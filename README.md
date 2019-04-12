@@ -4,7 +4,7 @@
 ## 简介
 
 对HTML5播放器的功能进行增强，快捷键仿照Potplayer的快捷键布局，实现调节亮度，饱和度，对比度，速度等功能，并增加各种实用功能，提供良好的在线播剧体验  
-PS：本脚基于：[https://greasyfork.org/users/49622](#https://greasyfork.org/users/49622)    
+PS：本脚基于：[https://greasyfork.org/users/49622](https://greasyfork.org/users/49622)    
 
 由于之前作者已长期不维护，故接坑自己开干，在原作者的基础上进行了大幅度的代码改造，提供更多的功能和兼容更多网站
 
@@ -40,9 +40,9 @@ PS：本脚基于：[https://greasyfork.org/users/49622](#https://greasyfork.org
 
 ## 支持网站列表
 经过测试并支持的网站列表：
-[https://netflix.com](https://netflix.com)
-[https://www.youtube.com](https://www.youtube.com)
-[https://www.bilibili.com](https://www.bilibili.com)
+* [https://netflix.com](https://netflix.com)
+* [https://www.youtube.com](https://www.youtube.com)
+* [https://www.bilibili.com](https://www.bilibili.com)
 
 
 ## 更新说明：
