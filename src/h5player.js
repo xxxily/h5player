@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         HTML5播放器增强插件 - 修订版
-// @namespace    http://www.ankvps.null
-// @homepage     http://www.ankvps.null
+// @namespace    https://github.com/xxxily/h5player
+// @homepage     https://github.com/xxxily/h5player
 // @version      1.2.0
-// @description  基于https://greasyfork.org/users/49622 对HTML5播放器的功能进行增强(仅对支持HTML5视频的网站有效)，快捷键仿照Potplayer的快捷键布局，实现调节亮度，饱和度，对比度，速度等功能。
+// @description  对HTML5播放器的功能进行增强(仅对支持HTML5视频的网站有效)，快捷键仿照Potplayer的快捷键布局，实现调节亮度，饱和度，对比度，速度等功能。
 // @author       ankvps
 // @match        http://*/*
 // @match        https://*/*
@@ -11,50 +11,10 @@
 // @grant        none
 // ==/UserScript==
 
-/*
- 提示字体设置：找到下面代码中，按住说明修改值即可，找到fontSize。
-
- 快捷键说明：
- ctrl+Enter || ctrl+\  切换是否聚焦，解决某些vidoe标签被遮罩而不能使用快捷键问题
-
- 播放时间定位：
- 方向键右→：快进3秒
- 方向键左←：后退3秒
- 按键F：下一帧
- 按键D：上一帧
-
- 音量调节：
- 方向键上↑：音量升高 1%
- 方向键下↓：音量降低 1%
-
- 播放速度调节：
- 按键C：加速播放 +0.1
- 按键X：减速播放 -0.1
- 按键Z：正常速度播放
-
- 图像参数调节：
- 按键E：亮度增加%
- 按键W：亮度减少%
- 按键T：对比度增加%
- 按键R：对比度减少%
- 按键U：饱和度增加%
- 按键Y：饱和度减少%
- 按键O：色相增加 1 度
- 按键I：色相减少 1 度
- 按键K：模糊增加 1 px
- 按键J：模糊减少 1 px
- 按键Q：图像复位
-
- 画面调节：
- 按键S：画面旋转 90 度
- 按键回车：进入全屏（只支持部分网站 B站，油管），还想增加什么网站的话，和我反馈一下！
-
- 兼容性问题：可以使用组合键临时停用插件，例如 播放/暂停 默认为空格键，那么使用Ctrl+space(空格键)即可暂停使用一次插件。
- */
-
 (function () {
   let h5Player = {
-    fontSize: 20, // 请输入您希望提示的文字大小(px)，默认值(浏览器默认)为 0,直接输入数字即可！
+    /* 提示文本的字号 */
+    fontSize: 20,
     player: function () {
       return document.querySelector('video')
     },
