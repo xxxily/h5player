@@ -1,6 +1,7 @@
 # h5player for tampermonkey
 网页播放器增强脚本  
-项目地址：[https://github.com/xxxily/h5player](https://github.com/xxxily/h5player)
+项目地址：[https://github.com/xxxily/h5player](https://github.com/xxxily/h5player)  
+脚本安装地址：[https://greasyfork.org/zh-CN/scripts/381682](https://greasyfork.org/zh-CN/scripts/381682)
 
 ## 简介
 

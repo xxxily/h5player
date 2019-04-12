@@ -19,7 +19,7 @@
       return document.querySelector('video')
     },
     scale: 1,
-    globalMode: false,
+    globalMode: true,
     tips: function (str) {
       let t = h5Player
       let tipsDom = document.querySelector('#html_player_enhance_tips')
@@ -116,20 +116,26 @@
         return
       }
 
-      // 按shift+Enter 键进入聚焦或取消聚焦状态，用于视频标签被遮挡的场景
-      if (event.ctrlKey && (keyCode === 13 || keyCode === 220)) {
+      // 按shift+\ 键进入聚焦或取消聚焦状态，用于视频标签被遮挡的场景
+      if (event.ctrlKey && keyCode === 220) {
         t._isFoucs = !t._isFoucs
-        if (t._isFoucs) {
-          t.globalMode = true
+        t.globalMode = !t.globalMode
+        if (t.globalMode) {
           t.tips('全局模式')
         } else {
-          t.globalMode = false
           t.tips('禁用全局模式')
         }
       }
 
-      /* 未聚焦，不能进行任何快捷键的操作 */
-      if (!t._isFoucs) return
+      /* 未聚焦，且不是全局模式则锁定快捷键的操作 */
+      if (t.globalMode) {
+        let target = event.target
+        let isEditable = target.getAttribute && target.getAttribute('contenteditable') === 'true'
+        let isInputDom = /INPUT|TEXTAREA|SELECT/.test(target.nodeName)
+        if (isEditable || isInputDom) return
+      } else {
+        if (!t._isFoucs) return
+      }
 
       if (event.shiftKey) {
         let isScaleKeyCode = keyCode === 88 || keyCode === 67 || keyCode === 90
