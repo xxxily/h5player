@@ -518,9 +518,15 @@
             }
 
             /* 同步之前设定的播放速度 */
+            let setPlaybackRateOnPlayingCount = 0
             player.onplaying = function () {
               setTimeout(function () {
-                t.setPlaybackRate(null, true)
+                if (setPlaybackRateOnPlayingCount === 0) {
+                  t.setPlaybackRate()
+                } else {
+                  t.setPlaybackRate(null, true)
+                }
+                setPlaybackRateOnPlayingCount += 1
               }, 1000)
             }
 
