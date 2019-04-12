@@ -53,8 +53,7 @@
  */
 
 (function () {
-  // 'use strict';
-  var html_player_enhance = {
+  let h5Player = {
     fontSize: 20, // 请输入您希望提示的文字大小(px)，默认值(浏览器默认)为 0,直接输入数字即可！
     player: function () {
       return document.querySelector('video')
@@ -62,7 +61,7 @@
     scale: 1,
     globalMode: false,
     tips: function (str) {
-      let t = html_player_enhance
+      let t = h5Player
       let tipsDom = document.querySelector('#html_player_enhance_tips')
 
       /* 出现异常的时候参数再初始化一次tips节点 */
@@ -103,7 +102,7 @@
           view = view.replace('{' + i + '}', String(this.key[i]))
           this.key[i] = Number(this.key[i])
         }
-        html_player_enhance.player().style.WebkitFilter = view
+        h5Player.player().style.WebkitFilter = view
       },
       reset: function () {
         this.key[0] = 1
@@ -124,30 +123,30 @@
         tips.style.fontSize = this.fontSize + 'px'
       }
       // 修复油管的兼容性问题
-      if (location.hostname === 'www.youtube.com') {
+      if (window.location.hostname === 'www.youtube.com') {
         this.player().parentNode.style.height = '100%'
       }
     },
     _isFoucs: false,
     isFoucs: function () {
-      let t = html_player_enhance
+      let t = h5Player
       let player = t.player()
       if (!player) return
 
       player.onmouseover = function () {
         if (!t.globalMode) {
-          html_player_enhance._isFoucs = true
+          h5Player._isFoucs = true
         }
       }
       player.onmouseout = function () {
         if (!t.globalMode) {
-          html_player_enhance._isFoucs = false
+          h5Player._isFoucs = false
         }
       }
     },
     /* 按键响应方法 */
     button: function (event) {
-      let t = html_player_enhance
+      let t = h5Player
       let keyCode = event.keyCode
       let player = t.player()
 
@@ -205,7 +204,7 @@
 
       // 方向键右→：快进3秒
       if (keyCode === 39) {
-        if (location.hostname === 'www.netflix.com') {
+        if (window.location.hostname === 'www.netflix.com') {
           return
         }
         player.currentTime += 3
@@ -213,7 +212,7 @@
       }
       // 方向键左←：后退3秒
       if (keyCode === 37) {
-        if (location.hostname === 'www.netflix.com') {
+        if (window.location.hostname === 'www.netflix.com') {
           return
         }
         player.currentTime -= 3
@@ -290,8 +289,8 @@
       }
 
       // 按键F：下一帧
-      if (keyCode == 70) {
-        if (location.hostname === 'www.netflix.com') {
+      if (keyCode === 70) {
+        if (window.location.hostname === 'www.netflix.com') {
           /* netflix 的F键是全屏的意思 */
           return
         }
@@ -300,13 +299,13 @@
         t.tips('定位：下一帧')
       }
       // 按键D：上一帧
-      if (keyCode == 68) {
+      if (keyCode === 68) {
         if (!player.paused) player.pause()
         player.currentTime -= Number(1 / t.fps)
         t.tips('定位：上一帧')
       }
       // 按键E：亮度增加%
-      if (keyCode == 69) {
+      if (keyCode === 69) {
         if (t.filter.key[0] > 1) {
           t.filter.key[0] += 1
         } else {
@@ -317,7 +316,7 @@
         t.tips('图像亮度增加：' + parseInt(t.filter.key[0] * 100) + '%')
       }
       // 按键W：亮度减少%
-      if (keyCode == 87) {
+      if (keyCode === 87) {
         if (t.filter.key[0] > 0) {
           if (t.filter.key[0] > 1) {
             t.filter.key[0] -= 1
@@ -330,7 +329,7 @@
         t.tips('图像亮度减少：' + parseInt(t.filter.key[0] * 100) + '%')
       }
       // 按键T：对比度增加%
-      if (keyCode == 84) {
+      if (keyCode === 84) {
         if (t.filter.key[1] > 1) {
           t.filter.key[1] += 1
         } else {
@@ -341,7 +340,7 @@
         t.tips('图像对比度增加：' + parseInt(t.filter.key[1] * 100) + '%')
       }
       // 按键R：对比度减少%
-      if (keyCode == 82) {
+      if (keyCode === 82) {
         if (t.filter.key[1] > 0) {
           if (t.filter.key[1] > 1) {
             t.filter.key[1] -= 1
@@ -354,7 +353,7 @@
         t.tips('图像对比度减少：' + parseInt(t.filter.key[1] * 100) + '%')
       }
       // 按键U：饱和度增加%
-      if (keyCode == 85) {
+      if (keyCode === 85) {
         if (t.filter.key[2] > 1) {
           t.filter.key[2] += 1
         } else {
@@ -365,7 +364,7 @@
         t.tips('图像饱和度增加：' + parseInt(t.filter.key[2] * 100) + '%')
       }
       // 按键Y：饱和度减少%
-      if (keyCode == 89) {
+      if (keyCode === 89) {
         if (t.filter.key[2] > 0) {
           if (t.filter.key[2] > 1) {
             t.filter.key[2] -= 1
@@ -378,25 +377,25 @@
         t.tips('图像饱和度减少：' + parseInt(t.filter.key[2] * 100) + '%')
       }
       // 按键O：色相增加 1 度
-      if (keyCode == 79) {
+      if (keyCode === 79) {
         t.filter.key[3] += 1
         t.filter.setup()
         t.tips('图像色相增加：' + t.filter.key[3] + '度')
       }
       // 按键I：色相减少 1 度
-      if (keyCode == 73) {
+      if (keyCode === 73) {
         t.filter.key[3] -= 1
         t.filter.setup()
         t.tips('图像色相减少：' + t.filter.key[3] + '度')
       }
       // 按键K：模糊增加 1 px
-      if (keyCode == 75) {
+      if (keyCode === 75) {
         t.filter.key[4] += 1
         t.filter.setup()
         t.tips('图像模糊增加：' + t.filter.key[4] + 'PX')
       }
       // 按键J：模糊减少 1 px
-      if (keyCode == 74) {
+      if (keyCode === 74) {
         if (t.filter.key[4] > 0) {
           t.filter.key[4] -= 1
           t.filter.setup()
@@ -404,25 +403,25 @@
         t.tips('图像模糊减少：' + t.filter.key[4] + 'PX')
       }
       // 按键Q：图像复位
-      if (keyCode == 81) {
+      if (keyCode === 81) {
         t.filter.reset()
         t.tips('图像属性：复位')
       }
       // 按键S：画面旋转 90 度
-      if (keyCode == 83) {
+      if (keyCode === 83) {
         t.rotate += 90
         if (t.rotate % 360 === 0) t.rotate = 0
         player.style.transform = 'rotate(' + t.rotate + 'deg)'
         t.tips('画面旋转：' + t.rotate + '度')
       }
       // 按键回车，进入全屏，支持仅部分网站(B站，油管)
-      if (keyCode == 13) {
-        if (location.hostname === 'www.bilibili.com') {
+      if (keyCode === 13) {
+        if (window.location.hostname === 'www.bilibili.com') {
           if (document.querySelector('[data-text="进入全屏"]')) {
             document.querySelector('[data-text="进入全屏"]').click()
           }
         }
-        if (location.hostname === 'www.youtube.com') {
+        if (window.location.hostname === 'www.youtube.com') {
           if (document.querySelector('[class="ytp-fullscreen-button ytp-button"]')) {
             document.querySelector('[class="ytp-fullscreen-button ytp-button"]').click()
           }
@@ -454,7 +453,7 @@
       t.detecH5Player(function (player) {
         if (document.querySelectorAll('#html_player_enhance_tips').length === 0) {
           if (!this.load) {
-            var t = html_player_enhance
+            var t = h5Player
             this.load = true
             console.log('检测到HTML5视频！')
             t.load = false
@@ -470,8 +469,8 @@
   }
 
   /* 进行初始化 */
-  html_player_enhance.init()
+  h5Player.init()
   document.addEventListener('DOMNodeInserted', function () {
-    html_player_enhance.init()
+    h5Player.init()
   })
 })()
