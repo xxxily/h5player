@@ -15,11 +15,27 @@
   let h5Player = {
     /* 提示文本的字号 */
     fontSize: 20,
+    enable: true,
+    globalMode: true,
     player: function () {
       return document.querySelector('video')
     },
     scale: 1,
-    globalMode: true,
+    playbackRate: 1,
+    initPlaybackRate: function () {
+      let t = this
+      let playbackRate = window.localStorage.getItem('_h5_player_playback_rate_') || t.playbackRate
+      t.playbackRate = Number(playbackRate)
+    },
+    setPlaybackRate: function (num) {
+      let t = this
+      let player = t.player()
+      window.localStorage.setItem('_h5_player_playback_rate_', num || t.playbackRate)
+      t.playbackRate = num || t.playbackRate
+      t.playbackRate = Number(t.playbackRate).toFixed(1)
+      player.playbackRate = t.playbackRate
+      t.tips('播放速度：' + player.playbackRate + '倍')
+    },
     tips: function (str) {
       let t = h5Player
       let tipsDom = document.querySelector('#html_player_enhance_tips')
@@ -36,19 +52,33 @@
 
       let style = tipsDom.style
       tipsDom.innerText = str
+
       for (var i = 0; i < 3; i++) {
         if (this.on_off[i]) clearTimeout(this.on_off[i])
       }
-      style.display = 'block'
-      this.on_off[0] = setTimeout(function () {
-        style.opacity = 1
-      }, 50)
-      this.on_off[1] = setTimeout(function () {
-        style.opacity = 0
-      }, 2000)
-      this.on_off[2] = setTimeout(function () {
+
+      function showTips () {
+        style.display = 'block'
+        t.on_off[0] = setTimeout(function () {
+          style.opacity = 1
+        }, 50)
+        t.on_off[1] = setTimeout(function () {
+          style.opacity = 0
+        }, 2000)
+        t.on_off[2] = setTimeout(function () {
+          style.display = 'none'
+        }, 2500)
+      }
+
+      if (style.display === 'block') {
         style.display = 'none'
-      }, 2800)
+        clearTimeout(this.on_off[3])
+        t.on_off[3] = setTimeout(function () {
+          showTips()
+        }, 100)
+      } else {
+        showTips()
+      }
     },
     on_off: new Array(3),
     rotate: 0,
@@ -94,15 +124,45 @@
       if (!player) return
 
       player.onmouseover = function () {
-        if (!t.globalMode) {
-          h5Player._isFoucs = true
-        }
+        h5Player._isFoucs = true
       }
       player.onmouseout = function () {
-        if (!t.globalMode) {
-          h5Player._isFoucs = false
-        }
+        h5Player._isFoucs = false
       }
+    },
+    keyList: [13, 16, 17, 18, 27, 32, 37, 38, 39, 40, 49, 52, 67, 68, 69, 70, 73, 74, 75, 79, 81, 82, 83, 84, 85, 87, 88, 89, 90, 100, 220],
+    keyMap: {
+      'enter': 14,
+      'shift': 16,
+      'ctrl': 17,
+      'alt': 18,
+      'esc': 27,
+      'space': 32,
+      '←': 37,
+      '↑': 38,
+      '→': 39,
+      '↓': 40,
+      '1': 49,
+      '4': 52,
+      'c': 67,
+      'd': 68,
+      'e': 69,
+      'f': 70,
+      'i': 73,
+      'j': 74,
+      'k': 75,
+      'o': 79,
+      'q': 81,
+      'r': 82,
+      's': 83,
+      't': 84,
+      'u': 85,
+      'w': 87,
+      'x': 88,
+      'y': 89,
+      'z': 90,
+      'pad4': 100,
+      '\\': 220
     },
     /* 按键响应方法 */
     button: function (event) {
@@ -110,15 +170,32 @@
       let keyCode = event.keyCode
       let player = t.player()
 
+      let isInUseCode = t.keyList.includes(keyCode)
+      if (!isInUseCode) return
+
       if (!player) {
         t.tips('video元素获取失败~')
         t.init()
         return
       }
 
+      /* 切换可用状态 */
+      if (event.ctrlKey && keyCode === 32) {
+        t.enable = !t.enable
+        if (t.enable) {
+          t.tips('启用h5Player插件')
+        } else {
+          t.tips('禁用h5Player插件')
+        }
+      }
+
+      if (!t.enable) {
+        console.log('h5Player 已禁用~')
+        return false
+      }
+
       // 按shift+\ 键进入聚焦或取消聚焦状态，用于视频标签被遮挡的场景
       if (event.ctrlKey && keyCode === 220) {
-        t._isFoucs = !t._isFoucs
         t.globalMode = !t.globalMode
         if (t.globalMode) {
           t.tips('全局模式')
@@ -203,54 +280,53 @@
       // 空格键：暂停/播放
       if (keyCode === 32) {
         // 已支持空格暂停的不在注册改键
-        var hostname = window.location.hostname || window.location.host
-        if (/youtube/i.test(hostname)) {
-          return
-        }
+        // var hostname = window.location.hostname || window.location.host
+        // if (/youtube/i.test(hostname)) {
+        //   return
+        // }
 
         let curStatus = player.paused
 
-        setTimeout(function () {
-          if (curStatus !== player.paused) {
-            // 默认快捷键已经处理过了，就不再重复处理
-            return
-          }
-          if (curStatus) {
-            player.play()
-            t.tips('播放')
-          } else {
-            player.pause()
-            t.tips('暂停')
-          }
-        }, 150)
+        if (curStatus !== player.paused) {
+          // 默认快捷键已经处理过了，就不再重复处理
+          return
+        }
+        if (curStatus) {
+          player.play()
+          t.tips('播放')
+        } else {
+          player.pause()
+          t.tips('暂停')
+        }
+        // setTimeout(function () {
+        //
+        // }, 150)
       }
 
       // 按键X：减速播放 -0.1
       if (keyCode === 88) {
         if (player.playbackRate > 0) {
           player.playbackRate -= 0.1
-          player.playbackRate = player.playbackRate.toFixed(1)
-          t.tips('播放速度：' + player.playbackRate + '倍')
+          t.setPlaybackRate(player.playbackRate)
         }
       }
       // 按键C：加速播放 +0.1
       if (keyCode === 67) {
         if (player.playbackRate < 16) {
           player.playbackRate += 0.1
-          player.playbackRate = player.playbackRate.toFixed(1)
-          t.tips('播放速度：' + player.playbackRate + '倍')
+          t.setPlaybackRate(player.playbackRate)
         }
       }
       // 按键Z：正常速度播放
       if (keyCode === 90) {
         player.playbackRate = 1
-        t.tips('播放速度：1倍')
+        t.setPlaybackRate(player.playbackRate)
       }
 
       // 按1-4设置播放速度 49-52;97-100
       if ((keyCode >= 49 && keyCode <= 52) || (keyCode >= 97 && keyCode <= 100)) {
         player.playbackRate = Number(event.key)
-        t.tips('播放速度：' + event.key + '倍')
+        t.setPlaybackRate(player.playbackRate)
         return false
       }
 
@@ -393,6 +469,7 @@
           }
         }
       }
+      return true
     },
     /**
      * 检测h5播放器是否存在
@@ -426,7 +503,31 @@
             t.filter.reset()
             t.settips()
             t.isFoucs()
-            document.onkeydown = t.button
+            t.initPlaybackRate()
+            document.querySelector('body').addEventListener('keydown', function (e) {
+              console.log(e.keyCode)
+            })
+            document.removeEventListener('keydown', t.button)
+            document.addEventListener('keydown', t.button, true)
+
+            if (window.top !== window && window.top.document) {
+              window.top.document.removeEventListener('keydown', t.button)
+              window.top.document.addEventListener('keydown', t.button, true)
+            }
+
+            /* 同步之前设定的播放速度 */
+            player.onloadeddata = function () {
+              if (player.readyState >= 4) {
+                t.setPlaybackRate()
+              }
+            }
+
+            // readyState
+
+            // document.onkeydown = t.button
+            // document.body.onkeydown = function (e) {
+            //   console.log(e.keyCode)
+            // }
           }
         }
       })
