@@ -27,14 +27,16 @@
       let playbackRate = window.localStorage.getItem('_h5_player_playback_rate_') || t.playbackRate
       t.playbackRate = Number(playbackRate)
     },
-    setPlaybackRate: function (num) {
+    setPlaybackRate: function (num, notips) {
       let t = this
       let player = t.player()
       window.localStorage.setItem('_h5_player_playback_rate_', num || t.playbackRate)
       t.playbackRate = num || t.playbackRate
       t.playbackRate = Number(t.playbackRate).toFixed(1)
       player.playbackRate = t.playbackRate
-      t.tips('播放速度：' + player.playbackRate + '倍')
+      if (!notips) {
+        t.tips('播放速度：' + player.playbackRate + '倍')
+      }
     },
     tips: function (str) {
       let t = h5Player
@@ -516,10 +518,10 @@
             }
 
             /* 同步之前设定的播放速度 */
-            player.onloadeddata = function () {
-              if (player.readyState >= 4) {
-                t.setPlaybackRate()
-              }
+            player.onplaying = function () {
+              setTimeout(function () {
+                t.setPlaybackRate(null, true)
+              }, 1000)
             }
 
             // readyState
