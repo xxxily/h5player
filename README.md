@@ -15,7 +15,7 @@ PS：本脚基于：[https://greasyfork.org/users/49622](https://greasyfork.org/
 |  快捷键   | 说明    |
 | --- | --- |
 | ctrl+\ | 快捷键是否全网页可用，默认只有鼠标在video标签上才可用 |
-| Ctrl+space | 临时停用插件 |
+| Ctrl+space | 禁用/启用 该播放插件 |
 | → | 快进3秒 |
 | ← | 后退3秒 |
 | ↑ | 音量升高 1% |
@@ -61,3 +61,9 @@ PS：本脚基于：[https://greasyfork.org/users/49622](https://greasyfork.org/
 * 脚本代码工程化，代码遵循js standard 规范
 * 完善文档说明
 
+### 1.3.0
+* 增加恢复播放进度功能
+* 增加记录播放速度功能
+* 增加禁用插件快捷功能（Ctrl+space）
+* 快捷键变成全局可用，增强兼容
+* 修复其它相关BUG
