@@ -12,6 +12,22 @@
 // ==/UserScript==
 
 (function () {
+  let quickSort = function (arr) {
+    if (arr.length <= 1) { return arr }
+    var pivotIndex = Math.floor(arr.length / 2)
+    var pivot = arr.splice(pivotIndex, 1)[0]
+    var left = []
+    var right = []
+    for (var i = 0; i < arr.length; i++) {
+      if (arr[i] < pivot) {
+        left.push(arr[i])
+      } else {
+        right.push(arr[i])
+      }
+    }
+    return quickSort(left).concat([pivot], quickSort(right))
+  }
+
   let h5Player = {
     /* 提示文本的字号 */
     fontSize: 20,
@@ -281,28 +297,13 @@
       }
       // 空格键：暂停/播放
       if (keyCode === 32) {
-        // 已支持空格暂停的不在注册改键
-        // var hostname = window.location.hostname || window.location.host
-        // if (/youtube/i.test(hostname)) {
-        //   return
-        // }
-
-        let curStatus = player.paused
-
-        if (curStatus !== player.paused) {
-          // 默认快捷键已经处理过了，就不再重复处理
-          return
-        }
-        if (curStatus) {
+        if (player.paused) {
           player.play()
           t.tips('播放')
         } else {
           player.pause()
           t.tips('暂停')
         }
-        // setTimeout(function () {
-        //
-        // }, 150)
       }
 
       // 按键X：减速播放 -0.1
@@ -473,6 +474,85 @@
       }
       return true
     },
+
+    /**
+     * 获取播放进度
+     * @param player -可选 对应的h5 播放器对象， 如果不传，则获取到的是整个播放进度表，传则获取当前播放器的播放进度
+     */
+    getPlayProgress: function (player) {
+      let progressMap = window.localStorage.getItem('_h5_player_play_progress_')
+      if (!progressMap) {
+        progressMap = {}
+      } else {
+        progressMap = JSON.parse(progressMap)
+      }
+      if (!player) {
+        return progressMap
+      } else {
+        let keyName = window.location.href || player.src
+        if (progressMap[keyName]) {
+          return progressMap[keyName].progress
+        } else {
+          return player.currentTime
+        }
+      }
+    },
+    /* 播放进度记录器 */
+    playProgressRecorder: function (player) {
+      let t = h5Player
+      clearTimeout(player._playProgressTimer_)
+      function recorder (player) {
+        player._playProgressTimer_ = setTimeout(function () {
+          let progressMap = t.getPlayProgress()
+
+          let keyName = window.location.href || player.src
+          let list = Object.keys(progressMap)
+
+          /* 只保存最近10个视频的播放进度 */
+          if (list.length > 10) {
+            /* 根据更新的时间戳，取出最早添加播放进度的记录项 */
+            let timeList = []
+            list.forEach(function (keyName) {
+              progressMap[keyName] && progressMap[keyName].t && timeList.push(progressMap[keyName].t)
+            })
+            timeList = quickSort(timeList)
+            let timestamp = timeList[0]
+
+            /* 删除最早添加的记录项 */
+            list.forEach(function (keyName) {
+              if (progressMap[keyName].t === timestamp) {
+                delete progressMap[keyName]
+              }
+            })
+          }
+
+          /* 记录当前播放进度 */
+          progressMap[keyName] = {
+            progress: player.currentTime,
+            t: new Date().getTime()
+          }
+
+          /* 存储播放进度表 */
+          window.localStorage.setItem('_h5_player_play_progress_', JSON.stringify(progressMap))
+
+          /* 循环侦听 */
+          recorder(player)
+        }, 1000 * 2)
+      }
+      recorder(player)
+    },
+    /* 设置播放进度 */
+    setPlayProgress: function (player, time) {
+      if (!player) return
+      let t = h5Player
+      let curTime = Number(t.getPlayProgress(player))
+      if (!curTime || Number.isNaN(curTime)) return
+
+      player.currentTime = curTime || player.currentTime
+      if (curTime > 3) {
+        t.tips('为你恢复上次播放进度~')
+      }
+    },
     /**
      * 检测h5播放器是否存在
      * @param callback
@@ -520,19 +600,20 @@
             /* 同步之前设定的播放速度 */
             let setPlaybackRateOnPlayingCount = 0
             player.onplaying = function () {
-              setTimeout(function () {
-                if (setPlaybackRateOnPlayingCount === 0) {
-                  t.setPlaybackRate()
-                } else {
-                  t.setPlaybackRate(null, true)
-                }
-                setPlaybackRateOnPlayingCount += 1
-              }, 1000)
+              if (setPlaybackRateOnPlayingCount === 0) {
+                t.setPlaybackRate()
+
+                /* 恢复播放进度和进行进度记录 */
+                t.setPlayProgress(player)
+                setTimeout(function () {
+                  t.playProgressRecorder(player)
+                }, 1000 * 3)
+              } else {
+                t.setPlaybackRate(null, true)
+              }
+              setPlaybackRateOnPlayingCount += 1
             }
 
-            // readyState
-
-            // document.onkeydown = t.button
             // document.body.onkeydown = function (e) {
             //   console.log(e.keyCode)
             // }
