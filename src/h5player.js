@@ -94,7 +94,24 @@
       return player
     },
     /* 每个网页可能存在的多个video播放器 */
-    playerList: [],
+    getPlayerList: function () {
+      let list = []
+      function findPlayer (context) {
+        context.querySelectorAll('viode').forEach(function (player) {
+          list.push(player)
+        })
+      }
+      findPlayer(document)
+
+      // 被封装在 shadow dom 里面的video
+      if (window._shadowDomList_) {
+        window._shadowDomList_.forEach(function (shadowRoot) {
+          findPlayer(shadowRoot)
+        })
+      }
+
+      return list
+    },
     scale: 1,
     playbackRate: 1,
     initPlaybackRate: function () {
@@ -113,16 +130,24 @@
         t.tips('播放速度：' + player.playbackRate + '倍')
       }
     },
+    tipsClassName: 'html_player_enhance_tips',
     tips: function (str) {
       let t = h5Player
-      let tipsDom = document.querySelector('#html_player_enhance_tips')
+      let player = t.player()
+      if (!player) {
+        console.log('h5Player Tips:', str)
+        return true
+      }
 
-      /* 出现异常的时候参数再初始化一次tips节点 */
+      let tipsSelector = '.' + t.tipsClassName
+      let tipsDom = player.parentNode.querySelector(tipsSelector)
+
+      /* 提示dom未初始化的，则进行初始化 */
       if (!tipsDom) {
-        console.log('h5player init error...')
-        t.settips()
-        tipsDom = document.querySelector('#html_player_enhance_tips')
+        t.initTips()
+        tipsDom = player.parentNode.querySelector(tipsSelector)
         if (!tipsDom) {
+          console.log('init h5player tips dom error...')
           return false
         }
       }
@@ -157,6 +182,40 @@
         showTips()
       }
     },
+    /* 设置提示DOM的样式 */
+    initTips: function () {
+      let t = this
+      let player = t.player()
+      let parentNode = player.parentNode
+      if (parentNode.querySelector('.' + t.tipsClassName)) return
+
+      let tipsStyle = `
+        position: absolute;
+        z-index: 999999;
+        font-size: ${t.fontSize || 16}px;
+        padding: 10px;
+        background: rgba(0,0,0,0.8);
+        color:white;top: 50%;
+        left: 50%;
+        transform: translate(-50%,-50%);
+        transition: all 500ms ease;
+        opacity: 0;
+        display: none;
+        -webkit-font-smoothing: subpixel-antialiased;
+        font-family: 'microsoft yahei', Verdana, Geneva, sans-serif;
+        -webkit-user-select: none;
+      `
+      let tips = document.createElement('div')
+      tips.setAttribute('style', tipsStyle)
+      tips.setAttribute('class', t.tipsClassName)
+
+      // 修复油管的兼容性问题
+      if (window.location.hostname === 'www.youtube.com') {
+        player.parentNode.style.height = '100%'
+      }
+
+      player.parentNode.appendChild(tips)
+    },
     on_off: new Array(3),
     rotate: 0,
     fps: 30,
@@ -180,21 +239,22 @@
         this.setup()
       }
     },
-    /* 设置提示DOM的样式 */
-    settips: function () {
-      var tips = document.createElement('div')
-      this.player().parentNode.appendChild(tips)
-      tips.setAttribute('id', 'html_player_enhance_tips')
-      tips.setAttribute('style', "position: absolute;z-index: 999999;padding: 10px;background: rgba(0,0,0,0.8);color:white;top: 50%;left: 50%;transform: translate(-50%,-50%);transition: all 500ms ease;opacity: 0;display: none; -webkit-font-smoothing: subpixel-antialiased;font-family: 'microsoft yahei', Verdana, Geneva, sans-serif;-webkit-user-select: none;")
-      if (this.fontSize !== 0) {
-        tips.style.fontSize = this.fontSize + 'px'
+    _isFoucs: false,
+
+    /* 播放器的聚焦事件 */
+    foucsEvent: function () {
+      let t = h5Player
+      let player = t.player()
+      if (!player) return
+
+      player.onmouseover = function () {
+        h5Player._isFoucs = true
       }
-      // 修复油管的兼容性问题
-      if (window.location.hostname === 'www.youtube.com') {
-        this.player().parentNode.style.height = '100%'
+      player.onmouseout = function () {
+        h5Player._isFoucs = false
       }
     },
-    _isFoucs: false,
+
     isFoucs: function () {
       let t = h5Player
       let player = t.player()
@@ -247,59 +307,11 @@
       '\\': 220
     },
 
-    trigger: function (event, player) {
-
-    },
-
-    /* 按键响应方法 */
-    button: function (event) {
+    /* 播放器事件响应器 */
+    palyerTrigger: function (player, event) {
+      if (!player || !event) return
       let t = h5Player
       let keyCode = event.keyCode
-      let player = t.player()
-
-      let isInUseCode = t.keyList.includes(keyCode)
-      if (!isInUseCode) return
-
-      if (!player) {
-        t.tips('video元素获取失败~')
-        t.init()
-        return
-      }
-
-      /* 切换可用状态 */
-      if (event.ctrlKey && keyCode === 32) {
-        t.enable = !t.enable
-        if (t.enable) {
-          t.tips('启用h5Player插件')
-        } else {
-          t.tips('禁用h5Player插件')
-        }
-      }
-
-      if (!t.enable) {
-        console.log('h5Player 已禁用~')
-        return false
-      }
-
-      // 按shift+\ 键进入聚焦或取消聚焦状态，用于视频标签被遮挡的场景
-      if (event.ctrlKey && keyCode === 220) {
-        t.globalMode = !t.globalMode
-        if (t.globalMode) {
-          t.tips('全局模式')
-        } else {
-          t.tips('禁用全局模式')
-        }
-      }
-
-      /* 未聚焦，且不是全局模式则锁定快捷键的操作 */
-      if (t.globalMode) {
-        let target = event.target
-        let isEditable = target.getAttribute && target.getAttribute('contenteditable') === 'true'
-        let isInputDom = /INPUT|TEXTAREA|SELECT/.test(target.nodeName)
-        if (isEditable || isInputDom) return
-      } else {
-        if (!t._isFoucs) return
-      }
 
       if (event.shiftKey) {
         let isScaleKeyCode = keyCode === 88 || keyCode === 67 || keyCode === 90
@@ -327,10 +339,8 @@
         return true
       }
 
-      // 防止其它组合键冲突
+      // 防止其它无关组合键冲突
       if (event.altKey || event.ctrlKey || event.shiftKey) return
-      event.stopPropagation()
-      event.preventDefault()
 
       // 方向键右→：快进3秒
       if (keyCode === 39) {
@@ -348,6 +358,7 @@
         player.currentTime -= 3
         t.tips('后退：3秒')
       }
+
       // 方向键上↑：音量升高 1%
       if (keyCode === 38) {
         if (player.volume < 1) {
@@ -364,6 +375,7 @@
         player.volume = player.volume.toFixed(2)
         t.tips('音量：' + parseInt(player.volume * 100) + '%')
       }
+
       // 空格键：暂停/播放
       if (keyCode === 32) {
         if (player.paused) {
@@ -399,7 +411,6 @@
       if ((keyCode >= 49 && keyCode <= 52) || (keyCode >= 97 && keyCode <= 100)) {
         player.playbackRate = Number(event.key)
         t.setPlaybackRate(player.playbackRate)
-        return false
       }
 
       // 按键F：下一帧
@@ -418,6 +429,7 @@
         player.currentTime -= Number(1 / t.fps)
         t.tips('定位：上一帧')
       }
+
       // 按键E：亮度增加%
       if (keyCode === 69) {
         if (t.filter.key[0] > 1) {
@@ -442,6 +454,7 @@
         }
         t.tips('图像亮度减少：' + parseInt(t.filter.key[0] * 100) + '%')
       }
+
       // 按键T：对比度增加%
       if (keyCode === 84) {
         if (t.filter.key[1] > 1) {
@@ -466,6 +479,7 @@
         }
         t.tips('图像对比度减少：' + parseInt(t.filter.key[1] * 100) + '%')
       }
+
       // 按键U：饱和度增加%
       if (keyCode === 85) {
         if (t.filter.key[2] > 1) {
@@ -490,6 +504,7 @@
         }
         t.tips('图像饱和度减少：' + parseInt(t.filter.key[2] * 100) + '%')
       }
+
       // 按键O：色相增加 1 度
       if (keyCode === 79) {
         t.filter.key[3] += 1
@@ -502,6 +517,7 @@
         t.filter.setup()
         t.tips('图像色相减少：' + t.filter.key[3] + '度')
       }
+
       // 按键K：模糊增加 1 px
       if (keyCode === 75) {
         t.filter.key[4] += 1
@@ -516,11 +532,13 @@
         }
         t.tips('图像模糊减少：' + t.filter.key[4] + 'PX')
       }
+
       // 按键Q：图像复位
       if (keyCode === 81) {
         t.filter.reset()
         t.tips('图像属性：复位')
       }
+
       // 按键S：画面旋转 90 度
       if (keyCode === 83) {
         t.rotate += 90
@@ -528,6 +546,7 @@
         player.style.transform = 'rotate(' + t.rotate + 'deg)'
         t.tips('画面旋转：' + t.rotate + '度')
       }
+
       // 按键回车，进入全屏，支持仅部分网站(B站，油管)
       if (keyCode === 13) {
         if (window.location.hostname === 'www.bilibili.com') {
@@ -541,7 +560,65 @@
           }
         }
       }
+
+      // 阻止事件冒泡
+      event.stopPropagation()
+      event.preventDefault()
       return true
+    },
+
+    /* 按键响应方法 */
+    keydownEvent: function (event) {
+      let t = h5Player
+      let keyCode = event.keyCode
+      let player = t.player()
+
+      /* 未用到的按键不进行任何事件监听 */
+      let isInUseCode = t.keyList.includes(keyCode)
+      if (!isInUseCode) return
+
+      if (!player) {
+        // console.log('无可用的播放，不执行相关操作')
+        return
+      }
+
+      /* 切换插件的可用状态 */
+      if (event.ctrlKey && keyCode === 32) {
+        t.enable = !t.enable
+        if (t.enable) {
+          t.tips('启用h5Player插件')
+        } else {
+          t.tips('禁用h5Player插件')
+        }
+      }
+
+      if (!t.enable) {
+        console.log('h5Player 已禁用~')
+        return false
+      }
+
+      // 按shift+\ 键进入聚焦或取消聚焦状态，用于视频标签被遮挡的场景
+      if (event.ctrlKey && keyCode === 220) {
+        t.globalMode = !t.globalMode
+        if (t.globalMode) {
+          t.tips('全局模式')
+        } else {
+          t.tips('禁用全局模式')
+        }
+      }
+
+      /* 未聚焦，且不是全局模式则锁定快捷键的操作 */
+      if (t.globalMode) {
+        let target = event.target
+        let isEditable = target.getAttribute && target.getAttribute('contenteditable') === 'true'
+        let isInputDom = /INPUT|TEXTAREA|SELECT/.test(target.nodeName)
+        if (isEditable || isInputDom) return
+      } else {
+        if (!t._isFoucs) return
+      }
+
+      /* 响应播放器相关操作 */
+      t.palyerTrigger(player, event)
     },
 
     /**
@@ -641,12 +718,13 @@
     /* 绑定相关事件 */
     bindEvent: function () {
       var t = this
-      document.removeEventListener('keydown', t.button)
-      document.addEventListener('keydown', t.button, true)
+      document.removeEventListener('keydown', t.keydownEvent)
+      document.addEventListener('keydown', t.keydownEvent, true)
 
+      /* 兼容iframe操作 */
       if (window.top !== window && window.top.document) {
-        window.top.document.removeEventListener('keydown', t.button)
-        window.top.document.addEventListener('keydown', t.button, true)
+        window.top.document.removeEventListener('keydown', t.keydownEvent)
+        window.top.document.addEventListener('keydown', t.keydownEvent, true)
       }
     },
     init: function () {
@@ -666,7 +744,7 @@
             console.log('检测到HTML5视频！')
             t.load = false
             t.filter.reset()
-            t.settips()
+            t.initTips()
             t.isFoucs()
             t.initPlaybackRate()
 
