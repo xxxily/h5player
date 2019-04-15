@@ -61,6 +61,49 @@
     $ready(selector, fn)
   }
 
+  /**
+   * 某些网页用了attachShadow closed mode，需要open才能获取video标签，例如百度云盘
+   * 解决参考：
+   * https://developers.google.com/web/fundamentals/web-components/shadowdom?hl=zh-cn#closed
+   * https://stackoverflow.com/questions/54954383/override-element-prototype-attachshadow-using-chrome-extension
+   */
+  function hackAttachShadow () {
+    if (window._hasHackAttachShadow_) return
+    try {
+      window._shadowDomList_ = []
+      window.Element.prototype._attachShadow = window.Element.prototype.attachShadow
+      window.Element.prototype.attachShadow = function () {
+        let arg = arguments
+        if (arg[0] && arg[0]['mode']) {
+          // 强制使用 open mode
+          arg[0]['mode'] = 'open'
+        }
+        let shadowRoot = this._attachShadow.apply(this, arg)
+        // 存一份shadowDomList
+        window._shadowDomList_.push(shadowRoot)
+
+        // 在document下面添加 addShadowRoot 自定义事件
+        let shadowEvent = new window.CustomEvent('addShadowRoot', {
+          shadowRoot,
+          detail: {
+            shadowRoot,
+            message: 'addShadowRoot',
+            time: new Date()
+          },
+          bubbles: true,
+          cancelable: true
+        })
+        document.dispatchEvent(shadowEvent)
+
+        return shadowRoot
+      }
+      window._hasHackAttachShadow_ = true
+    } catch (e) {
+      console.error('hackAttachShadow error by h5player plug-in')
+    }
+  }
+  hackAttachShadow()
+
   let quickSort = function (arr) {
     if (arr.length <= 1) { return arr }
     var pivotIndex = Math.floor(arr.length / 2)
@@ -82,22 +125,17 @@
     fontSize: 20,
     enable: true,
     globalMode: true,
+    playerInstance: null,
+    /* 获取当前播放器的实例 */
     player: function () {
-      let player = null
-      if (window._shadowDomList_) {
-        window._shadowDomList_.forEach(function (shadowRoot) {
-          player = shadowRoot.querySelector('video')
-        })
-      } else {
-        player = document.querySelector('video')
-      }
-      return player
+      let t = this
+      return t.playerInstance || t.getPlayerList()[0]
     },
     /* 每个网页可能存在的多个video播放器 */
     getPlayerList: function () {
       let list = []
       function findPlayer (context) {
-        context.querySelectorAll('viode').forEach(function (player) {
+        context.querySelectorAll('video').forEach(function (player) {
           list.push(player)
         })
       }
@@ -111,6 +149,43 @@
       }
 
       return list
+    },
+    /**
+     * 初始化播放器实例
+     * @param isSingle 是否为单实例video标签
+     */
+    initPlayerInstance: function (isSingle) {
+      let t = this
+      if (!t.playerInstance) return
+
+      let player = t.playerInstance
+      t.filter.reset()
+      t.initTips()
+      t.initPlaybackRate()
+
+      t.isFoucs()
+
+      /* 播放的时候进行相关同步操作 */
+      if (player._hasPlayingInitEvent_) return
+      let setPlaybackRateOnPlayingCount = 0
+      player.addEventListener('playing', function (event) {
+        if (setPlaybackRateOnPlayingCount === 0) {
+          /* 同步之前设定的播放速度 */
+          t.setPlaybackRate()
+
+          if (isSingle === true) {
+            /* 恢复播放进度和进行进度记录 */
+            t.setPlayProgress(player)
+            setTimeout(function () {
+              t.playProgressRecorder(player)
+            }, 1000 * 3)
+          }
+        } else {
+          t.setPlaybackRate(null, true)
+        }
+        setPlaybackRateOnPlayingCount += 1
+      })
+      player._hasPlayingInitEvent_ = true
     },
     scale: 1,
     playbackRate: 1,
@@ -260,10 +335,10 @@
       let player = t.player()
       if (!player) return
 
-      player.onmouseover = function () {
+      player.onmouseenter = function (e) {
         h5Player._isFoucs = true
       }
-      player.onmouseout = function () {
+      player.onmouseleave = function (e) {
         h5Player._isFoucs = false
       }
     },
@@ -703,21 +778,43 @@
      * 检测h5播放器是否存在
      * @param callback
      */
-    detecH5Player: function (callback) {
-      var t = this
-      var player = document.querySelector('video')
-      if (player) {
-        callback && callback(player)
-      } else {
-        // 轮询检测
-        setTimeout(function () {
-          t.detecH5Player(callback)
-        }, 1000)
+    detecH5Player: function () {
+      let t = this
+      let playerList = t.getPlayerList()
+      if (playerList.length) {
+        console.log('检测到HTML5视频！')
+
+        /* 单video实例标签的情况 */
+        if (playerList.length === 1) {
+          t.playerInstance = playerList[0]
+          t.initPlayerInstance(true)
+        } else {
+          /* 多video实例标签的情况 */
+          playerList.forEach(function (player) {
+            /* 鼠标移到其上面的时候重新指定实例 */
+            if (player._hasMouseRedirectEvent_) return
+            player.addEventListener('mouseenter', function (event) {
+              t.playerInstance = event.target
+              t.initPlayerInstance(false)
+            })
+            player._hasMouseRedirectEvent_ = true
+
+            /* 播放器开始播放的时候重新指向实例 */
+            if (player._hasPlayingRedirectEvent_) return
+            player.addEventListener('playing', function (event) {
+              t.playerInstance = event.target
+              t.initPlayerInstance(false)
+            })
+            player._hasPlayingRedirectEvent_ = true
+          })
+        }
       }
     },
     /* 绑定相关事件 */
     bindEvent: function () {
       var t = this
+      if (t._hasBindEvent_) return
+
       document.removeEventListener('keydown', t.keydownEvent)
       document.addEventListener('keydown', t.keydownEvent, true)
 
@@ -726,113 +823,29 @@
         window.top.document.removeEventListener('keydown', t.keydownEvent)
         window.top.document.addEventListener('keydown', t.keydownEvent, true)
       }
+      t._hasBindEvent_ = true
     },
     init: function () {
       var t = this
-
-      if (document.querySelectorAll('#html_player_enhance_tips').length > 1) {
-        document.querySelector('#html_player_enhance_tips').parentNode.removeChild(document.querySelectorAll('#html_player_enhance_tips')[1])
-      }
-
+      /* 绑定键盘事件 */
       t.bindEvent()
-
-      t.detecH5Player(function (player) {
-        if (document.querySelectorAll('#html_player_enhance_tips').length === 0) {
-          if (!this.load) {
-            var t = h5Player
-            this.load = true
-            console.log('检测到HTML5视频！')
-            t.load = false
-            t.filter.reset()
-            t.initTips()
-            t.isFoucs()
-            t.initPlaybackRate()
-
-            /* 同步之前设定的播放速度 */
-            let setPlaybackRateOnPlayingCount = 0
-            player.onplaying = function () {
-              if (setPlaybackRateOnPlayingCount === 0) {
-                t.setPlaybackRate()
-
-                /* 恢复播放进度和进行进度记录 */
-                t.setPlayProgress(player)
-                setTimeout(function () {
-                  t.playProgressRecorder(player)
-                }, 1000 * 3)
-              } else {
-                t.setPlaybackRate(null, true)
-              }
-              setPlaybackRateOnPlayingCount += 1
-            }
-
-            document.body.onkeydown = function (e) {
-              console.log(e.keyCode, e.key)
-            }
-          }
-        }
-      })
+      /* 检测是否存在H5播放器 */
+      t.detecH5Player()
     },
     load: false
   }
 
-  /**
-   * 某些网页用了attachShadow closed mode，需要open才能获取video标签，例如百度云盘
-   * 解决参考：
-   * https://developers.google.com/web/fundamentals/web-components/shadowdom?hl=zh-cn#closed
-   * https://stackoverflow.com/questions/54954383/override-element-prototype-attachshadow-using-chrome-extension
-   */
-  function hackAttachShadow () {
-    if (window._hasHackAttachShadow_) return
-    try {
-      window._shadowDomList_ = []
-      window.Element.prototype._attachShadow = window.Element.prototype.attachShadow
-      window.Element.prototype.attachShadow = function () {
-        let arg = arguments
-        if (arg[0] && arg[0]['mode']) {
-          // 强制使用 open mode
-          arg[0]['mode'] = 'open'
-        }
-        let shadowRoot = this._attachShadow.apply(this, arg)
-        // 存一份shadowDomList
-        window._shadowDomList_.push(shadowRoot)
-
-        // 在document下面添加 addShadowRoot 自定义事件
-        let shadowEvent = new window.CustomEvent('addShadowRoot', {
-          shadowRoot,
-          detail: {
-            shadowRoot,
-            message: 'addShadowRoot',
-            time: new Date()
-          },
-          bubbles: true,
-          cancelable: true
-        })
-        document.dispatchEvent(shadowEvent)
-
-        return shadowRoot
-      }
-      window._hasHackAttachShadow_ = true
-    } catch (e) {
-      console.error('hackAttachShadow error by h5player plug-in')
-    }
-  }
-  hackAttachShadow()
-
+  /* 检测到有视频标签就进行初始化 */
+  ready('video', function () {
+    console.log('video ready')
+    h5Player.init()
+  })
+  /* 检测shadow dom 下面的video */
   document.addEventListener('addShadowRoot', function (e) {
     let shadowRoot = e.detail.shadowRoot
     ready('video', function (element) {
-      // let videoElements = shadowRoot.querySelectorAll('video')
-      // videoElements.forEach(function (player) {
-      //   h5Player.playerList.push(player)
-      // })
-    }, shadowRoot)
-  })
-
-  document.addEventListener('DOMContentLoaded', function () {
-    /* 进行初始化 */
-    h5Player.init()
-    document.addEventListener('DOMNodeInserted', function () {
+      console.log('ShadowRoot video ready')
       h5Player.init()
-    })
+    }, shadowRoot)
   })
 })()
