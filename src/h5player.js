@@ -2,8 +2,8 @@
 // @name         HTML5播放器增强插件 - 修订版
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      1.3.0
-// @description  对HTML5播放器的功能进行增强(仅对支持HTML5视频的网站有效)，快捷键仿照Potplayer的快捷键布局，实现调节亮度，饱和度，对比度，速度等功能。
+// @version      2.0.0
+// @description  对HTML5播放器的功能进行增强，支持所有使用H5进行视频播放的网站，快捷键仿照Potplayer的快捷键布局，实现调节亮度，饱和度，对比度，速度等功能。
 // @author       ankvps
 // @match        http://*/*
 // @match        https://*/*
@@ -837,14 +837,12 @@
 
   /* 检测到有视频标签就进行初始化 */
   ready('video', function () {
-    console.log('video ready')
     h5Player.init()
   })
   /* 检测shadow dom 下面的video */
   document.addEventListener('addShadowRoot', function (e) {
     let shadowRoot = e.detail.shadowRoot
     ready('video', function (element) {
-      console.log('ShadowRoot video ready')
       h5Player.init()
     }, shadowRoot)
   })
