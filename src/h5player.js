@@ -776,7 +776,7 @@
   }
 
   /**
-   * 百度云盘使用了 attachShadow closed mode 需要open才能正常获取video标签
+   * 某些网页用了attachShadow closed mode，需要open才能获取video标签，例如百度云盘
    * 解决参考：
    * https://developers.google.com/web/fundamentals/web-components/shadowdom?hl=zh-cn#closed
    * https://stackoverflow.com/questions/54954383/override-element-prototype-attachshadow-using-chrome-extension
@@ -793,7 +793,10 @@
           arg[0]['mode'] = 'open'
         }
         let shadowRoot = this._attachShadow.apply(this, arg)
+        // 存一份shadowDomList
         window._shadowDomList_.push(shadowRoot)
+
+        // 在document下面添加 addShadowRoot 自定义事件
         let shadowEvent = new window.CustomEvent('addShadowRoot', {
           shadowRoot,
           detail: {
@@ -818,11 +821,10 @@
   document.addEventListener('addShadowRoot', function (e) {
     let shadowRoot = e.detail.shadowRoot
     ready('video', function (element) {
-      /* 虽然此处的element就是video标签，但是不能直接使用element，因为可能存在多次渲染video，最后一个才是真实的视频播放器，例如：百度云盘 */
-      let videoElements = shadowRoot.querySelectorAll('video')
-      videoElements.forEach(function (player) {
-        // h5Player.playerList.push(player)
-      })
+      // let videoElements = shadowRoot.querySelectorAll('video')
+      // videoElements.forEach(function (player) {
+      //   h5Player.playerList.push(player)
+      // })
     }, shadowRoot)
   })
 
