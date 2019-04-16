@@ -122,7 +122,7 @@
 
   let h5Player = {
     /* 提示文本的字号 */
-    fontSize: 20,
+    fontSize: 16,
     enable: true,
     globalMode: true,
     playerInstance: null,
@@ -265,7 +265,7 @@
         }, 2000)
         t.on_off[2] = setTimeout(function () {
           style.display = 'none'
-        }, 2500)
+        }, 2000)
       }
 
       if (style.display === 'block') {
@@ -290,12 +290,13 @@
         z-index: 999999;
         font-size: ${t.fontSize || 16}px;
         padding: 10px;
-        background: rgba(0,0,0,0.8);
+        background: rgba(0,0,0,0.6);
         color:white;top: 50%;
         left: 50%;
         transform: translate(-50%,-50%);
         transition: all 500ms ease;
         opacity: 0;
+        border-radius:3px;
         display: none;
         -webkit-font-smoothing: subpixel-antialiased;
         font-family: 'microsoft yahei', Verdana, Geneva, sans-serif;
