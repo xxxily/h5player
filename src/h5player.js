@@ -162,7 +162,6 @@
       t.filter.reset()
       t.initTips()
       t.initPlaybackRate()
-
       t.isFoucs()
 
       /* 播放的时候进行相关同步操作 */
@@ -191,20 +190,42 @@
     playbackRate: 1,
     initPlaybackRate: function () {
       let t = this
-      let playbackRate = window.localStorage.getItem('_h5_player_playback_rate_') || t.playbackRate
-      t.playbackRate = Number(playbackRate)
+      t.playbackRate = t.getPlaybackRate()
     },
+    getPlaybackRate: function () {
+      let t = this
+      let playbackRate = window.localStorage.getItem('_h5_player_playback_rate_') || t.playbackRate
+      return Number(Number(playbackRate).toFixed(1))
+    },
+    /* 设置播放速度 */
     setPlaybackRate: function (num, notips) {
       let t = this
       let player = t.player()
-      window.localStorage.setItem('_h5_player_playback_rate_', num || t.playbackRate)
-      t.playbackRate = num || t.playbackRate
-      t.playbackRate = Number(t.playbackRate).toFixed(1)
-      player.playbackRate = t.playbackRate
+      let curPlaybackRate
+      if (num) {
+        num = Number(num)
+        if (Number.isNaN(num)) {
+          console.error('h5player: 播放速度转换出错')
+          return false
+        }
+        if (num <= 0) {
+          num = 0.1
+        }
+        num = Number(num.toFixed(1))
+        curPlaybackRate = num
+      } else {
+        curPlaybackRate = t.getPlaybackRate()
+      }
+      window.localStorage.setItem('_h5_player_playback_rate_', curPlaybackRate)
+      t.playbackRate = curPlaybackRate
+      player.playbackRate = curPlaybackRate
       if (!notips) {
+        /* 本身处于1被播放速度的时候不再提示 */
+        if (!num && curPlaybackRate === 1) return
         t.tips('播放速度：' + player.playbackRate + '倍')
       }
     },
+
     tipsClassName: 'html_player_enhance_tips',
     tips: function (str) {
       let t = h5Player
@@ -804,6 +825,9 @@
             player.addEventListener('playing', function (event) {
               t.playerInstance = event.target
               t.initPlayerInstance(false)
+
+              /* 同步之前设定的播放速度 */
+              t.setPlaybackRate()
             })
             player._hasPlayingRedirectEvent_ = true
           })
@@ -847,3 +871,4 @@
     }, shadowRoot)
   })
 })()
+
