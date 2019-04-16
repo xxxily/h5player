@@ -290,7 +290,7 @@
         z-index: 999999;
         font-size: ${t.fontSize || 16}px;
         padding: 10px;
-        background: rgba(0,0,0,0.6);
+        background: rgba(0,0,0,0.4);
         color:white;top: 50%;
         left: 50%;
         transform: translate(-50%,-50%);
@@ -803,6 +803,7 @@
     detecH5Player: function () {
       let t = this
       let playerList = t.getPlayerList()
+
       if (playerList.length) {
         console.log('检测到HTML5视频！')
 
@@ -872,4 +873,3 @@
     }, shadowRoot)
   })
 })()
-
