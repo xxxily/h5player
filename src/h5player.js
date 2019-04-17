@@ -202,27 +202,35 @@
       t.initPlaybackRate()
       t.isFoucs()
 
-      /* 播放的时候进行相关同步操作 */
-      if (player._hasPlayingInitEvent_) return
-      let setPlaybackRateOnPlayingCount = 0
-      player.addEventListener('playing', function (event) {
-        if (setPlaybackRateOnPlayingCount === 0) {
-          /* 同步之前设定的播放速度 */
-          t.setPlaybackRate()
+      if (!player._hasCanplayEvent_) {
+        player.addEventListener('canplay', function (event) {
+          t.initAutoPlay(player)
+        })
+        player._hasCanplayEvent_ = true
+      }
 
-          if (isSingle === true) {
-            /* 恢复播放进度和进行进度记录 */
-            t.setPlayProgress(player)
-            setTimeout(function () {
-              t.playProgressRecorder(player)
-            }, 1000 * 3)
+      /* 播放的时候进行相关同步操作 */
+      if (!player._hasPlayingInitEvent_) {
+        let setPlaybackRateOnPlayingCount = 0
+        player.addEventListener('playing', function (event) {
+          if (setPlaybackRateOnPlayingCount === 0) {
+            /* 同步之前设定的播放速度 */
+            t.setPlaybackRate()
+
+            if (isSingle === true) {
+              /* 恢复播放进度和进行进度记录 */
+              t.setPlayProgress(player)
+              setTimeout(function () {
+                t.playProgressRecorder(player)
+              }, 1000 * 3)
+            }
+          } else {
+            t.setPlaybackRate(null, true)
           }
-        } else {
-          t.setPlaybackRate(null, true)
-        }
-        setPlaybackRateOnPlayingCount += 1
-      })
-      player._hasPlayingInitEvent_ = true
+          setPlaybackRateOnPlayingCount += 1
+        })
+        player._hasPlayingInitEvent_ = true
+      }
     },
     scale: 1,
     playbackRate: 1,
@@ -263,7 +271,43 @@
         t.tips('播放速度：' + player.playbackRate + '倍')
       }
     },
+    /**
+     * 初始化自动播放逻辑
+     * 必须是配置了自动播放按钮选择器得的才会进行自动播放
+     */
+    initAutoPlay: function (p) {
+      let t = this
+      let player = p || t.player()
+      let host = window.location.host
+      let selector = t.selectorMap.autoPlay[host]
 
+      // 在轮询重试的时候，如果实例变了，则放弃之前的轮询
+      if (p && p !== t.player()) return
+
+      if (player && selector && player.paused) {
+        // 在video的父元素里查找播放按钮，是为了尽可能兼容多实例播放下的自动播放逻辑
+        let wrapDom = t.getPlayerWrapDom()
+        if (wrapDom && wrapDom.querySelector(selector)) {
+          wrapDom.querySelector(selector).click()
+        } else if (document.querySelector(selector)) {
+          document.querySelector(selector).click()
+        }
+
+        if (player.paused) {
+          // 轮询重试
+          if (!player._initAutoPlayCount_) {
+            player._initAutoPlayCount_ = 1
+          }
+          player._initAutoPlayCount_ += 1
+          if (player._initAutoPlayCount_ >= 10) {
+            return false
+          }
+          setTimeout(function () {
+            t.initAutoPlay(player)
+          }, 200)
+        }
+      }
+    },
     tipsClassName: 'html_player_enhance_tips',
     tips: function (str) {
       let t = h5Player
@@ -441,14 +485,38 @@
       'pad4': 100,
       '\\': 220
     },
+    selectorMap: {
+      fullScreen: {
+        'www.youtube.com': 'button.ytp-fullscreen-button',
+        'www.netflix.com': 'button.button-nfplayerFullscreen',
+        'www.bilibili.com': '[data-text="进入全屏"]'
+      },
+      webFullScreen: {
+        'www.youtube.com': 'button.ytp-size-button',
+        'www.bilibili.com': '[data-text="网页全屏"]'
+      },
+      autoPlay: {
+        'www.bilibili.com': '.bilibili-player-video-btn-start'
+      }
+    },
 
     /* 播放器事件响应器 */
     palyerTrigger: function (player, event) {
       if (!player || !event) return
       let t = h5Player
       let keyCode = event.keyCode
+      let host = window.location.host
 
-      if (event.shiftKey) {
+      if (event.shiftKey && !event.ctrlKey && !event.altKey) {
+        // 网页全屏
+        if (keyCode === 13) {
+          let selector = t.selectorMap.webFullScreen[host]
+          if (selector && document.querySelector(selector)) {
+            document.querySelector(selector).click()
+          }
+        }
+
+        // 视频画面缩放相关事件
         let isScaleKeyCode = keyCode === 88 || keyCode === 67 || keyCode === 90
         if (!isScaleKeyCode) return
 
@@ -471,6 +539,10 @@
         let scale = t.scale = t.scale.toFixed(1)
         player.style.transform = 'scale(' + scale + ')'
         t.tips('视频缩放率：' + scale)
+
+        // 阻止事件冒泡
+        event.stopPropagation()
+        event.preventDefault()
         return true
       }
 
@@ -684,16 +756,21 @@
 
       // 按键回车，进入全屏，支持仅部分网站(B站，油管)
       if (keyCode === 13) {
-        if (window.location.hostname === 'www.bilibili.com') {
-          if (document.querySelector('[data-text="进入全屏"]')) {
-            document.querySelector('[data-text="进入全屏"]').click()
-          }
+        let selector = t.selectorMap.fullScreen[host]
+        if (selector && document.querySelector(selector)) {
+          document.querySelector(selector).click()
         }
-        if (window.location.hostname === 'www.youtube.com') {
-          if (document.querySelector('[class="ytp-fullscreen-button ytp-button"]')) {
-            document.querySelector('[class="ytp-fullscreen-button ytp-button"]').click()
-          }
-        }
+
+        // if (window.location.hostname === 'www.bilibili.com') {
+        //   if (document.querySelector('[data-text="进入全屏"]')) {
+        //     document.querySelector('[data-text="进入全屏"]').click()
+        //   }
+        // }
+        // if (window.location.hostname === 'www.youtube.com') {
+        //   if (document.querySelector('[class="ytp-fullscreen-button ytp-button"]')) {
+        //     document.querySelector('[class="ytp-fullscreen-button ytp-button"]').click()
+        //   }
+        // }
       }
 
       // 阻止事件冒泡
