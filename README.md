@@ -1,7 +1,7 @@
 # h5player for tampermonkey
 网页播放器增强脚本  
 项目地址：[https://github.com/xxxily/h5player](https://github.com/xxxily/h5player)  
-脚本安装地址：[https://greasyfork.org/zh-CN/scripts/381682](https://greasyfork.org/zh-CN/scripts/381682)
+脚本安装地址：[https://greasyfork.org/scripts/381682](https://greasyfork.org/scripts/381682)
 
 ## 特性
 * 兼容广泛：iframe、shadowdom下均可兼容
@@ -20,7 +20,7 @@ PS：本脚基于：[https://greasyfork.org/users/49622](https://greasyfork.org/
 
 ## 支持网站列表
 
-` 本插件支持支持所有使用HTML5技术进行视频播放的网站 `
+##### 本插件支持支持所有使用HTML5技术进行视频播放的网站
 
 下面列出一些常见网站列表方便点击测试：
 * [https://netflix.com](https://netflix.com)
@@ -34,13 +34,13 @@ PS：本脚基于：[https://greasyfork.org/users/49622](https://greasyfork.org/
 * [https://www.iqiyi.com](https://www.iqiyi.com)
 * [https://www.youku.com](https://www.youku.com)
 
-如果你常去的网站使用支持不好欢迎提[issues](https://github.com/xxxily/h5player/issues)  
+如果你常去的网站支持不好欢迎提[issues](https://github.com/xxxily/h5player/issues)  
 
   
 ## 快捷键列表
 |  快捷键   | 说明    |
 | --- | --- |
-| ctrl+\ | 快捷键是否全网页可用，默认只有鼠标在video标签上才可用 |
+| ctrl+\ | 快捷键是否全网页可用，默认true |
 | Ctrl+space | 禁用/启用 该播放插件 |
 | → | 快进3秒 |
 | ← | 后退3秒 |
