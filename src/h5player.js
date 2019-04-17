@@ -120,6 +120,26 @@
     return quickSort(left).concat([pivot], quickSort(right))
   }
 
+  /**
+   * 向上查找操作
+   * @param dom {Element} -必选 初始dom元素
+   * @param fn {function} -必选 每一级ParentNode的回调操作
+   * 如果函数返回true则表示停止向上查找动作
+   */
+  function eachParentNode (dom, fn) {
+    let parent = dom.parentNode
+    function recursion () {
+      if (parent) {
+        let isEnd = fn(parent, dom)
+        parent = parent.parentNode
+        if (!isEnd) {
+          recursion()
+        }
+      }
+    }
+    return recursion()
+  }
+
   let h5Player = {
     /* 提示文本的字号 */
     fontSize: 16,
@@ -149,6 +169,24 @@
       }
 
       return list
+    },
+    getPlayerWrapDom: function () {
+      let t = this
+      let player = t.player()
+      if (!player) return
+
+      let wrapDom = null
+      let playerBox = player.getBoundingClientRect()
+      eachParentNode(player, function (parent) {
+        if (parent === document || !parent.getBoundingClientRect) return
+        let parentBox = parent.getBoundingClientRect()
+        if (parentBox.width && parentBox.height) {
+          if (parentBox.width === playerBox.width && parentBox.height === playerBox.height) {
+            wrapDom = parent
+          }
+        }
+      })
+      return wrapDom
     },
     /**
      * 初始化播放器实例
@@ -860,6 +898,8 @@
     },
     load: false
   }
+
+  window.top._h5PlayerForDebug_ = h5Player
 
   /* 检测到有视频标签就进行初始化 */
   ready('video', function () {
