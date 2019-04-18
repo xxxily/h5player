@@ -65,8 +65,8 @@ PS：本脚基于：[https://greasyfork.org/users/49622](https://greasyfork.org/
 | J | 模糊减少 1 px |
 | Q | 图像复位 |
 | S | 画面旋转 90 度 |
-| Enter | 进入全屏（只支持网站已进行自定义配置的网站） |
-| shift+Enter | 进入网页全屏（只支持网站已进行自定义配置的网站） |
+| Enter | 进入全屏（只支持已进行自定义配置的网站） |
+| shift+Enter | 进入网页全屏（只支持已进行自定义配置的网站） |
 
 ## 更新说明：
 
