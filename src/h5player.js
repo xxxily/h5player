@@ -562,7 +562,8 @@
         'youtube.com': 'button.ytp-fullscreen-button',
         'netflix.com': 'button.button-nfplayerFullscreen',
         'bilibili.com': '[data-text="进入全屏"]',
-        'iqiyi.com': '.iqp-btn-fullscreen"]'
+        'iqiyi.com': '.iqp-btn-fullscreen"]',
+        'youku.com': '.control-fullscreen-icon'
       },
       /* 网页全屏任务配置 */
       webFullScreen: {
