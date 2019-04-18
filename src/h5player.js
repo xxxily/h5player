@@ -140,6 +140,79 @@
     return recursion()
   }
 
+  /**
+   * 准确地获取对象的具体类型 参见：https://www.talkingcoder.com/article/6333557442705696719
+   * @param obj { all } -必选 要判断的对象
+   * @returns {*} 返回判断的具体类型
+   */
+  function getType (obj) {
+    if (obj == null) {
+      return String(obj)
+    }
+    return typeof obj === 'object' || typeof obj === 'function'
+      ? (obj.constructor && obj.constructor.name && obj.constructor.name.toLowerCase()) ||
+      /function\s(.+?)\(/.exec(obj.constructor)[1].toLowerCase()
+      : typeof obj
+  }
+
+  function isObj (obj) {
+    return getType(obj) === 'object'
+  }
+
+  /**
+   * 深度合并两个可枚举的对象
+   * @param objA {object} -必选 对象A
+   * @param objB {object} -必选 对象B
+   * @param concatArr {boolean} -可选 合并数组，默认遇到数组的时候，直接以另外一个数组替换当前数组，将此设置true则，遇到数组的时候一律合并，而不是直接替换
+   * @returns {*|void}
+   */
+  function mergeObj (objA, objB, concatArr) {
+    function isObj (obj) {
+      return Object.prototype.toString.call(obj) === '[object Object]'
+    }
+    function isArr (arr) {
+      return Object.prototype.toString.call(arr) === '[object Array]'
+    }
+    if (!isObj(objA) || !isObj(objB)) return objA
+    function deepMerge (objA, objB) {
+      let keys = Object.keys(objB)
+      keys.forEach(function (key) {
+        let subItemA = objA[key]
+        let subItemB = objB[key]
+        if (typeof subItemA === 'undefined') {
+          objA[key] = subItemB
+        } else {
+          if (isObj(subItemA) && isObj(subItemB)) {
+            /* 进行深层合并 */
+            objA[key] = deepMerge(subItemA, subItemB)
+          } else {
+            if (concatArr && isArr(subItemA) && isArr(subItemB)) {
+              objA[key] = subItemA.concat(subItemB)
+            } else {
+              objA[key] = subItemB
+            }
+          }
+        }
+      })
+      return objA
+    }
+    return deepMerge(objA, objB)
+  }
+
+  /**
+   * 多对象深度合并，合并规则基于mergeObj，但不存在concatArr选项
+   * @returns {*}
+   */
+  function merge () {
+    let result = arguments[0]
+    for (var i = 0; i < arguments.length; i++) {
+      if (i) {
+        result = mergeObj(result, arguments[i])
+      }
+    }
+    return result
+  }
+
   let h5Player = {
     /* 提示文本的字号 */
     fontSize: 16,
@@ -278,20 +351,14 @@
     initAutoPlay: function (p) {
       let t = this
       let player = p || t.player()
-      let host = window.location.host
-      let selector = t.selectorMap.autoPlay[host]
 
       // 在轮询重试的时候，如果实例变了，则放弃之前的轮询
       if (p && p !== t.player()) return
 
-      if (player && selector && player.paused) {
-        // 在video的父元素里查找播放按钮，是为了尽可能兼容多实例播放下的自动播放逻辑
-        let wrapDom = t.getPlayerWrapDom()
-        if (wrapDom && wrapDom.querySelector(selector)) {
-          wrapDom.querySelector(selector).click()
-        } else if (document.querySelector(selector)) {
-          document.querySelector(selector).click()
-        }
+      let taskConf = t.TCC.getTaskConfig('autoPlay')
+
+      if (player && taskConf.selector && player.paused) {
+        t.TCC.doTask(taskConf)
 
         if (player.paused) {
           // 轮询重试
@@ -485,18 +552,165 @@
       'pad4': 100,
       '\\': 220
     },
-    selectorMap: {
+    /**
+     * 任务配置中心 Task Control Center
+     * 用于配置所有无法进行通用处理的任务，如不同网站的全屏方式不一样，必须调用网站本身的全屏逻辑，才能确保字幕、弹幕等正常工作
+     * */
+    TCC: {
+      /* 全屏任务配置 */
       fullScreen: {
-        'www.youtube.com': 'button.ytp-fullscreen-button',
-        'www.netflix.com': 'button.button-nfplayerFullscreen',
-        'www.bilibili.com': '[data-text="进入全屏"]'
+        'youtube.com': 'button.ytp-fullscreen-button',
+        'netflix.com': 'button.button-nfplayerFullscreen',
+        'bilibili.com': '[data-text="进入全屏"]',
+        'iqiyi.com': '.iqp-btn-fullscreen"]'
       },
+      /* 网页全屏任务配置 */
       webFullScreen: {
-        'www.youtube.com': 'button.ytp-size-button',
-        'www.bilibili.com': '[data-text="网页全屏"]'
+        'youtube.com': 'button.ytp-size-button',
+        'bilibili.com': '[data-text="网页全屏"]',
+        'iqiyi.com': '.iqp-btn-webscreen"]'
       },
+      /* 指定播放任务配置 */
       autoPlay: {
-        'www.bilibili.com': '.bilibili-player-video-btn-start'
+        'bilibili.com': '.bilibili-player-video-btn-start'
+      },
+
+      /* 获取域名 */
+      getDomain: function () {
+        let host = window.location.host
+        let domain = host
+        let tmpArr = host.split('.')
+        if (tmpArr.length > 2) {
+          tmpArr.shift()
+          domain = tmpArr.join('.')
+        }
+        return domain
+      },
+      /**
+       * 格式化配置任务
+       * @param isAll { boolean } -可选 默认只格式当前域名下的配置任务，传入true则将所有域名下的任务配置都进行格式化
+       */
+      formatTCC: function (isAll) {
+        let t = this
+        let keys = Object.keys(t)
+        let domain = t.getDomain()
+
+        function formatter (config) {
+          let formatObj = {
+            /* 触发某个任务点击事件的选择器 */
+            selector: '',
+            /* 点击选择器仍无法胜任的自定义回调操作 */
+            callback: function () {
+              //
+            },
+            /* 当前域名下需包含的路径信息，默认整个域名下所有路径可用 必须是正则 */
+            include: /^.*/,
+            /* 当前域名下需排除的路径信息，默认不排除任何路径 必须是正则 */
+            exclude: /\t/
+          }
+          let confType = getType(config)
+          if (confType === 'object') {
+            formatObj = merge(formatObj, config)
+          } else if (config === 'function') {
+            formatObj.callback = config
+          } else if (confType === 'string') {
+            formatObj.selector = config
+          }
+          return formatObj
+        }
+
+        let result = {}
+        keys.forEach(function (key) {
+          let item = t[key]
+          if (isObj(item)) {
+            if (isAll) {
+              // 进行格式
+              let domains = Object.keys(item)
+              domains.forEach(function (domain) {
+                item[domain] = formatter(item[domain])
+              })
+            } else {
+              if (item[domain]) {
+                // 进行格式
+                item[domain] = formatter(item[domain])
+              }
+            }
+            result[key] = item
+          }
+        })
+        return result
+      },
+      /* 判断所提供的配置任务是否适用于当前URL */
+      isMatch: function (taskConf) {
+        let url = window.location.href
+        let isMatch = false
+        if (taskConf.include.test(url)) {
+          isMatch = true
+        }
+        if (taskConf.exclude.test(url)) {
+          isMatch = false
+        }
+        return isMatch
+      },
+      /**
+       * 获取任务配置，只能获取到当前域名下的任务配置信息
+       * @param taskName {string} -可选 指定具体任务，默认返回所有类型的任务配置
+       */
+      getTaskConfig: function (taskName) {
+        let t = this
+        if (!t._hasFormatTCC_) {
+          t.formatTCC()
+          t._hasFormatTCC_ = true
+        }
+        let domain = t.getDomain()
+        if (taskName) {
+          if (t[taskName]) {
+            if (t[taskName][domain] && t.isMatch(t[taskName][domain])) {
+              return t[taskName][domain]
+            }
+          }
+        } else {
+          let keys = Object.keys(t)
+          let result = {}
+          keys.forEach(function (key) {
+            let item = t[key]
+            if (isObj(item) && item[domain] && t.isMatch(item[domain])) {
+              result[key] = item[domain]
+            }
+          })
+          return result
+        }
+        return {}
+      },
+      /**
+       * 执行当前页面下的相应任务
+       * @param taskName {object|string} -必选，可直接传入任务配置对象，也可用是任务名称的字符串信息，自己去查找是否有任务需要执行
+       */
+      doTask: function (taskName) {
+        let t = this
+        let isDo = false
+        if (!taskName) return isDo
+        let taskConf = isObj(taskName) ? taskName : t.getTaskConfig(taskName)
+        if (!isObj(taskConf)) return isDo
+        let { selector, callback } = taskConf
+
+        let wrapDom = h5Player.getPlayerWrapDom()
+
+        /* 触发选择器上的点击事件 */
+        if (wrapDom && wrapDom.querySelector(selector)) {
+          // 在video的父元素里查找，是为了尽可能兼容多实例下的逻辑
+          wrapDom.querySelector(selector).click()
+          isDo = true
+        } else if (document.querySelector(selector)) {
+          document.querySelector(selector).click()
+          isDo = true
+        }
+
+        if (callback instanceof Function) {
+          callback(h5Player, taskConf)
+          isDo = true
+        }
+        return isDo
       }
     },
 
@@ -505,14 +719,13 @@
       if (!player || !event) return
       let t = h5Player
       let keyCode = event.keyCode
-      let host = window.location.host
 
       if (event.shiftKey && !event.ctrlKey && !event.altKey) {
         // 网页全屏
         if (keyCode === 13) {
-          let selector = t.selectorMap.webFullScreen[host]
-          if (selector && document.querySelector(selector)) {
-            document.querySelector(selector).click()
+          let isDo = t.TCC.doTask('webFullScreen')
+          if (!isDo) {
+            t.tips('当前网页不存在网页全屏任务配置项')
           }
         }
 
@@ -754,23 +967,9 @@
         t.tips('画面旋转：' + t.rotate + '度')
       }
 
-      // 按键回车，进入全屏，支持仅部分网站(B站，油管)
+      // 按键回车，进入全屏
       if (keyCode === 13) {
-        let selector = t.selectorMap.fullScreen[host]
-        if (selector && document.querySelector(selector)) {
-          document.querySelector(selector).click()
-        }
-
-        // if (window.location.hostname === 'www.bilibili.com') {
-        //   if (document.querySelector('[data-text="进入全屏"]')) {
-        //     document.querySelector('[data-text="进入全屏"]').click()
-        //   }
-        // }
-        // if (window.location.hostname === 'www.youtube.com') {
-        //   if (document.querySelector('[class="ytp-fullscreen-button ytp-button"]')) {
-        //     document.querySelector('[class="ytp-fullscreen-button ytp-button"]').click()
-        //   }
-        // }
+        t.TCC.doTask('fullScreen')
       }
 
       // 阻止事件冒泡
