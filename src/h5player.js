@@ -599,7 +599,7 @@
           let formatObj = {
             /* 触发某个任务点击事件的选择器 */
             selector: '',
-            /* 点击选择器仍无法胜任的自定义回调操作 */
+            /* 点击选择器仍无法胜任时的自定义操作函数 */
             callback: function () {
               //
             },
@@ -624,14 +624,12 @@
           let item = t[key]
           if (isObj(item)) {
             if (isAll) {
-              // 进行格式
               let domains = Object.keys(item)
               domains.forEach(function (domain) {
                 item[domain] = formatter(item[domain])
               })
             } else {
               if (item[domain]) {
-                // 进行格式
                 item[domain] = formatter(item[domain])
               }
             }
