@@ -4,11 +4,12 @@
 脚本安装地址：[https://greasyfork.org/scripts/381682](https://greasyfork.org/scripts/381682)
 
 ## 特性
-* 兼容广泛：iframe、shadowdom下均可兼容
+* 兼容广泛，所有存在video标签的网页均支持 即使嵌在 iframe、shadowdom下均可兼容
 * 支持多实例（如：twitter，instagram下一样可兼容）
 * 支持播放进度记录
 * 支持播放速度记录
 * 支持视频画面缩放
+* 支持配置式添加自定义功能
 
 ## 简介
 
@@ -64,7 +65,8 @@ PS：本脚基于：[https://greasyfork.org/users/49622](https://greasyfork.org/
 | J | 模糊减少 1 px |
 | Q | 图像复位 |
 | S | 画面旋转 90 度 |
-| Enter | 进入全屏（只支持部分网站 B站，油管） |
+| Enter | 进入全屏（只支持网站已进行自定义配置的网站） |
+| shift+Enter | 进入网页全屏（只支持网站已进行自定义配置的网站） |
 
 ## 更新说明：
 
@@ -93,4 +95,11 @@ PS：本脚基于：[https://greasyfork.org/users/49622](https://greasyfork.org/
 * 支持多实例环境
 * 大幅度优化性能，使用更快的侦听方式
 * 代码重构和提炼
+* 修复其它相关BUG
+
+### 2.1.0
+* 实现任务配置中心（TCC）
+* 通过任务配置中心增加某些网站的全屏，网页全屏播放快捷键
+* 修正多实例下不能同步播放速度的问题
+* 优化提示样式
 * 修复其它相关BUG
