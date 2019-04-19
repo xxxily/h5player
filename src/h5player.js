@@ -128,16 +128,13 @@
    */
   function eachParentNode (dom, fn) {
     let parent = dom.parentNode
-    function recursion () {
-      if (parent) {
-        let isEnd = fn(parent, dom)
-        parent = parent.parentNode
-        if (!isEnd) {
-          recursion()
-        }
+    while (parent) {
+      let isEnd = fn(parent, dom)
+      parent = parent.parentNode
+      if (isEnd) {
+        break
       }
     }
-    return recursion()
   }
 
   /**
