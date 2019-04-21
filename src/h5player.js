@@ -13,6 +13,178 @@
 
 (function () {
   /**
+   * 任务配置中心 Task Control Center
+   * 用于配置所有无法进行通用处理的任务，如不同网站的全屏方式不一样，必须调用网站本身的全屏逻辑，才能确保字幕、弹幕等正常工作
+   * */
+  const TCC = {
+    /**
+     * 配置示例
+     * 父级键名对应的是一级域名，
+     * 子级键名对应的相关功能名称，键值对应的该功能要触发的点击选择器或者要调用的相关函数
+     * 所有子级的键值都支持使用选择器触发或函数调用
+     * 配置了子级的则使用子级配置逻辑进行操作，否则使用默认逻辑
+     * 注意：include，exclude这两个子级键名除外，这两个是用来进行url范围匹配的
+     * */
+    'demo.demo': {
+      'fullScreen': '.fullscreen-btn',
+      'exitFullScreen': '.exit-fullscreen-btn',
+      'webFullScreen': function () {},
+      'exitWebFullScreen': '.exit-fullscreen-btn',
+      'autoPlay': '.player-start-btn',
+      'pause': '.player-pause',
+      'play': '.player-play',
+      'switchPlayStatus': '.player-play',
+      'playbackRate': function () {},
+      'currentTime': function () {},
+      'addCurrentTime': '.add-currenttime',
+      'subtractCurrentTime': '.subtract-currenttime',
+      /* 当前域名下需包含的路径信息，默认整个域名下所有路径可用 必须是正则 */
+      include: /^.*/,
+      /* 当前域名下需排除的路径信息，默认不排除任何路径 必须是正则 */
+      exclude: /\t/
+    },
+    'youtube.com': {
+      'fullScreen': 'button.ytp-fullscreen-button',
+      'webFullScreen': 'button.ytp-size-button'
+    },
+    'netflix.com': {
+      'fullScreen': 'button.button-nfplayerFullscreen',
+      'addCurrentTime': 'button.button-nfplayerFastForward',
+      'subtractCurrentTime': 'button.button-nfplayerBackTen'
+    },
+    'bilibili.com': {
+      'fullScreen': '[data-text="进入全屏"]',
+      'webFullScreen': '[data-text="网页全屏"]',
+      'autoPlay': '.bilibili-player-video-btn-start',
+      'switchPlayStatus': '.bilibili-player-video-btn-start'
+    },
+    'iqiyi.com': {
+      'fullScreen': '.iqp-btn-fullscreen',
+      'webFullScreen': '.iqp-btn-webscreen'
+    },
+    'youku.com': {
+      'fullScreen': '.control-fullscreen-icon'
+    },
+    'ted.com': {
+      'fullScreen': 'button.Fullscreen'
+    },
+
+    /**
+     * 获取域名 , 目前实现方式不好，需改造，对地区性域名（如com.cn）、三级及以上域名支持不好
+     * */
+    getDomain: function () {
+      let host = window.location.host
+      let domain = host
+      let tmpArr = host.split('.')
+      if (tmpArr.length > 2) {
+        tmpArr.shift()
+        domain = tmpArr.join('.')
+      }
+      return domain
+    },
+    /**
+     * 格式化配置任务
+     * @param isAll { boolean } -可选 默认只格式当前域名或host下的配置任务，传入true则将所有域名下的任务配置都进行格式化
+     */
+    formatTCC: function (isAll) {
+      let t = this
+      let keys = Object.keys(t)
+      let domain = t.getDomain()
+      let host = window.location.host
+
+      function formatter (item) {
+        let defObj = {
+          include: /^.*/,
+          exclude: /\t/
+        }
+        item.include = item.include || defObj.include
+        item.exclude = item.exclude || defObj.exclude
+        return item
+      }
+
+      let result = {}
+      keys.forEach(function (key) {
+        let item = t[key]
+        if (isObj(item)) {
+          if (isAll) {
+            item = formatter(item)
+            result[key] = item
+          } else {
+            if (key === host || key === domain) {
+              item = formatter(item)
+              result[key] = item
+            }
+          }
+        }
+      })
+      return result
+    },
+    /* 判断所提供的配置任务是否适用于当前URL */
+    isMatch: function (taskConf) {
+      let url = window.location.href
+      let isMatch = false
+      if (taskConf.include.test(url)) {
+        isMatch = true
+      }
+      if (taskConf.exclude.test(url)) {
+        isMatch = false
+      }
+      return isMatch
+    },
+    /**
+     * 获取任务配置，只能获取到当前域名下的任务配置信息
+     * @param taskName {string} -可选 指定具体任务，默认返回所有类型的任务配置
+     */
+    getTaskConfig: function () {
+      let t = this
+      if (!t._hasFormatTCC_) {
+        t.formatTCC()
+        t._hasFormatTCC_ = true
+      }
+      let domain = t.getDomain()
+      let taskConf = t[window.location.host] || t[domain]
+
+      if (taskConf && t.isMatch(taskConf)) {
+        return taskConf
+      }
+
+      return {}
+    },
+    /**
+     * 执行当前页面下的相应任务
+     * @param taskName {object|string} -必选，可直接传入任务配置对象，也可用是任务名称的字符串信息，自己去查找是否有任务需要执行
+     */
+    doTask: function (taskName) {
+      let t = this
+      let isDo = false
+      if (!taskName) return isDo
+      let taskConf = isObj(taskName) ? taskName : t.getTaskConfig()
+
+      if (!isObj(taskConf) || !taskConf[taskName]) return isDo
+
+      let task = taskConf[taskName]
+
+      let wrapDom = h5Player.getPlayerWrapDom()
+
+      if (getType(task) === 'function') {
+        task(h5Player, taskConf)
+        isDo = true
+      } else {
+        /* 触发选择器上的点击事件 */
+        if (wrapDom && wrapDom.querySelector(task)) {
+          // 在video的父元素里查找，是为了尽可能兼容多实例下的逻辑
+          wrapDom.querySelector(task).click()
+          isDo = true
+        } else if (document.querySelector(task)) {
+          document.querySelector(task).click()
+          isDo = true
+        }
+      }
+      return isDo
+    }
+  }
+
+  /**
    * 元素监听器
    * @param selector -必选
    * @param fn -必选，元素存在时的回调
@@ -315,6 +487,12 @@
     },
     /* 设置播放速度 */
     setPlaybackRate: function (num, notips) {
+      let taskConf = TCC.getTaskConfig()
+      if (taskConf.playbackRate) {
+        TCC.doTask('playbackRate')
+        return
+      }
+
       let t = this
       let player = t.player()
       let curPlaybackRate
@@ -349,14 +527,12 @@
       let t = this
       let player = p || t.player()
 
-      // 在轮询重试的时候，如果实例变了，则放弃之前的轮询
-      if (p && p !== t.player()) return
+      // 在轮询重试的时候，如果实例变了，或处于隐藏页面中则不进行自动播放操作
+      if (!player || (p && p !== t.player()) || document.hidden) return
 
-      let taskConf = t.TCC.getTaskConfig('autoPlay')
-
-      if (player && taskConf.selector && player.paused) {
-        t.TCC.doTask(taskConf)
-
+      let taskConf = TCC.getTaskConfig()
+      if (player && taskConf.autoPlay && player.paused) {
+        TCC.doTask('autoPlay')
         if (player.paused) {
           // 轮询重试
           if (!player._initAutoPlayCount_) {
@@ -372,6 +548,87 @@
         }
       }
     },
+    setWebFullScreen: function () {
+      let t = this
+      let isDo = TCC.doTask('webFullScreen')
+      if (!isDo) {
+        t.tips('当前网页不存在网页全屏任务配置项')
+      }
+    },
+    setCurrentTime: function (num) {
+      if (!num) return
+      num = Number(num)
+      let _num = Math.abs(Number(num.toFixed(1)))
+
+      let t = this
+      let player = t.player()
+      let taskConf = TCC.getTaskConfig()
+      if (taskConf.currentTime) {
+        TCC.doTask('currentTime')
+        return
+      }
+
+      if (num > 0) {
+        if (taskConf.addCurrentTime) {
+          TCC.doTask('addCurrentTime')
+        } else {
+          player.currentTime += _num
+          t.tips('前进：' + _num + '秒')
+        }
+      } else {
+        if (taskConf.subtractCurrentTime) {
+          TCC.doTask('subtractCurrentTime')
+        } else {
+          player.currentTime -= _num
+          t.tips('后退：' + _num + '秒')
+        }
+      }
+    },
+    setVolume: function (num) {
+      if (!num) return
+      num = Number(num)
+      let _num = Math.abs(Number(num.toFixed(2)))
+
+      let t = this
+      let player = t.player()
+      if (num > 0) {
+        if (player.volume < 1) {
+          player.volume += _num
+        }
+      } else {
+        if (player.volume > 0) {
+          player.volume -= _num
+        }
+      }
+      t.tips('音量：' + parseInt(player.volume * 100) + '%')
+    },
+
+    switchPlayStatus: function () {
+      let t = this
+      let player = t.player()
+      let taskConf = TCC.getTaskConfig()
+      if (taskConf.switchPlayStatus) {
+        TCC.doTask('switchPlayStatus')
+        return
+      }
+
+      if (player.paused) {
+        if (taskConf.play) {
+          TCC.doTask('play')
+        } else {
+          player.play()
+          t.tips('播放')
+        }
+      } else {
+        if (taskConf.pause) {
+          TCC.doTask('pause')
+        } else {
+          player.pause()
+          t.tips('暂停')
+        }
+      }
+    },
+
     tipsClassName: 'html_player_enhance_tips',
     tips: function (str) {
       let t = h5Player
@@ -485,19 +742,6 @@
     _isFoucs: false,
 
     /* 播放器的聚焦事件 */
-    foucsEvent: function () {
-      let t = h5Player
-      let player = t.player()
-      if (!player) return
-
-      player.onmouseover = function () {
-        h5Player._isFoucs = true
-      }
-      player.onmouseout = function () {
-        h5Player._isFoucs = false
-      }
-    },
-
     isFoucs: function () {
       let t = h5Player
       let player = t.player()
@@ -510,6 +754,7 @@
         h5Player._isFoucs = false
       }
     },
+
     keyList: [13, 16, 17, 18, 27, 32, 37, 38, 39, 40, 49, 50, 51, 52, 67, 68, 69, 70, 73, 74, 75, 79, 81, 82, 83, 84, 85, 87, 88, 89, 90, 97, 98, 99, 100, 220],
     keyMap: {
       'enter': 14,
@@ -549,167 +794,6 @@
       'pad4': 100,
       '\\': 220
     },
-    /**
-     * 任务配置中心 Task Control Center
-     * 用于配置所有无法进行通用处理的任务，如不同网站的全屏方式不一样，必须调用网站本身的全屏逻辑，才能确保字幕、弹幕等正常工作
-     * */
-    TCC: {
-      /* 全屏任务配置 */
-      fullScreen: {
-        'youtube.com': 'button.ytp-fullscreen-button',
-        'netflix.com': 'button.button-nfplayerFullscreen',
-        'bilibili.com': '[data-text="进入全屏"]',
-        'iqiyi.com': '.iqp-btn-fullscreen"]',
-        'youku.com': '.control-fullscreen-icon'
-      },
-      /* 网页全屏任务配置 */
-      webFullScreen: {
-        'youtube.com': 'button.ytp-size-button',
-        'bilibili.com': '[data-text="网页全屏"]',
-        'iqiyi.com': '.iqp-btn-webscreen"]'
-      },
-      /* 指定播放任务配置 */
-      autoPlay: {
-        'bilibili.com': '.bilibili-player-video-btn-start'
-      },
-
-      /* 获取域名 */
-      getDomain: function () {
-        let host = window.location.host
-        let domain = host
-        let tmpArr = host.split('.')
-        if (tmpArr.length > 2) {
-          tmpArr.shift()
-          domain = tmpArr.join('.')
-        }
-        return domain
-      },
-      /**
-       * 格式化配置任务
-       * @param isAll { boolean } -可选 默认只格式当前域名下的配置任务，传入true则将所有域名下的任务配置都进行格式化
-       */
-      formatTCC: function (isAll) {
-        let t = this
-        let keys = Object.keys(t)
-        let domain = t.getDomain()
-
-        function formatter (config) {
-          let formatObj = {
-            /* 触发某个任务点击事件的选择器 */
-            selector: '',
-            /* 点击选择器仍无法胜任时的自定义操作函数 */
-            callback: function () {
-              //
-            },
-            /* 当前域名下需包含的路径信息，默认整个域名下所有路径可用 必须是正则 */
-            include: /^.*/,
-            /* 当前域名下需排除的路径信息，默认不排除任何路径 必须是正则 */
-            exclude: /\t/
-          }
-          let confType = getType(config)
-          if (confType === 'object') {
-            formatObj = merge(formatObj, config)
-          } else if (config === 'function') {
-            formatObj.callback = config
-          } else if (confType === 'string') {
-            formatObj.selector = config
-          }
-          return formatObj
-        }
-
-        let result = {}
-        keys.forEach(function (key) {
-          let item = t[key]
-          if (isObj(item)) {
-            if (isAll) {
-              let domains = Object.keys(item)
-              domains.forEach(function (domain) {
-                item[domain] = formatter(item[domain])
-              })
-            } else {
-              if (item[domain]) {
-                item[domain] = formatter(item[domain])
-              }
-            }
-            result[key] = item
-          }
-        })
-        return result
-      },
-      /* 判断所提供的配置任务是否适用于当前URL */
-      isMatch: function (taskConf) {
-        let url = window.location.href
-        let isMatch = false
-        if (taskConf.include.test(url)) {
-          isMatch = true
-        }
-        if (taskConf.exclude.test(url)) {
-          isMatch = false
-        }
-        return isMatch
-      },
-      /**
-       * 获取任务配置，只能获取到当前域名下的任务配置信息
-       * @param taskName {string} -可选 指定具体任务，默认返回所有类型的任务配置
-       */
-      getTaskConfig: function (taskName) {
-        let t = this
-        if (!t._hasFormatTCC_) {
-          t.formatTCC()
-          t._hasFormatTCC_ = true
-        }
-        let domain = t.getDomain()
-        if (taskName) {
-          if (t[taskName]) {
-            if (t[taskName][domain] && t.isMatch(t[taskName][domain])) {
-              return t[taskName][domain]
-            }
-          }
-        } else {
-          let keys = Object.keys(t)
-          let result = {}
-          keys.forEach(function (key) {
-            let item = t[key]
-            if (isObj(item) && item[domain] && t.isMatch(item[domain])) {
-              result[key] = item[domain]
-            }
-          })
-          return result
-        }
-        return {}
-      },
-      /**
-       * 执行当前页面下的相应任务
-       * @param taskName {object|string} -必选，可直接传入任务配置对象，也可用是任务名称的字符串信息，自己去查找是否有任务需要执行
-       */
-      doTask: function (taskName) {
-        let t = this
-        let isDo = false
-        if (!taskName) return isDo
-        let taskConf = isObj(taskName) ? taskName : t.getTaskConfig(taskName)
-        if (!isObj(taskConf)) return isDo
-        let { selector, callback } = taskConf
-
-        let wrapDom = h5Player.getPlayerWrapDom()
-
-        /* 触发选择器上的点击事件 */
-        if (wrapDom && wrapDom.querySelector(selector)) {
-          // 在video的父元素里查找，是为了尽可能兼容多实例下的逻辑
-          wrapDom.querySelector(selector).click()
-          isDo = true
-        } else if (document.querySelector(selector)) {
-          document.querySelector(selector).click()
-          isDo = true
-        }
-
-        if (callback instanceof Function) {
-          callback(h5Player, taskConf)
-          isDo = true
-        }
-        return isDo
-      }
-    },
-
     /* 播放器事件响应器 */
     palyerTrigger: function (player, event) {
       if (!player || !event) return
@@ -719,10 +803,7 @@
       if (event.shiftKey && !event.ctrlKey && !event.altKey) {
         // 网页全屏
         if (keyCode === 13) {
-          let isDo = t.TCC.doTask('webFullScreen')
-          if (!isDo) {
-            t.tips('当前网页不存在网页全屏任务配置项')
-          }
+          t.setWebFullScreen()
         }
 
         // 视频画面缩放相关事件
@@ -760,47 +841,25 @@
 
       // 方向键右→：快进3秒
       if (keyCode === 39) {
-        if (window.location.hostname === 'www.netflix.com') {
-          return
-        }
-        player.currentTime += 3
-        t.tips('快进：3秒')
+        t.setCurrentTime(3)
       }
       // 方向键左←：后退3秒
       if (keyCode === 37) {
-        if (window.location.hostname === 'www.netflix.com') {
-          return
-        }
-        player.currentTime -= 3
-        t.tips('后退：3秒')
+        t.setCurrentTime(-3)
       }
 
       // 方向键上↑：音量升高 1%
       if (keyCode === 38) {
-        if (player.volume < 1) {
-          player.volume += 0.01
-        }
-        player.volume = player.volume.toFixed(2)
-        t.tips('音量：' + parseInt(player.volume * 100) + '%')
+        t.setVolume(0.01)
       }
       // 方向键下↓：音量降低 1%
       if (keyCode === 40) {
-        if (player.volume > 0) {
-          player.volume -= 0.01
-        }
-        player.volume = player.volume.toFixed(2)
-        t.tips('音量：' + parseInt(player.volume * 100) + '%')
+        t.setVolume(-0.01)
       }
 
       // 空格键：暂停/播放
       if (keyCode === 32) {
-        if (player.paused) {
-          player.play()
-          t.tips('播放')
-        } else {
-          player.pause()
-          t.tips('暂停')
-        }
+        t.switchPlayStatus()
       }
 
       // 按键X：减速播放 -0.1
@@ -965,7 +1024,7 @@
 
       // 按键回车，进入全屏
       if (keyCode === 13) {
-        t.TCC.doTask('fullScreen')
+        TCC.doTask('fullScreen')
       }
 
       // 阻止事件冒泡
@@ -1184,4 +1243,10 @@
       h5Player.init()
     }, shadowRoot)
   })
+
+  // document.addEventListener('visibilitychange', function () {
+  //   if (!document.hidden) {
+  //     h5Player.initAutoPlay()
+  //   }
+  // })
 })()
