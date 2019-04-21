@@ -58,6 +58,11 @@
       'autoPlay': '.bilibili-player-video-btn-start',
       'switchPlayStatus': '.bilibili-player-video-btn-start'
     },
+    'live.bilibili.com': {
+      'fullScreen': '.bilibili-live-player-video-controller-fullscreen-btn button',
+      'webFullScreen': '.bilibili-live-player-video-controller-web-fullscreen-btn button',
+      'switchPlayStatus': '.bilibili-live-player-video-controller-start-btn button'
+    },
     'iqiyi.com': {
       'fullScreen': '.iqp-btn-fullscreen',
       'webFullScreen': '.iqp-btn-webscreen'
