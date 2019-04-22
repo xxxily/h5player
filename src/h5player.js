@@ -646,7 +646,10 @@
       let parentNode = player.parentNode
 
       // 修复部分提示按钮位置异常问题
-      parentNode.style.position = 'relative'
+      let oldPosition = window.getComputedStyle(parentNode).position
+      if (['static', 'inherit', 'initial', 'unset', ''].includes(oldPosition)) {
+        parentNode.style.position = 'relative'
+      }
       let playerBox = player.getBoundingClientRect()
       parentNode.style.minWidth = playerBox.width + 'px'
       parentNode.style.minHeight = playerBox.height + 'px'
