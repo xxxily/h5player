@@ -643,13 +643,21 @@
         return true
       }
 
+      let parentNode = player.parentNode
+
+      // 修复部分提示按钮位置异常问题
+      parentNode.style.position = 'relative'
+      let playerBox = player.getBoundingClientRect()
+      parentNode.style.minWidth = playerBox.width + 'px'
+      parentNode.style.minHeight = playerBox.height + 'px'
+
       let tipsSelector = '.' + t.tipsClassName
-      let tipsDom = player.parentNode.querySelector(tipsSelector)
+      let tipsDom = parentNode.querySelector(tipsSelector)
 
       /* 提示dom未初始化的，则进行初始化 */
       if (!tipsDom) {
         t.initTips()
-        tipsDom = player.parentNode.querySelector(tipsSelector)
+        tipsDom = parentNode.querySelector(tipsSelector)
         if (!tipsDom) {
           console.log('init h5player tips dom error...')
           return false
@@ -713,13 +721,7 @@
       let tips = document.createElement('div')
       tips.setAttribute('style', tipsStyle)
       tips.setAttribute('class', t.tipsClassName)
-
-      // 修复油管的兼容性问题
-      if (window.location.hostname === 'www.youtube.com') {
-        player.parentNode.style.height = '100%'
-      }
-
-      player.parentNode.appendChild(tips)
+      parentNode.appendChild(tips)
     },
     on_off: new Array(3),
     rotate: 0,
