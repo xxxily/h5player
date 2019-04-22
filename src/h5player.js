@@ -646,13 +646,26 @@
       let parentNode = player.parentNode
 
       // 修复部分提示按钮位置异常问题
-      let oldPosition = window.getComputedStyle(parentNode).position
-      if (['static', 'inherit', 'initial', 'unset', ''].includes(oldPosition)) {
-        parentNode.style.position = 'relative'
+      let backupStyle = parentNode.getAttribute('style-backup') || ''
+      let defStyle = parentNode.getAttribute('style') || ''
+      if (backupStyle === null) {
+        parentNode.setAttribute('style-backup', defStyle)
+        backupStyle = defStyle
       }
+      let newStyleArr = backupStyle.split(';')
+
+      let oldPosition = parentNode.getAttribute('def-position') || window.getComputedStyle(parentNode).position
+      if (parentNode.getAttribute('def-position') === null) {
+        parentNode.setAttribute('def-position', oldPosition || '')
+      }
+      if (['static', 'inherit', 'initial', 'unset', ''].includes(oldPosition)) {
+        newStyleArr.push('position: relative')
+      }
+
       let playerBox = player.getBoundingClientRect()
-      parentNode.style.minWidth = playerBox.width + 'px'
-      parentNode.style.minHeight = playerBox.height + 'px'
+      newStyleArr.push('min-width:' + playerBox.width + 'px')
+      newStyleArr.push('min-height:' + playerBox.height + 'px')
+      parentNode.setAttribute('style', newStyleArr.join(';'))
 
       let tipsSelector = '.' + t.tipsClassName
       let tipsDom = parentNode.querySelector(tipsSelector)
@@ -680,17 +693,17 @@
           style.opacity = 1
         }, 50)
         t.on_off[1] = setTimeout(function () {
+          // 隐藏提示框和还原样式
           style.opacity = 0
-        }, 2000)
-        t.on_off[2] = setTimeout(function () {
           style.display = 'none'
+          parentNode.setAttribute('style', backupStyle)
         }, 2000)
       }
 
       if (style.display === 'block') {
         style.display = 'none'
         clearTimeout(this.on_off[3])
-        t.on_off[3] = setTimeout(function () {
+        t.on_off[2] = setTimeout(function () {
           showTips()
         }, 100)
       } else {
