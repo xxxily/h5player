@@ -281,6 +281,50 @@
   }
   hackAttachShadow()
 
+  /* 事件侦听hack */
+  function hackEventListener () {
+    if (window.EventTarget.prototype._addEventListener) return
+    window.EventTarget.prototype._addEventListener = window.EventTarget.prototype.addEventListener
+    window.EventTarget.prototype._removeEventListener = window.EventTarget.prototype.removeEventListener
+
+    // hack addEventListener
+    window.EventTarget.prototype.addEventListener = function () {
+      let arg = arguments
+      let type = arg[0]
+      let listener = arg[1]
+      this._addEventListener.apply(this, arg)
+      this._listeners = this._listeners || {}
+      this._listeners[type] = this._listeners[type] || []
+      let listenerObj = {
+        target: this,
+        type,
+        listener,
+        options: arg[2],
+        addTime: new Date().getTime()
+      }
+      this._listeners[type].push(listenerObj)
+    }
+
+    // hack removeEventListener
+    window.EventTarget.prototype.removeEventListener = function () {
+      let arg = arguments
+      let type = arg[0]
+      let listener = arg[1]
+      this._removeEventListener.apply(this, arg)
+      this._listeners = this._listeners || {}
+      this._listeners[type] = this._listeners[type] || []
+
+      let result = []
+      this._listeners[type].forEach(function (listenerObj) {
+        if (listenerObj.listener !== listener) {
+          result.push(listenerObj)
+        }
+      })
+      this._listeners[type] = result
+    }
+  }
+  hackEventListener()
+
   let quickSort = function (arr) {
     if (arr.length <= 1) { return arr }
     var pivotIndex = Math.floor(arr.length / 2)
