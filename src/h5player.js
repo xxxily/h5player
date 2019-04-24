@@ -283,12 +283,13 @@
 
   /* 事件侦听hack */
   function hackEventListener () {
-    if (window.EventTarget.prototype._addEventListener) return
-    window.EventTarget.prototype._addEventListener = window.EventTarget.prototype.addEventListener
-    window.EventTarget.prototype._removeEventListener = window.EventTarget.prototype.removeEventListener
+    const EVENT = window.EventTarget.prototype
+    if (EVENT._addEventListener) return
+    EVENT._addEventListener = EVENT.addEventListener
+    EVENT._removeEventListener = EVENT.removeEventListener
 
     // hack addEventListener
-    window.EventTarget.prototype.addEventListener = function () {
+    EVENT.addEventListener = function () {
       let arg = arguments
       let type = arg[0]
       let listener = arg[1]
@@ -306,7 +307,7 @@
     }
 
     // hack removeEventListener
-    window.EventTarget.prototype.removeEventListener = function () {
+    EVENT.removeEventListener = function () {
       let arg = arguments
       let type = arg[0]
       let listener = arg[1]
