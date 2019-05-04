@@ -64,8 +64,20 @@ class FullPageScreen {
 
   getClassList (dom) {
     let d = dom || this.dom
-    let classStr = d.getAttribute('class') || ''
-    return classStr.split(' ')
+    return Array.from(d.classList)
+  }
+
+  eachNode (fn) {
+    let dom = this.dom
+    fn(dom)
+    let parent = dom.parentNode
+    while (parent && parent.setAttribute) {
+      let isEnd = fn(parent)
+      parent = parent.parentNode
+      if (isEnd) {
+        break
+      }
+    }
   }
 
   isFull () {
@@ -73,26 +85,24 @@ class FullPageScreen {
   }
 
   enter () {
-    if (this.isFull()) return
-    let parentNode = this.dom.parentNode
-    let classList = this.getClassList()
-    let parentClassList = this.getClassList(parentNode)
-    classList.push('_webfullscreen_')
-    parentClassList.push('_webfullscreen_')
-    this.dom.setAttribute('class', classList.join(' '))
-    parentNode.setAttribute('class', parentClassList.join(' '))
+    let t = this
+    if (t.isFull()) return
+    this.eachNode(function (dom) {
+      let classList = t.getClassList(dom)
+      classList.push('_webfullscreen_')
+      dom.setAttribute('class', classList.join(' '))
+    })
   }
 
   exit () {
-    let parentNode = this.dom.parentNode
-    let classList = this.getClassList().filter(function (val) {
-      return val !== '_webfullscreen_'
+    let t = this
+    t.eachNode(function (dom) {
+      let classList = t.getClassList(dom).filter(function (val) {
+        return val !== '_webfullscreen_'
+      })
+      dom.setAttribute('class', classList.join(' '))
+      console.log(dom, classList)
     })
-    let parentClassList = this.getClassList().filter(function (val) {
-      return val !== '_webfullscreen_'
-    })
-    this.dom.setAttribute('class', classList.join(' '))
-    parentNode.setAttribute('class', parentClassList.join(' '))
   }
 
   toggle () {
