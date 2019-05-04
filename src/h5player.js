@@ -53,7 +53,7 @@ class FullPageScreen {
 				top: 0 !important;
 				left: 0 !important;
 				background: #000 !important;
-				z-index: 999999999 !important;
+				z-index: 999998 !important;
 			}
 		`
     if (!window._hasInitFullPageStyle_) {
