@@ -8,7 +8,7 @@
 // @match        http://*/*
 // @match        https://*/*
 // @run-at       document-start
-// @grant        none
+// @grant        GM_addStyle
 // ==/UserScript==
 
 /* 元素全屏API */
@@ -40,6 +40,55 @@ class FullScreen {
   }
 }
 
+/* 元素网页全屏API */
+class FullPageScreen {
+  constructor (dom) {
+    this.dom = dom
+    let fullPageStyle = `
+			._webfullscreen_ {
+				display: block !important;
+				position: fixed !important;
+				width: 100% !important;
+				height: 100% !important;
+				top: 0 !important;
+				left: 0 !important;
+				background: #000 !important;
+				z-index: 999999999 !important;
+			}
+		`
+    if (!window._hasInitFullPageStyle_) {
+      GM_addStyle(fullPageStyle)
+      window._hasInitFullPageStyle_ = true
+    }
+  }
+
+  getClassList () {
+    let classStr = this.dom.getAttribute('class') || ''
+    return classStr.split(' ')
+  }
+
+  isFull () {
+    return this.getClassList().includes('_webfullscreen_')
+  }
+
+  enter () {
+    if (this.isFull()) return
+    let classList = this.getClassList()
+    classList.push('_webfullscreen_')
+    this.dom.setAttribute('class', classList.join(' '))
+  }
+
+  exit () {
+    let classList = this.getClassList().filter(function (val) {
+      return val !== '_webfullscreen_'
+    })
+    this.dom.setAttribute('class', classList.join(' '))
+  }
+
+  toggle () {
+    this.isFull() ? this.exit() : this.enter()
+  }
+}
 
 (function () {
   /**
@@ -334,9 +383,6 @@ class FullScreen {
         addTime: new Date().getTime()
       }
       this._listeners[type].push(listenerObj)
-      if (type === 'dblclick') {
-        console.log('---------------', listenerObj)
-      }
     }
 
     // hack removeEventListener
@@ -527,8 +573,9 @@ class FullScreen {
       t.initPlaybackRate()
       t.isFoucs()
 
-      /* 增加通用全屏api */
+      /* 增加通用全屏，网页全屏api */
       player._fullScreen_ = new FullScreen(player)
+      player._fullPageScreen_ = new FullPageScreen(player)
 
       if (!player._hasCanplayEvent_) {
         player.addEventListener('canplay', function (event) {
@@ -636,9 +683,10 @@ class FullScreen {
     },
     setWebFullScreen: function () {
       let t = this
+      let player = t.player()
       let isDo = TCC.doTask('webFullScreen')
-      if (!isDo) {
-        t.tips('当前网页不存在网页全屏任务配置项')
+      if (!isDo && player && player._fullPageScreen_) {
+        player._fullPageScreen_.toggle()
       }
     },
     setCurrentTime: function (num) {
