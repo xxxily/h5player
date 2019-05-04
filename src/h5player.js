@@ -11,6 +11,36 @@
 // @grant        none
 // ==/UserScript==
 
+/* 元素全屏API */
+class FullScreen {
+  constructor (dom) {
+    const d = document
+    const t = dom
+    this.dom = t
+    this.exitFn = d.exitFullscreen || d.webkitExitFullscreen || d.mozCancelFullScreen || d.msExitFullscreen
+    this.enterFn = t.requestFullscreen || t.webkitRequestFullScreen || t.mozRequestFullScreen || t.msRequestFullScreen
+  }
+
+  isFull () {
+    const d = document
+    return !!(d.fullscreen || d.webkitIsFullScreen || d.mozFullScreen ||
+      d.fullscreenElement || d.webkitFullscreenElement || d.mozFullScreenElement)
+  }
+
+  enter () {
+    this.enterFn.call(this.dom)
+  }
+
+  exit () {
+    this.exitFn.call(document)
+  }
+
+  toggle () {
+    this.isFull() ? this.exit() : this.enter()
+  }
+}
+
+
 (function () {
   /**
    * 任务配置中心 Task Control Center
@@ -304,6 +334,9 @@
         addTime: new Date().getTime()
       }
       this._listeners[type].push(listenerObj)
+      if (type === 'dblclick') {
+        console.log('---------------', listenerObj)
+      }
     }
 
     // hack removeEventListener
@@ -493,6 +526,9 @@
       t.initTips()
       t.initPlaybackRate()
       t.isFoucs()
+
+      /* 增加通用全屏api */
+      player._fullScreen_ = new FullScreen(player)
 
       if (!player._hasCanplayEvent_) {
         player.addEventListener('canplay', function (event) {
@@ -1092,7 +1128,10 @@
 
       // 按键回车，进入全屏
       if (keyCode === 13) {
-        TCC.doTask('fullScreen')
+        let isDo = TCC.doTask('fullScreen')
+        if (!isDo && player._fullScreen_) {
+          player._fullScreen_.toggle()
+        }
       }
 
       // 阻止事件冒泡
