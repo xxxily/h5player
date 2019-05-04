@@ -1000,7 +1000,7 @@ class FullPageScreen {
 
         let scale = t.scale = t.scale.toFixed(1)
         player.style.transform = 'scale(' + scale + ')'
-        t.tips('视频缩放率：' + scale)
+        t.tips('视频缩放率：' + (scale * 100) + '%')
 
         // 阻止事件冒泡
         event.stopPropagation()
