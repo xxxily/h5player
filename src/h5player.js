@@ -53,6 +53,8 @@ class FullPageScreen {
 				top: 0 !important;
 				left: 0 !important;
 				background: #000 !important;
+			}
+			._webfullscreen_zindex_ {
 				z-index: 999998 !important;
 			}
 		`
@@ -73,16 +75,44 @@ class FullPageScreen {
     }
   }
 
+  getContainer () {
+    let t = this
+    if (t._container_) return t._container_
+
+    let d = t.dom
+    let domBox = d.getBoundingClientRect()
+    let container = d
+    t.eachParentNode(d, function (parentNode) {
+      let parentBox = parentNode.getBoundingClientRect()
+      if (parentBox.width <= domBox.width && parentBox.height <= domBox.height) {
+        container = parentNode
+      } else {
+        return true
+      }
+    })
+    t._container_ = container
+    return container
+  }
+
   isFull () {
-    return this.dom.parentNode.classList.contains('_webfullscreen_')
+    return this.dom.classList.contains('_webfullscreen_')
   }
 
   enter () {
     let t = this
     if (t.isFull()) return
     t.dom.classList.add('_webfullscreen_')
+    let container = t.getContainer()
+    let needSetIndex = false
+    if (t.dom === container) {
+      needSetIndex = true
+    }
     this.eachParentNode(t.dom, function (parentNode) {
       parentNode.classList.add('_webfullscreen_')
+      if (container === parentNode || needSetIndex) {
+        needSetIndex = true
+        parentNode.classList.add('_webfullscreen_zindex_')
+      }
     })
   }
 
@@ -91,6 +121,7 @@ class FullPageScreen {
     t.dom.classList.remove('_webfullscreen_')
     this.eachParentNode(t.dom, function (parentNode) {
       parentNode.classList.remove('_webfullscreen_')
+      parentNode.classList.remove('_webfullscreen_zindex_')
     })
   }
 
@@ -132,8 +163,8 @@ class FullPageScreen {
       exclude: /\t/
     },
     'youtube.com': {
-      'fullScreen': 'button.ytp-fullscreen-button',
-      'webFullScreen': 'button.ytp-size-button'
+      // 'webFullScreen': 'button.ytp-size-button',
+      'fullScreen': 'button.ytp-fullscreen-button'
     },
     'netflix.com': {
       'fullScreen': 'button.button-nfplayerFullscreen',
@@ -1396,7 +1427,7 @@ class FullPageScreen {
     load: false
   }
 
-  window.top._h5PlayerForDebug_ = h5Player
+  // window.top._h5PlayerForDebug_ = h5Player
 
   /* 检测到有视频标签就进行初始化 */
   ready('video', function () {
