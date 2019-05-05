@@ -58,7 +58,6 @@ class FullScreen {
     t.eachParentNode(d, function (parentNode) {
       let parentBox = parentNode.getBoundingClientRect()
       if (parentBox.width <= domBox.width && parentBox.height <= domBox.height) {
-        console.log(parentBox, domBox, d)
         container = parentNode
       } else {
         return true
