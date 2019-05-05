@@ -71,6 +71,12 @@ class FullScreen {
     return this.dom.classList.contains('_webfullscreen_')
   }
 
+  isFullScreen () {
+    let d = document
+    return !!(d.fullscreen || d.webkitIsFullScreen || d.mozFullScreen ||
+      d.fullscreenElement || d.webkitFullscreenElement || d.mozFullScreenElement)
+  }
+
   enterFullScreen () {
     let c = this.getContainer()
     let enterFn = c.requestFullscreen || c.webkitRequestFullScreen || c.mozRequestFullScreen || c.msRequestFullScreen
@@ -113,7 +119,7 @@ class FullScreen {
       parentNode.classList.remove('_webfullscreen_zindex_')
     })
     let fullScreenMode = !t.pageMode
-    if (fullScreenMode) {
+    if (fullScreenMode || t.isFullScreen()) {
       t.exitFullScreen()
     }
   }
