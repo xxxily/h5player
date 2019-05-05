@@ -34,6 +34,9 @@ PS：本脚基于：[HTML5播放器增强插件](https://greasyfork.org/users/49
 * [https://www.huya.com](https://www.huya.com)
 * [https://www.iqiyi.com](https://www.iqiyi.com)
 * [https://www.youku.com](https://www.youku.com)
+* [https://weibo.com/tv](https://weibo.com/tv)
+* [https://krcom.cn](https://krcom.cn)
+* [https://tv.sohu.com](https://tv.sohu.com)
 
 如果你常去的网站支持不好欢迎提[issues](https://github.com/xxxily/h5player/issues)  
 
@@ -53,6 +56,8 @@ PS：本脚基于：[HTML5播放器增强插件](https://greasyfork.org/users/49
 | shift+C | 放大视频画面 +0.1 |
 | shift+X | 缩小视频画面 -0.1 |
 | shift+Z | 恢复视频画面 |
+| Enter | 进入全屏 |
+| shift+Enter | 进入网页全屏 |
 | E | 亮度增加% |
 | W | 亮度减少% |
 | T | 对比度增加% |
@@ -65,8 +70,6 @@ PS：本脚基于：[HTML5播放器增强插件](https://greasyfork.org/users/49
 | J | 模糊减少 1 px |
 | Q | 图像复位 |
 | S | 画面旋转 90 度 |
-| Enter | 进入全屏（只支持已进行自定义配置的网站） |
-| shift+Enter | 进入网页全屏（只支持已进行自定义配置的网站） |
 
 ## 更新说明：
 
@@ -108,4 +111,9 @@ PS：本脚基于：[HTML5播放器增强插件](https://greasyfork.org/users/49
 * 重构任务配置中心代码逻辑
 * 修正B站下暂停播放的兼容逻辑
 * 增加对B站直播的兼容
+* 修复其它相关BUG
+
+### 2.3.0
+* 增加默认的全屏逻辑
+* 增加默认网页全屏逻辑
 * 修复其它相关BUG
