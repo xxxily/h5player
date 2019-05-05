@@ -11,39 +11,12 @@
 // @grant        GM_addStyle
 // ==/UserScript==
 
-/* 元素全屏API */
+/* 元素全屏API，同时兼容网页全屏 */
 class FullScreen {
-  constructor (dom) {
-    const d = document
-    const t = dom
-    this.dom = t
-    this.exitFn = d.exitFullscreen || d.webkitExitFullscreen || d.mozCancelFullScreen || d.msExitFullscreen
-    this.enterFn = t.requestFullscreen || t.webkitRequestFullScreen || t.mozRequestFullScreen || t.msRequestFullScreen
-  }
-
-  isFull () {
-    const d = document
-    return !!(d.fullscreen || d.webkitIsFullScreen || d.mozFullScreen ||
-      d.fullscreenElement || d.webkitFullscreenElement || d.mozFullScreenElement)
-  }
-
-  enter () {
-    this.enterFn.call(this.dom)
-  }
-
-  exit () {
-    this.exitFn.call(document)
-  }
-
-  toggle () {
-    this.isFull() ? this.exit() : this.enter()
-  }
-}
-
-/* 元素网页全屏API */
-class FullPageScreen {
-  constructor (dom) {
+  constructor (dom, pageMode) {
     this.dom = dom
+    // 默认全屏模式，如果传入pageMode则表示进行的是页面全屏操作
+    this.pageMode = pageMode || false
     let fullPageStyle = `
 			._webfullscreen_ {
 				display: block !important;
@@ -98,6 +71,12 @@ class FullPageScreen {
     return this.dom.classList.contains('_webfullscreen_')
   }
 
+  enterFullScreen () {
+    let c = this.getContainer()
+    let enterFn = c.requestFullscreen || c.webkitRequestFullScreen || c.mozRequestFullScreen || c.msRequestFullScreen
+    enterFn && enterFn.call(c)
+  }
+
   enter () {
     let t = this
     if (t.isFull()) return
@@ -114,6 +93,16 @@ class FullPageScreen {
         parentNode.classList.add('_webfullscreen_zindex_')
       }
     })
+    let fullScreenMode = !t.pageMode
+    if (fullScreenMode) {
+      t.enterFullScreen()
+    }
+  }
+
+  exitFullScreen () {
+    let d = document
+    let exitFn = d.exitFullscreen || d.webkitExitFullscreen || d.mozCancelFullScreen || d.msExitFullscreen
+    exitFn && exitFn.call(d)
   }
 
   exit () {
@@ -123,6 +112,10 @@ class FullPageScreen {
       parentNode.classList.remove('_webfullscreen_')
       parentNode.classList.remove('_webfullscreen_zindex_')
     })
+    let fullScreenMode = !t.pageMode
+    if (fullScreenMode) {
+      t.exitFullScreen()
+    }
   }
 
   toggle () {
@@ -617,7 +610,7 @@ class FullPageScreen {
 
       /* 增加通用全屏，网页全屏api */
       player._fullScreen_ = new FullScreen(player)
-      player._fullPageScreen_ = new FullPageScreen(player)
+      player._fullPageScreen_ = new FullScreen(player, true)
 
       if (!player._hasCanplayEvent_) {
         player.addEventListener('canplay', function (event) {
