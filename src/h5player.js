@@ -62,17 +62,10 @@ class FullPageScreen {
     }
   }
 
-  getClassList (dom) {
-    let d = dom || this.dom
-    return Array.from(d.classList)
-  }
-
-  eachNode (fn) {
-    let dom = this.dom
-    fn(dom)
+  eachParentNode (dom, fn) {
     let parent = dom.parentNode
-    while (parent && parent.setAttribute) {
-      let isEnd = fn(parent)
+    while (parent && parent.classList) {
+      let isEnd = fn(parent, dom)
       parent = parent.parentNode
       if (isEnd) {
         break
@@ -81,27 +74,23 @@ class FullPageScreen {
   }
 
   isFull () {
-    return this.getClassList().includes('_webfullscreen_')
+    return this.dom.parentNode.classList.contains('_webfullscreen_')
   }
 
   enter () {
     let t = this
     if (t.isFull()) return
-    this.eachNode(function (dom) {
-      let classList = t.getClassList(dom)
-      classList.push('_webfullscreen_')
-      dom.setAttribute('class', classList.join(' '))
+    t.dom.classList.add('_webfullscreen_')
+    this.eachParentNode(t.dom, function (parentNode) {
+      parentNode.classList.add('_webfullscreen_')
     })
   }
 
   exit () {
     let t = this
-    t.eachNode(function (dom) {
-      let classList = t.getClassList(dom).filter(function (val) {
-        return val !== '_webfullscreen_'
-      })
-      dom.setAttribute('class', classList.join(' '))
-      console.log(dom, classList)
+    t.dom.classList.remove('_webfullscreen_')
+    this.eachParentNode(t.dom, function (parentNode) {
+      parentNode.classList.remove('_webfullscreen_')
     })
   }
 
@@ -386,6 +375,7 @@ class FullPageScreen {
     if (EVENT._addEventListener) return
     EVENT._addEventListener = EVENT.addEventListener
     EVENT._removeEventListener = EVENT.removeEventListener
+    window._listenerList_ = []
 
     // hack addEventListener
     EVENT.addEventListener = function () {
@@ -402,6 +392,7 @@ class FullPageScreen {
         options: arg[2],
         addTime: new Date().getTime()
       }
+      window._listenerList_.push(listenerObj)
       this._listeners[type].push(listenerObj)
     }
 
