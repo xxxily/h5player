@@ -58,6 +58,7 @@ class FullScreen {
     t.eachParentNode(d, function (parentNode) {
       let parentBox = parentNode.getBoundingClientRect()
       if (parentBox.width <= domBox.width && parentBox.height <= domBox.height) {
+        console.log(parentBox, domBox, d)
         container = parentNode
       } else {
         return true
@@ -86,7 +87,6 @@ class FullScreen {
   enter () {
     let t = this
     if (t.isFull()) return
-    t.dom.classList.add('_webfullscreen_')
     let container = t.getContainer()
     let needSetIndex = false
     if (t.dom === container) {
@@ -99,6 +99,7 @@ class FullScreen {
         parentNode.classList.add('_webfullscreen_zindex_')
       }
     })
+    t.dom.classList.add('_webfullscreen_')
     let fullScreenMode = !t.pageMode
     if (fullScreenMode) {
       t.enterFullScreen()
