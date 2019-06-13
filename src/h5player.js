@@ -558,6 +558,10 @@ class FullScreen {
     enable: true,
     globalMode: true,
     playerInstance: null,
+    scale: 1,
+    playbackRate: 1,
+    /* 快进快退步长 */
+    skipStep: 5,
     /* 获取当前播放器的实例 */
     player: function () {
       let t = this
@@ -648,8 +652,6 @@ class FullScreen {
         player._hasPlayingInitEvent_ = true
       }
     },
-    scale: 1,
-    playbackRate: 1,
     initPlaybackRate: function () {
       let t = this
       t.playbackRate = t.getPlaybackRate()
@@ -1034,11 +1036,11 @@ class FullScreen {
 
       // 方向键右→：快进3秒
       if (keyCode === 39) {
-        t.setCurrentTime(3)
+        t.setCurrentTime(t.skipStep)
       }
       // 方向键左←：后退3秒
       if (keyCode === 37) {
-        t.setCurrentTime(-3)
+        t.setCurrentTime(-t.skipStep)
       }
 
       // 方向键上↑：音量升高 1%
