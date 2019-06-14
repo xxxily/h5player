@@ -809,6 +809,24 @@ class FullScreen {
       }
       t.tips('音量：' + parseInt(player.volume * 100) + '%')
     },
+    setFakeUA (ua) {
+      ua = ua || userAgentMap.iPhone.safari
+      fakeUA(ua)
+
+      /* 记录设定的ua信息 */
+      window.localStorage.setItem('_h5_player_user_agent_', ua)
+    },
+
+    /* ua伪装切换开关 */
+    switchFakeUA (ua) {
+      let customUA = window.localStorage.getItem('_h5_player_user_agent_')
+      if (customUA) {
+        window.localStorage.removeItem('_h5_player_user_agent_')
+      } else {
+        this.setFakeUA(ua)
+      }
+      alert(window.navigator.userAgent)
+    },
 
     switchPlayStatus: function () {
       let t = this
@@ -835,7 +853,6 @@ class FullScreen {
         }
       }
     },
-
     tipsClassName: 'html_player_enhance_tips',
     tips: function (str) {
       let t = h5Player
@@ -1259,11 +1276,26 @@ class FullScreen {
       return true
     },
 
+    /* 判断焦点是否处于可编辑元素 */
+    isEditableTarget: function (target) {
+      let isEditable = target.getAttribute && target.getAttribute('contenteditable') === 'true'
+      let isInputDom = /INPUT|TEXTAREA|SELECT/.test(target.nodeName)
+      return isEditable || isInputDom
+    },
+
     /* 按键响应方法 */
     keydownEvent: function (event) {
       let t = h5Player
       let keyCode = event.keyCode
       let player = t.player()
+
+      /* 处于可编辑元素中不执行任何快捷键 */
+      if (t.isEditableTarget(event.target)) return
+
+      /* shift+f 切换UA伪装 */
+      if (event.shiftKey && keyCode === 70) {
+        t.switchFakeUA()
+      }
 
       /* 未用到的按键不进行任何事件监听 */
       let isInUseCode = t.keyList.includes(keyCode)
@@ -1289,7 +1321,7 @@ class FullScreen {
         return false
       }
 
-      // 按shift+\ 键进入聚焦或取消聚焦状态，用于视频标签被遮挡的场景
+      // 按ctrl+\ 键进入聚焦或取消聚焦状态，用于视频标签被遮挡的场景
       if (event.ctrlKey && keyCode === 220) {
         t.globalMode = !t.globalMode
         if (t.globalMode) {
@@ -1299,15 +1331,8 @@ class FullScreen {
         }
       }
 
-      /* 未聚焦，且不是全局模式则锁定快捷键的操作 */
-      if (t.globalMode) {
-        let target = event.target
-        let isEditable = target.getAttribute && target.getAttribute('contenteditable') === 'true'
-        let isInputDom = /INPUT|TEXTAREA|SELECT/.test(target.nodeName)
-        if (isEditable || isInputDom) return
-      } else {
-        if (!t._isFoucs) return
-      }
+      /* 非全局模式下，不聚焦则不执行快捷键的操作 */
+      if (!t.globalMode && !t._isFoucs) return
 
       /* 响应播放器相关操作 */
       t.palyerTrigger(player, event)
@@ -1446,29 +1471,49 @@ class FullScreen {
       }
       t._hasBindEvent_ = true
     },
-    init: function () {
+
+    init: function (global) {
       var t = this
-      /* 绑定键盘事件 */
-      t.bindEvent()
-      /* 检测是否存在H5播放器 */
-      t.detecH5Player()
+      if (global) {
+        /* 绑定键盘事件 */
+        t.bindEvent()
+
+        t.setFakeUA()
+
+        /* 判断是否需要进行ua伪装 */
+        // let customUA = window.localStorage.getItem('_h5_player_user_agent_')
+        // if (customUA) {
+        //   t.setFakeUA(customUA)
+        // }
+      } else {
+        /* 检测是否存在H5播放器 */
+        t.detecH5Player()
+      }
     },
     load: false
   }
 
-  // window.top._h5PlayerForDebug_ = h5Player
+  try {
+    /* 初始化全局所需的相关方法 */
+    h5Player.init(true)
 
-  /* 检测到有视频标签就进行初始化 */
-  ready('video', function () {
-    h5Player.init()
-  })
-  /* 检测shadow dom 下面的video */
-  document.addEventListener('addShadowRoot', function (e) {
-    let shadowRoot = e.detail.shadowRoot
-    ready('video', function (element) {
+    /* 检测到有视频标签就进行初始化 */
+    ready('video', function () {
       h5Player.init()
-    }, shadowRoot)
-  })
+    })
+
+    /* 检测shadow dom 下面的video */
+    document.addEventListener('addShadowRoot', function (e) {
+      let shadowRoot = e.detail.shadowRoot
+      ready('video', function (element) {
+        h5Player.init()
+      }, shadowRoot)
+    })
+
+    window.top._h5PlayerForDebug_ = h5Player
+  } catch (e) {
+    console.error('h5player:', e)
+  }
 
   // document.addEventListener('visibilitychange', function () {
   //   if (!document.hidden) {
