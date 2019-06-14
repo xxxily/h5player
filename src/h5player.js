@@ -480,7 +480,7 @@ class FullScreen {
   }
 
   /**
-   * 准确地获取对象的具体类型 参见：https://www.talkingcoder.com/article/6333557442705696719
+   * 准确地获取对象的具体类型
    * @param obj { all } -必选 要判断的对象
    * @returns {*} 返回判断的具体类型
    */
@@ -550,6 +550,16 @@ class FullScreen {
       }
     }
     return result
+  }
+
+  /* ua信息伪装 */
+  function fakeUA (ua) {
+    Object.defineProperty(navigator, 'userAgent', {
+      value: ua,
+      writable: false,
+      configurable: false,
+      enumerable: true
+    })
   }
 
   let h5Player = {
