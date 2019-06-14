@@ -562,6 +562,22 @@ class FullScreen {
     })
   }
 
+  /* ua信息来源：https://developers.whatismybrowser.com */
+  const userAgentMap = {
+    android: {
+      chrome: 'Mozilla/5.0 (Linux; Android 9; SM-G960F Build/PPR1.180610.011; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/74.0.3729.157 Mobile Safari/537.36',
+      firefox: 'Mozilla/5.0 (Android 7.0; Mobile; rv:57.0) Gecko/57.0 Firefox/57.0'
+    },
+    iPhone: {
+      safari: 'Mozilla/5.0 (iPhone; CPU iPhone OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1 Mobile/15E148 Safari/604.1',
+      chrome: 'Mozilla/5.0 (iPhone; CPU iPhone OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/74.0.3729.121 Mobile/15E148 Safari/605.1'
+    },
+    iPad: {
+      safari: 'Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1 Mobile/15E148 Safari/604.1',
+      chrome: 'Mozilla/5.0 (iPad; CPU OS 12_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/74.0.3729.155 Mobile/15E148 Safari/605.1'
+    }
+  }
+
   let h5Player = {
     /* 提示文本的字号 */
     fontSize: 16,
@@ -696,9 +712,13 @@ class FullScreen {
       } else {
         curPlaybackRate = t.getPlaybackRate()
       }
+
+      /* 记录播放速度的信息 */
       window.localStorage.setItem('_h5_player_playback_rate_', curPlaybackRate)
+
       t.playbackRate = curPlaybackRate
       player.playbackRate = curPlaybackRate
+
       if (!notips) {
         /* 本身处于1被播放速度的时候不再提示 */
         if (!num && curPlaybackRate === 1) return
@@ -1070,15 +1090,13 @@ class FullScreen {
       // 按键X：减速播放 -0.1
       if (keyCode === 88) {
         if (player.playbackRate > 0) {
-          player.playbackRate -= 0.1
-          t.setPlaybackRate(player.playbackRate)
+          t.setPlaybackRate(player.playbackRate - 0.1)
         }
       }
       // 按键C：加速播放 +0.1
       if (keyCode === 67) {
         if (player.playbackRate < 16) {
-          player.playbackRate += 0.1
-          t.setPlaybackRate(player.playbackRate)
+          t.setPlaybackRate(player.playbackRate + 0.1)
         }
       }
       // 按键Z：正常速度播放
