@@ -578,6 +578,19 @@ class FullScreen {
     }
   }
 
+  const fakeConfig = {
+    // 'tv.cctv.com': userAgentMap.iPhone.chrome,
+    // 'v.qq.com': userAgentMap.iPad.chrome,
+    'open.163.com': userAgentMap.iPhone.chrome,
+    'm.open.163.com': userAgentMap.iPhone.chrome
+  }
+
+  function debugMsg () {
+    let arg = Array.from(arguments)
+    arg.unshift('h5player debug message :')
+    console.info.apply(console, arg)
+  }
+
   let h5Player = {
     /* 提示文本的字号 */
     fontSize: 16,
@@ -811,10 +824,10 @@ class FullScreen {
     },
     setFakeUA (ua) {
       ua = ua || userAgentMap.iPhone.safari
-      fakeUA(ua)
 
       /* 记录设定的ua信息 */
       window.localStorage.setItem('_h5_player_user_agent_', ua)
+      fakeUA(ua)
     },
 
     /* ua伪装切换开关 */
@@ -825,6 +838,8 @@ class FullScreen {
       } else {
         this.setFakeUA(ua)
       }
+
+      debugMsg('ua', navigator.userAgent)
       alert(window.navigator.userAgent)
     },
 
@@ -1293,9 +1308,9 @@ class FullScreen {
       if (t.isEditableTarget(event.target)) return
 
       /* shift+f 切换UA伪装 */
-      if (event.shiftKey && keyCode === 70) {
-        t.switchFakeUA()
-      }
+      // if (event.shiftKey && keyCode === 70) {
+      //   t.switchFakeUA()
+      // }
 
       /* 未用到的按键不进行任何事件监听 */
       let isInUseCode = t.keyList.includes(keyCode)
@@ -1478,13 +1493,27 @@ class FullScreen {
         /* 绑定键盘事件 */
         t.bindEvent()
 
-        t.setFakeUA()
-
-        /* 判断是否需要进行ua伪装 */
+        /**
+         * 判断是否需要进行ua伪装
+         * 下面方案暂时不可用
+         * 由于部分网站跳转至移动端后域名不一致，形成跨域问题
+         * 导致无法同步伪装配置而不断死循环跳转
+         * eg. open.163.com
+         * */
         // let customUA = window.localStorage.getItem('_h5_player_user_agent_')
+        // debugMsg(customUA, window.location.href, window.navigator.userAgent, document.referrer)
         // if (customUA) {
         //   t.setFakeUA(customUA)
+        //   alert(customUA)
+        // } else {
+        //   alert('ua false')
         // }
+
+        /* 对配置了ua伪装的域名进行伪装 */
+        let host = window.location.host
+        if (fakeConfig[host]) {
+          t.setFakeUA(fakeConfig[host])
+        }
       } else {
         /* 检测是否存在H5播放器 */
         t.detecH5Player()
