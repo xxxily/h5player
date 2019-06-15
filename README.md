@@ -37,6 +37,8 @@ PS：本脚基于：[HTML5播放器增强插件](https://greasyfork.org/users/49
 * [https://weibo.com/tv](https://weibo.com/tv)
 * [https://krcom.cn](https://krcom.cn)
 * [https://tv.sohu.com](https://tv.sohu.com)
+* [网易公开课](https://open.163.com/ted)
+* [QQ音乐 - MV](https://y.qq.com/portal/mv_lib.html)
 
 如果你常去的网站支持不好欢迎提[issues](https://github.com/xxxily/h5player/issues)  
 
@@ -117,3 +119,8 @@ PS：本脚基于：[HTML5播放器增强插件](https://greasyfork.org/users/49
 * 增加默认的全屏逻辑
 * 增加默认网页全屏逻辑
 * 修复其它相关BUG
+
+### 2.3.2
+* 兼容网易公开课网页
+* 修复亮度、对比度、饱和度非线性调节BUG
+* 优化快进快退等其它细节
