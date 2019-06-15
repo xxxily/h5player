@@ -840,7 +840,6 @@ class FullScreen {
       }
 
       debugMsg('ua', navigator.userAgent)
-      alert(window.navigator.userAgent)
     },
 
     switchPlayStatus: function () {
