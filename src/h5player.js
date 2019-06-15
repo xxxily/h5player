@@ -1162,11 +1162,7 @@ class FullScreen {
 
       // 按键E：亮度增加%
       if (keyCode === 69) {
-        if (t.filter.key[0] > 1) {
-          t.filter.key[0] += 1
-        } else {
-          t.filter.key[0] += 0.1
-        }
+        t.filter.key[0] += 0.1
         t.filter.key[0] = t.filter.key[0].toFixed(2)
         t.filter.setup()
         t.tips('图像亮度增加：' + parseInt(t.filter.key[0] * 100) + '%')
@@ -1174,11 +1170,7 @@ class FullScreen {
       // 按键W：亮度减少%
       if (keyCode === 87) {
         if (t.filter.key[0] > 0) {
-          if (t.filter.key[0] > 1) {
-            t.filter.key[0] -= 1
-          } else {
-            t.filter.key[0] -= 0.1
-          }
+          t.filter.key[0] -= 0.1
           t.filter.key[0] = t.filter.key[0].toFixed(2)
           t.filter.setup()
         }
@@ -1187,11 +1179,7 @@ class FullScreen {
 
       // 按键T：对比度增加%
       if (keyCode === 84) {
-        if (t.filter.key[1] > 1) {
-          t.filter.key[1] += 1
-        } else {
-          t.filter.key[1] += 0.1
-        }
+        t.filter.key[1] += 0.1
         t.filter.key[1] = t.filter.key[1].toFixed(2)
         t.filter.setup()
         t.tips('图像对比度增加：' + parseInt(t.filter.key[1] * 100) + '%')
@@ -1199,11 +1187,7 @@ class FullScreen {
       // 按键R：对比度减少%
       if (keyCode === 82) {
         if (t.filter.key[1] > 0) {
-          if (t.filter.key[1] > 1) {
-            t.filter.key[1] -= 1
-          } else {
-            t.filter.key[1] -= 0.1
-          }
+          t.filter.key[1] -= 0.1
           t.filter.key[1] = t.filter.key[1].toFixed(2)
           t.filter.setup()
         }
@@ -1212,11 +1196,7 @@ class FullScreen {
 
       // 按键U：饱和度增加%
       if (keyCode === 85) {
-        if (t.filter.key[2] > 1) {
-          t.filter.key[2] += 1
-        } else {
-          t.filter.key[2] += 0.1
-        }
+        t.filter.key[2] += 0.1
         t.filter.key[2] = t.filter.key[2].toFixed(2)
         t.filter.setup()
         t.tips('图像饱和度增加：' + parseInt(t.filter.key[2] * 100) + '%')
@@ -1224,11 +1204,7 @@ class FullScreen {
       // 按键Y：饱和度减少%
       if (keyCode === 89) {
         if (t.filter.key[2] > 0) {
-          if (t.filter.key[2] > 1) {
-            t.filter.key[2] -= 1
-          } else {
-            t.filter.key[2] -= 0.1
-          }
+          t.filter.key[2] -= 0.1
           t.filter.key[2] = t.filter.key[2].toFixed(2)
           t.filter.setup()
         }
