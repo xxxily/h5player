@@ -156,6 +156,22 @@ class FullScreen {
       'currentTime': function () {},
       'addCurrentTime': '.add-currenttime',
       'subtractCurrentTime': '.subtract-currenttime',
+      // 自定义快捷键的执行方式，如果是组合键，必须是 ctrl-->shift-->alt 这样的顺序，没有可以忽略，键名必须全小写
+      'shortcuts': {
+        /* 注册要执行自定义回调操作的快捷键 */
+        register: [
+          'ctrl+shift+alt+c',
+          'ctrl+shift+c',
+          'ctrl+alt+c',
+          'ctrl+c',
+          'c'
+        ],
+        /* 自定义快捷键的回调操作 */
+        callback: function (h5Player, taskConf, data) {
+          let { event, player } = data
+          console.log(event, player)
+        }
+      },
       /* 当前域名下需包含的路径信息，默认整个域名下所有路径可用 必须是正则 */
       include: /^.*/,
       /* 当前域名下需排除的路径信息，默认不排除任何路径 必须是正则 */
@@ -190,6 +206,16 @@ class FullScreen {
     },
     'ted.com': {
       'fullScreen': 'button.Fullscreen'
+    },
+    'v.qq.com': {
+      'shortcuts': {
+        register: ['c', 'x', 'z'],
+        callback: function (h5Player, taskConf, data) {
+          let { event, player } = data
+          let items = document.querySelectorAll('.container_inner txpdiv[data-role="txp-button-speed-list"] .txp_menuitem')
+          console.log(event, player, items)
+        }
+      }
     },
 
     /**
@@ -276,8 +302,9 @@ class FullScreen {
     /**
      * 执行当前页面下的相应任务
      * @param taskName {object|string} -必选，可直接传入任务配置对象，也可用是任务名称的字符串信息，自己去查找是否有任务需要执行
+     * @param data {object} -可选，传给回调函数的数据
      */
-    doTask: function (taskName) {
+    doTask: function (taskName, data) {
       let t = this
       let isDo = false
       if (!taskName) return isDo
@@ -289,8 +316,13 @@ class FullScreen {
 
       let wrapDom = h5Player.getPlayerWrapDom()
 
-      if (getType(task) === 'function') {
-        task(h5Player, taskConf)
+      if (taskName === 'shortcuts') {
+        if (isObj(task) && getType(task.callback) === 'function') {
+          task.callback(h5Player, taskConf, data)
+          isDo = true
+        }
+      } else if (getType(task) === 'function') {
+        task(h5Player, taskConf, data)
         isDo = true
       } else {
         /* 触发选择器上的点击事件 */
@@ -1013,7 +1045,7 @@ class FullScreen {
 
     keyList: [13, 16, 17, 18, 27, 32, 37, 38, 39, 40, 49, 50, 51, 52, 67, 68, 69, 70, 73, 74, 75, 79, 81, 82, 83, 84, 85, 87, 88, 89, 90, 97, 98, 99, 100, 220],
     keyMap: {
-      'enter': 14,
+      'enter': 13,
       'shift': 16,
       'ctrl': 17,
       'alt': 18,
@@ -1055,30 +1087,48 @@ class FullScreen {
       if (!player || !event) return
       let t = h5Player
       let keyCode = event.keyCode
+      let key = event.key.toLowerCase()
 
       if (event.shiftKey && !event.ctrlKey && !event.altKey) {
         // 网页全屏
-        if (keyCode === 13) {
+        if (key === 'enter') {
           t.setWebFullScreen()
         }
 
+        // 进入或退出画中画模式
+        if (key === 'p') {
+          if (window._isPictureInPicture_) {
+            document.exitPictureInPicture().then(() => {
+              window._isPictureInPicture_ = null
+            }).catch(() => {
+              window._isPictureInPicture_ = null
+            })
+          } else {
+            player.requestPictureInPicture && player.requestPictureInPicture().then(() => {
+              window._isPictureInPicture_ = true
+            }).catch(() => {
+              window._isPictureInPicture_ = null
+            })
+          }
+        }
+
         // 视频画面缩放相关事件
-        let isScaleKeyCode = keyCode === 88 || keyCode === 67 || keyCode === 90
+        let isScaleKeyCode = key === 'x' || key === 'c' || keyCode === 'z'
         if (!isScaleKeyCode) return
 
         // shift+X：视频缩小 -0.1
-        if (keyCode === 88) {
+        if (key === 'x') {
           t.scale -= 0.1
         }
 
         // shift+C：视频放大 +0.1
-        if (keyCode === 67) {
+        if (key === 'c') {
           t.scale = Number(t.scale)
           t.scale += 0.1
         }
 
         // shift+Z：视频恢复正常大小
-        if (keyCode === 90) {
+        if (key === 'z') {
           t.scale = 1
         }
 
@@ -1266,6 +1316,66 @@ class FullScreen {
       return true
     },
 
+    /* 运行自定义的快捷键操作，如果运行了会返回true */
+    runCustomShortcuts: function (player, event) {
+      if (!player || !event) return
+      let key = event.key.toLowerCase()
+      let taskConf = TCC.getTaskConfig()
+      let confIsCorrect = isObj(taskConf.shortcuts) &&
+        Array.isArray(taskConf.shortcuts.register) &&
+        taskConf.shortcuts.callback instanceof Function
+
+      /* 判断当前触发的快捷键是否已被注册 */
+      function isRegister () {
+        let list = taskConf.shortcuts.register
+
+        /* 当前触发的组合键 */
+        let combineKey = []
+        if (event.ctrlKey) {
+          combineKey.push('ctrl')
+        }
+        if (event.shiftKey) {
+          combineKey.push('shift')
+        }
+        if (event.altKey) {
+          combineKey.push('alt')
+        }
+        combineKey.push(key)
+
+        /* 通过循环判断当前触发的组合键和已注册的组合键是否完全一致 */
+        let hasReg = false
+        list.forEach((shortcut) => {
+          let regKey = shortcut.split('+')
+          if (combineKey.length === regKey.length) {
+            let allMatch = true
+            regKey.forEach((key) => {
+              if (!combineKey.includes(key)) {
+                allMatch = false
+              }
+            })
+            if (allMatch) {
+              hasReg = true
+            }
+          }
+        })
+
+        return hasReg
+      }
+
+      if (confIsCorrect && isRegister()) {
+        // 执行自定义快捷键操作
+        TCC.doTask('shortcuts', {
+          event,
+          player,
+          h5Player
+        })
+
+        return true
+      } else {
+        return false
+      }
+    },
+
     /* 判断焦点是否处于可编辑元素 */
     isEditableTarget: function (target) {
       let isEditable = target.getAttribute && target.getAttribute('contenteditable') === 'true'
@@ -1283,13 +1393,13 @@ class FullScreen {
       if (t.isEditableTarget(event.target)) return
 
       /* shift+f 切换UA伪装 */
-      // if (event.shiftKey && keyCode === 70) {
-      //   t.switchFakeUA()
-      // }
+      if (event.shiftKey && keyCode === 70) {
+        t.switchFakeUA()
+      }
 
       /* 未用到的按键不进行任何事件监听 */
-      let isInUseCode = t.keyList.includes(keyCode)
-      if (!isInUseCode) return
+      // let isInUseCode = t.keyList.includes(keyCode)
+      // if (!isInUseCode) return
 
       if (!player) {
         // console.log('无可用的播放，不执行相关操作')
@@ -1323,6 +1433,9 @@ class FullScreen {
 
       /* 非全局模式下，不聚焦则不执行快捷键的操作 */
       if (!t.globalMode && !t._isFoucs) return
+
+      /* 判断是否执行了自定义快捷键操作，如果四则不再响应后面默认定义操作 */
+      if (t.runCustomShortcuts(player, event) === true) return
 
       /* 响应播放器相关操作 */
       t.palyerTrigger(player, event)
