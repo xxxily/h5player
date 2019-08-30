@@ -208,7 +208,7 @@ class FullScreen {
       'fullScreen': 'button.Fullscreen'
     },
     'v.qq.com': {
-      'pause': '.container_inner .txp-shadow-mod',
+      'pause': '.container_inner .txp-shadow-mod]',
       'play': '.container_inner .txp-shadow-mod',
       'shortcuts': {
         register: ['c', 'x', 'z'],
@@ -217,6 +217,30 @@ class FullScreen {
           let key = event.key.toLowerCase()
           let speedItems = document.querySelectorAll('.container_inner txpdiv[data-role="txp-button-speed-list"] .txp_menuitem')
 
+          /* 利用sessionStorage下的playbackRate进行设置 */
+          if (window.sessionStorage.playbackRate && /(c|x|z)/.test(key)) {
+            let curSpeed = Number(window.sessionStorage.playbackRate)
+            let perSpeed = curSpeed - 0.1 >= 0 ? curSpeed - 0.1 : 0.1
+            let nextSpeed = curSpeed + 0.1 <= 4 ? curSpeed + 0.1 : 4
+            let targetSpeed = curSpeed
+            switch (key) {
+              case 'z' :
+                targetSpeed = 1
+                break
+              case 'c' :
+                targetSpeed = nextSpeed
+                break
+              case 'x' :
+                targetSpeed = perSpeed
+                break
+            }
+            window.sessionStorage.playbackRate = targetSpeed
+            h5Player.setCurrentTime(0.1, true)
+            h5Player.setPlaybackRate(targetSpeed, true)
+            return true
+          }
+
+          /* 模拟点击触发 */
           if (speedItems.length >= 3 && /(c|x|z)/.test(key)) {
             let curIndex = 1
             speedItems.forEach((item, index) => {
@@ -794,11 +818,9 @@ class FullScreen {
       t.playbackRate = curPlaybackRate
       player.playbackRate = curPlaybackRate
 
-      if (!notips) {
-        /* 本身处于1被播放速度的时候不再提示 */
-        if (!num && curPlaybackRate === 1) return
-        t.tips('播放速度：' + player.playbackRate + '倍')
-      }
+      /* 本身处于1被播放速度的时候不再提示 */
+      if (!num && curPlaybackRate === 1) return
+      !notips && t.tips('播放速度：' + player.playbackRate + '倍')
     },
     /**
      * 初始化自动播放逻辑
@@ -837,7 +859,7 @@ class FullScreen {
         player._fullPageScreen_.toggle()
       }
     },
-    setCurrentTime: function (num) {
+    setCurrentTime: function (num, notips) {
       if (!num) return
       num = Number(num)
       let _num = Math.abs(Number(num.toFixed(1)))
@@ -855,14 +877,14 @@ class FullScreen {
           TCC.doTask('addCurrentTime')
         } else {
           player.currentTime += _num
-          t.tips('前进：' + _num + '秒')
+          !notips && t.tips('前进：' + _num + '秒')
         }
       } else {
         if (taskConf.subtractCurrentTime) {
           TCC.doTask('subtractCurrentTime')
         } else {
           player.currentTime -= _num
-          t.tips('后退：' + _num + '秒')
+          !notips && t.tips('后退：' + _num + '秒')
         }
       }
     },
