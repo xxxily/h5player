@@ -208,12 +208,41 @@ class FullScreen {
       'fullScreen': 'button.Fullscreen'
     },
     'v.qq.com': {
+      'autoPlay': '.container_inner .txp-shadow-mod',
       'shortcuts': {
         register: ['c', 'x', 'z'],
         callback: function (h5Player, taskConf, data) {
-          let { event, player } = data
-          let items = document.querySelectorAll('.container_inner txpdiv[data-role="txp-button-speed-list"] .txp_menuitem')
-          console.log(event, player, items)
+          let { event } = data
+          let key = event.key.toLowerCase()
+          let speedItems = document.querySelectorAll('.container_inner txpdiv[data-role="txp-button-speed-list"] .txp_menuitem')
+
+          if (speedItems.length >= 3 && /(c|x|z)/.test(key)) {
+            let curIndex = 1
+            speedItems.forEach((item, index) => {
+              if (item.classList.contains('txp_current')) {
+                curIndex = index
+              }
+            })
+            let perIndex = curIndex - 1 >= 0 ? curIndex - 1 : 0
+            let nextIndex = curIndex + 1 < speedItems.length ? curIndex + 1 : speedItems.length - 1
+
+            let target = speedItems[1]
+            switch (key) {
+              case 'z' :
+                target = speedItems[1]
+                break
+              case 'c' :
+                target = speedItems[nextIndex]
+                break
+              case 'x' :
+                target = speedItems[perIndex]
+                break
+            }
+
+            target.click()
+            let speedNum = Number(target.innerHTML.replace('x'))
+            h5Player.setPlaybackRate(speedNum)
+          }
         }
       }
     },
