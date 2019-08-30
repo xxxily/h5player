@@ -208,7 +208,8 @@ class FullScreen {
       'fullScreen': 'button.Fullscreen'
     },
     'v.qq.com': {
-      'autoPlay': '.container_inner .txp-shadow-mod',
+      'pause': '.container_inner .txp-shadow-mod',
+      'play': '.container_inner .txp-shadow-mod',
       'shortcuts': {
         register: ['c', 'x', 'z'],
         callback: function (h5Player, taskConf, data) {
