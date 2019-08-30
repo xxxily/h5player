@@ -37,6 +37,7 @@ PS：本脚基于：[HTML5播放器增强插件](https://greasyfork.org/users/49
 * [https://weibo.com/tv](https://weibo.com/tv)
 * [https://krcom.cn](https://krcom.cn)
 * [https://tv.sohu.com](https://tv.sohu.com)
+* [https://v.qq.com](https://v.qq.com)
 * [网易公开课](https://open.163.com/ted)
 * [QQ音乐 - MV](https://y.qq.com/portal/mv_lib.html)
 
@@ -58,6 +59,7 @@ PS：本脚基于：[HTML5播放器增强插件](https://greasyfork.org/users/49
 | shift+C | 放大视频画面 +0.1 |
 | shift+X | 缩小视频画面 -0.1 |
 | shift+Z | 恢复视频画面 |
+| shift+P | 进入或退画中画功能 |
 | Enter | 进入全屏 |
 | shift+Enter | 进入网页全屏 |
 | E | 亮度增加% |
@@ -124,3 +126,8 @@ PS：本脚基于：[HTML5播放器增强插件](https://greasyfork.org/users/49
 * 兼容网易公开课网页
 * 修复亮度、对比度、饱和度非线性调节BUG
 * 优化快进快退等其它细节
+
+### 2.3.3
+* 兼容腾讯视频快捷键操作
+* 增加画中画功能
+* 增加快快捷键自定义功能
