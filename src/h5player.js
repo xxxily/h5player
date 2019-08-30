@@ -988,7 +988,8 @@ class FullScreen {
         font-size: ${t.fontSize || 16}px;
         padding: 10px;
         background: rgba(0,0,0,0.4);
-        color:white;top: 50%;
+        color:white;
+        top: 50%;
         left: 50%;
         transform: translate(-50%,-50%);
         transition: all 500ms ease;
