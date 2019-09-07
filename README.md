@@ -5,7 +5,7 @@
 
 ## 特性
 * 兼容广泛，所有存在video标签的网页均支持 即使嵌在 iframe、shadowdom下均可兼容
-* 支持多实例（如：twitter，instagram下一样可兼容）
+* 支持多实例（如：twitter，instagram下亦可兼容）
 * 支持播放进度记录
 * 支持播放速度记录
 * 支持视频画面缩放
