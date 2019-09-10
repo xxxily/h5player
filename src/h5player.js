@@ -1170,7 +1170,7 @@ class FullScreen {
         }
 
         // 视频画面缩放相关事件
-        let allowKeys = ['x', 'y', 'z', 'arrowright', 'arrowleft', 'arrowup', 'arrowdown']
+        let allowKeys = ['x', 'c', 'z', 'arrowright', 'arrowleft', 'arrowup', 'arrowdown']
         if (!allowKeys.includes(key)) return
 
         t.scale = Number(t.scale)
