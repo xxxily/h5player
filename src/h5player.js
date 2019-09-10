@@ -684,6 +684,10 @@ class FullScreen {
     globalMode: true,
     playerInstance: null,
     scale: 1,
+    translate: {
+      x: 0,
+      y: 0
+    },
     playbackRate: 1,
     /* 快进快退步长 */
     skipStep: 5,
@@ -1166,28 +1170,48 @@ class FullScreen {
         }
 
         // 视频画面缩放相关事件
-        let isScaleKeyCode = key === 'x' || key === 'c' || key === 'z'
-        if (!isScaleKeyCode) return
+        let allowKeys = ['x', 'y', 'z', 'arrowright', 'arrowleft', 'arrowup', 'arrowdown']
+        if (!allowKeys.includes(key)) return
 
-        // shift+X：视频缩小 -0.1
-        if (key === 'x') {
-          t.scale -= 0.1
+        t.scale = Number(t.scale)
+        switch (key) {
+          // shift+X：视频缩小 -0.1
+          case 'x' :
+            t.scale -= 0.1
+            break
+          // shift+C：视频放大 +0.1
+          case 'c' :
+            t.scale += 0.1
+            break
+          // shift+Z：视频恢复正常大小
+          case 'z' :
+            t.scale = 1
+            t.translate = { x: 0, y: 0 }
+            break
+          case 'arrowright' :
+            t.translate.x += 10
+            break
+          case 'arrowleft' :
+            t.translate.x -= 10
+            break
+          case 'arrowup' :
+            t.translate.y -= 10
+            break
+          case 'arrowdown' :
+            t.translate.y += 10
+            break
         }
 
-        // shift+C：视频放大 +0.1
-        if (key === 'c') {
-          t.scale = Number(t.scale)
-          t.scale += 0.1
+        let scale = t.scale = Number(t.scale).toFixed(1)
+        player.style.transform = `scale(${scale}) translate(${t.translate.x}px, ${t.translate.y}px)`
+        let tipsMsg = `视频缩放率：${scale * 100}%`
+        if (t.translate.x) {
+          tipsMsg += `，水平位移：${t.translate.x}px`
         }
-
-        // shift+Z：视频恢复正常大小
-        if (key === 'z') {
-          t.scale = 1
+        if (t.translate.y) {
+          tipsMsg += `，垂直位移：${t.translate.y}px`
         }
-
-        let scale = t.scale = t.scale.toFixed(1)
-        player.style.transform = 'scale(' + scale + ')'
-        t.tips('视频缩放率：' + (scale * 100) + '%')
+        t.tips(tipsMsg)
 
         // 阻止事件冒泡
         event.stopPropagation()
