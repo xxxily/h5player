@@ -203,6 +203,10 @@ class FullScreen {
       'init': function (h5Player, taskConf) {
         // 隐藏水印
         hideDom('.iqp-logo-box')
+        // 移除暂停广告
+        GM_addStyle(`
+          div[templatetype="common_pause"]{ display:none }
+        `)
       }
     },
     'youku.com': {
