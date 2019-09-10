@@ -199,7 +199,14 @@ class FullScreen {
     },
     'iqiyi.com': {
       'fullScreen': '.iqp-btn-fullscreen',
-      'webFullScreen': '.iqp-btn-webscreen'
+      'webFullScreen': '.iqp-btn-webscreen',
+      'init': function (h5Player, taskConf) {
+        setTimeout(function () {
+          // 移除水印
+          const logoBox = document.querySelector('.iqp-logo-box')
+          if (logoBox) { logoBox.parentNode.removeChild(logoBox) }
+        }, 1000 * 5)
+      }
     },
     'youku.com': {
       'fullScreen': '.control-fullscreen-icon'
@@ -779,6 +786,12 @@ class FullScreen {
           setPlaybackRateOnPlayingCount += 1
         })
         player._hasPlayingInitEvent_ = true
+      }
+
+      /* 进行自定义初始化操作 */
+      let taskConf = TCC.getTaskConfig()
+      if (taskConf.init) {
+        TCC.doTask('init', player)
       }
     },
     initPlaybackRate: function () {
