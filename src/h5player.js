@@ -1166,7 +1166,7 @@ class FullScreen {
         }
 
         // 视频画面缩放相关事件
-        let isScaleKeyCode = key === 'x' || key === 'c' || keyCode === 'z'
+        let isScaleKeyCode = key === 'x' || key === 'c' || key === 'z'
         if (!isScaleKeyCode) return
 
         // shift+X：视频缩小 -0.1
@@ -1487,7 +1487,7 @@ class FullScreen {
       /* 非全局模式下，不聚焦则不执行快捷键的操作 */
       if (!t.globalMode && !t._isFoucs) return
 
-      /* 判断是否执行了自定义快捷键操作，如果四则不再响应后面默认定义操作 */
+      /* 判断是否执行了自定义快捷键操作，如果是则不再响应后面默认定义操作 */
       if (t.runCustomShortcuts(player, event) === true) return
 
       /* 响应播放器相关操作 */
