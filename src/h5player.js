@@ -201,15 +201,16 @@ class FullScreen {
       'fullScreen': '.iqp-btn-fullscreen',
       'webFullScreen': '.iqp-btn-webscreen',
       'init': function (h5Player, taskConf) {
-        setTimeout(function () {
-          // 移除水印
-          const logoBox = document.querySelector('.iqp-logo-box')
-          if (logoBox) { logoBox.parentNode.removeChild(logoBox) }
-        }, 1000 * 5)
+        // 隐藏水印
+        hideDom('.iqp-logo-box')
       }
     },
     'youku.com': {
-      'fullScreen': '.control-fullscreen-icon'
+      'fullScreen': '.control-fullscreen-icon',
+      'init': function (h5Player, taskConf) {
+        // 隐藏水印
+        hideDom('.youku-layer-logo')
+      }
     },
     'ted.com': {
       'fullScreen': 'button.Fullscreen'
@@ -276,6 +277,10 @@ class FullScreen {
             h5Player.setPlaybackRate(speedNum)
           }
         }
+      },
+      'init': function (h5Player, taskConf) {
+        // 隐藏水印
+        hideDom('.txp-watermark')
       }
     },
 
@@ -447,6 +452,15 @@ class FullScreen {
     }
 
     $ready(selector, fn)
+  }
+
+  function hideDom (selector, delay) {
+    setTimeout(function () {
+      const dom = document.querySelector(selector)
+      if (dom) {
+        dom.style.opacity = 0
+      }
+    }, delay || 1000 * 3)
   }
 
   /**
