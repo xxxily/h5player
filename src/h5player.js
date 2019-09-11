@@ -287,6 +287,11 @@ class FullScreen {
         hideDom('.txp-watermark')
       }
     },
+    'pan.baidu.com': {
+      'fullScreen': function (h5Player, taskConf) {
+        h5Player.playerInstance.parentNode.querySelector('.vjs-fullscreen-control').click()
+      }
+    },
 
     /**
      * 获取域名 , 目前实现方式不好，需改造，对地区性域名（如com.cn）、三级及以上域名支持不好
