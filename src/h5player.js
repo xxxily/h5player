@@ -1136,7 +1136,8 @@ class FullScreen {
       }
     },
 
-    keyList: [13, 16, 17, 18, 27, 32, 37, 38, 39, 40, 49, 50, 51, 52, 67, 68, 69, 70, 73, 74, 75, 79, 81, 82, 83, 84, 85, 87, 88, 89, 90, 97, 98, 99, 100, 220],
+    keyCodeList: [13, 16, 17, 18, 27, 32, 37, 38, 39, 40, 49, 50, 51, 52, 67, 68, 69, 70, 73, 74, 75, 79, 80, 81, 82, 83, 84, 85, 87, 88, 89, 90, 97, 98, 99, 100, 220],
+    keyList: ['enter', 'shift', 'control', 'alt', 'escape', ' ', 'arrowleft', 'arrowright', 'arrowright', 'arrowup', 'arrowdown', '1', '2', '3', '4', 'c', 'd', 'e', 'f', 'i', 'j', 'k', 'o', 'p', 'q', 'r', 's', 't', 'u', 'w', 'x', 'y', 'z', '\\', '|'],
     keyMap: {
       'enter': 13,
       'shift': 16,
@@ -1160,6 +1161,7 @@ class FullScreen {
       'j': 74,
       'k': 75,
       'o': 79,
+      'p': 80,
       'q': 81,
       'r': 82,
       's': 83,
@@ -1500,6 +1502,7 @@ class FullScreen {
     keydownEvent: function (event) {
       let t = h5Player
       let keyCode = event.keyCode
+      let key = event.key.toLowerCase()
       let player = t.player()
 
       /* 处于可编辑元素中不执行任何快捷键 */
@@ -1511,8 +1514,8 @@ class FullScreen {
       }
 
       /* 未用到的按键不进行任何事件监听 */
-      // let isInUseCode = t.keyList.includes(keyCode)
-      // if (!isInUseCode) return
+      let isInUseCode = t.keyCodeList.includes(keyCode) || t.keyList.includes(key)
+      if (!isInUseCode) return
 
       if (!player) {
         // console.log('无可用的播放，不执行相关操作')
