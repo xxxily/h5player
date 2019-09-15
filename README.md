@@ -151,3 +151,4 @@ PS：本脚基于：[HTML5播放器增强插件](https://greasyfork.org/users/49
 
 ### 2.5.1
 * 修复快捷键过度占用BUG
+
