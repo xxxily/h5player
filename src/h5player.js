@@ -36,6 +36,13 @@ class FullScreen {
       GM_addStyle(fullPageStyle)
       window._hasInitFullPageStyle_ = true
     }
+
+    window.addEventListener('keyup', (event) => {
+      const key = event.key.toLowerCase()
+      if (key === 'escape') {
+        this.exit()
+      }
+    }, true)
   }
 
   eachParentNode (dom, fn) {
@@ -104,7 +111,6 @@ class FullScreen {
     if (fullScreenMode) {
       t.enterFullScreen()
     }
-    window.addEventListener('keyup')
   }
 
   exitFullScreen () {
