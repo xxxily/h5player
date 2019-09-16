@@ -10,6 +10,7 @@
   "plugins": ["import", "node", "promise", "standard"],
   "extends": ["standard"],
   "rules": {
+     "no-tabs": ["warn"]
     // 禁止特定的全局变量
     // "no-restricted-globals": ["error", "event", "fdescribe"],
     // 始终使用分号进行结尾
