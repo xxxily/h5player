@@ -18,8 +18,8 @@ class FullScreen {
     // 默认全屏模式，如果传入pageMode则表示进行的是页面全屏操作
     this.pageMode = pageMode || false
     let fullPageStyle = `
-			._webfullscreen_ {
-				display: block !important;
+      ._webfullscreen_ {
+        display: block !important;
 				position: fixed !important;
 				width: 100% !important;
 				height: 100% !important;
@@ -32,6 +32,7 @@ class FullScreen {
 			}
 		`
     if (!window._hasInitFullPageStyle_) {
+      // eslint-disable-next-line no-undef
       GM_addStyle(fullPageStyle)
       window._hasInitFullPageStyle_ = true
     }
@@ -103,6 +104,7 @@ class FullScreen {
     if (fullScreenMode) {
       t.enterFullScreen()
     }
+    window.addEventListener('keyup')
   }
 
   exitFullScreen () {
