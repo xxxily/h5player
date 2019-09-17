@@ -17,7 +17,7 @@ class FullScreen {
     this.dom = dom
     // 默认全屏模式，如果传入pageMode则表示进行的是页面全屏操作
     this.pageMode = pageMode || false
-    let fullPageStyle = `
+    const fullPageStyle = `
       ._webfullscreen_ {
         display: block !important;
 				position: fixed !important;
@@ -48,7 +48,7 @@ class FullScreen {
   eachParentNode (dom, fn) {
     let parent = dom.parentNode
     while (parent && parent.classList) {
-      let isEnd = fn(parent, dom)
+      const isEnd = fn(parent, dom)
       parent = parent.parentNode
       if (isEnd) {
         break
@@ -57,14 +57,14 @@ class FullScreen {
   }
 
   getContainer () {
-    let t = this
+    const t = this
     if (t._container_) return t._container_
 
-    let d = t.dom
-    let domBox = d.getBoundingClientRect()
+    const d = t.dom
+    const domBox = d.getBoundingClientRect()
     let container = d
     t.eachParentNode(d, function (parentNode) {
-      let parentBox = parentNode.getBoundingClientRect()
+      const parentBox = parentNode.getBoundingClientRect()
       if (parentBox.width <= domBox.width && parentBox.height <= domBox.height) {
         container = parentNode
       } else {
@@ -80,21 +80,21 @@ class FullScreen {
   }
 
   isFullScreen () {
-    let d = document
+    const d = document
     return !!(d.fullscreen || d.webkitIsFullScreen || d.mozFullScreen ||
       d.fullscreenElement || d.webkitFullscreenElement || d.mozFullScreenElement)
   }
 
   enterFullScreen () {
-    let c = this.getContainer()
-    let enterFn = c.requestFullscreen || c.webkitRequestFullScreen || c.mozRequestFullScreen || c.msRequestFullScreen
+    const c = this.getContainer()
+    const enterFn = c.requestFullscreen || c.webkitRequestFullScreen || c.mozRequestFullScreen || c.msRequestFullScreen
     enterFn && enterFn.call(c)
   }
 
   enter () {
-    let t = this
+    const t = this
     if (t.isFull()) return
-    let container = t.getContainer()
+    const container = t.getContainer()
     let needSetIndex = false
     if (t.dom === container) {
       needSetIndex = true
@@ -107,26 +107,26 @@ class FullScreen {
       }
     })
     t.dom.classList.add('_webfullscreen_')
-    let fullScreenMode = !t.pageMode
+    const fullScreenMode = !t.pageMode
     if (fullScreenMode) {
       t.enterFullScreen()
     }
   }
 
   exitFullScreen () {
-    let d = document
-    let exitFn = d.exitFullscreen || d.webkitExitFullscreen || d.mozCancelFullScreen || d.msExitFullscreen
+    const d = document
+    const exitFn = d.exitFullscreen || d.webkitExitFullscreen || d.mozCancelFullScreen || d.msExitFullscreen
     exitFn && exitFn.call(d)
   }
 
   exit () {
-    let t = this
+    const t = this
     t.dom.classList.remove('_webfullscreen_')
     this.eachParentNode(t.dom, function (parentNode) {
       parentNode.classList.remove('_webfullscreen_')
       parentNode.classList.remove('_webfullscreen_zindex_')
     })
-    let fullScreenMode = !t.pageMode
+    const fullScreenMode = !t.pageMode
     if (fullScreenMode || t.isFullScreen()) {
       t.exitFullScreen()
     }
@@ -152,20 +152,20 @@ class FullScreen {
      * 注意：include，exclude这两个子级键名除外，这两个是用来进行url范围匹配的
      * */
     'demo.demo': {
-      'fullScreen': '.fullscreen-btn',
-      'exitFullScreen': '.exit-fullscreen-btn',
-      'webFullScreen': function () {},
-      'exitWebFullScreen': '.exit-fullscreen-btn',
-      'autoPlay': '.player-start-btn',
-      'pause': '.player-pause',
-      'play': '.player-play',
-      'switchPlayStatus': '.player-play',
-      'playbackRate': function () {},
-      'currentTime': function () {},
-      'addCurrentTime': '.add-currenttime',
-      'subtractCurrentTime': '.subtract-currenttime',
+      fullScreen: '.fullscreen-btn',
+      exitFullScreen: '.exit-fullscreen-btn',
+      webFullScreen: function () {},
+      exitWebFullScreen: '.exit-fullscreen-btn',
+      autoPlay: '.player-start-btn',
+      pause: '.player-pause',
+      play: '.player-play',
+      switchPlayStatus: '.player-play',
+      playbackRate: function () {},
+      currentTime: function () {},
+      addCurrentTime: '.add-currenttime',
+      subtractCurrentTime: '.subtract-currenttime',
       // 自定义快捷键的执行方式，如果是组合键，必须是 ctrl-->shift-->alt 这样的顺序，没有可以忽略，键名必须全小写
-      'shortcuts': {
+      shortcuts: {
         /* 注册要执行自定义回调操作的快捷键 */
         register: [
           'ctrl+shift+alt+c',
@@ -176,7 +176,7 @@ class FullScreen {
         ],
         /* 自定义快捷键的回调操作 */
         callback: function (h5Player, taskConf, data) {
-          let { event, player } = data
+          const { event, player } = data
           console.log(event, player)
         }
       },
@@ -187,28 +187,28 @@ class FullScreen {
     },
     'youtube.com': {
       // 'webFullScreen': 'button.ytp-size-button',
-      'fullScreen': 'button.ytp-fullscreen-button'
+      fullScreen: 'button.ytp-fullscreen-button'
     },
     'netflix.com': {
-      'fullScreen': 'button.button-nfplayerFullscreen',
-      'addCurrentTime': 'button.button-nfplayerFastForward',
-      'subtractCurrentTime': 'button.button-nfplayerBackTen'
+      fullScreen: 'button.button-nfplayerFullscreen',
+      addCurrentTime: 'button.button-nfplayerFastForward',
+      subtractCurrentTime: 'button.button-nfplayerBackTen'
     },
     'bilibili.com': {
-      'fullScreen': '[data-text="进入全屏"]',
-      'webFullScreen': '[data-text="网页全屏"]',
-      'autoPlay': '.bilibili-player-video-btn-start',
-      'switchPlayStatus': '.bilibili-player-video-btn-start'
+      fullScreen: '[data-text="进入全屏"]',
+      webFullScreen: '[data-text="网页全屏"]',
+      autoPlay: '.bilibili-player-video-btn-start',
+      switchPlayStatus: '.bilibili-player-video-btn-start'
     },
     'live.bilibili.com': {
-      'fullScreen': '.bilibili-live-player-video-controller-fullscreen-btn button',
-      'webFullScreen': '.bilibili-live-player-video-controller-web-fullscreen-btn button',
-      'switchPlayStatus': '.bilibili-live-player-video-controller-start-btn button'
+      fullScreen: '.bilibili-live-player-video-controller-fullscreen-btn button',
+      webFullScreen: '.bilibili-live-player-video-controller-web-fullscreen-btn button',
+      switchPlayStatus: '.bilibili-live-player-video-controller-start-btn button'
     },
     'iqiyi.com': {
-      'fullScreen': '.iqp-btn-fullscreen',
-      'webFullScreen': '.iqp-btn-webscreen',
-      'init': function (h5Player, taskConf) {
+      fullScreen: '.iqp-btn-fullscreen',
+      webFullScreen: '.iqp-btn-webscreen',
+      init: function (h5Player, taskConf) {
         // 隐藏水印
         hideDom('.iqp-logo-box')
         // 移除暂停广告
@@ -218,30 +218,30 @@ class FullScreen {
       }
     },
     'youku.com': {
-      'fullScreen': '.control-fullscreen-icon',
-      'init': function (h5Player, taskConf) {
+      fullScreen: '.control-fullscreen-icon',
+      init: function (h5Player, taskConf) {
         // 隐藏水印
         hideDom('.youku-layer-logo')
       }
     },
     'ted.com': {
-      'fullScreen': 'button.Fullscreen'
+      fullScreen: 'button.Fullscreen'
     },
     'v.qq.com': {
-      'pause': '.container_inner .txp-shadow-mod]',
-      'play': '.container_inner .txp-shadow-mod',
-      'shortcuts': {
+      pause: '.container_inner .txp-shadow-mod]',
+      play: '.container_inner .txp-shadow-mod',
+      shortcuts: {
         register: ['c', 'x', 'z'],
         callback: function (h5Player, taskConf, data) {
-          let { event } = data
-          let key = event.key.toLowerCase()
-          let speedItems = document.querySelectorAll('.container_inner txpdiv[data-role="txp-button-speed-list"] .txp_menuitem')
+          const { event } = data
+          const key = event.key.toLowerCase()
+          const speedItems = document.querySelectorAll('.container_inner txpdiv[data-role="txp-button-speed-list"] .txp_menuitem')
 
           /* 利用sessionStorage下的playbackRate进行设置 */
           if (window.sessionStorage.playbackRate && /(c|x|z)/.test(key)) {
-            let curSpeed = Number(window.sessionStorage.playbackRate)
-            let perSpeed = curSpeed - 0.1 >= 0 ? curSpeed - 0.1 : 0.1
-            let nextSpeed = curSpeed + 0.1 <= 4 ? curSpeed + 0.1 : 4
+            const curSpeed = Number(window.sessionStorage.playbackRate)
+            const perSpeed = curSpeed - 0.1 >= 0 ? curSpeed - 0.1 : 0.1
+            const nextSpeed = curSpeed + 0.1 <= 4 ? curSpeed + 0.1 : 4
             let targetSpeed = curSpeed
             switch (key) {
               case 'z' :
@@ -268,8 +268,8 @@ class FullScreen {
                 curIndex = index
               }
             })
-            let perIndex = curIndex - 1 >= 0 ? curIndex - 1 : 0
-            let nextIndex = curIndex + 1 < speedItems.length ? curIndex + 1 : speedItems.length - 1
+            const perIndex = curIndex - 1 >= 0 ? curIndex - 1 : 0
+            const nextIndex = curIndex + 1 < speedItems.length ? curIndex + 1 : speedItems.length - 1
 
             let target = speedItems[1]
             switch (key) {
@@ -285,18 +285,18 @@ class FullScreen {
             }
 
             target.click()
-            let speedNum = Number(target.innerHTML.replace('x'))
+            const speedNum = Number(target.innerHTML.replace('x'))
             h5Player.setPlaybackRate(speedNum)
           }
         }
       },
-      'init': function (h5Player, taskConf) {
+      init: function (h5Player, taskConf) {
         // 隐藏水印
         hideDom('.txp-watermark')
       }
     },
     'pan.baidu.com': {
-      'fullScreen': function (h5Player, taskConf) {
+      fullScreen: function (h5Player, taskConf) {
         h5Player.playerInstance.parentNode.querySelector('.vjs-fullscreen-control').click()
       }
     },
@@ -305,9 +305,9 @@ class FullScreen {
      * 获取域名 , 目前实现方式不好，需改造，对地区性域名（如com.cn）、三级及以上域名支持不好
      * */
     getDomain: function () {
-      let host = window.location.host
+      const host = window.location.host
       let domain = host
-      let tmpArr = host.split('.')
+      const tmpArr = host.split('.')
       if (tmpArr.length > 2) {
         tmpArr.shift()
         domain = tmpArr.join('.')
@@ -319,13 +319,13 @@ class FullScreen {
      * @param isAll { boolean } -可选 默认只格式当前域名或host下的配置任务，传入true则将所有域名下的任务配置都进行格式化
      */
     formatTCC: function (isAll) {
-      let t = this
-      let keys = Object.keys(t)
-      let domain = t.getDomain()
-      let host = window.location.host
+      const t = this
+      const keys = Object.keys(t)
+      const domain = t.getDomain()
+      const host = window.location.host
 
       function formatter (item) {
-        let defObj = {
+        const defObj = {
           include: /^.*/,
           exclude: /\t/
         }
@@ -334,7 +334,7 @@ class FullScreen {
         return item
       }
 
-      let result = {}
+      const result = {}
       keys.forEach(function (key) {
         let item = t[key]
         if (isObj(item)) {
@@ -353,7 +353,7 @@ class FullScreen {
     },
     /* 判断所提供的配置任务是否适用于当前URL */
     isMatch: function (taskConf) {
-      let url = window.location.href
+      const url = window.location.href
       let isMatch = false
       if (taskConf.include.test(url)) {
         isMatch = true
@@ -368,13 +368,13 @@ class FullScreen {
      * @param taskName {string} -可选 指定具体任务，默认返回所有类型的任务配置
      */
     getTaskConfig: function () {
-      let t = this
+      const t = this
       if (!t._hasFormatTCC_) {
         t.formatTCC()
         t._hasFormatTCC_ = true
       }
-      let domain = t.getDomain()
-      let taskConf = t[window.location.host] || t[domain]
+      const domain = t.getDomain()
+      const taskConf = t[window.location.host] || t[domain]
 
       if (taskConf && t.isMatch(taskConf)) {
         return taskConf
@@ -388,16 +388,16 @@ class FullScreen {
      * @param data {object} -可选，传给回调函数的数据
      */
     doTask: function (taskName, data) {
-      let t = this
+      const t = this
       let isDo = false
       if (!taskName) return isDo
-      let taskConf = isObj(taskName) ? taskName : t.getTaskConfig()
+      const taskConf = isObj(taskName) ? taskName : t.getTaskConfig()
 
       if (!isObj(taskConf) || !taskConf[taskName]) return isDo
 
-      let task = taskConf[taskName]
+      const task = taskConf[taskName]
 
-      let wrapDom = h5Player.getPlayerWrapDom()
+      const wrapDom = h5Player.getPlayerWrapDom()
 
       if (taskName === 'shortcuts') {
         if (isObj(task) && getType(task.callback) === 'function') {
@@ -430,10 +430,10 @@ class FullScreen {
    * 参考：https://javascript.ruanyifeng.com/dom/mutationobserver.html
    */
   function ready (selector, fn, shadowRoot) {
-    let listeners = []
-    let win = window
-    let doc = shadowRoot || win.document
-    let MutationObserver = win.MutationObserver || win.WebKitMutationObserver
+    const listeners = []
+    const win = window
+    const doc = shadowRoot || win.document
+    const MutationObserver = win.MutationObserver || win.WebKitMutationObserver
     let observer
 
     function $ready (selector, fn) {
@@ -492,17 +492,17 @@ class FullScreen {
       window._shadowDomList_ = []
       window.Element.prototype._attachShadow = window.Element.prototype.attachShadow
       window.Element.prototype.attachShadow = function () {
-        let arg = arguments
-        if (arg[0] && arg[0]['mode']) {
+        const arg = arguments
+        if (arg[0] && arg[0].mode) {
           // 强制使用 open mode
-          arg[0]['mode'] = 'open'
+          arg[0].mode = 'open'
         }
-        let shadowRoot = this._attachShadow.apply(this, arg)
+        const shadowRoot = this._attachShadow.apply(this, arg)
         // 存一份shadowDomList
         window._shadowDomList_.push(shadowRoot)
 
         // 在document下面添加 addShadowRoot 自定义事件
-        let shadowEvent = new window.CustomEvent('addShadowRoot', {
+        const shadowEvent = new window.CustomEvent('addShadowRoot', {
           shadowRoot,
           detail: {
             shadowRoot,
@@ -533,13 +533,13 @@ class FullScreen {
 
     // hack addEventListener
     EVENT.addEventListener = function () {
-      let arg = arguments
-      let type = arg[0]
-      let listener = arg[1]
+      const arg = arguments
+      const type = arg[0]
+      const listener = arg[1]
       this._addEventListener.apply(this, arg)
       this._listeners = this._listeners || {}
       this._listeners[type] = this._listeners[type] || []
-      let listenerObj = {
+      const listenerObj = {
         target: this,
         type,
         listener,
@@ -552,14 +552,14 @@ class FullScreen {
 
     // hack removeEventListener
     EVENT.removeEventListener = function () {
-      let arg = arguments
-      let type = arg[0]
-      let listener = arg[1]
+      const arg = arguments
+      const type = arg[0]
+      const listener = arg[1]
       this._removeEventListener.apply(this, arg)
       this._listeners = this._listeners || {}
       this._listeners[type] = this._listeners[type] || []
 
-      let result = []
+      const result = []
       this._listeners[type].forEach(function (listenerObj) {
         if (listenerObj.listener !== listener) {
           result.push(listenerObj)
@@ -570,7 +570,7 @@ class FullScreen {
   }
   hackEventListener()
 
-  let quickSort = function (arr) {
+  const quickSort = function (arr) {
     if (arr.length <= 1) { return arr }
     var pivotIndex = Math.floor(arr.length / 2)
     var pivot = arr.splice(pivotIndex, 1)[0]
@@ -595,7 +595,7 @@ class FullScreen {
   function eachParentNode (dom, fn) {
     let parent = dom.parentNode
     while (parent) {
-      let isEnd = fn(parent, dom)
+      const isEnd = fn(parent, dom)
       parent = parent.parentNode
       if (isEnd) {
         break
@@ -638,10 +638,10 @@ class FullScreen {
     }
     if (!isObj(objA) || !isObj(objB)) return objA
     function deepMerge (objA, objB) {
-      let keys = Object.keys(objB)
+      const keys = Object.keys(objB)
       keys.forEach(function (key) {
-        let subItemA = objA[key]
-        let subItemB = objB[key]
+        const subItemA = objA[key]
+        const subItemB = objB[key]
         if (typeof subItemA === 'undefined') {
           objA[key] = subItemB
         } else {
@@ -710,12 +710,12 @@ class FullScreen {
   }
 
   function debugMsg () {
-    let arg = Array.from(arguments)
+    const arg = Array.from(arguments)
     arg.unshift('h5player debug message :')
     console.info.apply(console, arg)
   }
 
-  let h5Player = {
+  const h5Player = {
     /* 提示文本的字号 */
     fontSize: 16,
     enable: true,
@@ -731,12 +731,12 @@ class FullScreen {
     skipStep: 5,
     /* 获取当前播放器的实例 */
     player: function () {
-      let t = this
+      const t = this
       return t.playerInstance || t.getPlayerList()[0]
     },
     /* 每个网页可能存在的多个video播放器 */
     getPlayerList: function () {
-      let list = []
+      const list = []
       function findPlayer (context) {
         context.querySelectorAll('video').forEach(function (player) {
           list.push(player)
@@ -754,15 +754,15 @@ class FullScreen {
       return list
     },
     getPlayerWrapDom: function () {
-      let t = this
-      let player = t.player()
+      const t = this
+      const player = t.player()
       if (!player) return
 
       let wrapDom = null
-      let playerBox = player.getBoundingClientRect()
+      const playerBox = player.getBoundingClientRect()
       eachParentNode(player, function (parent) {
         if (parent === document || !parent.getBoundingClientRect) return
-        let parentBox = parent.getBoundingClientRect()
+        const parentBox = parent.getBoundingClientRect()
         if (parentBox.width && parentBox.height) {
           if (parentBox.width === playerBox.width && parentBox.height === playerBox.height) {
             wrapDom = parent
@@ -776,10 +776,10 @@ class FullScreen {
      * @param isSingle 是否为单实例video标签
      */
     initPlayerInstance: function (isSingle) {
-      let t = this
+      const t = this
       if (!t.playerInstance) return
 
-      let player = t.playerInstance
+      const player = t.playerInstance
       t.filter.reset()
       t.initTips()
       t.initPlaybackRate()
@@ -820,30 +820,30 @@ class FullScreen {
       }
 
       /* 进行自定义初始化操作 */
-      let taskConf = TCC.getTaskConfig()
+      const taskConf = TCC.getTaskConfig()
       if (taskConf.init) {
         TCC.doTask('init', player)
       }
     },
     initPlaybackRate: function () {
-      let t = this
+      const t = this
       t.playbackRate = t.getPlaybackRate()
     },
     getPlaybackRate: function () {
-      let t = this
-      let playbackRate = window.localStorage.getItem('_h5_player_playback_rate_') || t.playbackRate
+      const t = this
+      const playbackRate = window.localStorage.getItem('_h5_player_playback_rate_') || t.playbackRate
       return Number(Number(playbackRate).toFixed(1))
     },
     /* 设置播放速度 */
     setPlaybackRate: function (num, notips) {
-      let taskConf = TCC.getTaskConfig()
+      const taskConf = TCC.getTaskConfig()
       if (taskConf.playbackRate) {
         TCC.doTask('playbackRate')
         return
       }
 
-      let t = this
-      let player = t.player()
+      const t = this
+      const player = t.player()
       let curPlaybackRate
       if (num) {
         num = Number(num)
@@ -875,13 +875,13 @@ class FullScreen {
      * 必须是配置了自动播放按钮选择器得的才会进行自动播放
      */
     initAutoPlay: function (p) {
-      let t = this
-      let player = p || t.player()
+      const t = this
+      const player = p || t.player()
 
       // 在轮询重试的时候，如果实例变了，或处于隐藏页面中则不进行自动播放操作
       if (!player || (p && p !== t.player()) || document.hidden) return
 
-      let taskConf = TCC.getTaskConfig()
+      const taskConf = TCC.getTaskConfig()
       if (player && taskConf.autoPlay && player.paused) {
         TCC.doTask('autoPlay')
         if (player.paused) {
@@ -900,9 +900,9 @@ class FullScreen {
       }
     },
     setWebFullScreen: function () {
-      let t = this
-      let player = t.player()
-      let isDo = TCC.doTask('webFullScreen')
+      const t = this
+      const player = t.player()
+      const isDo = TCC.doTask('webFullScreen')
       if (!isDo && player && player._fullPageScreen_) {
         player._fullPageScreen_.toggle()
       }
@@ -910,11 +910,11 @@ class FullScreen {
     setCurrentTime: function (num, notips) {
       if (!num) return
       num = Number(num)
-      let _num = Math.abs(Number(num.toFixed(1)))
+      const _num = Math.abs(Number(num.toFixed(1)))
 
-      let t = this
-      let player = t.player()
-      let taskConf = TCC.getTaskConfig()
+      const t = this
+      const player = t.player()
+      const taskConf = TCC.getTaskConfig()
       if (taskConf.currentTime) {
         TCC.doTask('currentTime')
         return
@@ -939,10 +939,10 @@ class FullScreen {
     setVolume: function (num) {
       if (!num) return
       num = Number(num)
-      let _num = Math.abs(Number(num.toFixed(2)))
+      const _num = Math.abs(Number(num.toFixed(2)))
 
-      let t = this
-      let player = t.player()
+      const t = this
+      const player = t.player()
       if (num > 0) {
         if (player.volume < 1) {
           player.volume += _num
@@ -964,7 +964,7 @@ class FullScreen {
 
     /* ua伪装切换开关 */
     switchFakeUA (ua) {
-      let customUA = window.localStorage.getItem('_h5_player_user_agent_')
+      const customUA = window.localStorage.getItem('_h5_player_user_agent_')
       if (customUA) {
         window.localStorage.removeItem('_h5_player_user_agent_')
       } else {
@@ -975,9 +975,9 @@ class FullScreen {
     },
 
     switchPlayStatus: function () {
-      let t = this
-      let player = t.player()
-      let taskConf = TCC.getTaskConfig()
+      const t = this
+      const player = t.player()
+      const taskConf = TCC.getTaskConfig()
       if (taskConf.switchPlayStatus) {
         TCC.doTask('switchPlayStatus')
         return
@@ -1001,25 +1001,25 @@ class FullScreen {
     },
     tipsClassName: 'html_player_enhance_tips',
     tips: function (str) {
-      let t = h5Player
-      let player = t.player()
+      const t = h5Player
+      const player = t.player()
       if (!player) {
         console.log('h5Player Tips:', str)
         return true
       }
 
-      let parentNode = player.parentNode
+      const parentNode = player.parentNode
 
       // 修复部分提示按钮位置异常问题
       let backupStyle = parentNode.getAttribute('style-backup') || ''
-      let defStyle = parentNode.getAttribute('style') || ''
+      const defStyle = parentNode.getAttribute('style') || ''
       if (backupStyle === null) {
         parentNode.setAttribute('style-backup', defStyle)
         backupStyle = defStyle
       }
-      let newStyleArr = backupStyle.split(';')
+      const newStyleArr = backupStyle.split(';')
 
-      let oldPosition = parentNode.getAttribute('def-position') || window.getComputedStyle(parentNode).position
+      const oldPosition = parentNode.getAttribute('def-position') || window.getComputedStyle(parentNode).position
       if (parentNode.getAttribute('def-position') === null) {
         parentNode.setAttribute('def-position', oldPosition || '')
       }
@@ -1027,12 +1027,12 @@ class FullScreen {
         newStyleArr.push('position: relative')
       }
 
-      let playerBox = player.getBoundingClientRect()
+      const playerBox = player.getBoundingClientRect()
       newStyleArr.push('min-width:' + playerBox.width + 'px')
       newStyleArr.push('min-height:' + playerBox.height + 'px')
       parentNode.setAttribute('style', newStyleArr.join(';'))
 
-      let tipsSelector = '.' + t.tipsClassName
+      const tipsSelector = '.' + t.tipsClassName
       let tipsDom = parentNode.querySelector(tipsSelector)
 
       /* 提示dom未初始化的，则进行初始化 */
@@ -1045,7 +1045,7 @@ class FullScreen {
         }
       }
 
-      let style = tipsDom.style
+      const style = tipsDom.style
       tipsDom.innerText = str
 
       for (var i = 0; i < 3; i++) {
@@ -1077,12 +1077,12 @@ class FullScreen {
     },
     /* 设置提示DOM的样式 */
     initTips: function () {
-      let t = this
-      let player = t.player()
-      let parentNode = player.parentNode
+      const t = this
+      const player = t.player()
+      const parentNode = player.parentNode
       if (parentNode.querySelector('.' + t.tipsClassName)) return
 
-      let tipsStyle = `
+      const tipsStyle = `
         position: absolute;
         z-index: 999999;
         font-size: ${t.fontSize || 16}px;
@@ -1100,7 +1100,7 @@ class FullScreen {
         font-family: 'microsoft yahei', Verdana, Geneva, sans-serif;
         -webkit-user-select: none;
       `
-      let tips = document.createElement('div')
+      const tips = document.createElement('div')
       tips.setAttribute('style', tipsStyle)
       tips.setAttribute('class', t.tipsClassName)
       parentNode.appendChild(tips)
@@ -1132,8 +1132,8 @@ class FullScreen {
 
     /* 播放器的聚焦事件 */
     isFoucs: function () {
-      let t = h5Player
-      let player = t.player()
+      const t = h5Player
+      const player = t.player()
       if (!player) return
 
       player.onmouseenter = function (e) {
@@ -1147,50 +1147,50 @@ class FullScreen {
     keyCodeList: [13, 16, 17, 18, 27, 32, 37, 38, 39, 40, 49, 50, 51, 52, 67, 68, 69, 70, 73, 74, 75, 79, 80, 81, 82, 83, 84, 85, 87, 88, 89, 90, 97, 98, 99, 100, 220],
     keyList: ['enter', 'shift', 'control', 'alt', 'escape', ' ', 'arrowleft', 'arrowright', 'arrowright', 'arrowup', 'arrowdown', '1', '2', '3', '4', 'c', 'd', 'e', 'f', 'i', 'j', 'k', 'o', 'p', 'q', 'r', 's', 't', 'u', 'w', 'x', 'y', 'z', '\\', '|'],
     keyMap: {
-      'enter': 13,
-      'shift': 16,
-      'ctrl': 17,
-      'alt': 18,
-      'esc': 27,
-      'space': 32,
+      enter: 13,
+      shift: 16,
+      ctrl: 17,
+      alt: 18,
+      esc: 27,
+      space: 32,
       '←': 37,
       '↑': 38,
       '→': 39,
       '↓': 40,
-      '1': 49,
-      '2': 50,
-      '3': 51,
-      '4': 52,
-      'c': 67,
-      'd': 68,
-      'e': 69,
-      'f': 70,
-      'i': 73,
-      'j': 74,
-      'k': 75,
-      'o': 79,
-      'p': 80,
-      'q': 81,
-      'r': 82,
-      's': 83,
-      't': 84,
-      'u': 85,
-      'w': 87,
-      'x': 88,
-      'y': 89,
-      'z': 90,
-      'pad1': 97,
-      'pad2': 98,
-      'pad3': 99,
-      'pad4': 100,
+      1: 49,
+      2: 50,
+      3: 51,
+      4: 52,
+      c: 67,
+      d: 68,
+      e: 69,
+      f: 70,
+      i: 73,
+      j: 74,
+      k: 75,
+      o: 79,
+      p: 80,
+      q: 81,
+      r: 82,
+      s: 83,
+      t: 84,
+      u: 85,
+      w: 87,
+      x: 88,
+      y: 89,
+      z: 90,
+      pad1: 97,
+      pad2: 98,
+      pad3: 99,
+      pad4: 100,
       '\\': 220
     },
     /* 播放器事件响应器 */
     palyerTrigger: function (player, event) {
       if (!player || !event) return
-      let t = h5Player
-      let keyCode = event.keyCode
-      let key = event.key.toLowerCase()
+      const t = h5Player
+      const keyCode = event.keyCode
+      const key = event.key.toLowerCase()
 
       if (event.shiftKey && !event.ctrlKey && !event.altKey) {
         // 网页全屏
@@ -1216,7 +1216,7 @@ class FullScreen {
         }
 
         // 视频画面缩放相关事件
-        let allowKeys = ['x', 'c', 'z', 'arrowright', 'arrowleft', 'arrowup', 'arrowdown']
+        const allowKeys = ['x', 'c', 'z', 'arrowright', 'arrowleft', 'arrowup', 'arrowdown']
         if (!allowKeys.includes(key)) return
 
         t.scale = Number(t.scale)
@@ -1248,7 +1248,7 @@ class FullScreen {
             break
         }
 
-        let scale = t.scale = Number(t.scale).toFixed(1)
+        const scale = t.scale = Number(t.scale).toFixed(1)
         player.style.transform = `scale(${scale}) translate(${t.translate.x}px, ${t.translate.y}px)`
         let tipsMsg = `视频缩放率：${scale * 100}%`
         if (t.translate.x) {
@@ -1427,7 +1427,7 @@ class FullScreen {
 
       // 按键回车，进入全屏
       if (keyCode === 13) {
-        let isDo = TCC.doTask('fullScreen')
+        const isDo = TCC.doTask('fullScreen')
         if (!isDo && player._fullScreen_) {
           player._fullScreen_.toggle()
         }
@@ -1442,18 +1442,18 @@ class FullScreen {
     /* 运行自定义的快捷键操作，如果运行了会返回true */
     runCustomShortcuts: function (player, event) {
       if (!player || !event) return
-      let key = event.key.toLowerCase()
-      let taskConf = TCC.getTaskConfig()
-      let confIsCorrect = isObj(taskConf.shortcuts) &&
+      const key = event.key.toLowerCase()
+      const taskConf = TCC.getTaskConfig()
+      const confIsCorrect = isObj(taskConf.shortcuts) &&
         Array.isArray(taskConf.shortcuts.register) &&
         taskConf.shortcuts.callback instanceof Function
 
       /* 判断当前触发的快捷键是否已被注册 */
       function isRegister () {
-        let list = taskConf.shortcuts.register
+        const list = taskConf.shortcuts.register
 
         /* 当前触发的组合键 */
-        let combineKey = []
+        const combineKey = []
         if (event.ctrlKey) {
           combineKey.push('ctrl')
         }
@@ -1468,7 +1468,7 @@ class FullScreen {
         /* 通过循环判断当前触发的组合键和已注册的组合键是否完全一致 */
         let hasReg = false
         list.forEach((shortcut) => {
-          let regKey = shortcut.split('+')
+          const regKey = shortcut.split('+')
           if (combineKey.length === regKey.length) {
             let allMatch = true
             regKey.forEach((key) => {
@@ -1501,17 +1501,17 @@ class FullScreen {
 
     /* 判断焦点是否处于可编辑元素 */
     isEditableTarget: function (target) {
-      let isEditable = target.getAttribute && target.getAttribute('contenteditable') === 'true'
-      let isInputDom = /INPUT|TEXTAREA|SELECT/.test(target.nodeName)
+      const isEditable = target.getAttribute && target.getAttribute('contenteditable') === 'true'
+      const isInputDom = /INPUT|TEXTAREA|SELECT/.test(target.nodeName)
       return isEditable || isInputDom
     },
 
     /* 按键响应方法 */
     keydownEvent: function (event) {
-      let t = h5Player
-      let keyCode = event.keyCode
-      let key = event.key.toLowerCase()
-      let player = t.player()
+      const t = h5Player
+      const keyCode = event.keyCode
+      const key = event.key.toLowerCase()
+      const player = t.player()
 
       /* 处于可编辑元素中不执行任何快捷键 */
       if (t.isEditableTarget(event.target)) return
@@ -1522,7 +1522,7 @@ class FullScreen {
       }
 
       /* 未用到的按键不进行任何事件监听 */
-      let isInUseCode = t.keyCodeList.includes(keyCode) || t.keyList.includes(key)
+      const isInUseCode = t.keyCodeList.includes(keyCode) || t.keyList.includes(key)
       if (!isInUseCode) return
 
       if (!player) {
@@ -1579,7 +1579,7 @@ class FullScreen {
       if (!player) {
         return progressMap
       } else {
-        let keyName = window.location.href || player.src
+        const keyName = window.location.href || player.src
         if (progressMap[keyName]) {
           return progressMap[keyName].progress
         } else {
@@ -1589,14 +1589,14 @@ class FullScreen {
     },
     /* 播放进度记录器 */
     playProgressRecorder: function (player) {
-      let t = h5Player
+      const t = h5Player
       clearTimeout(player._playProgressTimer_)
       function recorder (player) {
         player._playProgressTimer_ = setTimeout(function () {
-          let progressMap = t.getPlayProgress()
+          const progressMap = t.getPlayProgress()
 
-          let keyName = window.location.href || player.src
-          let list = Object.keys(progressMap)
+          const keyName = window.location.href || player.src
+          const list = Object.keys(progressMap)
 
           /* 只保存最近10个视频的播放进度 */
           if (list.length > 10) {
@@ -1606,7 +1606,7 @@ class FullScreen {
               progressMap[keyName] && progressMap[keyName].t && timeList.push(progressMap[keyName].t)
             })
             timeList = quickSort(timeList)
-            let timestamp = timeList[0]
+            const timestamp = timeList[0]
 
             /* 删除最早添加的记录项 */
             list.forEach(function (keyName) {
@@ -1634,8 +1634,8 @@ class FullScreen {
     /* 设置播放进度 */
     setPlayProgress: function (player, time) {
       if (!player) return
-      let t = h5Player
-      let curTime = Number(t.getPlayProgress(player))
+      const t = h5Player
+      const curTime = Number(t.getPlayProgress(player))
       if (!curTime || Number.isNaN(curTime)) return
 
       player.currentTime = curTime || player.currentTime
@@ -1648,8 +1648,8 @@ class FullScreen {
      * @param callback
      */
     detecH5Player: function () {
-      let t = this
-      let playerList = t.getPlayerList()
+      const t = this
+      const playerList = t.getPlayerList()
 
       if (playerList.length) {
         console.log('检测到HTML5视频！')
@@ -1722,7 +1722,7 @@ class FullScreen {
         // }
 
         /* 对配置了ua伪装的域名进行伪装 */
-        let host = window.location.host
+        const host = window.location.host
         if (fakeConfig[host]) {
           t.setFakeUA(fakeConfig[host])
         }
@@ -1745,7 +1745,7 @@ class FullScreen {
 
     /* 检测shadow dom 下面的video */
     document.addEventListener('addShadowRoot', function (e) {
-      let shadowRoot = e.detail.shadowRoot
+      const shadowRoot = e.detail.shadowRoot
       ready('video', function (element) {
         h5Player.init()
       }, shadowRoot)
