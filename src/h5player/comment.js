@@ -10,6 +10,4 @@
 // @run-at       document-start
 // @grant        GM_addStyle
 // ==/UserScript==
-(function (w) {
-  if (w) { w.name = 'h5player' }
-})()
+(function (w) { if (w) { w.name = 'h5player' } })()
