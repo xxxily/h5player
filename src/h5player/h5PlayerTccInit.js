@@ -1,10 +1,15 @@
+import TCC from '../libs/TCC/index'
+import {
+  isObj,
+  hideDom
+} from '../libs/utils/index'
 
 /**
  * 任务配置中心 Task Control Center
  * 用于配置所有无法进行通用处理的任务，如不同网站的全屏方式不一样，必须调用网站本身的全屏逻辑，才能确保字幕、弹幕等正常工作
  * */
 
-const TCC = {
+const taskConf = {
   /**
    * 配置示例
    * 父级键名对应的是一级域名，
@@ -74,9 +79,10 @@ const TCC = {
       // 隐藏水印
       hideDom('.iqp-logo-box')
       // 移除暂停广告
+      // eslint-disable-next-line no-undef
       GM_addStyle(`
           div[templatetype="common_pause"]{ display:none }
-        `)
+      `)
     }
   },
   'youku.com': {
@@ -161,127 +167,30 @@ const TCC = {
     fullScreen: function (h5Player, taskConf) {
       h5Player.playerInstance.parentNode.querySelector('.vjs-fullscreen-control').click()
     }
-  },
+  }
+}
 
-  /**
-   * 获取域名 , 目前实现方式不好，需改造，对地区性域名（如com.cn）、三级及以上域名支持不好
-   * */
-  getDomain: function () {
-    const host = window.location.host
-    let domain = host
-    const tmpArr = host.split('.')
-    if (tmpArr.length > 2) {
-      tmpArr.shift()
-      domain = tmpArr.join('.')
-    }
-    return domain
-  },
-  /**
-   * 格式化配置任务
-   * @param isAll { boolean } -可选 默认只格式当前域名或host下的配置任务，传入true则将所有域名下的任务配置都进行格式化
-   */
-  formatTCC: function (isAll) {
-    const t = this
-    const keys = Object.keys(t)
-    const domain = t.getDomain()
-    const host = window.location.host
-
-    function formatter (item) {
-      const defObj = {
-        include: /^.*/,
-        exclude: /\t/
-      }
-      item.include = item.include || defObj.include
-      item.exclude = item.exclude || defObj.exclude
-      return item
-    }
-
-    const result = {}
-    keys.forEach(function (key) {
-      let item = t[key]
-      if (isObj(item)) {
-        if (isAll) {
-          item = formatter(item)
-          result[key] = item
-        } else {
-          if (key === host || key === domain) {
-            item = formatter(item)
-            result[key] = item
-          }
-        }
-      }
-    })
-    return result
-  },
-  /* 判断所提供的配置任务是否适用于当前URL */
-  isMatch: function (taskConf) {
-    const url = window.location.href
-    let isMatch = false
-    if (taskConf.include.test(url)) {
-      isMatch = true
-    }
-    if (taskConf.exclude.test(url)) {
-      isMatch = false
-    }
-    return isMatch
-  },
-  /**
-   * 获取任务配置，只能获取到当前域名下的任务配置信息
-   * @param taskName {string} -可选 指定具体任务，默认返回所有类型的任务配置
-   */
-  getTaskConfig: function () {
-    const t = this
-    if (!t._hasFormatTCC_) {
-      t.formatTCC()
-      t._hasFormatTCC_ = true
-    }
-    const domain = t.getDomain()
-    const taskConf = t[window.location.host] || t[domain]
-
-    if (taskConf && t.isMatch(taskConf)) {
-      return taskConf
-    }
-
-    return {}
-  },
-  /**
-   * 执行当前页面下的相应任务
-   * @param taskName {object|string} -必选，可直接传入任务配置对象，也可用是任务名称的字符串信息，自己去查找是否有任务需要执行
-   * @param data {object} -可选，传给回调函数的数据
-   */
-  doTask: function (taskName, data) {
-    const t = this
-    let isDo = false
-    if (!taskName) return isDo
-    const taskConf = isObj(taskName) ? taskName : t.getTaskConfig()
-
-    if (!isObj(taskConf) || !taskConf[taskName]) return isDo
-
+function h5PlayerTccInit (h5Player) {
+  return new TCC(taskConf, function (taskName, taskConf, data) {
     const task = taskConf[taskName]
-
     const wrapDom = h5Player.getPlayerWrapDom()
 
     if (taskName === 'shortcuts') {
-      if (isObj(task) && getType(task.callback) === 'function') {
+      if (isObj(task) && task.callback instanceof Function) {
         task.callback(h5Player, taskConf, data)
-        isDo = true
       }
-    } else if (getType(task) === 'function') {
+    } else if (task instanceof Function) {
       task(h5Player, taskConf, data)
-      isDo = true
     } else {
       /* 触发选择器上的点击事件 */
       if (wrapDom && wrapDom.querySelector(task)) {
         // 在video的父元素里查找，是为了尽可能兼容多实例下的逻辑
         wrapDom.querySelector(task).click()
-        isDo = true
       } else if (document.querySelector(task)) {
         document.querySelector(task).click()
-        isDo = true
       }
     }
-    return isDo
-  }
+  })
 }
 
-export default TCC
+export default h5PlayerTccInit

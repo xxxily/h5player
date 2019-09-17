@@ -11,5 +11,5 @@
 // @grant        GM_addStyle
 // ==/UserScript==
 (function (w) {
-  w.name = 'h5player'
+  if (w) { w.name = 'h5player' }
 })()

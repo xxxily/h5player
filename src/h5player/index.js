@@ -1,5 +1,6 @@
 import './comment'
-import TCC from './TCC'
+import h5PlayerTccInit from './h5PlayerTccInit'
+import fakeConfig from './fakeConfig'
 import FullScreen from '../libs/FullScreen/index'
 import {
   ready,
@@ -16,19 +17,13 @@ import {
   hackAttachShadow()
   hackEventListener()
 
-  const fakeConfig = {
-    // 'tv.cctv.com': userAgentMap.iPhone.chrome,
-    // 'v.qq.com': userAgentMap.iPad.chrome,
-    'open.163.com': userAgentMap.iPhone.chrome,
-    'm.open.163.com': userAgentMap.iPhone.chrome
-  }
-
   function debugMsg () {
     const arg = Array.from(arguments)
     arg.unshift('h5player debug message :')
     console.info.apply(console, arg)
   }
 
+  let TCC = null
   const h5Player = {
     /* 提示文本的字号 */
     fontSize: 16,
@@ -1047,6 +1042,9 @@ import {
     },
     load: false
   }
+
+  /* 初始化任务配置中心 */
+  TCC = h5PlayerTccInit(h5Player)
 
   try {
     /* 初始化全局所需的相关方法 */
