@@ -3,6 +3,7 @@
 **/dist/
 **/log/
 **/.cache/
+**/src/demo/
 
 npm-debug.log*
 yarn-debug.log*
