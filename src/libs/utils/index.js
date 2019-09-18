@@ -6,6 +6,7 @@ import { clone, forIn, getObjKeys, mergeObj, merge, getValByPath } from './objec
 import { quickSort } from './number'
 import { hideDom, eachParentNode } from './dom'
 import { fakeUA, userAgentMap } from './fakeUA'
+import { isInIframe, isInCrossOriginFrame } from './iframe'
 
 export {
   ready,
@@ -30,5 +31,7 @@ export {
   hideDom,
   eachParentNode,
   fakeUA,
-  userAgentMap
+  userAgentMap,
+  isInIframe,
+  isInCrossOriginFrame
 }

@@ -2,7 +2,7 @@ import './comment'
 import h5PlayerTccInit from './h5PlayerTccInit'
 import fakeConfig from './fakeConfig'
 import FullScreen from '../libs/FullScreen/index'
-import statisticsInit from './statistics'
+import './statistics'
 import {
   ready,
   hackAttachShadow,
@@ -11,7 +11,9 @@ import {
   quickSort,
   eachParentNode,
   fakeUA,
-  userAgentMap
+  userAgentMap,
+  isInIframe,
+  isInCrossOriginFrame
 } from '../libs/utils/index'
 
 (function () {
@@ -142,7 +144,10 @@ import {
     },
     getPlaybackRate: function () {
       const t = this
-      const playbackRate = window.localStorage.getItem('_h5_player_playback_rate_') || t.playbackRate
+      let playbackRate = t.playbackRate
+      if (!isInCrossOriginFrame()) {
+        playbackRate = window.localStorage.getItem('_h5_player_playback_rate_') || t.playbackRate
+      }
       return Number(Number(playbackRate).toFixed(1))
     },
     /* 设置播放速度 */
@@ -172,7 +177,7 @@ import {
       }
 
       /* 记录播放速度的信息 */
-      window.localStorage.setItem('_h5_player_playback_rate_', curPlaybackRate)
+      !isInCrossOriginFrame() && window.localStorage.setItem('_h5_player_playback_rate_', curPlaybackRate)
 
       t.playbackRate = curPlaybackRate
       player.playbackRate = curPlaybackRate
@@ -269,15 +274,15 @@ import {
       ua = ua || userAgentMap.iPhone.safari
 
       /* 记录设定的ua信息 */
-      window.localStorage.setItem('_h5_player_user_agent_', ua)
+      !isInCrossOriginFrame() && window.localStorage.setItem('_h5_player_user_agent_', ua)
       fakeUA(ua)
     },
 
     /* ua伪装切换开关 */
     switchFakeUA (ua) {
-      const customUA = window.localStorage.getItem('_h5_player_user_agent_')
+      const customUA = isInCrossOriginFrame() ? null : window.localStorage.getItem('_h5_player_user_agent_')
       if (customUA) {
-        window.localStorage.removeItem('_h5_player_user_agent_')
+        !isInCrossOriginFrame() && window.localStorage.removeItem('_h5_player_user_agent_')
       } else {
         this.setFakeUA(ua)
       }
@@ -887,7 +892,7 @@ import {
      * @param player -可选 对应的h5 播放器对象， 如果不传，则获取到的是整个播放进度表，传则获取当前播放器的播放进度
      */
     getPlayProgress: function (player) {
-      let progressMap = window.localStorage.getItem('_h5_player_play_progress_')
+      let progressMap = isInCrossOriginFrame() ? null : window.localStorage.getItem('_h5_player_play_progress_')
       if (!progressMap) {
         progressMap = {}
       } else {
@@ -940,7 +945,7 @@ import {
           }
 
           /* 存储播放进度表 */
-          window.localStorage.setItem('_h5_player_play_progress_', JSON.stringify(progressMap))
+          !isInCrossOriginFrame() && window.localStorage.setItem('_h5_player_play_progress_', JSON.stringify(progressMap))
 
           /* 循环侦听 */
           recorder(player)
@@ -1009,7 +1014,7 @@ import {
       document.addEventListener('keydown', t.keydownEvent, true)
 
       /* 兼容iframe操作 */
-      if (window.top !== window && window.top.document) {
+      if (isInIframe() && !isInCrossOriginFrame()) {
         window.top.document.removeEventListener('keydown', t.keydownEvent)
         window.top.document.addEventListener('keydown', t.keydownEvent, true)
       }
@@ -1071,12 +1076,16 @@ import {
       }, shadowRoot)
     })
 
-    window.top._h5PlayerForDebug_ = h5Player
+    if (isInCrossOriginFrame()) {
+      window._h5PlayerForDebug_ = h5Player
+      debugMsg('当前处于跨域受限的Iframe中，h5Player相关功能可能无法正常开启')
+    } else {
+      window.top._h5PlayerForDebug_ = h5Player
+    }
   } catch (e) {
     console.error('h5player:', e)
   }
 
-  statisticsInit()
   // document.addEventListener('visibilitychange', function () {
   //   if (!document.hidden) {
   //     h5Player.initAutoPlay()

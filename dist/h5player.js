@@ -410,6 +410,30 @@ const userAgentMap = {
 };
 
 /**
+ * 判断是否处于Iframe中
+ * @returns {boolean}
+ */
+function isInIframe () {
+  return window !== window.top
+}
+
+/**
+ * 判断是否处于跨域限制的Iframe中
+ * @returns {boolean}
+ */
+function isInCrossOriginFrame () {
+  let result = true;
+  try {
+    if (window.top.localStorage || window.top.location.href) {
+      result = false;
+    }
+  } catch (e) {
+    result = true;
+  }
+  return result
+}
+
+/**
  * 任务配置中心 Task Control Center
  * 用于配置所有无法进行通用处理的任务，如不同网站的全屏方式不一样，必须调用网站本身的全屏逻辑，才能确保字幕、弹幕等正常工作
  * */
@@ -735,15 +759,13 @@ class FullScreen {
   }
 }
 
-function statisticsInit () {
+(function () {
   window._hmt = window._hmt || [];
-  (function () {
-    var hm = document.createElement('script');
-    hm.src = 'https://hm.baidu.com/hm.js?6815ad33453b781f873df096fae25ab4';
-    var s = document.getElementsByTagName('script')[0];
-    s.parentNode.insertBefore(hm, s);
-  })();
-}
+  var hm = document.createElement('script');
+  hm.src = 'https://hm.baidu.com/hm.js?6815ad33453b781f873df096fae25ab4';
+  var s = document.getElementsByTagName('script')[0];
+  s.parentNode.insertBefore(hm, s);
+})();
 
 (function () {
   hackAttachShadow();
@@ -873,7 +895,10 @@ function statisticsInit () {
     },
     getPlaybackRate: function () {
       const t = this;
-      const playbackRate = window.localStorage.getItem('_h5_player_playback_rate_') || t.playbackRate;
+      let playbackRate = t.playbackRate;
+      if (!isInCrossOriginFrame()) {
+        playbackRate = window.localStorage.getItem('_h5_player_playback_rate_') || t.playbackRate;
+      }
       return Number(Number(playbackRate).toFixed(1))
     },
     /* 设置播放速度 */
@@ -903,7 +928,7 @@ function statisticsInit () {
       }
 
       /* 记录播放速度的信息 */
-      window.localStorage.setItem('_h5_player_playback_rate_', curPlaybackRate);
+      !isInCrossOriginFrame() && window.localStorage.setItem('_h5_player_playback_rate_', curPlaybackRate);
 
       t.playbackRate = curPlaybackRate;
       player.playbackRate = curPlaybackRate;
@@ -1000,15 +1025,15 @@ function statisticsInit () {
       ua = ua || userAgentMap.iPhone.safari;
 
       /* 记录设定的ua信息 */
-      window.localStorage.setItem('_h5_player_user_agent_', ua);
+      !isInCrossOriginFrame() && window.localStorage.setItem('_h5_player_user_agent_', ua);
       fakeUA(ua);
     },
 
     /* ua伪装切换开关 */
     switchFakeUA (ua) {
-      const customUA = window.localStorage.getItem('_h5_player_user_agent_');
+      const customUA = isInCrossOriginFrame() ? null : window.localStorage.getItem('_h5_player_user_agent_');
       if (customUA) {
-        window.localStorage.removeItem('_h5_player_user_agent_');
+        !isInCrossOriginFrame() && window.localStorage.removeItem('_h5_player_user_agent_');
       } else {
         this.setFakeUA(ua);
       }
@@ -1618,7 +1643,7 @@ function statisticsInit () {
      * @param player -可选 对应的h5 播放器对象， 如果不传，则获取到的是整个播放进度表，传则获取当前播放器的播放进度
      */
     getPlayProgress: function (player) {
-      let progressMap = window.localStorage.getItem('_h5_player_play_progress_');
+      let progressMap = isInCrossOriginFrame() ? null : window.localStorage.getItem('_h5_player_play_progress_');
       if (!progressMap) {
         progressMap = {};
       } else {
@@ -1671,7 +1696,7 @@ function statisticsInit () {
           };
 
           /* 存储播放进度表 */
-          window.localStorage.setItem('_h5_player_play_progress_', JSON.stringify(progressMap));
+          !isInCrossOriginFrame() && window.localStorage.setItem('_h5_player_play_progress_', JSON.stringify(progressMap));
 
           /* 循环侦听 */
           recorder(player);
@@ -1740,7 +1765,7 @@ function statisticsInit () {
       document.addEventListener('keydown', t.keydownEvent, true);
 
       /* 兼容iframe操作 */
-      if (window.top !== window && window.top.document) {
+      if (isInIframe() && !isInCrossOriginFrame()) {
         window.top.document.removeEventListener('keydown', t.keydownEvent);
         window.top.document.addEventListener('keydown', t.keydownEvent, true);
       }
@@ -1802,12 +1827,16 @@ function statisticsInit () {
       }, shadowRoot);
     });
 
-    window.top._h5PlayerForDebug_ = h5Player;
+    if (isInCrossOriginFrame()) {
+      window._h5PlayerForDebug_ = h5Player;
+      debugMsg('当前处于跨域受限的Iframe中，h5Player相关功能可能无法正常开启');
+    } else {
+      window.top._h5PlayerForDebug_ = h5Player;
+    }
   } catch (e) {
     console.error('h5player:', e);
   }
 
-  statisticsInit();
   // document.addEventListener('visibilitychange', function () {
   //   if (!document.hidden) {
   //     h5Player.initAutoPlay()
