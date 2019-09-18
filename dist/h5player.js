@@ -758,6 +758,7 @@ class FullScreen {
       y: 0
     },
     playbackRate: 1,
+    lastPlaybackRate: 1,
     /* 快进快退步长 */
     skipStep: 5,
     /* 获取当前播放器的实例 */
@@ -1336,7 +1337,13 @@ class FullScreen {
       }
       // 按键Z：正常速度播放
       if (keyCode === 90) {
-        player.playbackRate = 1;
+        const oldPlaybackRate = Number(player.playbackRate);
+        const playbackRate = oldPlaybackRate === 1 ? t.lastPlaybackRate : 1;
+        if (oldPlaybackRate !== 1) {
+          t.lastPlaybackRate = oldPlaybackRate;
+        }
+
+        player.playbackRate = playbackRate;
         t.setPlaybackRate(player.playbackRate);
       }
 
