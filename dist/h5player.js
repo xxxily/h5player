@@ -735,6 +735,16 @@ class FullScreen {
   }
 }
 
+function statisticsInit () {
+  window._hmt = window._hmt || [];
+  (function () {
+    var hm = document.createElement('script');
+    hm.src = 'https://hm.baidu.com/hm.js?6815ad33453b781f873df096fae25ab4';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+}
+
 (function () {
   hackAttachShadow();
   hackEventListener();
@@ -1797,6 +1807,7 @@ class FullScreen {
     console.error('h5player:', e);
   }
 
+  statisticsInit();
   // document.addEventListener('visibilitychange', function () {
   //   if (!document.hidden) {
   //     h5Player.initAutoPlay()

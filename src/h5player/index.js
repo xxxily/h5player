@@ -2,6 +2,7 @@ import './comment'
 import h5PlayerTccInit from './h5PlayerTccInit'
 import fakeConfig from './fakeConfig'
 import FullScreen from '../libs/FullScreen/index'
+import statisticsInit from './statistics'
 import {
   ready,
   hackAttachShadow,
@@ -1075,6 +1076,7 @@ import {
     console.error('h5player:', e)
   }
 
+  statisticsInit()
   // document.addEventListener('visibilitychange', function () {
   //   if (!document.hidden) {
   //     h5Player.initAutoPlay()
