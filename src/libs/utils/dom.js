@@ -24,4 +24,11 @@ function eachParentNode (dom, fn) {
   }
 }
 
-export { hideDom, eachParentNode }
+function loadCSSText (cssText) {
+  const style = document.createElement('style')
+  const head = document.head || document.getElementsByTagName('head')[0]
+  style.appendChild(document.createTextNode(cssText))
+  head.appendChild(style)
+}
+
+export { hideDom, eachParentNode, loadCSSText }
