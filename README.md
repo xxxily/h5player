@@ -157,3 +157,7 @@ PS：本脚基于：[HTML5播放器增强插件](https://greasyfork.org/users/49
 * 增加Esc退出网页全屏
 * 代码逻辑模块化
 
+### 2.6.1
+* 移除统计功能
+* 兼容跨域iframe下播放
+
