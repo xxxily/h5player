@@ -2,7 +2,6 @@ import './comment'
 import h5PlayerTccInit from './h5PlayerTccInit'
 import fakeConfig from './fakeConfig'
 import FullScreen from '../libs/FullScreen/index'
-import './statistics'
 import {
   ready,
   hackAttachShadow,
