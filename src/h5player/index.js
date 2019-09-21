@@ -2,6 +2,9 @@ import './comment'
 import h5PlayerTccInit from './h5PlayerTccInit'
 import fakeConfig from './fakeConfig'
 import FullScreen from '../libs/FullScreen/index'
+import { getTabId } from './getId'
+import monkeyMenu from './monkeyMenu'
+import monkeyMsg from './monkeyMsg'
 import {
   ready,
   hackAttachShadow,
@@ -15,7 +18,14 @@ import {
   isInCrossOriginFrame
 } from '../libs/utils/index'
 
-(function () {
+(async function () {
+  monkeyMenu.on('设置', function () {
+    window.alert('这是设置')
+  })
+  monkeyMenu.on('关于', function () {
+    window.alert('这是关于')
+  })
+
   hackAttachShadow()
   hackEventListener()
 
@@ -846,6 +856,9 @@ import {
       const isInUseCode = t.keyCodeList.includes(keyCode) || t.keyList.includes(key)
       if (!isInUseCode) return
 
+      /* 广播按键消息，进行跨域控制 */
+      monkeyMsg.send('globalKeydownEvent', event)
+
       if (!player) {
         // console.log('无可用的播放，不执行相关操作')
         return
@@ -1006,7 +1019,7 @@ import {
     },
     /* 绑定相关事件 */
     bindEvent: function () {
-      var t = this
+      const t = this
       if (t._hasBindEvent_) return
 
       document.removeEventListener('keydown', t.keydownEvent)
@@ -1017,6 +1030,25 @@ import {
         window.top.document.removeEventListener('keydown', t.keydownEvent)
         window.top.document.addEventListener('keydown', t.keydownEvent, true)
       }
+
+      /* 响应来自按键消息的广播 */
+      monkeyMsg.on('globalKeydownEvent', async (name, oldVal, newVal, remote) => {
+        if (remote) {
+          if (isInCrossOriginFrame()) {
+            /**
+             * 同处跨域受限页面，且都处于可见状态，大概率处于同一个Tab标签里，但不是100%
+             * tabId一致则100%为同一标签下
+             */
+            const tabId = await getTabId()
+            if (newVal.tabId === tabId || document.visibilityState === 'visible') {
+              //
+            }
+          }
+        } else {
+          console.error('收到来自别处的广播消息：', newVal, remote)
+        }
+      })
+
       t._hasBindEvent_ = true
     },
 

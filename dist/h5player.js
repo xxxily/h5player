@@ -7,8 +7,20 @@
 // @author       ankvps
 // @match        http://*/*
 // @match        https://*/*
-// @run-at       document-start
+// @grant        unsafeWindow
 // @grant        GM_addStyle
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_deleteValue
+// @grant        GM_listValues
+// @grant        GM_addValueChangeListener
+// @grant        GM_removeValueChangeListener
+// @grant        GM_registerMenuCommand
+// @grant        GM_unregisterMenuCommand
+// @grant        GM_getTab
+// @grant        GM_saveTab
+// @grant        GM_getTabs
+// @run-at       document-start
 // ==/UserScript==
 (function (w) { if (w) { w.name = 'h5player'; } })();
 
@@ -759,7 +771,113 @@ class FullScreen {
   }
 }
 
-(function () {
+/* 用于获取全局唯一的id */
+function getId () {
+  let gID = window.GM_getValue('_global_id_');
+  if (!gID) gID = 0;
+  gID = Number(gID) + 1;
+  window.GM_setValue('_global_id_', gID);
+  return gID
+}
+
+/**
+ * 获取当前TAB标签的Id号，可用于iframe确定自己是否处于同一TAB标签下
+ * @returns {Promise<any>}
+ */
+function getTabId () {
+  return new Promise((resolve, reject) => {
+    window.GM_getTab(function (obj) {
+      if (!obj.tabId) {
+        obj.tabId = getId();
+        window.GM_saveTab(obj);
+      }
+      resolve(obj.tabId);
+    });
+  })
+}
+
+/*!
+ * @name      menuCommand.js
+ * @version   0.0.1
+ * @author    Blaze
+ * @date      2019/9/21 14:22
+ */
+
+const monkeyMenu = {
+  on (title, fn, accessKey) {
+    return window.GM_registerMenuCommand && window.GM_registerMenuCommand(title, fn, accessKey)
+  },
+  off (id) {
+    return window.GM_unregisterMenuCommand && window.GM_unregisterMenuCommand(id)
+  },
+  /* 切换类型的菜单功能 */
+  switch (title, fn, defVal) {
+    const t = this;
+    t.on(title, fn);
+  }
+};
+
+/*!
+ * @name      monkeyMsg.js
+ * @version   0.0.1
+ * @author    Blaze
+ * @date      2019/9/21 14:22
+ */
+function extractDatafromOb (obj) {
+  const result = {};
+  if (typeof obj === 'object') {
+    for (const key in obj) {
+      const val = obj[key];
+      const valType = typeof val;
+      if (valType === 'number' || valType === 'string' || valType === 'boolean') {
+        Object.defineProperty(result, key, {
+          value: val,
+          writable: true,
+          configurable: true,
+          enumerable: true
+        });
+      } else if (valType === 'object' && Object.prototype.propertyIsEnumerable.call(obj, key)) {
+        /* 进行递归提取 */
+        result[key] = extractDatafromOb(val);
+      } else if (valType === 'array') {
+        result[key] = val;
+      }
+    }
+  }
+  return result
+}
+
+const monkeyMsg = {
+  async send (name, data) {
+    const tabId = await getTabId();
+    const msg = {
+      /* 发送过来的数据 */
+      data,
+      /* 补充标签ID，用于判断是否同处一个tab标签下 */
+      tabId,
+      /* 补充消息的页面来源的标题信息 */
+      title: document.title,
+      /* 补充消息的页面来源信息 */
+      referrer: extractDatafromOb(window.location)
+    };
+    if (typeof data === 'object') {
+      msg.data = extractDatafromOb(data);
+    }
+    // console.log('send:', msg)
+    window.GM_setValue(name, msg);
+  },
+  on: (name, fn) => window.GM_addValueChangeListener(name, fn),
+  off: (listenerId) => window.GM_removeValueChangeListener(listenerId)
+};
+
+(async function () {
+  monkeyMenu.on('设置', function () {
+    window.alert('这是设置');
+  });
+  monkeyMenu.on('关于', function () {
+    window.alert('这是关于');
+  });
+
   hackAttachShadow();
   hackEventListener();
 
@@ -1590,6 +1708,9 @@ class FullScreen {
       const isInUseCode = t.keyCodeList.includes(keyCode) || t.keyList.includes(key);
       if (!isInUseCode) return
 
+      /* 广播按键消息，进行跨域控制 */
+      monkeyMsg.send('globalKeydownEvent', event);
+
       if (!player) {
         // console.log('无可用的播放，不执行相关操作')
         return
@@ -1750,7 +1871,7 @@ class FullScreen {
     },
     /* 绑定相关事件 */
     bindEvent: function () {
-      var t = this;
+      const t = this;
       if (t._hasBindEvent_) return
 
       document.removeEventListener('keydown', t.keydownEvent);
@@ -1761,6 +1882,23 @@ class FullScreen {
         window.top.document.removeEventListener('keydown', t.keydownEvent);
         window.top.document.addEventListener('keydown', t.keydownEvent, true);
       }
+
+      /* 响应来自按键消息的广播 */
+      monkeyMsg.on('globalKeydownEvent', async (name, oldVal, newVal, remote) => {
+        if (remote) {
+          if (isInCrossOriginFrame()) {
+            /**
+             * 同处跨域受限页面，且都处于可见状态，大概率处于同一个Tab标签里，但不是100%
+             * tabId一致则100%为同一标签下
+             */
+            const tabId = await getTabId();
+            if (newVal.tabId === tabId || document.visibilityState === 'visible') ;
+          }
+        } else {
+          console.error('收到来自别处的广播消息：', newVal, remote);
+        }
+      });
+
       t._hasBindEvent_ = true;
     },
 

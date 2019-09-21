@@ -7,7 +7,19 @@
 // @author       ankvps
 // @match        http://*/*
 // @match        https://*/*
-// @run-at       document-start
+// @grant        unsafeWindow
 // @grant        GM_addStyle
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_deleteValue
+// @grant        GM_listValues
+// @grant        GM_addValueChangeListener
+// @grant        GM_removeValueChangeListener
+// @grant        GM_registerMenuCommand
+// @grant        GM_unregisterMenuCommand
+// @grant        GM_getTab
+// @grant        GM_saveTab
+// @grant        GM_getTabs
+// @run-at       document-start
 // ==/UserScript==
 (function (w) { if (w) { w.name = 'h5player' } })()
