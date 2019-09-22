@@ -20,6 +20,7 @@
 // @grant        GM_getTab
 // @grant        GM_saveTab
 // @grant        GM_getTabs
+// @grant        GM_openInTab
 // @run-at       document-start
 // ==/UserScript==
 (function (w) { if (w) { w.name = 'h5player'; } })();
@@ -875,7 +876,18 @@ const monkeyMsg = {
     window.alert('这是设置');
   });
   monkeyMenu.on('关于', function () {
-    window.alert('这是关于');
+    window.GM_openInTab('https://github.com/xxxily/h5player', {
+      active: true,
+      insert: true,
+      setParent: true
+    });
+  });
+  monkeyMenu.on('反馈', function () {
+    window.GM_openInTab('https://github.com/xxxily/h5player/issues', {
+      active: true,
+      insert: true,
+      setParent: true
+    });
   });
 
   hackAttachShadow();

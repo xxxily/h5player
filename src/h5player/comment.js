@@ -20,6 +20,7 @@
 // @grant        GM_getTab
 // @grant        GM_saveTab
 // @grant        GM_getTabs
+// @grant        GM_openInTab
 // @run-at       document-start
 // ==/UserScript==
 (function (w) { if (w) { w.name = 'h5player' } })()
