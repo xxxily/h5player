@@ -1892,7 +1892,16 @@ const monkeyMsg = {
              * tabId一致则100%为同一标签下
              */
             const tabId = await getTabId();
-            if (newVal.tabId === tabId || document.visibilityState === 'visible') ;
+            if (newVal.tabId === tabId && document.visibilityState === 'visible') {
+              /* 模拟触发快捷键事件，实现跨域控制 */
+              const player = t.player();
+              if (player) {
+                const fakeEvent = newVal.data;
+                fakeEvent.stopPropagation = () => {};
+                fakeEvent.preventDefault = () => {};
+                t.palyerTrigger(player, fakeEvent);
+              }
+            }
           }
         } else {
           console.error('收到来自别处的广播消息：', newVal, remote);
