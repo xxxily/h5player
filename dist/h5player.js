@@ -1,9 +1,9 @@
 // ==UserScript==
-// @name         HTML5播放器增强插件 - 修订版
+// @name         HTML5视频播放器增强脚本
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      2.6.1
-// @description  对HTML5播放器的功能进行增强，支持所有使用H5进行视频播放的网站，快捷键仿照Potplayer的快捷键布局，实现调节亮度，饱和度，对比度，速度等功能。
+// @version      3.0.0
+// @description  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍数播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
 // @author       ankvps
 // @match        http://*/*
 // @match        https://*/*
@@ -936,7 +936,7 @@ const monkeyMsg = {
 
 (async function () {
   monkeyMenu.on('设置', function () {
-    window.alert('这是设置');
+    window.alert('功能开发中，敬请期待...');
   });
   monkeyMenu.on('关于', function () {
     window.GM_openInTab('https://github.com/xxxily/h5player', {

@@ -21,7 +21,7 @@ import {
 
 (async function () {
   monkeyMenu.on('设置', function () {
-    window.alert('这是设置')
+    window.alert('功能开发中，敬请期待...')
   })
   monkeyMenu.on('关于', function () {
     window.GM_openInTab('https://github.com/xxxily/h5player', {

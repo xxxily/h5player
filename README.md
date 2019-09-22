@@ -5,18 +5,22 @@
 
 ## 特性
 * 兼容广泛，所有存在video标签的网页均支持 即使嵌在 iframe、shadowdom下均可兼容
+* 支持跨域控制，跨域受限页面下快捷键一样可以无缝衔接
 * 支持多实例（如：twitter，instagram下亦可兼容）
 * 支持播放进度记录
 * 支持播放速度记录
 * 支持视频画面缩放
+* 支持画中画功能
+* 支持视频画面截图功能
 * 支持配置式添加自定义功能
 
 ## 简介
 
-对HTML5播放器的功能进行增强，快捷键仿照Potplayer的快捷键布局，实现调节亮度，饱和度，对比度，速度等功能，并增加各种实用功能，提供良好的在线播剧体验  
-PS：本脚基于：[HTML5播放器增强插件](https://greasyfork.org/users/49622)   但已远超原脚本提供的功能   
+HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍数播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，提供良好的在线播剧体验    
 
-由于之前作者已长期不维护，故接坑自己开干，在原作者的基础上进行了大幅度的代码改造，提供更多的功能和兼容更多网站
+PS：本脚基于：[HTML5播放器增强插件](https://greasyfork.org/users/49622)   但已远超原脚本提供的功能。   
+
+由于之前作者已长期不维护，故接坑自己开干，在原作者的基础上进行了大幅度的代码改造，并采用了全新的项目架构进行开发，维护更加方便，逻辑更加清晰，功能更加强大，兼容更多网站
 
 
 ## 支持网站列表
@@ -29,6 +33,7 @@ PS：本脚基于：[HTML5播放器增强插件](https://greasyfork.org/users/49
 * [https://www.youtube.com](https://www.youtube.com)
 * [https://www.instagram.com](https://www.instagram.com)
 * [https://twitter.com](https://twitter.com)
+* [https://www.pornhub.com](https://www.pornhub.com)
 * [https://www.bilibili.com](https://www.bilibili.com)
 * [https://www.douyu.com](https://www.douyu.com)
 * [https://www.huya.com](https://www.huya.com)
@@ -60,6 +65,7 @@ PS：本脚基于：[HTML5播放器增强插件](https://greasyfork.org/users/49
 | shift+X | 缩小视频画面 -0.1 |
 | shift+Z | 恢复视频画面 |
 | shift+P | 进入或退画中画功能 |
+| shift+S | 截图，截取当前画面并保存 |
 | shift+→ | 画面向右移动10px |
 | shift+← | 画面向左移动10px |
 | shift+↑ | 画面向上移动10px |
@@ -160,3 +166,8 @@ PS：本脚基于：[HTML5播放器增强插件](https://greasyfork.org/users/49
 ### 2.6.1
 * 移除统计功能
 * 兼容跨域iframe下播放
+
+### 3.0.0
+* 支持视频画面截图
+* 支持快捷键跨域控制
+* 增加更多实用模块，便于后续开发
