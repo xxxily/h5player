@@ -21,6 +21,7 @@
 // @grant        GM_saveTab
 // @grant        GM_getTabs
 // @grant        GM_openInTab
+// @grant        GM_download
 // @run-at       document-start
 // ==/UserScript==
 (function (w) { if (w) { w.name = 'h5player' } })()

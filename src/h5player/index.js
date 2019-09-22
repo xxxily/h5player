@@ -2,6 +2,7 @@ import './comment'
 import h5PlayerTccInit from './h5PlayerTccInit'
 import fakeConfig from './fakeConfig'
 import FullScreen from '../libs/FullScreen/index'
+import videoCapturer from '../libs/videoCapturer/index'
 import { getTabId } from './getId'
 import monkeyMenu from './monkeyMenu'
 import monkeyMsg from './monkeyMsg'
@@ -549,6 +550,11 @@ import {
               window._isPictureInPicture_ = null
             })
           }
+        }
+
+        // 截图并下载保存
+        if (key === 's') {
+          videoCapturer.capture(player, true)
         }
 
         // 视频画面缩放相关事件

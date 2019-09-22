@@ -30,6 +30,8 @@ var videoCapturer = {
     } else {
       t.previe(canvas, captureTitle)
     }
+
+    return canvas
   },
   /**
    * 预览截取到的画面内容
