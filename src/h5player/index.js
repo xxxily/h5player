@@ -1068,8 +1068,6 @@ import {
               }
             }
           }
-        } else {
-          console.error('收到来自别处的广播消息：', newVal, remote)
         }
       })
 
