@@ -2,7 +2,7 @@
 // @name         HTML5视频播放器增强脚本
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.0.0
+// @version      3.0.1
 // @description  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍数播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
 // @author       ankvps
 // @icon         https://raw.githubusercontent.com/xxxily/h5player/master/logo.png
@@ -827,12 +827,12 @@ var videoCapturer = {
    */
   download (canvas, title) {
     title = title || 'videoCapturer_' + Date.now();
-    const el = document.createElement('a');
-    el.href = canvas.toDataURL('image/jpeg', 0.96);
-    el.download = `${title}.jpg`;
-    document.head.appendChild(el);
-    el.click();
-    document.head.removeChild(el);
+    canvas.toBlob(function (blob) {
+      const el = document.createElement('a');
+      el.download = `${title}.png`;
+      el.href = URL.createObjectURL(blob);
+      el.click();
+    });
   }
 };
 

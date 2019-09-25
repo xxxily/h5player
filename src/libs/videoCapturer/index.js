@@ -51,12 +51,12 @@ var videoCapturer = {
    */
   download (canvas, title) {
     title = title || 'videoCapturer_' + Date.now()
-    const el = document.createElement('a')
-    el.href = canvas.toDataURL('image/jpeg', 0.96)
-    el.download = `${title}.jpg`
-    document.head.appendChild(el)
-    el.click()
-    document.head.removeChild(el)
+    canvas.toBlob(function (blob) {
+      const el = document.createElement('a')
+      el.download = `${title}.png`
+      el.href = URL.createObjectURL(blob)
+      el.click()
+    })
   }
 }
 
