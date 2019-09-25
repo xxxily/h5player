@@ -53,10 +53,10 @@ var videoCapturer = {
     title = title || 'videoCapturer_' + Date.now()
     canvas.toBlob(function (blob) {
       const el = document.createElement('a')
-      el.download = `${title}.png`
+      el.download = `${title}.jpg`
       el.href = URL.createObjectURL(blob)
       el.click()
-    })
+    }, 'image/jpeg', 0.99)
   }
 }
 
