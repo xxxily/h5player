@@ -1449,14 +1449,14 @@ const hasUseKey = {
         position: absolute;
         z-index: 999999;
         font-size: ${t.fontSize || 16}px;
-        padding: 10px 16px;
+        padding: 8px 16px;
         background: rgba(0,0,0,0.4);
         color:white;
         top: 0;
         left: 0;
         transition: all 500ms ease;
         opacity: 0;
-        border-bottom-right-radius: 3px
+        border-bottom-right-radius: 5px;
         display: none;
         -webkit-font-smoothing: subpixel-antialiased;
         font-family: 'microsoft yahei', Verdana, Geneva, sans-serif;
