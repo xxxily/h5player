@@ -4,7 +4,7 @@ function hideDom (selector, delay) {
     if (dom) {
       dom.style.opacity = 0
     }
-  }, delay || 1000 * 3)
+  }, delay || 1000 * 5)
 }
 
 /**
