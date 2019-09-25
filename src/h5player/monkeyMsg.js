@@ -5,7 +5,10 @@
  * @date      2019/9/21 14:22
  */
 import { getTabId } from './getId'
-function extractDatafromOb (obj) {
+function extractDatafromOb (obj, deep) {
+  deep = deep || 1
+  if (deep > 3) return {}
+
   const result = {}
   if (typeof obj === 'object') {
     for (const key in obj) {
@@ -20,7 +23,7 @@ function extractDatafromOb (obj) {
         })
       } else if (valType === 'object' && Object.prototype.propertyIsEnumerable.call(obj, key)) {
         /* 进行递归提取 */
-        result[key] = extractDatafromOb(val)
+        result[key] = extractDatafromOb(val, deep + 1)
       } else if (valType === 'array') {
         result[key] = val
       } else {

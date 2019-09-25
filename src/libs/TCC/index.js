@@ -114,11 +114,15 @@ class TCC {
   isMatch (taskConf) {
     const url = window.location.href
     let isMatch = false
-    if (taskConf.include.test(url)) {
+    if (!taskConf.include && !taskConf.exclude) {
       isMatch = true
-    }
-    if (taskConf.exclude.test(url)) {
-      isMatch = false
+    } else {
+      if (taskConf.include && taskConf.include.test(url)) {
+        isMatch = true
+      }
+      if (taskConf.exclude && taskConf.exclude.test(url)) {
+        isMatch = false
+      }
     }
     return isMatch
   }
@@ -134,7 +138,7 @@ class TCC {
       t._hasFormatTCC_ = true
     }
     const domain = t.getDomain()
-    const taskConf = t[window.location.host] || t[domain]
+    const taskConf = t.conf[window.location.host] || t.conf[domain]
 
     if (taskConf && t.isMatch(taskConf)) {
       return taskConf
@@ -159,8 +163,7 @@ class TCC {
     const task = taskConf[taskName]
 
     if (task) {
-      isDo = true
-      t.doTaskFunc(taskName, taskConf, data)
+      isDo = t.doTaskFunc(taskName, taskConf, data)
     }
 
     return isDo

@@ -53,7 +53,7 @@ const taskConf = {
     exclude: /\t/
   },
   'youtube.com': {
-    // 'webFullScreen': 'button.ytp-size-button',
+    // webFullScreen: 'button.ytp-size-button',
     fullScreen: 'button.ytp-fullscreen-button'
   },
   'netflix.com': {
@@ -167,6 +167,15 @@ const taskConf = {
     fullScreen: function (h5Player, taskConf) {
       h5Player.playerInstance.parentNode.querySelector('.vjs-fullscreen-control').click()
     }
+  },
+  // 'pornhub.com': {
+  //   webFullScreen: '.bilibili-live-player-video-controller-web-fullscreen-btn button'
+  // },
+  'douyu.com': {
+    fullScreen: 'div[title="窗口全屏"]',
+    exitFullScreen: 'div[title="退出窗口全屏"]',
+    webFullScreen: 'div[title="网页全屏"]',
+    exitWebFullScreen: 'div[title="退出网页全屏"]'
   }
 }
 
@@ -177,17 +186,19 @@ function h5PlayerTccInit (h5Player) {
 
     if (taskName === 'shortcuts') {
       if (isObj(task) && task.callback instanceof Function) {
-        task.callback(h5Player, taskConf, data)
+        return task.callback(h5Player, taskConf, data)
       }
     } else if (task instanceof Function) {
-      task(h5Player, taskConf, data)
+      return task(h5Player, taskConf, data)
     } else {
       /* 触发选择器上的点击事件 */
       if (wrapDom && wrapDom.querySelector(task)) {
         // 在video的父元素里查找，是为了尽可能兼容多实例下的逻辑
         wrapDom.querySelector(task).click()
+        return true
       } else if (document.querySelector(task)) {
         document.querySelector(task).click()
+        return true
       }
     }
   })

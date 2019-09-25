@@ -166,11 +166,15 @@ class TCC {
   isMatch (taskConf) {
     const url = window.location.href;
     let isMatch = false;
-    if (taskConf.include.test(url)) {
+    if (!taskConf.include && !taskConf.exclude) {
       isMatch = true;
-    }
-    if (taskConf.exclude.test(url)) {
-      isMatch = false;
+    } else {
+      if (taskConf.include && taskConf.include.test(url)) {
+        isMatch = true;
+      }
+      if (taskConf.exclude && taskConf.exclude.test(url)) {
+        isMatch = false;
+      }
     }
     return isMatch
   }
@@ -186,7 +190,7 @@ class TCC {
       t._hasFormatTCC_ = true;
     }
     const domain = t.getDomain();
-    const taskConf = t[window.location.host] || t[domain];
+    const taskConf = t.conf[window.location.host] || t.conf[domain];
 
     if (taskConf && t.isMatch(taskConf)) {
       return taskConf
@@ -211,8 +215,7 @@ class TCC {
     const task = taskConf[taskName];
 
     if (task) {
-      isDo = true;
-      t.doTaskFunc(taskName, taskConf, data);
+      isDo = t.doTaskFunc(taskName, taskConf, data);
     }
 
     return isDo
@@ -497,7 +500,7 @@ const taskConf = {
     exclude: /\t/
   },
   'youtube.com': {
-    // 'webFullScreen': 'button.ytp-size-button',
+    // webFullScreen: 'button.ytp-size-button',
     fullScreen: 'button.ytp-fullscreen-button'
   },
   'netflix.com': {
@@ -611,6 +614,15 @@ const taskConf = {
     fullScreen: function (h5Player, taskConf) {
       h5Player.playerInstance.parentNode.querySelector('.vjs-fullscreen-control').click();
     }
+  },
+  // 'pornhub.com': {
+  //   webFullScreen: '.bilibili-live-player-video-controller-web-fullscreen-btn button'
+  // },
+  'douyu.com': {
+    fullScreen: 'div[title="窗口全屏"]',
+    exitFullScreen: 'div[title="退出窗口全屏"]',
+    webFullScreen: 'div[title="网页全屏"]',
+    exitWebFullScreen: 'div[title="退出网页全屏"]'
   }
 };
 
@@ -621,17 +633,19 @@ function h5PlayerTccInit (h5Player) {
 
     if (taskName === 'shortcuts') {
       if (isObj(task) && task.callback instanceof Function) {
-        task.callback(h5Player, taskConf, data);
+        return task.callback(h5Player, taskConf, data)
       }
     } else if (task instanceof Function) {
-      task(h5Player, taskConf, data);
+      return task(h5Player, taskConf, data)
     } else {
       /* 触发选择器上的点击事件 */
       if (wrapDom && wrapDom.querySelector(task)) {
         // 在video的父元素里查找，是为了尽可能兼容多实例下的逻辑
         wrapDom.querySelector(task).click();
+        return true
       } else if (document.querySelector(task)) {
         document.querySelector(task).click();
+        return true
       }
     }
   })
@@ -888,7 +902,10 @@ const monkeyMenu = {
  * @author    Blaze
  * @date      2019/9/21 14:22
  */
-function extractDatafromOb (obj) {
+function extractDatafromOb (obj, deep) {
+  deep = deep || 1;
+  if (deep > 3) return {}
+
   const result = {};
   if (typeof obj === 'object') {
     for (const key in obj) {
@@ -903,7 +920,7 @@ function extractDatafromOb (obj) {
         });
       } else if (valType === 'object' && Object.prototype.propertyIsEnumerable.call(obj, key)) {
         /* 进行递归提取 */
-        result[key] = extractDatafromOb(val);
+        result[key] = extractDatafromOb(val, deep + 1);
       } else if (valType === 'array') {
         result[key] = val;
       }
