@@ -952,6 +952,66 @@ const monkeyMsg = {
   off: (listenerId) => window.GM_removeValueChangeListener(listenerId)
 };
 
+function createDebugMethod (name) {
+  name = name || 'info';
+  return function () {
+    const arg = Array.from(arguments);
+    arg.unshift('h5player debug message :');
+    console[name].apply(console, arg);
+  }
+}
+
+const debug = {
+  log: createDebugMethod('log'),
+  error: createDebugMethod('error'),
+  info: createDebugMethod('info')
+};
+
+/* 当前用到的快捷键 */
+const hasUseKey = {
+  keyCodeList: [13, 16, 17, 18, 27, 32, 37, 38, 39, 40, 49, 50, 51, 52, 67, 68, 69, 70, 73, 74, 75, 79, 80, 81, 82, 83, 84, 85, 87, 88, 89, 90, 97, 98, 99, 100, 220],
+  keyList: ['enter', 'shift', 'control', 'alt', 'escape', ' ', 'arrowleft', 'arrowright', 'arrowright', 'arrowup', 'arrowdown', '1', '2', '3', '4', 'c', 'd', 'e', 'f', 'i', 'j', 'k', 'o', 'p', 'q', 'r', 's', 't', 'u', 'w', 'x', 'y', 'z', '\\', '|'],
+  keyMap: {
+    enter: 13,
+    shift: 16,
+    ctrl: 17,
+    alt: 18,
+    esc: 27,
+    space: 32,
+    '←': 37,
+    '↑': 38,
+    '→': 39,
+    '↓': 40,
+    1: 49,
+    2: 50,
+    3: 51,
+    4: 52,
+    c: 67,
+    d: 68,
+    e: 69,
+    f: 70,
+    i: 73,
+    j: 74,
+    k: 75,
+    o: 79,
+    p: 80,
+    q: 81,
+    r: 82,
+    s: 83,
+    t: 84,
+    u: 85,
+    w: 87,
+    x: 88,
+    y: 89,
+    z: 90,
+    pad1: 97,
+    pad2: 98,
+    pad3: 99,
+    pad4: 100,
+    '\\': 220
+  }
+};
+
 (async function () {
   monkeyMenu.on('设置', function () {
     window.alert('功能开发中，敬请期待...');
@@ -974,16 +1034,10 @@ const monkeyMsg = {
   hackAttachShadow();
   hackEventListener();
 
-  function debugMsg () {
-    const arg = Array.from(arguments);
-    arg.unshift('h5player debug message :');
-    console.info.apply(console, arg);
-  }
-
   let TCC = null;
   const h5Player = {
     /* 提示文本的字号 */
-    fontSize: 16,
+    fontSize: 12,
     enable: true,
     globalMode: true,
     playerInstance: null,
@@ -1118,12 +1172,16 @@ const monkeyMsg = {
       if (num) {
         num = Number(num);
         if (Number.isNaN(num)) {
-          console.error('h5player: 播放速度转换出错');
+          debug.error('h5player: 播放速度转换出错');
           return false
         }
+
         if (num <= 0) {
           num = 0.1;
+        } else if (num > 16) {
+          num = 16;
         }
+
         num = Number(num.toFixed(1));
         curPlaybackRate = num;
       } else {
@@ -1139,6 +1197,20 @@ const monkeyMsg = {
       /* 本身处于1被播放速度的时候不再提示 */
       if (!num && curPlaybackRate === 1) return
       !notips && t.tips('播放速度：' + player.playbackRate + '倍');
+    },
+    /* 恢复播放速度，还原到1倍速度、或恢复到上次的倍速 */
+    resetPlaybackRate: function (player) {
+      const t = this;
+      player = player || t.player();
+
+      const oldPlaybackRate = Number(player.playbackRate);
+      const playbackRate = oldPlaybackRate === 1 ? t.lastPlaybackRate : 1;
+      if (oldPlaybackRate !== 1) {
+        t.lastPlaybackRate = oldPlaybackRate;
+      }
+
+      player.playbackRate = playbackRate;
+      t.setPlaybackRate(player.playbackRate);
     },
     /**
      * 初始化自动播放逻辑
@@ -1177,6 +1249,7 @@ const monkeyMsg = {
         player._fullPageScreen_.toggle();
       }
     },
+    /* 设置播放进度 */
     setCurrentTime: function (num, notips) {
       if (!num) return
       num = Number(num);
@@ -1206,6 +1279,7 @@ const monkeyMsg = {
         }
       }
     },
+    /* 设置声音大小 */
     setVolume: function (num) {
       if (!num) return
       num = Number(num);
@@ -1224,6 +1298,23 @@ const monkeyMsg = {
       }
       t.tips('音量：' + parseInt(player.volume * 100) + '%');
     },
+    /* 设置视频画面的缩放与位移 */
+    setTransform: function (scale, translate) {
+      const t = this;
+      const player = t.player();
+      scale = t.scale = typeof scale === 'undefined' ? t.scale : Number(scale).toFixed(1);
+      translate = t.translate = translate || t.translate;
+
+      player.style.transform = `scale(${scale}) translate(${translate.x}px, ${translate.y}px)`;
+      let tipsMsg = `视频缩放率：${scale * 100}%`;
+      if (translate.x) {
+        tipsMsg += `，水平位移：${t.translate.x}px`;
+      }
+      if (translate.y) {
+        tipsMsg += `，垂直位移：${t.translate.y}px`;
+      }
+      t.tips(tipsMsg);
+    },
     setFakeUA (ua) {
       ua = ua || userAgentMap.iPhone.safari;
 
@@ -1231,7 +1322,6 @@ const monkeyMsg = {
       !isInCrossOriginFrame() && window.localStorage.setItem('_h5_player_user_agent_', ua);
       fakeUA(ua);
     },
-
     /* ua伪装切换开关 */
     switchFakeUA (ua) {
       const customUA = isInCrossOriginFrame() ? null : window.localStorage.getItem('_h5_player_user_agent_');
@@ -1241,9 +1331,9 @@ const monkeyMsg = {
         this.setFakeUA(ua);
       }
 
-      debugMsg('ua', navigator.userAgent);
+      debug.log('ua', navigator.userAgent);
     },
-
+    /* 切换播放状态 */
     switchPlayStatus: function () {
       const t = this;
       const player = t.player();
@@ -1274,7 +1364,7 @@ const monkeyMsg = {
       const t = h5Player;
       const player = t.player();
       if (!player) {
-        console.log('h5Player Tips:', str);
+        debug.log('h5Player Tips:', str);
         return true
       }
 
@@ -1310,7 +1400,7 @@ const monkeyMsg = {
         t.initTips();
         tipsDom = parentNode.querySelector(tipsSelector);
         if (!tipsDom) {
-          console.log('init h5player tips dom error...');
+          debug.log('init h5player tips dom error...');
           return false
         }
       }
@@ -1352,19 +1442,21 @@ const monkeyMsg = {
       const parentNode = player.parentNode;
       if (parentNode.querySelector('.' + t.tipsClassName)) return
 
+      // top: 50%;
+      // left: 50%;
+      // transform: translate(-50%,-50%);
       const tipsStyle = `
         position: absolute;
         z-index: 999999;
         font-size: ${t.fontSize || 16}px;
-        padding: 10px;
+        padding: 10px 16px;
         background: rgba(0,0,0,0.4);
         color:white;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%,-50%);
+        top: 0;
+        left: 0;
         transition: all 500ms ease;
         opacity: 0;
-        border-radius:3px;
+        border-bottom-right-radius: 3px
         display: none;
         -webkit-font-smoothing: subpixel-antialiased;
         font-family: 'microsoft yahei', Verdana, Geneva, sans-serif;
@@ -1413,48 +1505,8 @@ const monkeyMsg = {
         h5Player._isFoucs = false;
       };
     },
-
-    keyCodeList: [13, 16, 17, 18, 27, 32, 37, 38, 39, 40, 49, 50, 51, 52, 67, 68, 69, 70, 73, 74, 75, 79, 80, 81, 82, 83, 84, 85, 87, 88, 89, 90, 97, 98, 99, 100, 220],
-    keyList: ['enter', 'shift', 'control', 'alt', 'escape', ' ', 'arrowleft', 'arrowright', 'arrowright', 'arrowup', 'arrowdown', '1', '2', '3', '4', 'c', 'd', 'e', 'f', 'i', 'j', 'k', 'o', 'p', 'q', 'r', 's', 't', 'u', 'w', 'x', 'y', 'z', '\\', '|'],
-    keyMap: {
-      enter: 13,
-      shift: 16,
-      ctrl: 17,
-      alt: 18,
-      esc: 27,
-      space: 32,
-      '←': 37,
-      '↑': 38,
-      '→': 39,
-      '↓': 40,
-      1: 49,
-      2: 50,
-      3: 51,
-      4: 52,
-      c: 67,
-      d: 68,
-      e: 69,
-      f: 70,
-      i: 73,
-      j: 74,
-      k: 75,
-      o: 79,
-      p: 80,
-      q: 81,
-      r: 82,
-      s: 83,
-      t: 84,
-      u: 85,
-      w: 87,
-      x: 88,
-      y: 89,
-      z: 90,
-      pad1: 97,
-      pad2: 98,
-      pad3: 99,
-      pad4: 100,
-      '\\': 220
-    },
+    keyCodeList: hasUseKey.keyCodeList,
+    keyList: hasUseKey.keyList,
     /* 播放器事件响应器 */
     palyerTrigger: function (player, event) {
       if (!player || !event) return
@@ -1522,17 +1574,7 @@ const monkeyMsg = {
             t.translate.y += 10;
             break
         }
-
-        const scale = t.scale = Number(t.scale).toFixed(1);
-        player.style.transform = `scale(${scale}) translate(${t.translate.x}px, ${t.translate.y}px)`;
-        let tipsMsg = `视频缩放率：${scale * 100}%`;
-        if (t.translate.x) {
-          tipsMsg += `，水平位移：${t.translate.x}px`;
-        }
-        if (t.translate.y) {
-          tipsMsg += `，垂直位移：${t.translate.y}px`;
-        }
-        t.tips(tipsMsg);
+        t.setTransform(t.scale, t.translate);
 
         // 阻止事件冒泡
         event.stopPropagation();
@@ -1568,32 +1610,20 @@ const monkeyMsg = {
 
       // 按键X：减速播放 -0.1
       if (keyCode === 88) {
-        if (player.playbackRate > 0) {
-          t.setPlaybackRate(player.playbackRate - 0.1);
-        }
+        t.setPlaybackRate(player.playbackRate - 0.1);
       }
       // 按键C：加速播放 +0.1
       if (keyCode === 67) {
-        if (player.playbackRate < 16) {
-          t.setPlaybackRate(player.playbackRate + 0.1);
-        }
+        t.setPlaybackRate(player.playbackRate + 0.1);
       }
       // 按键Z：正常速度播放
       if (keyCode === 90) {
-        const oldPlaybackRate = Number(player.playbackRate);
-        const playbackRate = oldPlaybackRate === 1 ? t.lastPlaybackRate : 1;
-        if (oldPlaybackRate !== 1) {
-          t.lastPlaybackRate = oldPlaybackRate;
-        }
-
-        player.playbackRate = playbackRate;
-        t.setPlaybackRate(player.playbackRate);
+        t.resetPlaybackRate();
       }
 
       // 按1-4设置播放速度 49-52;97-100
       if ((keyCode >= 49 && keyCode <= 52) || (keyCode >= 97 && keyCode <= 100)) {
-        player.playbackRate = Number(event.key);
-        t.setPlaybackRate(player.playbackRate);
+        t.setPlaybackRate(event.key);
       }
 
       // 按键F：下一帧
@@ -1810,7 +1840,7 @@ const monkeyMsg = {
       monkeyMsg.send('globalKeydownEvent', event);
 
       if (!player) {
-        // console.log('无可用的播放，不执行相关操作')
+        // debug.log('无可用的播放，不执行相关操作')
         return
       }
 
@@ -1825,7 +1855,7 @@ const monkeyMsg = {
       }
 
       if (!t.enable) {
-        console.log('h5Player 已禁用~');
+        debug.log('h5Player 已禁用~');
         return false
       }
 
@@ -1936,7 +1966,7 @@ const monkeyMsg = {
       const playerList = t.getPlayerList();
 
       if (playerList.length) {
-        console.log('检测到HTML5视频！');
+        debug.log('检测到HTML5视频！');
 
         /* 单video实例标签的情况 */
         if (playerList.length === 1) {
@@ -2021,7 +2051,7 @@ const monkeyMsg = {
          * eg. open.163.com
          * */
         // let customUA = window.localStorage.getItem('_h5_player_user_agent_')
-        // debugMsg(customUA, window.location.href, window.navigator.userAgent, document.referrer)
+        // debug.log(customUA, window.location.href, window.navigator.userAgent, document.referrer)
         // if (customUA) {
         //   t.setFakeUA(customUA)
         //   alert(customUA)
@@ -2064,12 +2094,12 @@ const monkeyMsg = {
 
     if (isInCrossOriginFrame()) {
       window._h5PlayerForDebug_ = h5Player;
-      debugMsg('当前处于跨域受限的Iframe中，h5Player相关功能可能无法正常开启');
+      debug.log('当前处于跨域受限的Iframe中，h5Player相关功能可能无法正常开启');
     } else {
       window.top._h5PlayerForDebug_ = h5Player;
     }
   } catch (e) {
-    console.error('h5player:', e);
+    debug.error(e);
   }
 
   // document.addEventListener('visibilitychange', function () {
