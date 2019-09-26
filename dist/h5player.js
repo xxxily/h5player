@@ -677,9 +677,10 @@ class FullScreen {
 				top: 0 !important;
 				left: 0 !important;
 				background: #000 !important;
+				z-index: 999999 !important;
 			}
 			._webfullscreen_zindex_ {
-				z-index: 999998 !important;
+				z-index: 999999 !important;
 			}
 		`;
     if (!window._hasInitFullPageStyle_) {
@@ -694,6 +695,8 @@ class FullScreen {
         this.exit();
       }
     }, true);
+
+    this.getContainer();
   }
 
   eachParentNode (dom, fn) {
@@ -715,6 +718,11 @@ class FullScreen {
     const domBox = d.getBoundingClientRect();
     let container = d;
     t.eachParentNode(d, function (parentNode) {
+      if (parentNode.getAttribute('data-fullscreen-container')) {
+        container = parentNode;
+        return true
+      }
+
       const parentBox = parentNode.getBoundingClientRect();
       if (parentBox.width <= domBox.width && parentBox.height <= domBox.height) {
         container = parentNode;
@@ -722,6 +730,8 @@ class FullScreen {
         return true
       }
     });
+
+    container.setAttribute('data-fullscreen-container', 'true');
     t._container_ = container;
     return container
   }
@@ -1013,9 +1023,9 @@ const hasUseKey = {
 };
 
 (async function () {
-  monkeyMenu.on('设置', function () {
-    window.alert('功能开发中，敬请期待...');
-  });
+  // monkeyMenu.on('设置', function () {
+  //   window.alert('功能开发中，敬请期待...')
+  // })
   monkeyMenu.on('关于', function () {
     window.GM_openInTab('https://github.com/xxxily/h5player', {
       active: true,
@@ -1449,7 +1459,7 @@ const hasUseKey = {
         position: absolute;
         z-index: 999999;
         font-size: ${t.fontSize || 16}px;
-        padding: 8px 16px;
+        padding: 5px 10px;
         background: rgba(0,0,0,0.4);
         color:white;
         top: 0;

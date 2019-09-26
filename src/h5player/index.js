@@ -25,9 +25,9 @@ import {
 } from './helper'
 
 (async function () {
-  monkeyMenu.on('设置', function () {
-    window.alert('功能开发中，敬请期待...')
-  })
+  // monkeyMenu.on('设置', function () {
+  //   window.alert('功能开发中，敬请期待...')
+  // })
   monkeyMenu.on('关于', function () {
     window.GM_openInTab('https://github.com/xxxily/h5player', {
       active: true,
@@ -461,7 +461,7 @@ import {
         position: absolute;
         z-index: 999999;
         font-size: ${t.fontSize || 16}px;
-        padding: 8px 16px;
+        padding: 5px 10px;
         background: rgba(0,0,0,0.4);
         color:white;
         top: 0;
