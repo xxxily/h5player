@@ -165,17 +165,35 @@ const taskConf = {
   },
   'pan.baidu.com': {
     fullScreen: function (h5Player, taskConf) {
-      h5Player.playerInstance.parentNode.querySelector('.vjs-fullscreen-control').click()
+      h5Player.player().parentNode.querySelector('.vjs-fullscreen-control').click()
     }
   },
   // 'pornhub.com': {
   //   webFullScreen: '.bilibili-live-player-video-controller-web-fullscreen-btn button'
   // },
   'douyu.com': {
-    fullScreen: 'div[title="窗口全屏"]',
-    exitFullScreen: 'div[title="退出窗口全屏"]',
-    webFullScreen: 'div[title="网页全屏"]',
-    exitWebFullScreen: 'div[title="退出网页全屏"]'
+    fullScreen: function (h5Player, taskConf) {
+      const player = h5Player.player()
+      const container = player._fullScreen_.getContainer()
+      if (player._isFullScreen_) {
+        container.querySelector('div[title="退出窗口全屏"]').click()
+      } else {
+        container.querySelector('div[title="窗口全屏"]').click()
+      }
+      player._isFullScreen_ = !player._isFullScreen_
+      return true
+    },
+    webFullScreen: function (h5Player, taskConf) {
+      const player = h5Player.player()
+      const container = player._fullScreen_.getContainer()
+      if (player._isWebFullScreen_) {
+        container.querySelector('div[title="退出网页全屏"]').click()
+      } else {
+        container.querySelector('div[title="网页全屏"]').click()
+      }
+      player._isWebFullScreen_ = !player._isWebFullScreen_
+      return true
+    }
   }
 }
 
@@ -189,7 +207,12 @@ function h5PlayerTccInit (h5Player) {
         return task.callback(h5Player, taskConf, data)
       }
     } else if (task instanceof Function) {
-      return task(h5Player, taskConf, data)
+      try {
+        return task(h5Player, taskConf, data)
+      } catch (e) {
+        console.error('TCC自定义函数任务执行失败：', h5Player, taskConf, data)
+        return false
+      }
     } else {
       /* 触发选择器上的点击事件 */
       if (wrapDom && wrapDom.querySelector(task)) {
