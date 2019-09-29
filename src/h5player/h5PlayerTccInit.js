@@ -82,6 +82,7 @@ const taskConf = {
       // eslint-disable-next-line no-undef
       GM_addStyle(`
           div[templatetype="common_pause"]{ display:none }
+          .iqp-logo-box{ display:none !important }
       `)
     }
   },
