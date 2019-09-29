@@ -25,6 +25,8 @@ import {
 } from './helper'
 
 (async function () {
+  const $ = window.jQuery
+
   // monkeyMenu.on('设置', function () {
   //   window.alert('功能开发中，敬请期待...')
   // })

@@ -24,6 +24,7 @@
 // @grant        GM_openInTab
 // @grant        GM_download
 // @run-at       document-start
+// @require      http://cdn.bootcss.com/jquery/3.4.1/jquery.min.js
 // ==/UserScript==
 (function (w) { if (w) { w.name = 'h5player'; } })();
 
@@ -615,9 +616,6 @@ const taskConf = {
       h5Player.player().parentNode.querySelector('.vjs-fullscreen-control').click();
     }
   },
-  // 'pornhub.com': {
-  //   webFullScreen: '.bilibili-live-player-video-controller-web-fullscreen-btn button'
-  // },
   'douyu.com': {
     fullScreen: function (h5Player, taskConf) {
       const player = h5Player.player();
@@ -1046,6 +1044,7 @@ const hasUseKey = {
 };
 
 (async function () {
+
   // monkeyMenu.on('设置', function () {
   //   window.alert('功能开发中，敬请期待...')
   // })

@@ -24,5 +24,6 @@
 // @grant        GM_openInTab
 // @grant        GM_download
 // @run-at       document-start
+// @require      http://cdn.bootcss.com/jquery/3.4.1/jquery.min.js
 // ==/UserScript==
 (function (w) { if (w) { w.name = 'h5player' } })()

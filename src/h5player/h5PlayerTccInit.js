@@ -168,9 +168,6 @@ const taskConf = {
       h5Player.player().parentNode.querySelector('.vjs-fullscreen-control').click()
     }
   },
-  // 'pornhub.com': {
-  //   webFullScreen: '.bilibili-live-player-video-controller-web-fullscreen-btn button'
-  // },
   'douyu.com': {
     fullScreen: function (h5Player, taskConf) {
       const player = h5Player.player()
