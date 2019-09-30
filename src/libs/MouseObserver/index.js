@@ -1,3 +1,10 @@
+/**
+ * 鼠标事件观测对象
+ * 用于实现鼠标事件的穿透响应，有别于pointer-events:none
+ * pointer-events:none是设置当前层允许穿透
+ * 而MouseObserver是：即使不知道target上面存在多少层遮挡，一样可以响应鼠标事件
+ */
+
 class MouseObserver {
   constructor (observeOpt) {
     // eslint-disable-next-line no-undef
@@ -37,6 +44,12 @@ class MouseObserver {
     this.observeList = newObserveList
   }
 
+  /**
+   * 增加事件绑定
+   * @param target {element} -必选 要绑定事件的dom对象
+   * @param type {string} -必选 要绑定的事件，只支持鼠标事件
+   * @param listener {function} -必选 符合触发条件时的响应函数
+   */
   on (target, type, listener, options) {
     const t = this
     t._observe(target)
@@ -87,9 +100,16 @@ class MouseObserver {
     }
   }
 
+  /**
+   * 解除事件绑定
+   * @param target {element} -必选 要解除事件的dom对象
+   * @param type {string} -必选 要解除的事件，只支持鼠标事件
+   * @param listener {function} -必选 绑定事件时的响应函数
+   * @returns {boolean}
+   */
   off (target, type, listener) {
     const t = this
-    if (!t._mouseObserver_ || !t._mouseObserver_[type] || !target.MouseObserverEvent || !target.MouseObserverEvent[type]) return false
+    if (!target || !type || !listener || !t._mouseObserver_ || !t._mouseObserver_[type] || !target.MouseObserverEvent || !target.MouseObserverEvent[type]) return false
 
     const newListenerList = []
     const listenerList = t._mouseObserver_[type]
