@@ -72,7 +72,7 @@ class MouseObserver {
                   listener.call(t, event, {
                     x: offsetX,
                     y: offsetY
-                  })
+                  }, target)
                 }
               })
             }
@@ -86,11 +86,47 @@ class MouseObserver {
       t._mouseObserver_[type].push(listener)
     }
   }
+
+  off (target, type, listener) {
+    const t = this
+    if (!t._mouseObserver_ || !t._mouseObserver_[type] || !target.MouseObserverEvent || !target.MouseObserverEvent[type]) return false
+
+    const newListenerList = []
+    const listenerList = t._mouseObserver_[type]
+    let isMatch = false
+    listenerList.forEach((listenerItem) => {
+      if (listenerItem === listener) {
+        isMatch = true
+      } else {
+        newListenerList.push(listenerItem)
+      }
+    })
+
+    if (isMatch) {
+      t._mouseObserver_[type] = newListenerList
+
+      /* 侦听器已被完全移除 */
+      if (newListenerList.length === 0) {
+        delete target.MouseObserverEvent[type]
+      }
+
+      /* 当MouseObserverEvent为空对象时移除观测对象 */
+      if (JSON.stringify(target.MouseObserverEvent[type]) === '{}') {
+        t._unobserve(target)
+      }
+    }
+  }
 }
 
-var mouseObserver = new MouseObserver()
-mouseObserver.on(document.querySelector('#additional-info'), 'click', (event, offset) => {
-  console.log('偏移信息：', offset, event)
-})
+// 测试代码
+// var mouseObserver = new MouseObserver()
+// var target = document.querySelector('#additional-info')
+// var listener = (event, offset, target) => {
+//   console.log('偏移信息：', offset, event, target)
+// }
+// mouseObserver.on(target, 'click', listener)
+// setTimeout(function () {
+//   mouseObserver.off(target, 'click', listener)
+// }, 1000 * 10)
 
 export default MouseObserver
