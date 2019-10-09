@@ -181,3 +181,8 @@ PS：本脚基于：[HTML5播放器增强插件](https://greasyfork.org/users/49
 * 优化操作提示样式降低干扰
 * 优化截图保存文件大小
 * 增加部分网站兼容
+
+### 3.0.3
+* 解决tips引起的样式混乱BUG
+* 优化获取video包裹节点的方法
+* 增加MouseObserver模块
