@@ -395,10 +395,11 @@ import {
       // 修复部分提示按钮位置异常问题
       let backupStyle = parentNode.getAttribute('style-backup') || ''
       const defStyle = parentNode.getAttribute('style') || ''
-      if (backupStyle === null) {
+      if (!backupStyle) {
         parentNode.setAttribute('style-backup', defStyle)
         backupStyle = defStyle
       }
+
       const newStyleArr = backupStyle.split(';')
 
       const oldPosition = parentNode.getAttribute('def-position') || window.getComputedStyle(parentNode).position
