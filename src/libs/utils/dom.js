@@ -24,6 +24,35 @@ function eachParentNode (dom, fn) {
   }
 }
 
+/**
+ * 根据节点的宽高获取其包裹节点
+ * @param el {Element} -必选 要查找的节点
+ * @returns {element}
+ */
+function getContainer (el) {
+  if (!el || !el.getBoundingClientRect) return el
+
+  const domBox = el.getBoundingClientRect()
+  let container = el
+  eachParentNode(el, function (parentNode) {
+    if (!parentNode || !parentNode.getBoundingClientRect) return true
+    const parentBox = parentNode.getBoundingClientRect()
+    const isInsideTheBox = parentBox.width <= domBox.width && parentBox.height <= domBox.height
+    if (isInsideTheBox) {
+      container = parentNode
+    } else {
+      return true
+    }
+  })
+
+  // 如果查找到的包裹节点指向自己，则尝试使用parentNode作为包裹节点再次查找
+  if (container === el && el.parentNode) {
+    container = getContainer(el.parentNode)
+  }
+
+  return container
+}
+
 function loadCSSText (cssText) {
   const style = document.createElement('style')
   const head = document.head || document.getElementsByTagName('head')[0]
@@ -31,4 +60,4 @@ function loadCSSText (cssText) {
   head.appendChild(style)
 }
 
-export { hideDom, eachParentNode, loadCSSText }
+export { hideDom, eachParentNode, loadCSSText, getContainer }

@@ -4,7 +4,7 @@ import hackEventListener from './hackEventListener'
 import { getType, isType, isObj, isErr, isArr, isRegExp, isFunction, isUndefined, isNull } from './typeof'
 import { clone, forIn, getObjKeys, mergeObj, merge, getValByPath } from './object'
 import { quickSort } from './number'
-import { hideDom, eachParentNode, loadCSSText } from './dom'
+import { hideDom, eachParentNode, getContainer, loadCSSText } from './dom'
 import { fakeUA, userAgentMap } from './fakeUA'
 import { isInIframe, isInCrossOriginFrame } from './iframe'
 
@@ -31,6 +31,7 @@ export {
   hideDom,
   loadCSSText,
   eachParentNode,
+  getContainer,
   fakeUA,
   userAgentMap,
   isInIframe,
