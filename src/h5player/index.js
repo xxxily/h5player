@@ -3,6 +3,7 @@ import h5PlayerTccInit from './h5PlayerTccInit'
 import fakeConfig from './fakeConfig'
 import FullScreen from '../libs/FullScreen/index'
 import videoCapturer from '../libs/videoCapturer/index'
+import MouseObserver from '../libs/MouseObserver/index'
 import { getTabId } from './getId'
 import monkeyMenu from './monkeyMenu'
 import monkeyMsg from './monkeyMsg'
@@ -13,6 +14,7 @@ import {
   isObj,
   quickSort,
   eachParentNode,
+  getContainer,
   fakeUA,
   userAgentMap,
   isInIframe,
@@ -25,7 +27,9 @@ import {
 } from './helper'
 
 (async function () {
-  const $ = window.jQuery
+  // const $ = window.jQuery
+
+  const mouseObserver = new MouseObserver()
 
   // monkeyMenu.on('设置', function () {
   //   window.alert('功能开发中，敬请期待...')
@@ -116,7 +120,6 @@ import {
 
       const player = t.playerInstance
       t.filter.reset()
-      t.initTips()
       t.initPlaybackRate()
       t.isFoucs()
 
@@ -159,6 +162,11 @@ import {
       if (taskConf.init) {
         TCC.doTask('init', player)
       }
+
+      /* 注册鼠标响应事件 */
+      mouseObserver.on(player, 'click', function (event, offset, target) {
+        debug.log('捕捉到鼠标点击事件：', event, offset, target)
+      })
     },
     initPlaybackRate: function () {
       const t = this
@@ -382,7 +390,7 @@ import {
         return true
       }
 
-      const parentNode = player.parentNode
+      const parentNode = getContainer(player)
 
       // 修复部分提示按钮位置异常问题
       let backupStyle = parentNode.getAttribute('style-backup') || ''
@@ -453,7 +461,7 @@ import {
     initTips: function () {
       const t = this
       const player = t.player()
-      const parentNode = player.parentNode
+      const parentNode = getContainer(player)
       if (parentNode.querySelector('.' + t.tipsClassName)) return
 
       // top: 50%;
