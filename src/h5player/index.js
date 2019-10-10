@@ -396,7 +396,7 @@ import {
       let backupStyle = parentNode.getAttribute('style-backup') || ''
       const defStyle = parentNode.getAttribute('style') || ''
       if (!backupStyle) {
-        parentNode.setAttribute('style-backup', defStyle)
+        parentNode.setAttribute('style-backup', defStyle || 'style-backup:none')
         backupStyle = defStyle
       }
 
@@ -411,8 +411,13 @@ import {
       }
 
       const playerBox = player.getBoundingClientRect()
-      newStyleArr.push('min-width:' + playerBox.width + 'px')
-      newStyleArr.push('min-height:' + playerBox.height + 'px')
+      const parentNodeBox = parentNode.getBoundingClientRect()
+      /* 不存在高宽时，给包裹节点一个最小高宽，才能保证提示能正常显示 */
+      if (!parentNodeBox.width || !parentNodeBox.height) {
+        newStyleArr.push('min-width:' + playerBox.width + 'px')
+        newStyleArr.push('min-height:' + playerBox.height + 'px')
+      }
+
       parentNode.setAttribute('style', newStyleArr.join(';'))
 
       const tipsSelector = '.' + t.tipsClassName
@@ -444,7 +449,9 @@ import {
           // 隐藏提示框和还原样式
           style.opacity = 0
           style.display = 'none'
-          parentNode.setAttribute('style', backupStyle)
+          if (backupStyle && backupStyle !== 'style-backup:none') {
+            parentNode.setAttribute('style', backupStyle)
+          }
         }, 2000)
       }
 

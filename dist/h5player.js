@@ -405,9 +405,10 @@ function eachParentNode (dom, fn) {
 /**
  * 根据节点的宽高获取其包裹节点
  * @param el {Element} -必选 要查找的节点
+ * @param noRecursive {Boolean} -可选 禁止递归，默认false
  * @returns {element}
  */
-function getContainer (el) {
+function getContainer (el, noRecursive) {
   if (!el || !el.getBoundingClientRect) return el
 
   const domBox = el.getBoundingClientRect();
@@ -424,8 +425,8 @@ function getContainer (el) {
   });
 
   // 如果查找到的包裹节点指向自己，则尝试使用parentNode作为包裹节点再次查找
-  if (container === el && el.parentNode) {
-    container = getContainer(el.parentNode);
+  if (container === el && el.parentNode && !noRecursive) {
+    container = getContainer(el.parentNode, true);
   }
 
   return container
@@ -1585,7 +1586,7 @@ const hasUseKey = {
       let backupStyle = parentNode.getAttribute('style-backup') || '';
       const defStyle = parentNode.getAttribute('style') || '';
       if (!backupStyle) {
-        parentNode.setAttribute('style-backup', defStyle);
+        parentNode.setAttribute('style-backup', defStyle || 'style-backup:none');
         backupStyle = defStyle;
       }
 
@@ -1600,8 +1601,13 @@ const hasUseKey = {
       }
 
       const playerBox = player.getBoundingClientRect();
-      newStyleArr.push('min-width:' + playerBox.width + 'px');
-      newStyleArr.push('min-height:' + playerBox.height + 'px');
+      const parentNodeBox = parentNode.getBoundingClientRect();
+      /* 不存在高宽时，给包裹节点一个最小高宽，才能保证提示能正常显示 */
+      if (!parentNodeBox.width || !parentNodeBox.height) {
+        newStyleArr.push('min-width:' + playerBox.width + 'px');
+        newStyleArr.push('min-height:' + playerBox.height + 'px');
+      }
+
       parentNode.setAttribute('style', newStyleArr.join(';'));
 
       const tipsSelector = '.' + t.tipsClassName;
@@ -1633,7 +1639,9 @@ const hasUseKey = {
           // 隐藏提示框和还原样式
           style.opacity = 0;
           style.display = 'none';
-          parentNode.setAttribute('style', backupStyle);
+          if (backupStyle && backupStyle !== 'style-backup:none') {
+            parentNode.setAttribute('style', backupStyle);
+          }
         }, 2000);
       }
 
