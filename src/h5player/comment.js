@@ -2,7 +2,7 @@
 // @name         HTML5视频播放器增强脚本
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.0.3
+// @version      3.0.4
 // @description  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍数播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
 // @author       ankvps
 // @icon         https://raw.githubusercontent.com/xxxily/h5player/master/logo.png
