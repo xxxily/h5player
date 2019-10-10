@@ -27,9 +27,10 @@ function eachParentNode (dom, fn) {
 /**
  * 根据节点的宽高获取其包裹节点
  * @param el {Element} -必选 要查找的节点
+ * @param noRecursive {Boolean} -可选 禁止递归，默认false
  * @returns {element}
  */
-function getContainer (el) {
+function getContainer (el, noRecursive) {
   if (!el || !el.getBoundingClientRect) return el
 
   const domBox = el.getBoundingClientRect()
@@ -46,8 +47,8 @@ function getContainer (el) {
   })
 
   // 如果查找到的包裹节点指向自己，则尝试使用parentNode作为包裹节点再次查找
-  if (container === el && el.parentNode) {
-    container = getContainer(el.parentNode)
+  if (container === el && el.parentNode && !noRecursive) {
+    container = getContainer(el.parentNode, true)
   }
 
   return container
