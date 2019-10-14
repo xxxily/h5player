@@ -1,13 +1,21 @@
 function createDebugMethod (name) {
   name = name || 'info'
+
+  const bgColorMap = {
+    info: '#2274A5',
+    log: '#95B46A',
+    error: '#D33F49'
+  }
+
   return function () {
     const arg = Array.from(arguments)
-    arg.unshift('h5player debug message :')
+    arg.unshift(`color: white; background-color: ${bgColorMap[name] || '#95B46A'}`)
+    arg.unshift('%c h5player message:')
     console[name].apply(console, arg)
   }
 }
 
-const debug = {
+var debug = {
   log: createDebugMethod('log'),
   error: createDebugMethod('error'),
   info: createDebugMethod('info')
