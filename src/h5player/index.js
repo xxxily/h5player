@@ -544,7 +544,7 @@ import {
       const keyCode = event.keyCode
       const key = event.key.toLowerCase()
 
-      if (event.shiftKey && !event.ctrlKey && !event.altKey) {
+      if (event.shiftKey && !event.ctrlKey && !event.altKey && !event.metaKey) {
         // 网页全屏
         if (key === 'enter') {
           t.setWebFullScreen()
@@ -613,7 +613,7 @@ import {
       }
 
       // 防止其它无关组合键冲突
-      if (event.altKey || event.ctrlKey || event.shiftKey) return
+      if (event.altKey || event.ctrlKey || event.shiftKey || event.metaKey) return
 
       // 方向键右→：快进3秒
       if (keyCode === 39) {
@@ -804,6 +804,10 @@ import {
         if (event.altKey) {
           combineKey.push('alt')
         }
+        if (event.metaKey) {
+          combineKey.push('command')
+        }
+
         combineKey.push(key)
 
         /* 通过循环判断当前触发的组合键和已注册的组合键是否完全一致 */
