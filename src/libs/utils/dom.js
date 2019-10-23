@@ -47,8 +47,14 @@ function getContainer (el, noRecursive) {
   })
 
   // 如果查找到的包裹节点指向自己，则尝试使用parentNode作为包裹节点再次查找
-  if (container === el && el.parentNode && !noRecursive) {
-    container = getContainer(el.parentNode, true)
+  if (container === el && el.parentNode) {
+    if (noRecursive) {
+      // 直接以父节点作为包裹节点
+      container = el.parentNode
+    } else {
+      // 以父节点作为基准再次查找，但不再深入递归
+      container = getContainer(el.parentNode, true)
+    }
   }
 
   return container

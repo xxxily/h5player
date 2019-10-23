@@ -382,6 +382,15 @@ import {
       }
     },
     tipsClassName: 'html_player_enhance_tips',
+    getTipsContainer: function () {
+      const t = h5Player
+      const player = t.player()
+      // 使用getContainer获取到的父节点弊端太多，暂时弃用
+      // const _tispContainer_ = player._tispContainer_  ||  getContainer(player);
+      const _tispContainer_ = player._tispContainer_ || player.parentNode
+      if (!player._tispContainer_) { player._tispContainer_ = _tispContainer_ }
+      return _tispContainer_
+    },
     tips: function (str) {
       const t = h5Player
       const player = t.player()
@@ -390,11 +399,11 @@ import {
         return true
       }
 
-      const parentNode = getContainer(player)
+      const parentNode = t.getTipsContainer()
 
       // 修复部分提示按钮位置异常问题
-      let backupStyle = parentNode.getAttribute('style-backup') || ''
       const defStyle = parentNode.getAttribute('style') || ''
+      let backupStyle = parentNode.getAttribute('style-backup') || ''
       if (!backupStyle) {
         parentNode.setAttribute('style-backup', defStyle || 'style-backup:none')
         backupStyle = defStyle
@@ -467,9 +476,8 @@ import {
     },
     /* 设置提示DOM的样式 */
     initTips: function () {
-      const t = this
-      const player = t.player()
-      const parentNode = getContainer(player)
+      const t = h5Player
+      const parentNode = t.getTipsContainer()
       if (parentNode.querySelector('.' + t.tipsClassName)) return
 
       // top: 50%;

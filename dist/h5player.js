@@ -402,36 +402,6 @@ function eachParentNode (dom, fn) {
   }
 }
 
-/**
- * 根据节点的宽高获取其包裹节点
- * @param el {Element} -必选 要查找的节点
- * @param noRecursive {Boolean} -可选 禁止递归，默认false
- * @returns {element}
- */
-function getContainer (el, noRecursive) {
-  if (!el || !el.getBoundingClientRect) return el
-
-  const domBox = el.getBoundingClientRect();
-  let container = el;
-  eachParentNode(el, function (parentNode) {
-    if (!parentNode || !parentNode.getBoundingClientRect) return true
-    const parentBox = parentNode.getBoundingClientRect();
-    const isInsideTheBox = parentBox.width <= domBox.width && parentBox.height <= domBox.height;
-    if (isInsideTheBox) {
-      container = parentNode;
-    } else {
-      return true
-    }
-  });
-
-  // 如果查找到的包裹节点指向自己，则尝试使用parentNode作为包裹节点再次查找
-  if (container === el && el.parentNode && !noRecursive) {
-    container = getContainer(el.parentNode, true);
-  }
-
-  return container
-}
-
 /* ua信息伪装 */
 function fakeUA (ua) {
   Object.defineProperty(navigator, 'userAgent', {
@@ -1580,6 +1550,15 @@ const hasUseKey = {
       }
     },
     tipsClassName: 'html_player_enhance_tips',
+    getTipsContainer: function () {
+      const t = h5Player;
+      const player = t.player();
+      // 使用getContainer获取到的父节点弊端太多，暂时弃用
+      // const _tispContainer_ = player._tispContainer_  ||  getContainer(player);
+      const _tispContainer_ = player._tispContainer_ || player.parentNode;
+      if (!player._tispContainer_) { player._tispContainer_ = _tispContainer_; }
+      return _tispContainer_
+    },
     tips: function (str) {
       const t = h5Player;
       const player = t.player();
@@ -1588,11 +1567,11 @@ const hasUseKey = {
         return true
       }
 
-      const parentNode = getContainer(player);
+      const parentNode = t.getTipsContainer();
 
       // 修复部分提示按钮位置异常问题
-      let backupStyle = parentNode.getAttribute('style-backup') || '';
       const defStyle = parentNode.getAttribute('style') || '';
+      let backupStyle = parentNode.getAttribute('style-backup') || '';
       if (!backupStyle) {
         parentNode.setAttribute('style-backup', defStyle || 'style-backup:none');
         backupStyle = defStyle;
@@ -1665,9 +1644,8 @@ const hasUseKey = {
     },
     /* 设置提示DOM的样式 */
     initTips: function () {
-      const t = this;
-      const player = t.player();
-      const parentNode = getContainer(player);
+      const t = h5Player;
+      const parentNode = t.getTipsContainer();
       if (parentNode.querySelector('.' + t.tipsClassName)) return
 
       // top: 50%;
