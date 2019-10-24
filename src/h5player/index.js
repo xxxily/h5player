@@ -14,7 +14,6 @@ import {
   isObj,
   quickSort,
   eachParentNode,
-  getContainer,
   fakeUA,
   userAgentMap,
   isInIframe,
@@ -381,6 +380,26 @@ import {
         }
       }
     },
+    isAllowRestorePlayProgress: function () {
+      const allowRestorePlayProgressVal = window.GM_getValue('_allowRestorePlayProgress_')
+      return !allowRestorePlayProgressVal || allowRestorePlayProgressVal === 'true'
+    },
+    /* 切换自动恢复播放进度的状态 */
+    switchRestorePlayProgressStatus: function () {
+      const t = h5Player
+      let isAllowRestorePlayProgress = t.isAllowRestorePlayProgress()
+      /* 进行值反转 */
+      isAllowRestorePlayProgress = !isAllowRestorePlayProgress
+      window.GM_setValue('_allowRestorePlayProgress_', String(isAllowRestorePlayProgress))
+
+      /* 操作提示 */
+      if (isAllowRestorePlayProgress) {
+        t.tips('允许自动恢复播放进度')
+        t.setPlayProgress(t.player())
+      } else {
+        t.tips('禁止自动恢复播放进度')
+      }
+    },
     tipsClassName: 'html_player_enhance_tips',
     getTipsContainer: function () {
       const t = h5Player
@@ -578,6 +597,10 @@ import {
         // 截图并下载保存
         if (key === 's') {
           videoCapturer.capture(player, true)
+        }
+
+        if (key === 'r') {
+          t.switchRestorePlayProgressStatus()
         }
 
         // 视频画面缩放相关事件
@@ -949,6 +972,11 @@ import {
       clearTimeout(player._playProgressTimer_)
       function recorder (player) {
         player._playProgressTimer_ = setTimeout(function () {
+          if (!t.isAllowRestorePlayProgress()) {
+            recorder(player)
+            return true
+          }
+
           const progressMap = t.getPlayProgress()
 
           const keyName = window.location.href || player.src
@@ -989,14 +1017,19 @@ import {
     },
     /* 设置播放进度 */
     setPlayProgress: function (player, time) {
-      if (!player) return
       const t = h5Player
+      if (!player) return
+
       const curTime = Number(t.getPlayProgress(player))
       if (!curTime || Number.isNaN(curTime)) return
 
-      player.currentTime = curTime || player.currentTime
-      if (curTime > 3) {
-        t.tips('为你恢复上次播放进度~')
+      if (t.isAllowRestorePlayProgress()) {
+        player.currentTime = curTime || player.currentTime
+        if (curTime > 3) {
+          t.tips('为你恢复上次播放进度~')
+        }
+      } else {
+        t.tips('恢复播放进度功能已禁用，按shift+r可开启该功能')
       }
     },
     /**
