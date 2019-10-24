@@ -2,7 +2,7 @@
 // @name         HTML5视频播放器增强脚本
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.0.5
+// @version      3.1.0
 // @description  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍数播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
 // @author       ankvps
 // @icon         https://raw.githubusercontent.com/xxxily/h5player/master/logo.png
@@ -1549,6 +1549,26 @@ const hasUseKey = {
         }
       }
     },
+    isAllowRestorePlayProgress: function () {
+      const allowRestorePlayProgressVal = window.GM_getValue('_allowRestorePlayProgress_');
+      return !allowRestorePlayProgressVal || allowRestorePlayProgressVal === 'true'
+    },
+    /* 切换自动恢复播放进度的状态 */
+    switchRestorePlayProgressStatus: function () {
+      const t = h5Player;
+      let isAllowRestorePlayProgress = t.isAllowRestorePlayProgress();
+      /* 进行值反转 */
+      isAllowRestorePlayProgress = !isAllowRestorePlayProgress;
+      window.GM_setValue('_allowRestorePlayProgress_', String(isAllowRestorePlayProgress));
+
+      /* 操作提示 */
+      if (isAllowRestorePlayProgress) {
+        t.tips('允许自动恢复播放进度');
+        t.setPlayProgress(t.player());
+      } else {
+        t.tips('禁止自动恢复播放进度');
+      }
+    },
     tipsClassName: 'html_player_enhance_tips',
     getTipsContainer: function () {
       const t = h5Player;
@@ -1746,6 +1766,10 @@ const hasUseKey = {
         // 截图并下载保存
         if (key === 's') {
           videoCapturer.capture(player, true);
+        }
+
+        if (key === 'r') {
+          t.switchRestorePlayProgressStatus();
         }
 
         // 视频画面缩放相关事件
@@ -2117,6 +2141,11 @@ const hasUseKey = {
       clearTimeout(player._playProgressTimer_);
       function recorder (player) {
         player._playProgressTimer_ = setTimeout(function () {
+          if (!t.isAllowRestorePlayProgress()) {
+            recorder(player);
+            return true
+          }
+
           const progressMap = t.getPlayProgress();
 
           const keyName = window.location.href || player.src;
@@ -2157,14 +2186,19 @@ const hasUseKey = {
     },
     /* 设置播放进度 */
     setPlayProgress: function (player, time) {
-      if (!player) return
       const t = h5Player;
+      if (!player) return
+
       const curTime = Number(t.getPlayProgress(player));
       if (!curTime || Number.isNaN(curTime)) return
 
-      player.currentTime = curTime || player.currentTime;
-      if (curTime > 3) {
-        t.tips('为你恢复上次播放进度~');
+      if (t.isAllowRestorePlayProgress()) {
+        player.currentTime = curTime || player.currentTime;
+        if (curTime > 3) {
+          t.tips('为你恢复上次播放进度~');
+        }
+      } else {
+        t.tips('恢复播放进度功能已禁用，按shift+r可开启该功能');
       }
     },
     /**

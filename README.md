@@ -66,6 +66,7 @@ PS：本脚基于：[HTML5播放器增强插件](https://greasyfork.org/users/49
 | shift+Z | 恢复视频画面 |
 | shift+P | 进入或退画中画功能 |
 | shift+S | 截图，截取当前画面并保存 |
+| shift+R | 启用或禁止自动恢复播放进度功能 |
 | shift+→ | 画面向右移动10px |
 | shift+← | 画面向左移动10px |
 | shift+↑ | 画面向上移动10px |
@@ -194,3 +195,7 @@ PS：本脚基于：[HTML5播放器增强插件](https://greasyfork.org/users/49
 ### 3.0.5
 * 增加mac快捷键兼容
 * 优化部分代码逻辑
+
+### 3.1.0
+* 增加自动恢复播放进度的控制选项
+* 修复部分网站tips无法正常显示BUG
