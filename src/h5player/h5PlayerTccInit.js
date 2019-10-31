@@ -67,6 +67,9 @@ const taskConf = {
     autoPlay: '.bilibili-player-video-btn-start',
     switchPlayStatus: '.bilibili-player-video-btn-start'
   },
+  't.bilibili.com': {
+    fullScreen: 'button[name="fullscreen-button"]'
+  },
   'live.bilibili.com': {
     fullScreen: '.bilibili-live-player-video-controller-fullscreen-btn button',
     webFullScreen: '.bilibili-live-player-video-controller-web-fullscreen-btn button',
