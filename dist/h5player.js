@@ -613,6 +613,7 @@ const taskConf = {
     init: function (h5Player, taskConf) {
       // 隐藏水印
       hideDom('.txp-watermark');
+      hideDom('.txp-watermark-action');
     },
     include: /(v.qq|sports.qq)/
   },
