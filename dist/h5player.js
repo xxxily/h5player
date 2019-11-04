@@ -547,7 +547,7 @@ const taskConf = {
   'ted.com': {
     fullScreen: 'button.Fullscreen'
   },
-  'v.qq.com': {
+  'qq.com': {
     pause: '.container_inner .txp-shadow-mod]',
     play: '.container_inner .txp-shadow-mod',
     shortcuts: {
@@ -613,7 +613,8 @@ const taskConf = {
     init: function (h5Player, taskConf) {
       // 隐藏水印
       hideDom('.txp-watermark');
-    }
+    },
+    include: /(v.qq|sports.qq)/
   },
   'pan.baidu.com': {
     fullScreen: function (h5Player, taskConf) {
@@ -1336,7 +1337,7 @@ const hasUseKey = {
 
       /* 注册鼠标响应事件 */
       mouseObserver.on(player, 'click', function (event, offset, target) {
-        debug.log('捕捉到鼠标点击事件：', event, offset, target);
+        // debug.log('捕捉到鼠标点击事件：', event, offset, target)
       });
     },
     initPlaybackRate: function () {

@@ -164,7 +164,7 @@ import {
 
       /* 注册鼠标响应事件 */
       mouseObserver.on(player, 'click', function (event, offset, target) {
-        debug.log('捕捉到鼠标点击事件：', event, offset, target)
+        // debug.log('捕捉到鼠标点击事件：', event, offset, target)
       })
     },
     initPlaybackRate: function () {
