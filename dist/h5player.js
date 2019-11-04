@@ -1579,9 +1579,16 @@ const hasUseKey = {
       const player = t.player();
       // 使用getContainer获取到的父节点弊端太多，暂时弃用
       // const _tispContainer_ = player._tispContainer_  ||  getContainer(player);
-      const _tispContainer_ = player._tispContainer_ || player.parentNode;
-      if (!player._tispContainer_) { player._tispContainer_ = _tispContainer_; }
-      return _tispContainer_
+
+      let tispContainer = player._tispContainer_ || player.parentNode;
+      /* 如果父节点为无长宽的元素，则再往上查找一级 */
+      const containerBox = tispContainer.getBoundingClientRect();
+      if ((!containerBox.width || !containerBox.height) && tispContainer.parentNode) {
+        tispContainer = tispContainer.parentNode;
+      }
+
+      if (!player._tispContainer_) { player._tispContainer_ = tispContainer; }
+      return tispContainer
     },
     tips: function (str) {
       const t = h5Player;
