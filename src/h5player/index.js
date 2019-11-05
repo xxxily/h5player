@@ -542,7 +542,7 @@ import {
           view = view.replace('{' + i + '}', String(this.key[i]))
           this.key[i] = Number(this.key[i])
         }
-        h5Player.player().style.WebkitFilter = view
+        h5Player.player().style.filter = view
       },
       reset: function () {
         this.key[0] = 1
