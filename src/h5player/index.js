@@ -118,7 +118,6 @@ import {
       if (!t.playerInstance) return
 
       const player = t.playerInstance
-      t.filter.reset()
       t.initPlaybackRate()
       t.isFoucs()
 
@@ -536,7 +535,7 @@ import {
     fps: 30,
     /* 滤镜效果 */
     filter: {
-      key: new Array(5),
+      key: [1, 1, 1, 0, 0],
       setup: function () {
         var view = 'brightness({0}) contrast({1}) saturate({2}) hue-rotate({3}deg) blur({4}px)'
         for (var i = 0; i < 5; i++) {
