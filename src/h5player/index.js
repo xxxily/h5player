@@ -335,6 +335,13 @@ import {
       }
       t.tips(tipsMsg)
     },
+    /* 播放下一个视频，默认是没有这个功能的，只有在TCC里配置了next字段才会有该功能 */
+    setNextVideo: function () {
+      const isDo = TCC.doTask('next')
+      if (!isDo) {
+        debug.log('当前网页不支持一键播放下个视频功能~')
+      }
+    },
     setFakeUA (ua) {
       ua = ua || userAgentMap.iPhone.safari
 
@@ -811,6 +818,10 @@ import {
         }
       }
 
+      if (key === 'n') {
+        t.setNextVideo()
+      }
+
       // 阻止事件冒泡
       event.stopPropagation()
       event.preventDefault()
@@ -869,13 +880,18 @@ import {
 
       if (confIsCorrect && isRegister()) {
         // 执行自定义快捷键操作
-        TCC.doTask('shortcuts', {
+        const isDo = TCC.doTask('shortcuts', {
           event,
           player,
           h5Player
         })
 
-        return true
+        if (isDo) {
+          event.stopPropagation()
+          event.preventDefault()
+        }
+
+        return isDo
       } else {
         return false
       }

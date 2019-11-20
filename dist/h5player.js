@@ -502,7 +502,8 @@ const taskConf = {
   },
   'youtube.com': {
     // webFullScreen: 'button.ytp-size-button',
-    fullScreen: 'button.ytp-fullscreen-button'
+    fullScreen: 'button.ytp-fullscreen-button',
+    next: '.ytp-next-button'
   },
   'netflix.com': {
     fullScreen: 'button.button-nfplayerFullscreen',
@@ -513,7 +514,8 @@ const taskConf = {
     fullScreen: '[data-text="进入全屏"]',
     webFullScreen: '[data-text="网页全屏"]',
     autoPlay: '.bilibili-player-video-btn-start',
-    switchPlayStatus: '.bilibili-player-video-btn-start'
+    switchPlayStatus: '.bilibili-player-video-btn-start',
+    next: '.bilibili-player-video-btn-next'
   },
   't.bilibili.com': {
     fullScreen: 'button[name="fullscreen-button"]'
@@ -526,6 +528,7 @@ const taskConf = {
   'iqiyi.com': {
     fullScreen: '.iqp-btn-fullscreen',
     webFullScreen: '.iqp-btn-webscreen',
+    next: '.iqp-btn-next',
     init: function (h5Player, taskConf) {
       // 隐藏水印
       hideDom('.iqp-logo-box');
@@ -539,6 +542,7 @@ const taskConf = {
   },
   'youku.com': {
     fullScreen: '.control-fullscreen-icon',
+    next: '.control-next-video',
     init: function (h5Player, taskConf) {
       // 隐藏水印
       hideDom('.youku-layer-logo');
@@ -548,7 +552,7 @@ const taskConf = {
     fullScreen: 'button.Fullscreen'
   },
   'qq.com': {
-    pause: '.container_inner .txp-shadow-mod]',
+    pause: '.container_inner .txp-shadow-mod',
     play: '.container_inner .txp-shadow-mod',
     shortcuts: {
       register: ['c', 'x', 'z', '1', '2', '3', '4'],
@@ -611,11 +615,13 @@ const taskConf = {
           target.click();
           const speedNum = Number(target.innerHTML.replace('x'));
           h5Player.setPlaybackRate(speedNum);
+          return true
         }
       }
     },
     fullScreen: 'txpdiv[data-report="window-fullscreen"]',
     webFullScreen: 'txpdiv[data-report="browser-fullscreen"]',
+    next: 'txpdiv[data-report="play-next"]',
     init: function (h5Player, taskConf) {
       // 隐藏水印
       hideDom('.txp-watermark');
@@ -1162,8 +1168,8 @@ var debug = {
 
 /* 当前用到的快捷键 */
 const hasUseKey = {
-  keyCodeList: [13, 16, 17, 18, 27, 32, 37, 38, 39, 40, 49, 50, 51, 52, 67, 68, 69, 70, 73, 74, 75, 79, 80, 81, 82, 83, 84, 85, 87, 88, 89, 90, 97, 98, 99, 100, 220],
-  keyList: ['enter', 'shift', 'control', 'alt', 'escape', ' ', 'arrowleft', 'arrowright', 'arrowright', 'arrowup', 'arrowdown', '1', '2', '3', '4', 'c', 'd', 'e', 'f', 'i', 'j', 'k', 'o', 'p', 'q', 'r', 's', 't', 'u', 'w', 'x', 'y', 'z', '\\', '|'],
+  keyCodeList: [13, 16, 17, 18, 27, 32, 37, 38, 39, 40, 49, 50, 51, 52, 67, 68, 69, 70, 73, 74, 75, 78, 79, 80, 81, 82, 83, 84, 85, 87, 88, 89, 90, 97, 98, 99, 100, 220],
+  keyList: ['enter', 'shift', 'control', 'alt', 'escape', ' ', 'arrowleft', 'arrowright', 'arrowright', 'arrowup', 'arrowdown', '1', '2', '3', '4', 'c', 'd', 'e', 'f', 'i', 'j', 'k', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'w', 'x', 'y', 'z', '\\', '|'],
   keyMap: {
     enter: 13,
     shift: 16,
@@ -1186,6 +1192,7 @@ const hasUseKey = {
     i: 73,
     j: 74,
     k: 75,
+    n: 78,
     o: 79,
     p: 80,
     q: 81,
@@ -1514,6 +1521,13 @@ const hasUseKey = {
         tipsMsg += `，垂直位移：${t.translate.y}px`;
       }
       t.tips(tipsMsg);
+    },
+    /* 播放下一个视频，默认是没有这个功能的，只有在TCC里配置了next字段才会有该功能 */
+    setNextVideo: function () {
+      const isDo = TCC.doTask('next');
+      if (!isDo) {
+        debug.log('当前网页不支持一键播放下个视频功能~');
+      }
     },
     setFakeUA (ua) {
       ua = ua || userAgentMap.iPhone.safari;
@@ -1991,6 +2005,10 @@ const hasUseKey = {
         }
       }
 
+      if (key === 'n') {
+        t.setNextVideo();
+      }
+
       // 阻止事件冒泡
       event.stopPropagation();
       event.preventDefault();
@@ -2049,13 +2067,18 @@ const hasUseKey = {
 
       if (confIsCorrect && isRegister()) {
         // 执行自定义快捷键操作
-        TCC.doTask('shortcuts', {
+        const isDo = TCC.doTask('shortcuts', {
           event,
           player,
           h5Player
         });
 
-        return true
+        if (isDo) {
+          event.stopPropagation();
+          event.preventDefault();
+        }
+
+        return isDo
       } else {
         return false
       }

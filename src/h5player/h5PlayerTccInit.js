@@ -54,7 +54,8 @@ const taskConf = {
   },
   'youtube.com': {
     // webFullScreen: 'button.ytp-size-button',
-    fullScreen: 'button.ytp-fullscreen-button'
+    fullScreen: 'button.ytp-fullscreen-button',
+    next: '.ytp-next-button'
   },
   'netflix.com': {
     fullScreen: 'button.button-nfplayerFullscreen',
@@ -65,7 +66,8 @@ const taskConf = {
     fullScreen: '[data-text="进入全屏"]',
     webFullScreen: '[data-text="网页全屏"]',
     autoPlay: '.bilibili-player-video-btn-start',
-    switchPlayStatus: '.bilibili-player-video-btn-start'
+    switchPlayStatus: '.bilibili-player-video-btn-start',
+    next: '.bilibili-player-video-btn-next'
   },
   't.bilibili.com': {
     fullScreen: 'button[name="fullscreen-button"]'
@@ -78,6 +80,7 @@ const taskConf = {
   'iqiyi.com': {
     fullScreen: '.iqp-btn-fullscreen',
     webFullScreen: '.iqp-btn-webscreen',
+    next: '.iqp-btn-next',
     init: function (h5Player, taskConf) {
       // 隐藏水印
       hideDom('.iqp-logo-box')
@@ -91,6 +94,7 @@ const taskConf = {
   },
   'youku.com': {
     fullScreen: '.control-fullscreen-icon',
+    next: '.control-next-video',
     init: function (h5Player, taskConf) {
       // 隐藏水印
       hideDom('.youku-layer-logo')
@@ -100,7 +104,7 @@ const taskConf = {
     fullScreen: 'button.Fullscreen'
   },
   'qq.com': {
-    pause: '.container_inner .txp-shadow-mod]',
+    pause: '.container_inner .txp-shadow-mod',
     play: '.container_inner .txp-shadow-mod',
     shortcuts: {
       register: ['c', 'x', 'z', '1', '2', '3', '4'],
@@ -163,11 +167,13 @@ const taskConf = {
           target.click()
           const speedNum = Number(target.innerHTML.replace('x'))
           h5Player.setPlaybackRate(speedNum)
+          return true
         }
       }
     },
     fullScreen: 'txpdiv[data-report="window-fullscreen"]',
     webFullScreen: 'txpdiv[data-report="browser-fullscreen"]',
+    next: 'txpdiv[data-report="play-next"]',
     init: function (h5Player, taskConf) {
       // 隐藏水印
       hideDom('.txp-watermark')
