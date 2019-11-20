@@ -551,14 +551,14 @@ const taskConf = {
     pause: '.container_inner .txp-shadow-mod]',
     play: '.container_inner .txp-shadow-mod',
     shortcuts: {
-      register: ['c', 'x', 'z'],
+      register: ['c', 'x', 'z', '1', '2', '3', '4'],
       callback: function (h5Player, taskConf, data) {
         const { event } = data;
         const key = event.key.toLowerCase();
         const speedItems = document.querySelectorAll('.container_inner txpdiv[data-role="txp-button-speed-list"] .txp_menuitem');
 
         /* 利用sessionStorage下的playbackRate进行设置 */
-        if (window.sessionStorage.playbackRate && /(c|x|z)/.test(key)) {
+        if (window.sessionStorage.playbackRate && /(c|x|z|1|2|3|4)/.test(key)) {
           const curSpeed = Number(window.sessionStorage.playbackRate);
           const perSpeed = curSpeed - 0.1 >= 0 ? curSpeed - 0.1 : 0.1;
           const nextSpeed = curSpeed + 0.1 <= 4 ? curSpeed + 0.1 : 4;
@@ -573,7 +573,11 @@ const taskConf = {
             case 'x' :
               targetSpeed = perSpeed;
               break
+            default :
+              targetSpeed = Number(key);
+              break
           }
+
           window.sessionStorage.playbackRate = targetSpeed;
           h5Player.setCurrentTime(0.1, true);
           h5Player.setPlaybackRate(targetSpeed, true);
