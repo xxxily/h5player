@@ -610,6 +610,8 @@ const taskConf = {
         }
       }
     },
+    fullScreen: 'txpdiv[data-report="window-fullscreen"]',
+    webFullScreen: 'txpdiv[data-report="browser-fullscreen"]',
     init: function (h5Player, taskConf) {
       // 隐藏水印
       hideDom('.txp-watermark');
