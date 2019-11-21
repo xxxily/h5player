@@ -5,6 +5,13 @@
  * @date      2019/9/21 14:22
  */
 import { getTabId } from './getId'
+
+/**
+ * 将对象数据里面可存储到GM_setValue里面的值提取出来
+ * @param obj {objcet} -必选 打算要存储的对象数据
+ * @param deep {number} -可选 如果对象层级非常深，则须限定递归的层级，默认最高不能超过3级
+ * @returns {{}}
+ */
 function extractDatafromOb (obj, deep) {
   deep = deep || 1
   if (deep > 3) return {}
@@ -45,7 +52,9 @@ const monkeyMsg = {
       /* 补充消息的页面来源的标题信息 */
       title: document.title,
       /* 补充消息的页面来源信息 */
-      referrer: extractDatafromOb(window.location)
+      referrer: extractDatafromOb(window.location),
+      /* 最近一次更新该数据的时间 */
+      updateTime: Date.now()
     }
     if (typeof data === 'object') {
       msg.data = extractDatafromOb(data)
@@ -53,6 +62,8 @@ const monkeyMsg = {
     // console.log('send:', msg)
     window.GM_setValue(name, msg)
   },
+  set: (name, data) => monkeyMsg.send(name, data),
+  get: (name) => window.GM_getValue(name),
   on: (name, fn) => window.GM_addValueChangeListener(name, fn),
   off: (listenerId) => window.GM_removeValueChangeListener(listenerId)
 }
