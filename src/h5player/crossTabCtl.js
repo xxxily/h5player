@@ -8,6 +8,8 @@
  */
 
 import monkeyMsg from './monkeyMsg'
+import { debug, isRegisterKey } from './helper'
+import { curTabId } from './getId'
 import {
   isEditableTarget
 } from '../libs/utils/index'
@@ -26,35 +28,46 @@ const crossTabCtl = {
   /* 判断当前是否开启了画中画功能 */
   hasOpenPictureInPicture () {
     const data = monkeyMsg.get('globalPictureInPictureInfo')
-    console.log(data)
+    /* 画中画的全局信息更新时间差在3s内，才认为当前开启了画中画模式 */
+    return data && Math.abs(Date.now() - data.updateTime) < 1000 * 3
   },
   /**
    * 判断是否需要发送跨Tab控制按键信息
    */
   isNeedSendCrossTabCtlEvent () {
-    const t = this
+    const t = crossTabCtl
     if (t.hasOpenPictureInPicture()) {
-      return true
+      /* 画中画开启后，判断不在同一个Tab才发送事件 */
+      const data = monkeyMsg.get('globalPictureInPictureInfo')
+      if (data.tabId !== curTabId) {
+        return true
+      }
     }
   },
   crossTabKeydownEvent (event) {
-    const t = this
+    const t = crossTabCtl
     /* 处于可编辑元素中不执行任何快捷键 */
     if (isEditableTarget(event.target)) return
-    if (t.isNeedSendCrossTabCtlEvent()) {
+    if (t.isNeedSendCrossTabCtlEvent() && isRegisterKey(event)) {
+      // 阻止事件冒泡和默认事件
+      event.stopPropagation()
+      event.preventDefault()
+
       /* 广播按键消息，进行跨Tab控制 */
       monkeyMsg.send('globalKeydownEvent', event)
+      debug.log('已发送跨Tab按键控制信息：', event)
+      return true
     }
   },
   bindCrossTabEvent () {
-    const t = this
+    const t = crossTabCtl
     if (t._hasBindEvent_) return
     document.removeEventListener('keydown', t.crossTabKeydownEvent)
     document.addEventListener('keydown', t.crossTabKeydownEvent, true)
     t._hasBindEvent_ = true
   },
   init () {
-    const t = this
+    const t = crossTabCtl
     t.updatePictureInPictureInfo()
     t.bindCrossTabEvent()
   }

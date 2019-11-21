@@ -19,12 +19,13 @@ import {
   userAgentMap,
   isInIframe,
   isInCrossOriginFrame,
-  isEditableTarget
+  isEditableTarget,
+  throttle
 } from '../libs/utils/index'
 
 import {
   debug,
-  hasUseKey
+  isRegisterKey
 } from './helper'
 
 (async function () {
@@ -577,8 +578,6 @@ import {
         h5Player._isFoucs = false
       }
     },
-    keyCodeList: hasUseKey.keyCodeList,
-    keyList: hasUseKey.keyList,
     /* 播放器事件响应器 */
     palyerTrigger: function (player, event) {
       if (!player || !event) return
@@ -903,7 +902,7 @@ import {
     keydownEvent: function (event) {
       const t = h5Player
       const keyCode = event.keyCode
-      const key = event.key.toLowerCase()
+      // const key = event.key.toLowerCase()
       const player = t.player()
 
       /* 处于可编辑元素中不执行任何快捷键 */
@@ -915,8 +914,7 @@ import {
       }
 
       /* 未用到的按键不进行任何事件监听 */
-      const isInUseCode = t.keyCodeList.includes(keyCode) || t.keyList.includes(key)
-      if (!isInUseCode) return
+      if (!isRegisterKey(event)) return
 
       /* 广播按键消息，进行跨域控制 */
       monkeyMsg.send('globalKeydownEvent', event)
@@ -1105,22 +1103,33 @@ import {
 
       /* 响应来自按键消息的广播 */
       monkeyMsg.on('globalKeydownEvent', async (name, oldVal, newVal, remote) => {
+        const tabId = await getTabId()
+        const triggerFakeEvent = throttle(function () {
+          /* 模拟触发快捷键事件，实现跨域、跨Tab控制 */
+          const player = t.player()
+          if (player) {
+            const fakeEvent = newVal.data
+            fakeEvent.stopPropagation = () => {}
+            fakeEvent.preventDefault = () => {}
+            t.palyerTrigger(player, fakeEvent)
+            debug.log('模拟触发操作成功')
+          }
+        }, 80)
+
         if (remote) {
           if (isInCrossOriginFrame()) {
             /**
              * 同处跨域受限页面，且都处于可见状态，大概率处于同一个Tab标签里，但不是100%
              * tabId一致则100%为同一标签下
              */
-            const tabId = await getTabId()
             if (newVal.tabId === tabId && document.visibilityState === 'visible') {
-              /* 模拟触发快捷键事件，实现跨域控制 */
-              const player = t.player()
-              if (player) {
-                const fakeEvent = newVal.data
-                fakeEvent.stopPropagation = () => {}
-                fakeEvent.preventDefault = () => {}
-                t.palyerTrigger(player, fakeEvent)
-              }
+              triggerFakeEvent()
+            }
+          } else if (crossTabCtl.hasOpenPictureInPicture() && document.pictureInPictureElement) {
+            /* 跨Tab控制画中画里面的视频播放 */
+            if (tabId !== newVal.tabId) {
+              triggerFakeEvent()
+              debug.log('已接收到跨Tab按键控制信息：', newVal)
             }
           }
         }

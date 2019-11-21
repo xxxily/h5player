@@ -67,7 +67,19 @@ const hasUseKey = {
   }
 }
 
+/**
+ * 判断当前按键是否注册为需要用的按键
+ * 用于减少对其它键位的干扰
+ */
+function isRegisterKey (event) {
+  const keyCode = event.keyCode
+  const key = event.key.toLowerCase()
+  return hasUseKey.keyCodeList.includes(keyCode) ||
+    hasUseKey.keyList.includes(key)
+}
+
 export {
   debug,
-  hasUseKey
+  hasUseKey,
+  isRegisterKey
 }

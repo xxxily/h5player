@@ -402,6 +402,17 @@ function eachParentNode (dom, fn) {
   }
 }
 
+/**
+ * 判断当前元素是否为可编辑元素
+ * @param target
+ * @returns Boolean
+ */
+function isEditableTarget (target) {
+  const isEditable = target.getAttribute && target.getAttribute('contenteditable') === 'true';
+  const isInputDom = /INPUT|TEXTAREA|SELECT/.test(target.nodeName);
+  return isEditable || isInputDom
+}
+
 /* ua信息伪装 */
 function fakeUA (ua) {
   Object.defineProperty(navigator, 'userAgent', {
@@ -450,6 +461,23 @@ function isInCrossOriginFrame () {
     result = true;
   }
   return result
+}
+
+/**
+ * 简单的节流函数
+ * @param fn
+ * @param interval
+ * @returns {Function}
+ */
+function throttle (fn, interval = 80) {
+  let timeout = null;
+  return function () {
+    if (timeout) return false
+    timeout = setTimeout(() => {
+      timeout = null;
+    }, interval);
+    fn.apply(this, arguments);
+  }
 }
 
 /**
@@ -1050,6 +1078,8 @@ function getId () {
   return gID
 }
 
+let curTabId = null;
+
 /**
  * 获取当前TAB标签的Id号，可用于iframe确定自己是否处于同一TAB标签下
  * @returns {Promise<any>}
@@ -1061,10 +1091,15 @@ function getTabId () {
         obj.tabId = getId();
         window.GM_saveTab(obj);
       }
+      /* 每次获取都更新当前Tab的id号 */
+      curTabId = obj.tabId;
       resolve(obj.tabId);
     });
   })
 }
+
+/* 一开始就初始化好curTabId，这样后续就不需要异步获取Tabid，部分场景下需要用到 */
+getTabId();
 
 /*!
  * @name      menuCommand.js
@@ -1092,6 +1127,13 @@ const monkeyMenu = {
  * @version   0.0.1
  * @author    Blaze
  * @date      2019/9/21 14:22
+ */
+
+/**
+ * 将对象数据里面可存储到GM_setValue里面的值提取出来
+ * @param obj {objcet} -必选 打算要存储的对象数据
+ * @param deep {number} -可选 如果对象层级非常深，则须限定递归的层级，默认最高不能超过3级
+ * @returns {{}}
  */
 function extractDatafromOb (obj, deep) {
   deep = deep || 1;
@@ -1121,24 +1163,42 @@ function extractDatafromOb (obj, deep) {
 }
 
 const monkeyMsg = {
-  async send (name, data) {
-    const tabId = await getTabId();
+  /**
+   * 发送消息，出了正常发送信息外，还会补充各类必要的信息
+   * @param name {string} -必选 要发送给那个字段，接收时要一致才能监听的正确
+   * @param data {Any} -必选 要发送的数据
+   * @param throttleInterval -可选，因为会出现莫名奇妙的重复发送情况，为了消除重复发送带来的副作用，所以引入节流限制逻辑，即限制某个时间间隔内只能发送一次，多余的次数自动抛弃掉，默认80ms
+   * @returns {Promise<void>}
+   */
+  send (name, data, throttleInterval = 80) {
+    /* 阻止频繁发送修改事件 */
+    const oldMsg = window.GM_getValue(name);
+    if (oldMsg && oldMsg.updateTime) {
+      const interval = Math.abs(Date.now() - oldMsg.updateTime);
+      if (interval < throttleInterval) {
+        return false
+      }
+    }
+
     const msg = {
       /* 发送过来的数据 */
       data,
       /* 补充标签ID，用于判断是否同处一个tab标签下 */
-      tabId,
+      tabId: curTabId || 'undefined',
       /* 补充消息的页面来源的标题信息 */
       title: document.title,
       /* 补充消息的页面来源信息 */
-      referrer: extractDatafromOb(window.location)
+      referrer: extractDatafromOb(window.location),
+      /* 最近一次更新该数据的时间 */
+      updateTime: Date.now()
     };
     if (typeof data === 'object') {
       msg.data = extractDatafromOb(data);
     }
-    // console.log('send:', msg)
     window.GM_setValue(name, msg);
   },
+  set: (name, data) => monkeyMsg.send(name, data),
+  get: (name) => window.GM_getValue(name),
   on: (name, fn) => window.GM_addValueChangeListener(name, fn),
   off: (listenerId) => window.GM_removeValueChangeListener(listenerId)
 };
@@ -1209,6 +1269,85 @@ const hasUseKey = {
     pad3: 99,
     pad4: 100,
     '\\': 220
+  }
+};
+
+/**
+ * 判断当前按键是否注册为需要用的按键
+ * 用于减少对其它键位的干扰
+ */
+function isRegisterKey (event) {
+  const keyCode = event.keyCode;
+  const key = event.key.toLowerCase();
+  return hasUseKey.keyCodeList.includes(keyCode) ||
+    hasUseKey.keyList.includes(key)
+}
+
+/*!
+ * @name         crossTabCtl.js
+ * @description  跨Tab控制脚本逻辑
+ * @version      0.0.1
+ * @author       Blaze
+ * @date         2019/11/21 上午11:56
+ * @github       https://github.com/xxxily
+ */
+
+const crossTabCtl = {
+  /* 由于没有专门的监控方法，所以只能通过轮询来更新画中画信息 */
+  updatePictureInPictureInfo () {
+    setInterval(function () {
+      if (document.pictureInPictureElement) {
+        monkeyMsg.send('globalPictureInPictureInfo', {
+          hasGlobalPictureInPictureElement: true
+        });
+      }
+    }, 1000 * 1.5);
+  },
+  /* 判断当前是否开启了画中画功能 */
+  hasOpenPictureInPicture () {
+    const data = monkeyMsg.get('globalPictureInPictureInfo');
+    /* 画中画的全局信息更新时间差在3s内，才认为当前开启了画中画模式 */
+    return data && Math.abs(Date.now() - data.updateTime) < 1000 * 3
+  },
+  /**
+   * 判断是否需要发送跨Tab控制按键信息
+   */
+  isNeedSendCrossTabCtlEvent () {
+    const t = crossTabCtl;
+    if (t.hasOpenPictureInPicture()) {
+      /* 画中画开启后，判断不在同一个Tab才发送事件 */
+      const data = monkeyMsg.get('globalPictureInPictureInfo');
+      if (data.tabId !== curTabId) {
+        return true
+      }
+    }
+  },
+  crossTabKeydownEvent (event) {
+    const t = crossTabCtl;
+    /* 处于可编辑元素中不执行任何快捷键 */
+    if (isEditableTarget(event.target)) return
+    if (t.isNeedSendCrossTabCtlEvent() && isRegisterKey(event)) {
+      // 阻止事件冒泡和默认事件
+      event.stopPropagation();
+      event.preventDefault();
+
+      /* 广播按键消息，进行跨Tab控制 */
+      monkeyMsg.send('globalKeydownEvent', event);
+      debug.log('已发送跨Tab按键控制信息：', event);
+      return true
+    }
+  },
+  bindCrossTabEvent () {
+    const t = crossTabCtl;
+    if (t._hasBindEvent_) return
+    document.removeEventListener('keydown', t.crossTabKeydownEvent);
+    document.addEventListener('keydown', t.crossTabKeydownEvent, true);
+    t._hasBindEvent_ = true;
+  },
+  init () {
+    const t = crossTabCtl;
+    t.updatePictureInPictureInfo();
+    t.bindCrossTabEvent();
   }
 };
 
@@ -1762,8 +1901,6 @@ const hasUseKey = {
         h5Player._isFoucs = false;
       };
     },
-    keyCodeList: hasUseKey.keyCodeList,
-    keyList: hasUseKey.keyList,
     /* 播放器事件响应器 */
     palyerTrigger: function (player, event) {
       if (!player || !event) return
@@ -2084,22 +2221,15 @@ const hasUseKey = {
       }
     },
 
-    /* 判断焦点是否处于可编辑元素 */
-    isEditableTarget: function (target) {
-      const isEditable = target.getAttribute && target.getAttribute('contenteditable') === 'true';
-      const isInputDom = /INPUT|TEXTAREA|SELECT/.test(target.nodeName);
-      return isEditable || isInputDom
-    },
-
     /* 按键响应方法 */
     keydownEvent: function (event) {
       const t = h5Player;
       const keyCode = event.keyCode;
-      const key = event.key.toLowerCase();
+      // const key = event.key.toLowerCase()
       const player = t.player();
 
       /* 处于可编辑元素中不执行任何快捷键 */
-      if (t.isEditableTarget(event.target)) return
+      if (isEditableTarget(event.target)) return
 
       /* shift+f 切换UA伪装 */
       if (event.shiftKey && keyCode === 70) {
@@ -2107,8 +2237,7 @@ const hasUseKey = {
       }
 
       /* 未用到的按键不进行任何事件监听 */
-      const isInUseCode = t.keyCodeList.includes(keyCode) || t.keyList.includes(key);
-      if (!isInUseCode) return
+      if (!isRegisterKey(event)) return
 
       /* 广播按键消息，进行跨域控制 */
       monkeyMsg.send('globalKeydownEvent', event);
@@ -2297,22 +2426,33 @@ const hasUseKey = {
 
       /* 响应来自按键消息的广播 */
       monkeyMsg.on('globalKeydownEvent', async (name, oldVal, newVal, remote) => {
+        const tabId = await getTabId();
+        const triggerFakeEvent = throttle(function () {
+          /* 模拟触发快捷键事件，实现跨域、跨Tab控制 */
+          const player = t.player();
+          if (player) {
+            const fakeEvent = newVal.data;
+            fakeEvent.stopPropagation = () => {};
+            fakeEvent.preventDefault = () => {};
+            t.palyerTrigger(player, fakeEvent);
+            debug.log('模拟触发操作成功');
+          }
+        }, 80);
+
         if (remote) {
           if (isInCrossOriginFrame()) {
             /**
              * 同处跨域受限页面，且都处于可见状态，大概率处于同一个Tab标签里，但不是100%
              * tabId一致则100%为同一标签下
              */
-            const tabId = await getTabId();
             if (newVal.tabId === tabId && document.visibilityState === 'visible') {
-              /* 模拟触发快捷键事件，实现跨域控制 */
-              const player = t.player();
-              if (player) {
-                const fakeEvent = newVal.data;
-                fakeEvent.stopPropagation = () => {};
-                fakeEvent.preventDefault = () => {};
-                t.palyerTrigger(player, fakeEvent);
-              }
+              triggerFakeEvent();
+            }
+          } else if (crossTabCtl.hasOpenPictureInPicture() && document.pictureInPictureElement) {
+            /* 跨Tab控制画中画里面的视频播放 */
+            if (tabId !== newVal.tabId) {
+              triggerFakeEvent();
+              debug.log('已接收到跨Tab按键控制信息：', newVal);
             }
           }
         }
@@ -2320,7 +2460,6 @@ const hasUseKey = {
 
       t._hasBindEvent_ = true;
     },
-
     init: function (global) {
       var t = this;
       if (global) {
@@ -2382,6 +2521,9 @@ const hasUseKey = {
     } else {
       window.top._h5PlayerForDebug_ = h5Player;
     }
+
+    /* 初始化跨Tab控制逻辑 */
+    crossTabCtl.init();
   } catch (e) {
     debug.error(e);
   }

@@ -7,6 +7,7 @@ import { quickSort } from './number'
 import { hideDom, eachParentNode, getContainer, loadCSSText, isEditableTarget } from './dom'
 import { fakeUA, userAgentMap } from './fakeUA'
 import { isInIframe, isInCrossOriginFrame } from './iframe'
+import { throttle } from './throttle'
 
 export {
   ready,
@@ -36,5 +37,6 @@ export {
   fakeUA,
   userAgentMap,
   isInIframe,
-  isInCrossOriginFrame
+  isInCrossOriginFrame,
+  throttle
 }
