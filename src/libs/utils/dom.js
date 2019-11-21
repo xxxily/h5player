@@ -67,4 +67,15 @@ function loadCSSText (cssText) {
   head.appendChild(style)
 }
 
-export { hideDom, eachParentNode, loadCSSText, getContainer }
+/**
+ * 判断当前元素是否为可编辑元素
+ * @param target
+ * @returns Boolean
+ */
+function isEditableTarget (target) {
+  const isEditable = target.getAttribute && target.getAttribute('contenteditable') === 'true'
+  const isInputDom = /INPUT|TEXTAREA|SELECT/.test(target.nodeName)
+  return isEditable || isInputDom
+}
+
+export { hideDom, eachParentNode, loadCSSText, getContainer, isEditableTarget }

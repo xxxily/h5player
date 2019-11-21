@@ -7,6 +7,7 @@ import MouseObserver from '../libs/MouseObserver/index'
 import { getTabId } from './getId'
 import monkeyMenu from './monkeyMenu'
 import monkeyMsg from './monkeyMsg'
+import crossTabCtl from './crossTabCtl'
 import {
   ready,
   hackAttachShadow,
@@ -17,7 +18,8 @@ import {
   fakeUA,
   userAgentMap,
   isInIframe,
-  isInCrossOriginFrame
+  isInCrossOriginFrame,
+  isEditableTarget
 } from '../libs/utils/index'
 
 import {
@@ -897,13 +899,6 @@ import {
       }
     },
 
-    /* 判断焦点是否处于可编辑元素 */
-    isEditableTarget: function (target) {
-      const isEditable = target.getAttribute && target.getAttribute('contenteditable') === 'true'
-      const isInputDom = /INPUT|TEXTAREA|SELECT/.test(target.nodeName)
-      return isEditable || isInputDom
-    },
-
     /* 按键响应方法 */
     keydownEvent: function (event) {
       const t = h5Player
@@ -912,7 +907,7 @@ import {
       const player = t.player()
 
       /* 处于可编辑元素中不执行任何快捷键 */
-      if (t.isEditableTarget(event.target)) return
+      if (isEditableTarget(event.target)) return
 
       /* shift+f 切换UA伪装 */
       if (event.shiftKey && keyCode === 70) {
@@ -1133,7 +1128,6 @@ import {
 
       t._hasBindEvent_ = true
     },
-
     init: function (global) {
       var t = this
       if (global) {
@@ -1195,6 +1189,9 @@ import {
     } else {
       window.top._h5PlayerForDebug_ = h5Player
     }
+
+    /* 初始化跨Tab控制逻辑 */
+    crossTabCtl.init()
   } catch (e) {
     debug.error(e)
   }
