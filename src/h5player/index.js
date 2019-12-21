@@ -217,7 +217,7 @@ import {
       t.playbackRate = curPlaybackRate
       player.playbackRate = curPlaybackRate
 
-      /* 本身处于1被播放速度的时候不再提示 */
+      /* 本身处于1倍播放速度的时候不再提示 */
       if (!num && curPlaybackRate === 1) return
       !notips && t.tips('播放速度：' + player.playbackRate + '倍')
     },
@@ -390,7 +390,8 @@ import {
       }
     },
     isAllowRestorePlayProgress: function () {
-      const allowRestorePlayProgressVal = window.GM_getValue('_allowRestorePlayProgress_')
+      const keyName = '_allowRestorePlayProgress_' + window.location.host
+      const allowRestorePlayProgressVal = window.GM_getValue(keyName)
       return !allowRestorePlayProgressVal || allowRestorePlayProgressVal === 'true'
     },
     /* 切换自动恢复播放进度的状态 */
@@ -399,7 +400,8 @@ import {
       let isAllowRestorePlayProgress = t.isAllowRestorePlayProgress()
       /* 进行值反转 */
       isAllowRestorePlayProgress = !isAllowRestorePlayProgress
-      window.GM_setValue('_allowRestorePlayProgress_', String(isAllowRestorePlayProgress))
+      const keyName = '_allowRestorePlayProgress_' + window.location.host
+      window.GM_setValue(keyName, String(isAllowRestorePlayProgress))
 
       /* 操作提示 */
       if (isAllowRestorePlayProgress) {
@@ -973,7 +975,8 @@ import {
       if (!player) {
         return progressMap
       } else {
-        const keyName = window.location.href || player.src
+        let keyName = window.location.href || player.src
+        keyName += player.duration
         if (progressMap[keyName]) {
           return progressMap[keyName].progress
         } else {
@@ -993,9 +996,10 @@ import {
           }
 
           const progressMap = t.getPlayProgress()
-
-          const keyName = window.location.href || player.src
           const list = Object.keys(progressMap)
+
+          let keyName = window.location.href || player.src
+          keyName += player.duration
 
           /* 只保存最近10个视频的播放进度 */
           if (list.length > 10) {

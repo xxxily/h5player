@@ -65,7 +65,7 @@ const taskConf = {
   'bilibili.com': {
     fullScreen: '[data-text="进入全屏"]',
     webFullScreen: '[data-text="网页全屏"]',
-    autoPlay: '.bilibili-player-video-btn-start',
+    // autoPlay: '.bilibili-player-video-btn-start',
     switchPlayStatus: '.bilibili-player-video-btn-start',
     next: '.bilibili-player-video-btn-next'
   },
@@ -76,6 +76,24 @@ const taskConf = {
     fullScreen: '.bilibili-live-player-video-controller-fullscreen-btn button',
     webFullScreen: '.bilibili-live-player-video-controller-web-fullscreen-btn button',
     switchPlayStatus: '.bilibili-live-player-video-controller-start-btn button'
+  },
+  'acfun.cn': {
+    fullScreen: '[data-bind-key="screenTip"]',
+    webFullScreen: '[data-bind-key="webTip"]',
+    switchPlayStatus: function (h5player) {
+      /* 无法抢得控制权，只好延迟判断要不要干预 */
+      const player = h5player.player()
+      const status = player.paused
+      setTimeout(function () {
+        if (status === player.paused) {
+          if (player.paused) {
+            player.play()
+          } else {
+            player.pause()
+          }
+        }
+      }, 200)
+    }
   },
   'iqiyi.com': {
     fullScreen: '.iqp-btn-fullscreen',
