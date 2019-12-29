@@ -659,6 +659,15 @@ import {
         return true
       }
 
+      // ctrl+方向键右→：快进30秒
+      if (event.ctrlKey && keyCode === 39) {
+        t.setCurrentTime(t.skipStep * 6);
+      }
+      // ctrl+方向键左←：后退30秒
+      if (event.ctrlKey && keyCode === 37) {
+        t.setCurrentTime(-t.skipStep * 6);
+      }
+
       // 防止其它无关组合键冲突
       if (event.altKey || event.ctrlKey || event.shiftKey || event.metaKey) return
 
