@@ -662,11 +662,11 @@ import {
       // 防止其它无关组合键冲突
       if (event.altKey || event.ctrlKey || event.shiftKey || event.metaKey) return
 
-      // 方向键右→：快进3秒
+      // 方向键右→：快进5秒
       if (keyCode === 39) {
         t.setCurrentTime(t.skipStep)
       }
-      // 方向键左←：后退3秒
+      // 方向键左←：后退5秒
       if (keyCode === 37) {
         t.setCurrentTime(-t.skipStep)
       }
