@@ -328,7 +328,7 @@ import {
       scale = t.scale = typeof scale === 'undefined' ? t.scale : Number(scale).toFixed(1)
       translate = t.translate = translate || t.translate
 
-      player.style.transform = `scale(${scale}) translate(${translate.x}px, ${translate.y}px)`
+      player.style.transform = `scale(${scale}) translate(${translate.x}px, ${translate.y}px) rotate(${t.rotate}deg)`
       let tipsMsg = `视频缩放率：${scale * 100}%`
       if (translate.x) {
         tipsMsg += `，水平位移：${t.translate.x}px`
@@ -818,7 +818,7 @@ import {
       if (keyCode === 83) {
         t.rotate += 90
         if (t.rotate % 360 === 0) t.rotate = 0
-        player.style.transform = 'rotate(' + t.rotate + 'deg)'
+        player.style.transform = `scale(${t.scale}) translate(${t.translate.x}px, ${t.translate.y}px) rotate( ${t.rotate}deg)`
         t.tips('画面旋转：' + t.rotate + '度')
       }
 
