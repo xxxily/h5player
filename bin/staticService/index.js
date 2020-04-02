@@ -42,6 +42,9 @@ const index = {
       redirect: false,
       setHeaders: function (res, path, stat) {
         res.set('x-timestamp', Date.now())
+
+        /* 禁止缓存，用于调试 */
+        res.set('Cache-control', 'no-cache')
       }
     }
     app.use(serviceConfig.staticPath, express.static(serviceConfig.staticDir, options))
