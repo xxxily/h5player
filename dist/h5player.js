@@ -2,7 +2,7 @@
 // @name         HTML5视频播放器增强脚本
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.2.1
+// @version      3.2.2
 // @description  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
 // @author       ankvps
 // @icon         https://raw.githubusercontent.com/xxxily/h5player/master/logo.png
@@ -2042,6 +2042,15 @@ const crossTabCtl = {
       // ctrl+方向键左←：后退30秒
       if (event.ctrlKey && keyCode === 37) {
         t.setCurrentTime(-t.skipStep * 6);
+      }
+
+      // ctrl+方向键上↑：音量升高 10%
+      if (event.ctrlKey && keyCode === 38) {
+        t.setVolume(0.1);
+      }
+      // 方向键下↓：音量降低 10%
+      if (event.ctrlKey && keyCode === 40) {
+        t.setVolume(-0.1);
       }
 
       // 防止其它无关组合键冲突

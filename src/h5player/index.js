@@ -667,6 +667,15 @@ import {
         t.setCurrentTime(-t.skipStep * 6)
       }
 
+      // ctrl+方向键上↑：音量升高 10%
+      if (event.ctrlKey && keyCode === 38) {
+        t.setVolume(0.1)
+      }
+      // 方向键下↓：音量降低 10%
+      if (event.ctrlKey && keyCode === 40) {
+        t.setVolume(-0.1)
+      }
+
       // 防止其它无关组合键冲突
       if (event.altKey || event.ctrlKey || event.shiftKey || event.metaKey) return
 
