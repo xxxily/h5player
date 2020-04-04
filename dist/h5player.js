@@ -680,6 +680,42 @@ const taskConf = {
       h5Player.player().parentNode.querySelector('.vjs-fullscreen-control').click();
     }
   },
+  'facebook.com': {
+    fullScreen: function (h5Player, taskConf) {
+      const actionBtn = h5Player.player().parentNode.querySelectorAll('button');
+      if (actionBtn && actionBtn.length > 3) {
+        /* 模拟点击倒数第二个按钮 */
+        actionBtn[actionBtn.length - 2].click();
+        return true
+      }
+    },
+    webFullScreen: function (h5Player, taskConf) {
+      const actionBtn = h5Player.player().parentNode.querySelectorAll('button');
+      if (actionBtn && actionBtn.length > 3) {
+        /* 模拟点击倒数第二个按钮 */
+        actionBtn[actionBtn.length - 2].click();
+        return true
+      }
+    },
+    shortcuts: {
+      /* 在视频模式下按esc键，自动返回上一层界面 */
+      register: [
+        'escape'
+      ],
+      /* 自定义快捷键的回调操作 */
+      callback: function (h5Player, taskConf, data) {
+        eachParentNode(h5Player.player(), function (parentNode) {
+          if (parentNode.getAttribute('data-fullscreen-container') === 'true') {
+            const goBackBtn = parentNode.parentNode.querySelector('div>a>i>u');
+            if (goBackBtn) {
+              goBackBtn.parentNode.parentNode.click();
+            }
+            return true
+          }
+        });
+      }
+    }
+  },
   'douyu.com': {
     fullScreen: function (h5Player, taskConf) {
       const player = h5Player.player();
@@ -1668,7 +1704,7 @@ const crossTabCtl = {
       const player = t.player();
       scale = t.scale = typeof scale === 'undefined' ? t.scale : Number(scale).toFixed(1);
       translate = t.translate = translate || t.translate;
-      player.style.transform = `scale(${scale}) translate(${translate.x}px, ${translate.y}px) rotate(${t.rotate}deg)`
+      player.style.transform = `scale(${scale}) translate(${translate.x}px, ${translate.y}px) rotate(${t.rotate}deg)`;
       let tipsMsg = `视频缩放率：${scale * 100}%`;
       if (translate.x) {
         tipsMsg += `，水平位移：${t.translate.x}px`;
@@ -1999,14 +2035,23 @@ const crossTabCtl = {
         return true
       }
 
+      // ctrl+方向键右→：快进30秒
+      if (event.ctrlKey && keyCode === 39) {
+        t.setCurrentTime(t.skipStep * 6);
+      }
+      // ctrl+方向键左←：后退30秒
+      if (event.ctrlKey && keyCode === 37) {
+        t.setCurrentTime(-t.skipStep * 6);
+      }
+
       // 防止其它无关组合键冲突
       if (event.altKey || event.ctrlKey || event.shiftKey || event.metaKey) return
 
-      // 方向键右→：快进3秒
+      // 方向键右→：快进5秒
       if (keyCode === 39) {
         t.setCurrentTime(t.skipStep);
       }
-      // 方向键左←：后退3秒
+      // 方向键左←：后退5秒
       if (keyCode === 37) {
         t.setCurrentTime(-t.skipStep);
       }
@@ -2149,7 +2194,7 @@ const crossTabCtl = {
       if (keyCode === 83) {
         t.rotate += 90;
         if (t.rotate % 360 === 0) t.rotate = 0;
-        player.style.transform = `scale(${t.scale}) translate(${t.translate.x}px, ${t.translate.y}px) rotate( ${t.rotate}deg)`
+        player.style.transform = `scale(${t.scale}) translate(${t.translate.x}px, ${t.translate.y}px) rotate( ${t.rotate}deg)`;
         t.tips('画面旋转：' + t.rotate + '度');
       }
 

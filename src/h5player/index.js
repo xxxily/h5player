@@ -327,7 +327,6 @@ import {
       const player = t.player()
       scale = t.scale = typeof scale === 'undefined' ? t.scale : Number(scale).toFixed(1)
       translate = t.translate = translate || t.translate
-
       player.style.transform = `scale(${scale}) translate(${translate.x}px, ${translate.y}px) rotate(${t.rotate}deg)`
       let tipsMsg = `视频缩放率：${scale * 100}%`
       if (translate.x) {
@@ -661,11 +660,11 @@ import {
 
       // ctrl+方向键右→：快进30秒
       if (event.ctrlKey && keyCode === 39) {
-        t.setCurrentTime(t.skipStep * 6);
+        t.setCurrentTime(t.skipStep * 6)
       }
       // ctrl+方向键左←：后退30秒
       if (event.ctrlKey && keyCode === 37) {
-        t.setCurrentTime(-t.skipStep * 6);
+        t.setCurrentTime(-t.skipStep * 6)
       }
 
       // 防止其它无关组合键冲突
