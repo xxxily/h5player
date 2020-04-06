@@ -131,6 +131,13 @@ import {
       /* 注册播放器的事件代理处理器 */
       player._listenerProxyApplyHandler_ = t.playerEventHandler
 
+      /**
+       * 不设置CORS标识，这样才能跨域截图
+       * https://developer.mozilla.org/zh-CN/docs/Web/HTML/CORS_enabled_image
+       * https://developer.mozilla.org/zh-CN/docs/Web/HTML/CORS_settings_attributes
+       */
+      player.setAttribute('crossorigin', 'anonymous')
+
       if (!player._hasCanplayEvent_) {
         player.addEventListener('canplay', function (event) {
           t.initAutoPlay(player)

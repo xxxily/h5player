@@ -977,6 +977,7 @@ var videoCapturer = {
     const captureTitle = title || `${document.title}_${currentTime}`;
 
     /* 截图核心逻辑 */
+    video.setAttribute('crossorigin', 'anonymous');
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -1009,12 +1010,17 @@ var videoCapturer = {
    */
   download (canvas, title) {
     title = title || 'videoCapturer_' + Date.now();
-    canvas.toBlob(function (blob) {
-      const el = document.createElement('a');
-      el.download = `${title}.jpg`;
-      el.href = URL.createObjectURL(blob);
-      el.click();
-    }, 'image/jpeg', 0.99);
+    try {
+      canvas.toBlob(function (blob) {
+        const el = document.createElement('a');
+        el.download = `${title}.jpg`;
+        el.href = URL.createObjectURL(blob);
+        el.click();
+      }, 'image/jpeg', 0.99);
+    } catch (e) {
+      window.alert('视频源受CORS标识限制，无法下载截图');
+      console.error(e);
+    }
   }
 };
 
@@ -1542,6 +1548,13 @@ const crossTabCtl = {
 
       /* 注册播放器的事件代理处理器 */
       player._listenerProxyApplyHandler_ = t.playerEventHandler;
+
+      /**
+       * 不设置CORS标识，这样才能跨域截图
+       * https://developer.mozilla.org/zh-CN/docs/Web/HTML/CORS_enabled_image
+       * https://developer.mozilla.org/zh-CN/docs/Web/HTML/CORS_settings_attributes
+       */
+      player.setAttribute('crossorigin', 'anonymous');
 
       if (!player._hasCanplayEvent_) {
         player.addEventListener('canplay', function (event) {

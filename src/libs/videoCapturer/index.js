@@ -19,6 +19,7 @@ var videoCapturer = {
     const captureTitle = title || `${document.title}_${currentTime}`
 
     /* 截图核心逻辑 */
+    video.setAttribute('crossorigin', 'anonymous')
     const canvas = document.createElement('canvas')
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
@@ -51,12 +52,17 @@ var videoCapturer = {
    */
   download (canvas, title) {
     title = title || 'videoCapturer_' + Date.now()
-    canvas.toBlob(function (blob) {
-      const el = document.createElement('a')
-      el.download = `${title}.jpg`
-      el.href = URL.createObjectURL(blob)
-      el.click()
-    }, 'image/jpeg', 0.99)
+    try {
+      canvas.toBlob(function (blob) {
+        const el = document.createElement('a')
+        el.download = `${title}.jpg`
+        el.href = URL.createObjectURL(blob)
+        el.click()
+      }, 'image/jpeg', 0.99)
+    } catch (e) {
+      window.alert('视频源受CORS标识限制，无法下载截图')
+      console.error(e)
+    }
   }
 }
 
