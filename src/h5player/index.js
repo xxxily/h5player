@@ -52,7 +52,9 @@ import {
   })
 
   hackAttachShadow()
-  hackEventListener()
+  hackEventListener({
+    proxyNodeType: ['video']
+  })
 
   let TCC = null
   const h5Player = {
