@@ -43,7 +43,7 @@ function extractDatafromOb (obj, deep) {
 
 const monkeyMsg = {
   /**
-   * 发送消息，出了正常发送信息外，还会补充各类必要的信息
+   * 发送消息，除了正常发送信息外，还会补充各类必要的信息
    * @param name {string} -必选 要发送给那个字段，接收时要一致才能监听的正确
    * @param data {Any} -必选 要发送的数据
    * @param throttleInterval -可选，因为会出现莫名奇妙的重复发送情况，为了消除重复发送带来的副作用，所以引入节流限制逻辑，即限制某个时间间隔内只能发送一次，多余的次数自动抛弃掉，默认80ms

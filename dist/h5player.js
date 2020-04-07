@@ -366,13 +366,15 @@ function hackEventListener (config) {
     const arg = arguments;
     const type = arg[0];
     const listener = arg[1];
+    const listenerSymbol = Symbol.for(listener);
 
     /**
      * 对监听函数进行代理
      * 为了降低对性能的影响，此处只对特定的标签的事件进行代理
      */
+    let listenerProxy = null;
     if (proxyNodeType.includes(t.nodeName)) {
-      const listenerProxy = new Proxy(listener, {
+      listenerProxy = new Proxy(listener, {
         apply (target, ctx, args) {
           /* 让外部通过 _listenerProxyApplyHandler_ 控制事件的执行 */
           if (t._listenerProxyApplyHandler_ instanceof Function) {
@@ -385,6 +387,11 @@ function hackEventListener (config) {
           return target.apply(ctx, args)
         }
       });
+
+      /* 挂载listenerProxy到自身，方便快速查找 */
+      listener[listenerSymbol] = listenerProxy;
+
+      /* 使用listenerProxy替代本来应该进行侦听的listener */
       arg[1] = listenerProxy;
     }
 
@@ -395,6 +402,7 @@ function hackEventListener (config) {
       target: t,
       type,
       listener,
+      listenerProxy,
       options: arg[2],
       addTime: new Date().getTime()
     };
@@ -412,17 +420,34 @@ function hackEventListener (config) {
     const arg = arguments;
     const type = arg[0];
     const listener = arg[1];
+    const listenerSymbol = Symbol.for(listener);
+
+    /* 对arg[1]重新赋值，以便正确卸载对应的监听函数 */
+    arg[1] = listener[listenerSymbol] || listener;
+
     this._removeEventListener.apply(this, arg);
     this._listeners = this._listeners || {};
     this._listeners[type] = this._listeners[type] || [];
 
     const result = [];
-    this._listeners[type].forEach(function (listenerObj) {
+    this._listeners[type].forEach(listenerObj => {
       if (listenerObj.listener !== listener) {
         result.push(listenerObj);
       }
     });
     this._listeners[type] = result;
+
+    /* 从全局列表中移除 */
+    if (config.debug) {
+      const result = [];
+      const listenerTypeList = window._listenerList_[type] || [];
+      listenerTypeList.forEach(listenerObj => {
+        if (listenerObj.listener !== listener) {
+          result.push(listenerObj);
+        }
+      });
+      window._listenerList_[type] = result;
+    }
   };
 }
 
@@ -1290,7 +1315,7 @@ function extractDatafromOb (obj, deep) {
 
 const monkeyMsg = {
   /**
-   * 发送消息，出了正常发送信息外，还会补充各类必要的信息
+   * 发送消息，除了正常发送信息外，还会补充各类必要的信息
    * @param name {string} -必选 要发送给那个字段，接收时要一致才能监听的正确
    * @param data {Any} -必选 要发送的数据
    * @param throttleInterval -可选，因为会出现莫名奇妙的重复发送情况，为了消除重复发送带来的副作用，所以引入节流限制逻辑，即限制某个时间间隔内只能发送一次，多余的次数自动抛弃掉，默认80ms

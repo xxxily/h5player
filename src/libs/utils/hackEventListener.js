@@ -33,13 +33,15 @@ function hackEventListener (config) {
     const arg = arguments
     const type = arg[0]
     const listener = arg[1]
+    const listenerSymbol = Symbol.for(listener)
 
     /**
      * 对监听函数进行代理
      * 为了降低对性能的影响，此处只对特定的标签的事件进行代理
      */
+    let listenerProxy = null
     if (proxyNodeType.includes(t.nodeName)) {
-      const listenerProxy = new Proxy(listener, {
+      listenerProxy = new Proxy(listener, {
         apply (target, ctx, args) {
           /* 让外部通过 _listenerProxyApplyHandler_ 控制事件的执行 */
           if (t._listenerProxyApplyHandler_ instanceof Function) {
@@ -52,6 +54,11 @@ function hackEventListener (config) {
           return target.apply(ctx, args)
         }
       })
+
+      /* 挂载listenerProxy到自身，方便快速查找 */
+      listener[listenerSymbol] = listenerProxy
+
+      /* 使用listenerProxy替代本来应该进行侦听的listener */
       arg[1] = listenerProxy
     }
 
@@ -62,6 +69,7 @@ function hackEventListener (config) {
       target: t,
       type,
       listener,
+      listenerProxy,
       options: arg[2],
       addTime: new Date().getTime()
     }
@@ -79,17 +87,34 @@ function hackEventListener (config) {
     const arg = arguments
     const type = arg[0]
     const listener = arg[1]
+    const listenerSymbol = Symbol.for(listener)
+
+    /* 对arg[1]重新赋值，以便正确卸载对应的监听函数 */
+    arg[1] = listener[listenerSymbol] || listener
+
     this._removeEventListener.apply(this, arg)
     this._listeners = this._listeners || {}
     this._listeners[type] = this._listeners[type] || []
 
     const result = []
-    this._listeners[type].forEach(function (listenerObj) {
+    this._listeners[type].forEach(listenerObj => {
       if (listenerObj.listener !== listener) {
         result.push(listenerObj)
       }
     })
     this._listeners[type] = result
+
+    /* 从全局列表中移除 */
+    if (config.debug) {
+      const result = []
+      const listenerTypeList = window._listenerList_[type] || []
+      listenerTypeList.forEach(listenerObj => {
+        if (listenerObj.listener !== listener) {
+          result.push(listenerObj)
+        }
+      })
+      window._listenerList_[type] = result
+    }
   }
 }
 
