@@ -1,9 +1,25 @@
 // ==UserScript==
 // @name         HTML5视频播放器增强脚本
+// @name:en      HTML5 video player enhanced script
+// @name:zh      HTML5视频播放器增强脚本
+// @name:zh-CN   HTML5视频播放器增强脚本
+// @name:zh-TW   HTML5視頻播放器增強腳本
+// @name:ja      HTML5ビデオプレーヤーの拡張スクリプト
+// @name:ko      HTML5 비디오 플레이어 고급 스크립트
+// @name:ru      HTML5 видео плеер улучшенный скрипт
+// @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.2.1
+// @version      3.2.3
 // @description  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
+// @description:en  HTML5 video playback enhanced script, supports all H5 video playback websites, full-length shortcut key control, supports: double-speed playback / accelerated playback, video screenshots, picture-in-picture, full-page webpage, brightness, saturation, contrast, custom configuration enhancement And other functions.
+// @description:zh  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
+// @description:zh-CN  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
+// @description:zh-TW  HTML5視頻播放增強腳本，支持所有H5視頻播放網站，全程快捷鍵控制，支持：倍速播放/加速播放、視頻畫面截圖、畫中畫、網頁全屏、調節亮度、飽和度、對比度、自定義配置功能增強等功能。
+// @description:ja  HTML5ビデオ再生拡張スクリプト、すべてのH5ビデオ再生Webサイト、フルレングスのショートカットキーコントロールをサポート、サポート：倍速再生/加速再生、ビデオスクリーンショット、ピクチャーインピクチャー、フルページWebページ、明るさ、彩度、コントラスト、カスタム構成拡張 そして他の機能。
+// @description:ko  HTML5 비디오 재생 고급 스크립트, 모든 H5 비디오 재생 웹 사이트 지원, 전체 길이 바로 가기 키 제어 지원 : 2 배속 재생 / 가속 재생, 비디오 스크린 샷, PIP (picture-in-picture), 전체 페이지 웹 페이지, 밝기, 채도, 대비, 사용자 정의 구성 향상 그리고 다른 기능들.
+// @description:ru  HTML5 улучшенный сценарий воспроизведения видео, поддерживает все веб-сайты воспроизведения видео H5, полноразмерное управление с помощью сочетания клавиш, поддерживает: двухскоростное воспроизведение / ускоренное воспроизведение, скриншоты видео, картинка в картинке, полностраничную веб-страницу, яркость, насыщенность, контрастность, улучшение пользовательской конфигурации И другие функции.
+// @description:de  Verbessertes Skript für die HTML5-Videowiedergabe, unterstützt alle H5-Videowiedergabewebsites, Tastenkombination in voller Länge, unterstützt: Wiedergabe mit doppelter Geschwindigkeit / beschleunigte Wiedergabe, Video-Screenshots, Bild-in-Bild, ganzseitige Webseite, Helligkeit, Sättigung, Kontrast, benutzerdefinierte Konfigurationsverbesserung Und andere Funktionen.
 // @author       ankvps
 // @icon         https://raw.githubusercontent.com/xxxily/h5player/master/logo.png
 // @match        http://*/*
@@ -25,6 +41,7 @@
 // @grant        GM_download
 // @run-at       document-start
 // @require      http://cdn.bootcss.com/jquery/3.4.1/jquery.min.js
+// @license      MIT
 // ==/UserScript==
 (function (w) { if (w) { w.name = 'h5player'; } })();
 
@@ -324,21 +341,39 @@ function hackEventListener () {
 
   // hack addEventListener
   EVENT.addEventListener = function () {
+    const t = this;
     const arg = arguments;
     const type = arg[0];
     const listener = arg[1];
-    this._addEventListener.apply(this, arg);
-    this._listeners = this._listeners || {};
-    this._listeners[type] = this._listeners[type] || [];
+
+    /* 对监听函数进行代理 */
+    const listenerProxy = new Proxy(listener, {
+      apply (target, ctx, args) {
+        /* 让外部通过 _listenerProxyApplyHandler_ 控制事件的执行 */
+        if (t._listenerProxyApplyHandler_ instanceof Function) {
+          const handlerResult = t._listenerProxyApplyHandler_(target, ctx, args, arg);
+          if (handlerResult !== undefined) {
+            return handlerResult
+          }
+        }
+
+        return target.apply(ctx, args)
+      }
+    });
+    arg[1] = listenerProxy;
+
+    t._addEventListener.apply(t, arg);
+    t._listeners = t._listeners || {};
+    t._listeners[type] = t._listeners[type] || [];
     const listenerObj = {
-      target: this,
+      target: t,
       type,
       listener,
       options: arg[2],
       addTime: new Date().getTime()
     };
     window._listenerList_.push(listenerObj);
-    this._listeners[type].push(listenerObj);
+    t._listeners[type].push(listenerObj);
   };
 
   // hack removeEventListener
@@ -680,6 +715,42 @@ const taskConf = {
       h5Player.player().parentNode.querySelector('.vjs-fullscreen-control').click();
     }
   },
+  'facebook.com': {
+    fullScreen: function (h5Player, taskConf) {
+      const actionBtn = h5Player.player().parentNode.querySelectorAll('button');
+      if (actionBtn && actionBtn.length > 3) {
+        /* 模拟点击倒数第二个按钮 */
+        actionBtn[actionBtn.length - 2].click();
+        return true
+      }
+    },
+    webFullScreen: function (h5Player, taskConf) {
+      const actionBtn = h5Player.player().parentNode.querySelectorAll('button');
+      if (actionBtn && actionBtn.length > 3) {
+        /* 模拟点击倒数第二个按钮 */
+        actionBtn[actionBtn.length - 2].click();
+        return true
+      }
+    },
+    shortcuts: {
+      /* 在视频模式下按esc键，自动返回上一层界面 */
+      register: [
+        'escape'
+      ],
+      /* 自定义快捷键的回调操作 */
+      callback: function (h5Player, taskConf, data) {
+        eachParentNode(h5Player.player(), function (parentNode) {
+          if (parentNode.getAttribute('data-fullscreen-container') === 'true') {
+            const goBackBtn = parentNode.parentNode.querySelector('div>a>i>u');
+            if (goBackBtn) {
+              goBackBtn.parentNode.parentNode.click();
+            }
+            return true
+          }
+        });
+      }
+    }
+  },
   'douyu.com': {
     fullScreen: function (h5Player, taskConf) {
       const player = h5Player.player();
@@ -906,6 +977,7 @@ var videoCapturer = {
     const captureTitle = title || `${document.title}_${currentTime}`;
 
     /* 截图核心逻辑 */
+    video.setAttribute('crossorigin', 'anonymous');
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -938,12 +1010,17 @@ var videoCapturer = {
    */
   download (canvas, title) {
     title = title || 'videoCapturer_' + Date.now();
-    canvas.toBlob(function (blob) {
-      const el = document.createElement('a');
-      el.download = `${title}.jpg`;
-      el.href = URL.createObjectURL(blob);
-      el.click();
-    }, 'image/jpeg', 0.99);
+    try {
+      canvas.toBlob(function (blob) {
+        const el = document.createElement('a');
+        el.download = `${title}.jpg`;
+        el.href = URL.createObjectURL(blob);
+        el.click();
+      }, 'image/jpeg', 0.99);
+    } catch (e) {
+      window.alert('视频源受CORS标识限制，无法下载截图');
+      console.error(e);
+    }
   }
 };
 
@@ -1469,6 +1546,16 @@ const crossTabCtl = {
       player._fullScreen_ = new FullScreen(player);
       player._fullPageScreen_ = new FullScreen(player, true);
 
+      /* 注册播放器的事件代理处理器 */
+      player._listenerProxyApplyHandler_ = t.playerEventHandler;
+
+      /**
+       * 不设置CORS标识，这样才能跨域截图
+       * https://developer.mozilla.org/zh-CN/docs/Web/HTML/CORS_enabled_image
+       * https://developer.mozilla.org/zh-CN/docs/Web/HTML/CORS_settings_attributes
+       */
+      player.setAttribute('crossorigin', 'anonymous');
+
       if (!player._hasCanplayEvent_) {
         player.addEventListener('canplay', function (event) {
           t.initAutoPlay(player);
@@ -1668,7 +1755,7 @@ const crossTabCtl = {
       const player = t.player();
       scale = t.scale = typeof scale === 'undefined' ? t.scale : Number(scale).toFixed(1);
       translate = t.translate = translate || t.translate;
-      player.style.transform = `scale(${scale}) translate(${translate.x}px, ${translate.y}px) rotate(${t.rotate}deg)`
+      player.style.transform = `scale(${scale}) translate(${translate.x}px, ${translate.y}px) rotate(${t.rotate}deg)`;
       let tipsMsg = `视频缩放率：${scale * 100}%`;
       if (translate.x) {
         tipsMsg += `，水平位移：${t.translate.x}px`;
@@ -1999,14 +2086,32 @@ const crossTabCtl = {
         return true
       }
 
+      // ctrl+方向键右→：快进30秒
+      if (event.ctrlKey && keyCode === 39) {
+        t.setCurrentTime(t.skipStep * 6);
+      }
+      // ctrl+方向键左←：后退30秒
+      if (event.ctrlKey && keyCode === 37) {
+        t.setCurrentTime(-t.skipStep * 6);
+      }
+
+      // ctrl+方向键上↑：音量升高 10%
+      if (event.ctrlKey && keyCode === 38) {
+        t.setVolume(0.1);
+      }
+      // 方向键下↓：音量降低 10%
+      if (event.ctrlKey && keyCode === 40) {
+        t.setVolume(-0.1);
+      }
+
       // 防止其它无关组合键冲突
       if (event.altKey || event.ctrlKey || event.shiftKey || event.metaKey) return
 
-      // 方向键右→：快进3秒
+      // 方向键右→：快进5秒
       if (keyCode === 39) {
         t.setCurrentTime(t.skipStep);
       }
-      // 方向键左←：后退3秒
+      // 方向键左←：后退5秒
       if (keyCode === 37) {
         t.setCurrentTime(-t.skipStep);
       }
@@ -2050,12 +2155,14 @@ const crossTabCtl = {
           return
         }
         if (!player.paused) player.pause();
+        t.cancelPlayerEvent(['seeking', 'timeupdate', 'seeked', 'canplay'], 1000);
         player.currentTime += Number(1 / t.fps);
         t.tips('定位：下一帧');
       }
       // 按键D：上一帧
       if (keyCode === 68) {
         if (!player.paused) player.pause();
+        t.cancelPlayerEvent(['seeking', 'timeupdate', 'seeked', 'canplay'], 1000);
         player.currentTime -= Number(1 / t.fps);
         t.tips('定位：上一帧');
       }
@@ -2149,7 +2256,7 @@ const crossTabCtl = {
       if (keyCode === 83) {
         t.rotate += 90;
         if (t.rotate % 360 === 0) t.rotate = 0;
-        player.style.transform = `scale(${t.scale}) translate(${t.translate.x}px, ${t.translate.y}px) rotate( ${t.rotate}deg)`
+        player.style.transform = `scale(${t.scale}) translate(${t.translate.x}px, ${t.translate.y}px) rotate( ${t.rotate}deg)`;
         t.tips('画面旋转：' + t.rotate + '度');
       }
 
@@ -2429,6 +2536,53 @@ const crossTabCtl = {
             player._hasPlayingRedirectEvent_ = true;
           });
         }
+      }
+    },
+    /* 指定取消响应某些事件的列表 */
+    _cancelPlayerEventList_: [],
+    /**
+     * 取消响应播放器的某些事件，改取消不能永久取消，只能取消某段时间内的，如果永久取消容易出现很多副作用
+     * @param eventType {String|Array} -必选 要取消的事件类型，可以是单个事件也可以是多个事件
+     * @param timeout {Number} -可选 调用取消事件函数后，多久后失效，恢复正常事件响应，默认200ms
+     */
+    cancelPlayerEvent (eventType, timeout) {
+      const t = h5Player;
+      t._cancelPlayerEventList_ = t._cancelPlayerEventList_ || [];
+      eventType = Array.isArray(eventType) ? eventType : [eventType];
+      timeout = timeout || 200;
+
+      eventType.forEach(type => {
+        if (!t._cancelPlayerEventList_.includes(type)) {
+          t._cancelPlayerEventList_.push(type);
+        }
+      });
+
+      clearTimeout(t._cancelPlayerEventTimer_);
+      t._cancelPlayerEventTimer_ = setTimeout(function () {
+        const newList = [];
+        t._cancelPlayerEventList_.forEach(cancelType => {
+          if (!eventType.includes(cancelType)) {
+            newList.push(cancelType);
+          }
+        });
+        t._cancelPlayerEventList_ = newList;
+      }, timeout);
+    },
+    /**
+     * 播放器里的所有事件代理处理器
+     * @param target
+     * @param ctx
+     * @param args
+     * @param listenerArgs
+     */
+    playerEventHandler (target, ctx, args, listenerArgs) {
+      const t = h5Player;
+      const eventType = listenerArgs[0];
+
+      /* 取消对某些事件的响应 */
+      if (t._cancelPlayerEventList_.includes(eventType)) {
+        debug.log(`播放器[${eventType}]事件被取消`);
+        return false
       }
     },
     /* 绑定相关事件 */

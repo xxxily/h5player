@@ -1,7 +1,8 @@
 import TCC from '../libs/TCC/index'
 import {
   isObj,
-  hideDom
+  hideDom,
+  eachParentNode
 } from '../libs/utils/index'
 
 /**
@@ -202,6 +203,42 @@ const taskConf = {
   'pan.baidu.com': {
     fullScreen: function (h5Player, taskConf) {
       h5Player.player().parentNode.querySelector('.vjs-fullscreen-control').click()
+    }
+  },
+  'facebook.com': {
+    fullScreen: function (h5Player, taskConf) {
+      const actionBtn = h5Player.player().parentNode.querySelectorAll('button')
+      if (actionBtn && actionBtn.length > 3) {
+        /* 模拟点击倒数第二个按钮 */
+        actionBtn[actionBtn.length - 2].click()
+        return true
+      }
+    },
+    webFullScreen: function (h5Player, taskConf) {
+      const actionBtn = h5Player.player().parentNode.querySelectorAll('button')
+      if (actionBtn && actionBtn.length > 3) {
+        /* 模拟点击倒数第二个按钮 */
+        actionBtn[actionBtn.length - 2].click()
+        return true
+      }
+    },
+    shortcuts: {
+      /* 在视频模式下按esc键，自动返回上一层界面 */
+      register: [
+        'escape'
+      ],
+      /* 自定义快捷键的回调操作 */
+      callback: function (h5Player, taskConf, data) {
+        eachParentNode(h5Player.player(), function (parentNode) {
+          if (parentNode.getAttribute('data-fullscreen-container') === 'true') {
+            const goBackBtn = parentNode.parentNode.querySelector('div>a>i>u')
+            if (goBackBtn) {
+              goBackBtn.parentNode.parentNode.click()
+            }
+            return true
+          }
+        })
+      }
     }
   },
   'douyu.com': {

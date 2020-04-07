@@ -128,6 +128,16 @@ import {
       player._fullScreen_ = new FullScreen(player)
       player._fullPageScreen_ = new FullScreen(player, true)
 
+      /* 注册播放器的事件代理处理器 */
+      player._listenerProxyApplyHandler_ = t.playerEventHandler
+
+      /**
+       * 不设置CORS标识，这样才能跨域截图
+       * https://developer.mozilla.org/zh-CN/docs/Web/HTML/CORS_enabled_image
+       * https://developer.mozilla.org/zh-CN/docs/Web/HTML/CORS_settings_attributes
+       */
+      player.setAttribute('crossorigin', 'anonymous')
+
       if (!player._hasCanplayEvent_) {
         player.addEventListener('canplay', function (event) {
           t.initAutoPlay(player)
@@ -327,7 +337,6 @@ import {
       const player = t.player()
       scale = t.scale = typeof scale === 'undefined' ? t.scale : Number(scale).toFixed(1)
       translate = t.translate = translate || t.translate
-
       player.style.transform = `scale(${scale}) translate(${translate.x}px, ${translate.y}px) rotate(${t.rotate}deg)`
       let tipsMsg = `视频缩放率：${scale * 100}%`
       if (translate.x) {
@@ -661,11 +670,20 @@ import {
 
       // ctrl+方向键右→：快进30秒
       if (event.ctrlKey && keyCode === 39) {
-        t.setCurrentTime(t.skipStep * 6);
+        t.setCurrentTime(t.skipStep * 6)
       }
       // ctrl+方向键左←：后退30秒
       if (event.ctrlKey && keyCode === 37) {
-        t.setCurrentTime(-t.skipStep * 6);
+        t.setCurrentTime(-t.skipStep * 6)
+      }
+
+      // ctrl+方向键上↑：音量升高 10%
+      if (event.ctrlKey && keyCode === 38) {
+        t.setVolume(0.1)
+      }
+      // 方向键下↓：音量降低 10%
+      if (event.ctrlKey && keyCode === 40) {
+        t.setVolume(-0.1)
       }
 
       // 防止其它无关组合键冲突
@@ -719,12 +737,14 @@ import {
           return
         }
         if (!player.paused) player.pause()
+        t.cancelPlayerEvent(['seeking', 'timeupdate', 'seeked', 'canplay'], 1000)
         player.currentTime += Number(1 / t.fps)
         t.tips('定位：下一帧')
       }
       // 按键D：上一帧
       if (keyCode === 68) {
         if (!player.paused) player.pause()
+        t.cancelPlayerEvent(['seeking', 'timeupdate', 'seeked', 'canplay'], 1000)
         player.currentTime -= Number(1 / t.fps)
         t.tips('定位：上一帧')
       }
@@ -1098,6 +1118,53 @@ import {
             player._hasPlayingRedirectEvent_ = true
           })
         }
+      }
+    },
+    /* 指定取消响应某些事件的列表 */
+    _cancelPlayerEventList_: [],
+    /**
+     * 取消响应播放器的某些事件，改取消不能永久取消，只能取消某段时间内的，如果永久取消容易出现很多副作用
+     * @param eventType {String|Array} -必选 要取消的事件类型，可以是单个事件也可以是多个事件
+     * @param timeout {Number} -可选 调用取消事件函数后，多久后失效，恢复正常事件响应，默认200ms
+     */
+    cancelPlayerEvent (eventType, timeout) {
+      const t = h5Player
+      t._cancelPlayerEventList_ = t._cancelPlayerEventList_ || []
+      eventType = Array.isArray(eventType) ? eventType : [eventType]
+      timeout = timeout || 200
+
+      eventType.forEach(type => {
+        if (!t._cancelPlayerEventList_.includes(type)) {
+          t._cancelPlayerEventList_.push(type)
+        }
+      })
+
+      clearTimeout(t._cancelPlayerEventTimer_)
+      t._cancelPlayerEventTimer_ = setTimeout(function () {
+        const newList = []
+        t._cancelPlayerEventList_.forEach(cancelType => {
+          if (!eventType.includes(cancelType)) {
+            newList.push(cancelType)
+          }
+        })
+        t._cancelPlayerEventList_ = newList
+      }, timeout)
+    },
+    /**
+     * 播放器里的所有事件代理处理器
+     * @param target
+     * @param ctx
+     * @param args
+     * @param listenerArgs
+     */
+    playerEventHandler (target, ctx, args, listenerArgs) {
+      const t = h5Player
+      const eventType = listenerArgs[0]
+
+      /* 取消对某些事件的响应 */
+      if (t._cancelPlayerEventList_.includes(eventType)) {
+        debug.log(`播放器[${eventType}]事件被取消`)
+        return false
       }
     },
     /* 绑定相关事件 */
