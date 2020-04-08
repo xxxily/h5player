@@ -720,7 +720,7 @@ const taskConf = {
           }
 
           window.sessionStorage.playbackRate = targetSpeed;
-          h5Player.setCurrentTime(0.1, true);
+          h5Player.setCurrentTime(0.01, true);
           h5Player.setPlaybackRate(targetSpeed, true);
           return true
         }
