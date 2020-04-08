@@ -1791,20 +1791,31 @@ const crossTabCtl = {
     /* 设置声音大小 */
     setVolume: function (num) {
       if (!num) return
-      num = Number(num);
-      const _num = Math.abs(Number(num.toFixed(2)));
-
       const t = this;
       const player = t.player();
+
+      num = Number(num);
+      const _num = Math.abs(Number(num.toFixed(2)));
+      const curVol = player.volume;
+      let newVol = curVol;
+
       if (num > 0) {
-        if (player.volume < 1) {
-          player.volume += _num;
+        newVol += _num;
+        if (newVol > 1) {
+          newVol = 1;
         }
       } else {
-        if (player.volume > 0) {
-          player.volume -= _num;
+        newVol -= _num;
+        if (newVol < 0) {
+          newVol = 0;
         }
       }
+
+      player.volume = newVol;
+
+      /* 条件音量的时候顺便把静音模式关闭 */
+      player.muted = false;
+
       t.tips('音量：' + parseInt(player.volume * 100) + '%');
     },
     /* 设置视频画面的缩放与位移 */
@@ -2153,13 +2164,13 @@ const crossTabCtl = {
         t.setCurrentTime(-t.skipStep * 6);
       }
 
-      // ctrl+方向键上↑：音量升高 10%
+      // ctrl+方向键上↑：音量升高 20%
       if (event.ctrlKey && keyCode === 38) {
-        t.setVolume(0.1);
+        t.setVolume(0.2);
       }
-      // 方向键下↓：音量降低 10%
+      // 方向键下↓：音量降低 20%
       if (event.ctrlKey && keyCode === 40) {
-        t.setVolume(-0.1);
+        t.setVolume(-0.2);
       }
 
       // 防止其它无关组合键冲突
@@ -2174,13 +2185,13 @@ const crossTabCtl = {
         t.setCurrentTime(-t.skipStep);
       }
 
-      // 方向键上↑：音量升高 1%
+      // 方向键上↑：音量升高 10%
       if (keyCode === 38) {
-        t.setVolume(0.01);
+        t.setVolume(0.1);
       }
-      // 方向键下↓：音量降低 1%
+      // 方向键下↓：音量降低 10%
       if (keyCode === 40) {
-        t.setVolume(-0.01);
+        t.setVolume(-0.1);
       }
 
       // 空格键：暂停/播放
