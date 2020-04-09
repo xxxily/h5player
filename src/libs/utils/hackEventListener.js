@@ -35,12 +35,17 @@ function hackEventListener (config) {
     const listener = arg[1]
     const listenerSymbol = Symbol.for(listener)
 
+    if (!(listener instanceof Function)) {
+      return false
+    }
+
     /**
      * 对监听函数进行代理
      * 为了降低对性能的影响，此处只对特定的标签的事件进行代理
      */
     let listenerProxy = null
-    if (proxyNodeType.includes(t.nodeName)) {
+    const proxyAll = true
+    if (proxyNodeType.includes(t.nodeName) || proxyAll) {
       listenerProxy = new Proxy(listener, {
         apply (target, ctx, args) {
           /* 让外部通过 _listenerProxyApplyHandler_ 控制事件的执行 */
