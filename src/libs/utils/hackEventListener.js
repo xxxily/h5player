@@ -7,6 +7,7 @@
 function hackEventListener (config) {
   config = config || {
     debug: false,
+    proxyAll: false,
     proxyNodeType: []
   }
 
@@ -44,8 +45,7 @@ function hackEventListener (config) {
      * 为了降低对性能的影响，此处只对特定的标签的事件进行代理
      */
     let listenerProxy = null
-    const proxyAll = true
-    if (proxyNodeType.includes(t.nodeName) || proxyAll) {
+    if (config.proxyAll || proxyNodeType.includes(t.nodeName)) {
       listenerProxy = new Proxy(listener, {
         apply (target, ctx, args) {
           /* 让外部通过 _listenerProxyApplyHandler_ 控制事件的执行 */

@@ -53,7 +53,7 @@ import {
 
   hackAttachShadow()
   hackEventListener({
-    proxyNodeType: ['video']
+    proxyAll: true
   })
 
   let TCC = null
@@ -750,14 +750,14 @@ import {
           return
         }
         if (!player.paused) player.pause()
-        t.hangUpPlayerEvent(['seeking', 'timeupdate', 'seeked', 'canplay'], 1000)
+        t.hangUpPlayerEvent(['seeking', 'timeupdate', 'seeked', 'canplay'], 1000 * 1.5)
         player.currentTime += Number(1 / t.fps)
         t.tips('定位：下一帧')
       }
       // 按键D：上一帧
       if (keyCode === 68) {
         if (!player.paused) player.pause()
-        t.hangUpPlayerEvent(['seeking', 'timeupdate', 'seeked', 'canplay'], 1000)
+        t.hangUpPlayerEvent(['seeking', 'timeupdate', 'seeked', 'canplay'], 1000 * 1.5)
         player.currentTime -= Number(1 / t.fps)
         t.tips('定位：上一帧')
       }

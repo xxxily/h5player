@@ -340,6 +340,7 @@ function hackAttachShadow () {
 function hackEventListener (config) {
   config = config || {
     debug: false,
+    proxyAll: false,
     proxyNodeType: []
   };
 
@@ -377,8 +378,7 @@ function hackEventListener (config) {
      * 为了降低对性能的影响，此处只对特定的标签的事件进行代理
      */
     let listenerProxy = null;
-    const proxyAll = true;
-    if (proxyNodeType.includes(t.nodeName) || proxyAll) {
+    if (config.proxyAll || proxyNodeType.includes(t.nodeName)) {
       listenerProxy = new Proxy(listener, {
         apply (target, ctx, args) {
           /* 让外部通过 _listenerProxyApplyHandler_ 控制事件的执行 */
@@ -1536,7 +1536,7 @@ const crossTabCtl = {
 
   hackAttachShadow();
   hackEventListener({
-    proxyNodeType: ['video']
+    proxyAll: true
   });
 
   let TCC = null;
@@ -2233,14 +2233,14 @@ const crossTabCtl = {
           return
         }
         if (!player.paused) player.pause();
-        t.hangUpPlayerEvent(['seeking', 'timeupdate', 'seeked', 'canplay'], 1000);
+        t.hangUpPlayerEvent(['seeking', 'timeupdate', 'seeked', 'canplay'], 1000 * 1.5);
         player.currentTime += Number(1 / t.fps);
         t.tips('定位：下一帧');
       }
       // 按键D：上一帧
       if (keyCode === 68) {
         if (!player.paused) player.pause();
-        t.hangUpPlayerEvent(['seeking', 'timeupdate', 'seeked', 'canplay'], 1000);
+        t.hangUpPlayerEvent(['seeking', 'timeupdate', 'seeked', 'canplay'], 1000 * 1.5);
         player.currentTime -= Number(1 / t.fps);
         t.tips('定位：上一帧');
       }
