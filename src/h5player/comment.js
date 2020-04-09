@@ -41,6 +41,9 @@
 // @grant        GM_download
 // @run-at       document-start
 // @require      http://cdn.bootcss.com/jquery/3.4.1/jquery.min.js
+// @require      https://unpkg.com/vue@2.6.11/dist/vue.min.js
+// @require      https://unpkg.com/element-ui@2.13.0/lib/index.js
+// @resource     elementUiCss https://unpkg.com/element-ui@2.13.0/lib/theme-chalk/index.css
 // @license      GPL
 // ==/UserScript==
 (function (w) { if (w) { w.name = 'h5player' } })()
