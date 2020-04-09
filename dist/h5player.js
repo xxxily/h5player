@@ -427,6 +427,10 @@ function hackEventListener (config) {
     const listener = arg[1];
     const listenerSymbol = Symbol.for(listener);
 
+    if (!(listener instanceof Function)) {
+      return false
+    }
+
     /* 对arg[1]重新赋值，以便正确卸载对应的监听函数 */
     arg[1] = listener[listenerSymbol] || listener;
 
