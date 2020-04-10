@@ -60,7 +60,7 @@ var videoCapturer = {
         el.click()
       }, 'image/jpeg', 0.99)
     } catch (e) {
-      window.alert('视频源受CORS标识限制，无法下载截图')
+      window.alert('视频源受CORS标识限制，无法下载截图，\n您可向作者反馈信息，以便完善网站兼容逻辑')
       console.log('video object:', video)
       console.error('video crossorigin:', video.getAttribute('crossorigin'))
       console.error(e)

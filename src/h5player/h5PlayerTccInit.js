@@ -264,6 +264,17 @@ const taskConf = {
       player._isWebFullScreen_ = !player._isWebFullScreen_
       return true
     }
+  },
+  'agefans.tv': {
+    init: function (h5Player, taskConf) {
+      const player = h5Player.player()
+      /**
+       * 不设置CORS标识，这样才能跨域截图
+       * https://developer.mozilla.org/zh-CN/docs/Web/HTML/CORS_enabled_image
+       * https://developer.mozilla.org/zh-CN/docs/Web/HTML/CORS_settings_attributes
+       */
+      player.setAttribute('crossOrigin', 'anonymous')
+    }
   }
 }
 

@@ -29,8 +29,6 @@ import {
 } from './helper'
 
 (async function () {
-  // const $ = window.jQuery
-
   const mouseObserver = new MouseObserver()
 
   // monkeyMenu.on('设置', function () {
@@ -134,13 +132,6 @@ import {
 
       /* 注册播放器的事件代理处理器 */
       player._listenerProxyApplyHandler_ = t.playerEventHandler
-
-      /**
-       * 不设置CORS标识，这样才能跨域截图
-       * https://developer.mozilla.org/zh-CN/docs/Web/HTML/CORS_enabled_image
-       * https://developer.mozilla.org/zh-CN/docs/Web/HTML/CORS_settings_attributes
-       */
-      player.setAttribute('crossorigin', 'anonymous')
 
       if (!player._hasCanplayEvent_) {
         player.addEventListener('canplay', function (event) {
@@ -402,8 +393,9 @@ import {
 
       t.tips('音量：' + parseInt(player.volume * 100) + '%')
     },
+
     /* 设置视频画面的缩放与位移 */
-    setTransform: function (scale, translate) {
+    setTransform (scale, translate) {
       const t = this
       const player = t.player()
       scale = t.scale = typeof scale === 'undefined' ? t.scale : Number(scale).toFixed(1)
@@ -418,13 +410,42 @@ import {
       }
       t.tips(tipsMsg)
     },
+
+    /**
+     * 定格帧画面
+     * @param perFps {Number} -可选 默认 1，即定格到下一帧，如果是-1则为定格到上一帧
+     */
+    freezeFrame (perFps) {
+      perFps = perFps || 1
+      const t = this
+      const player = t.player()
+
+      /* 跳帧 */
+      player.currentTime += Number(perFps / t.fps)
+
+      /* 定格画面 */
+      if (!player.paused) player.pause()
+
+      /* 有些播放器发现画面所在位置变了会自动进行播放，所以此时需要对播放操作进行挂起 */
+      player._hangUp_ && player._hangUp_('play', 400)
+
+      if (perFps === 1) {
+        t.tips('定位：下一帧')
+      } else if (perFps === -1) {
+        t.tips('定位：上一帧')
+      } else {
+        t.tips('定格帧画面：' + perFps)
+      }
+    },
+
     /* 播放下一个视频，默认是没有这个功能的，只有在TCC里配置了next字段才会有该功能 */
-    setNextVideo: function () {
+    setNextVideo () {
       const isDo = TCC.doTask('next')
       if (!isDo) {
         debug.log('当前网页不支持一键播放下个视频功能~')
       }
     },
+
     setFakeUA (ua) {
       ua = ua || userAgentMap.iPhone.safari
 
@@ -432,6 +453,7 @@ import {
       !isInCrossOriginFrame() && window.localStorage.setItem('_h5_player_user_agent_', ua)
       fakeUA(ua)
     },
+
     /* ua伪装切换开关 */
     switchFakeUA (ua) {
       const customUA = isInCrossOriginFrame() ? null : window.localStorage.getItem('_h5_player_user_agent_')
@@ -443,8 +465,9 @@ import {
 
       debug.log('ua', navigator.userAgent)
     },
+
     /* 切换播放状态 */
-    switchPlayStatus: function () {
+    switchPlayStatus () {
       const t = this
       const player = t.player()
       const taskConf = TCC.getTaskConfig()
@@ -469,6 +492,7 @@ import {
         }
       }
     },
+
     isAllowRestorePlayProgress: function () {
       const keyName = '_allowRestorePlayProgress_' + window.location.host
       const allowRestorePlayProgressVal = window.GM_getValue(keyName)
@@ -807,23 +831,11 @@ import {
           /* netflix 的F键是全屏的意思 */
           return
         }
-        player.currentTime += Number(1 / t.fps)
-
-        /* 定格画面 */
-        if (!player.paused) player.pause()
-        player._hangUp_ && player._hangUp_('play')
-
-        t.tips('定位：下一帧')
+        t.freezeFrame(1)
       }
       // 按键D：上一帧
       if (keyCode === 68) {
-        player.currentTime -= Number(1 / t.fps)
-
-        /* 定格画面 */
-        if (!player.paused) player.pause()
-        player._hangUp_ && player._hangUp_('play')
-
-        t.tips('定位：上一帧')
+        t.freezeFrame(-1)
       }
 
       // 按键E：亮度增加%
