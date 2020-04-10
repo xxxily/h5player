@@ -27,7 +27,7 @@ var videoCapturer = {
     context.drawImage(video, 0, 0, canvas.width, canvas.height)
 
     if (download) {
-      t.download(canvas, captureTitle)
+      t.download(canvas, captureTitle, video)
     } else {
       t.previe(canvas, captureTitle)
     }
@@ -50,7 +50,7 @@ var videoCapturer = {
    * canvas 下载截取到的内容
    * @param canvas
    */
-  download (canvas, title) {
+  download (canvas, title, video) {
     title = title || 'videoCapturer_' + Date.now()
     try {
       canvas.toBlob(function (blob) {
@@ -61,6 +61,8 @@ var videoCapturer = {
       }, 'image/jpeg', 0.99)
     } catch (e) {
       window.alert('视频源受CORS标识限制，无法下载截图')
+      console.log('video object:', video)
+      console.error('video crossorigin:', video.getAttribute('crossorigin'))
       console.error(e)
     }
   }

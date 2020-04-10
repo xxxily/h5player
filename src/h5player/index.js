@@ -53,6 +53,7 @@ import {
 
   hackAttachShadow()
   hackEventListener({
+    // proxyAll: true,
     proxyNodeType: ['video']
   })
 
@@ -750,14 +751,14 @@ import {
           return
         }
         if (!player.paused) player.pause()
-        t.hangUpPlayerEvent(['seeking', 'timeupdate', 'seeked', 'canplay'], 1000 * 1.5)
+        t.hangUpPlayerEvent(['all'], 1000 * 2)
         player.currentTime += Number(1 / t.fps)
         t.tips('定位：下一帧')
       }
       // 按键D：上一帧
       if (keyCode === 68) {
         if (!player.paused) player.pause()
-        t.hangUpPlayerEvent(['seeking', 'timeupdate', 'seeked', 'canplay'], 1000 * 1.5)
+        t.hangUpPlayerEvent(['all'], 1000 * 1.5)
         player.currentTime -= Number(1 / t.fps)
         t.tips('定位：上一帧')
       }
@@ -1037,7 +1038,7 @@ import {
             return true
           }
 
-          const progressMap = t.getPlayProgress()
+          const progressMap = t.getPlayProgress() || {}
           const list = Object.keys(progressMap)
 
           let keyName = window.location.href || player.src
@@ -1175,7 +1176,7 @@ import {
       const eventType = listenerArgs[0]
 
       /* 取消对某些事件的响应 */
-      if (t._hangUpPlayerEventList_.includes(eventType)) {
+      if (t._hangUpPlayerEventList_.includes(eventType) || t._hangUpPlayerEventList_.includes('all')) {
         debug.log(`播放器[${eventType}]事件被取消`)
         return false
       }

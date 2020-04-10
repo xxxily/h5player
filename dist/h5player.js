@@ -40,7 +40,9 @@
 // @grant        GM_openInTab
 // @grant        GM_download
 // @run-at       document-start
-// @require      http://cdn.bootcss.com/jquery/3.4.1/jquery.min.js
+// @require      https://unpkg.com/vue@2.6.11/dist/vue.min.js
+// @require      https://unpkg.com/element-ui@2.13.0/lib/index.js
+// @resource     elementUiCss https://unpkg.com/element-ui@2.13.0/lib/theme-chalk/index.css
 // @license      GPL
 // ==/UserScript==
 (function (w) { if (w) { w.name = 'h5player'; } })();
@@ -1050,7 +1052,7 @@ var videoCapturer = {
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     if (download) {
-      t.download(canvas, captureTitle);
+      t.download(canvas, captureTitle, video);
     } else {
       t.previe(canvas, captureTitle);
     }
@@ -1073,7 +1075,7 @@ var videoCapturer = {
    * canvas 下载截取到的内容
    * @param canvas
    */
-  download (canvas, title) {
+  download (canvas, title, video) {
     title = title || 'videoCapturer_' + Date.now();
     try {
       canvas.toBlob(function (blob) {
@@ -1084,6 +1086,8 @@ var videoCapturer = {
       }, 'image/jpeg', 0.99);
     } catch (e) {
       window.alert('视频源受CORS标识限制，无法下载截图');
+      console.log('video object:', video);
+      console.error('video crossorigin:', video.getAttribute('crossorigin'));
       console.error(e);
     }
   }
@@ -1536,6 +1540,7 @@ const crossTabCtl = {
 
   hackAttachShadow();
   hackEventListener({
+    // proxyAll: true,
     proxyNodeType: ['video']
   });
 
@@ -2233,14 +2238,14 @@ const crossTabCtl = {
           return
         }
         if (!player.paused) player.pause();
-        t.hangUpPlayerEvent(['seeking', 'timeupdate', 'seeked', 'canplay'], 1000 * 1.5);
+        t.hangUpPlayerEvent(['all'], 1000 * 2);
         player.currentTime += Number(1 / t.fps);
         t.tips('定位：下一帧');
       }
       // 按键D：上一帧
       if (keyCode === 68) {
         if (!player.paused) player.pause();
-        t.hangUpPlayerEvent(['seeking', 'timeupdate', 'seeked', 'canplay'], 1000 * 1.5);
+        t.hangUpPlayerEvent(['all'], 1000 * 1.5);
         player.currentTime -= Number(1 / t.fps);
         t.tips('定位：上一帧');
       }
@@ -2520,7 +2525,7 @@ const crossTabCtl = {
             return true
           }
 
-          const progressMap = t.getPlayProgress();
+          const progressMap = t.getPlayProgress() || {};
           const list = Object.keys(progressMap);
 
           let keyName = window.location.href || player.src;
@@ -2658,7 +2663,7 @@ const crossTabCtl = {
       const eventType = listenerArgs[0];
 
       /* 取消对某些事件的响应 */
-      if (t._hangUpPlayerEventList_.includes(eventType)) {
+      if (t._hangUpPlayerEventList_.includes(eventType) || t._hangUpPlayerEventList_.includes('all')) {
         debug.log(`播放器[${eventType}]事件被取消`);
         return false
       }
