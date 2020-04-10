@@ -10,7 +10,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.2.4
+// @version      3.2.5
 // @description  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
 // @description:en  HTML5 video playback enhanced script, supports all H5 video playback websites, full-length shortcut key control, supports: double-speed playback / accelerated playback, video screenshots, picture-in-picture, full-page webpage, brightness, saturation, contrast, custom configuration enhancement And other functions.
 // @description:zh  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
@@ -41,9 +41,6 @@
 // @grant        GM_download
 // @run-at       document-start
 // @require      http://cdn.bootcss.com/jquery/3.4.1/jquery.min.js
-// @require      https://unpkg.com/vue@2.6.11/dist/vue.min.js
-// @require      https://unpkg.com/element-ui@2.13.0/lib/index.js
-// @resource     elementUiCss https://unpkg.com/element-ui@2.13.0/lib/theme-chalk/index.css
 // @license      GPL
 // ==/UserScript==
 (function (w) { if (w) { w.name = 'h5player'; } })();
