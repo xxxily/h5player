@@ -119,13 +119,14 @@ import {
      * 初始化播放器实例
      * @param isSingle 是否为单实例video标签
      */
-    initPlayerInstance: function (isSingle) {
+    initPlayerInstance (isSingle) {
       const t = this
       if (!t.playerInstance) return
 
       const player = t.playerInstance
       t.initPlaybackRate()
       t.isFoucs()
+      t.proxyPlayerInstance(player)
 
       /* 增加通用全屏，网页全屏api */
       player._fullScreen_ = new FullScreen(player)
@@ -182,11 +183,67 @@ import {
         // debug.log('捕捉到鼠标点击事件：', event, offset, target)
       })
     },
-    initPlaybackRate: function () {
+
+    /**
+     * 对播放器实例的方法或属性进行代理
+     * @param player
+     */
+    proxyPlayerInstance (player) {
+      if (!player) return
+
+      /* 要代理的方法或属性列表 */
+      const proxyList = [
+        'play',
+        'pause'
+      ]
+
+      proxyList.forEach(key => {
+        const originKey = 'origin_' + key
+        if (Reflect.has(player, key) && !Reflect.has(player, originKey)) {
+          player[originKey] = player[key]
+          const proxy = new Proxy(player[key], {
+            apply (target, ctx, args) {
+              debug.log(key + '被调用')
+
+              /* 处理挂起逻辑 */
+              const hangUpInfo = player._hangUpInfo_ || {}
+              const hangUpDetail = hangUpInfo[key] || hangUpInfo['hangUp_' + key]
+              const needHangUp = hangUpDetail && hangUpDetail.timeout >= Date.now()
+              if (needHangUp) {
+                debug.log(key + '已被挂起，本次调用将被忽略')
+                return false
+              }
+
+              return target.apply(ctx || player, args)
+            }
+          })
+
+          player[key] = proxy
+        }
+      })
+
+      if (!player._hangUp_) {
+        player._hangUpInfo_ = {}
+        /**
+         * 挂起player某个函数的调用
+         * @param name {String} -必选 player方法或属性名，名字写对外，还须要该方法或属性被代理了才能进行挂起，否则这将是个无效的调用
+         * @param timeout {Number} -可选 挂起多长时间，默认200ms
+         * @private
+         */
+        player._hangUp_ = function (name, timeout) {
+          timeout = Number(timeout) || 200
+          debug.log('_hangUp_', name, timeout)
+          player._hangUpInfo_[name] = {
+            timeout: Date.now() + timeout
+          }
+        }
+      }
+    },
+    initPlaybackRate () {
       const t = this
       t.playbackRate = t.getPlaybackRate()
     },
-    getPlaybackRate: function () {
+    getPlaybackRate () {
       const t = this
       let playbackRate = t.playbackRate
       if (!isInCrossOriginFrame()) {
@@ -750,16 +807,22 @@ import {
           /* netflix 的F键是全屏的意思 */
           return
         }
-        if (!player.paused) player.pause()
-        t.hangUpPlayerEvent(['all'], 1000 * 2)
         player.currentTime += Number(1 / t.fps)
+
+        /* 定格画面 */
+        if (!player.paused) player.pause()
+        player._hangUp_ && player._hangUp_('play')
+
         t.tips('定位：下一帧')
       }
       // 按键D：上一帧
       if (keyCode === 68) {
-        if (!player.paused) player.pause()
-        t.hangUpPlayerEvent(['all'], 1000 * 1.5)
         player.currentTime -= Number(1 / t.fps)
+
+        /* 定格画面 */
+        if (!player.paused) player.pause()
+        player._hangUp_ && player._hangUp_('play')
+
         t.tips('定位：上一帧')
       }
 
