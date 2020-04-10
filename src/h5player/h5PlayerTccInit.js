@@ -265,7 +265,7 @@ const taskConf = {
       return true
     }
   },
-  'agefans.tv': {
+  'open.163.com': {
     init: function (h5Player, taskConf) {
       const player = h5Player.player()
       /**
@@ -274,6 +274,11 @@ const taskConf = {
        * https://developer.mozilla.org/zh-CN/docs/Web/HTML/CORS_settings_attributes
        */
       player.setAttribute('crossOrigin', 'anonymous')
+    }
+  },
+  'agefans.tv': {
+    init: function (h5Player, taskConf) {
+      h5Player.player().setAttribute('crossOrigin', 'anonymous')
     }
   }
 }
