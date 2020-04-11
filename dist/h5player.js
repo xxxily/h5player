@@ -371,7 +371,7 @@ function hackEventListener (config) {
     const listener = arg[1];
     const listenerSymbol = Symbol.for(listener);
 
-    if (!(listener instanceof Function)) {
+    if (!listener) {
       return false
     }
 
@@ -381,25 +381,29 @@ function hackEventListener (config) {
      */
     let listenerProxy = null;
     if (config.proxyAll || proxyNodeType.includes(t.nodeName)) {
-      listenerProxy = new Proxy(listener, {
-        apply (target, ctx, args) {
-          /* 让外部通过 _listenerProxyApplyHandler_ 控制事件的执行 */
-          if (t._listenerProxyApplyHandler_ instanceof Function) {
-            const handlerResult = t._listenerProxyApplyHandler_(target, ctx, args, arg);
-            if (handlerResult !== undefined) {
-              return handlerResult
+      try {
+        listenerProxy = new Proxy(listener, {
+          apply (target, ctx, args) {
+            /* 让外部通过 _listenerProxyApplyHandler_ 控制事件的执行 */
+            if (t._listenerProxyApplyHandler_ instanceof Function) {
+              const handlerResult = t._listenerProxyApplyHandler_(target, ctx, args, arg);
+              if (handlerResult !== undefined) {
+                return handlerResult
+              }
             }
+
+            return target.apply(ctx, args)
           }
+        });
 
-          return target.apply(ctx, args)
-        }
-      });
+        /* 挂载listenerProxy到自身，方便快速查找 */
+        listener[listenerSymbol] = listenerProxy;
 
-      /* 挂载listenerProxy到自身，方便快速查找 */
-      listener[listenerSymbol] = listenerProxy;
-
-      /* 使用listenerProxy替代本来应该进行侦听的listener */
-      arg[1] = listenerProxy;
+        /* 使用listenerProxy替代本来应该进行侦听的listener */
+        arg[1] = listenerProxy;
+      } catch (e) {
+        // console.error('listenerProxy error:', e)
+      }
     }
 
     t._addEventListener.apply(t, arg);
