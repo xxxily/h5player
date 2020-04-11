@@ -34,60 +34,69 @@ function hackEventListener (config) {
     const arg = arguments
     const type = arg[0]
     const listener = arg[1]
-    const listenerSymbol = Symbol.for(listener)
 
     if (!listener) {
       return false
     }
 
     /**
-     * 对监听函数进行代理
-     * 为了降低对性能的影响，此处只对特定的标签的事件进行代理
+     * 使用了Symbol之后，某些页面下会和 raven-js发生冲突，所以必须进行 try catch
+     * TODO 如何解决该问题待研究，测试页面：https://xueqiu.com/S/SZ300498
      */
-    let listenerProxy = null
-    if (config.proxyAll || proxyNodeType.includes(t.nodeName)) {
-      try {
-        listenerProxy = new Proxy(listener, {
-          apply (target, ctx, args) {
-            /* 让外部通过 _listenerProxyApplyHandler_ 控制事件的执行 */
-            if (t._listenerProxyApplyHandler_ instanceof Function) {
-              const handlerResult = t._listenerProxyApplyHandler_(target, ctx, args, arg)
-              if (handlerResult !== undefined) {
-                return handlerResult
+    try {
+      /**
+       * 对监听函数进行代理
+       * 为了降低对性能的影响，此处只对特定的标签的事件进行代理
+       */
+      const listenerSymbol = Symbol.for(listener)
+      let listenerProxy = null
+      if (config.proxyAll) {
+        try {
+          listenerProxy = new Proxy(listener, {
+            apply (target, ctx, args) {
+              /* 让外部通过 _listenerProxyApplyHandler_ 控制事件的执行 */
+              if (t._listenerProxyApplyHandler_ instanceof Function) {
+                const handlerResult = t._listenerProxyApplyHandler_(target, ctx, args, arg)
+                if (handlerResult !== undefined) {
+                  return handlerResult
+                }
               }
+
+              return target.apply(ctx, args)
             }
+          })
 
-            return target.apply(ctx, args)
-          }
-        })
+          /* 挂载listenerProxy到自身，方便快速查找 */
+          listener[listenerSymbol] = listenerProxy
 
-        /* 挂载listenerProxy到自身，方便快速查找 */
-        listener[listenerSymbol] = listenerProxy
-
-        /* 使用listenerProxy替代本来应该进行侦听的listener */
-        arg[1] = listenerProxy
-      } catch (e) {
-        // console.error('listenerProxy error:', e)
+          /* 使用listenerProxy替代本来应该进行侦听的listener */
+          // arg[1] = listenerProxy
+        } catch (e) {
+          // console.error('listenerProxy error:', e)
+        }
       }
-    }
 
-    t._addEventListener.apply(t, arg)
-    t._listeners = t._listeners || {}
-    t._listeners[type] = t._listeners[type] || []
-    const listenerObj = {
-      target: t,
-      type,
-      listener,
-      listenerProxy,
-      options: arg[2],
-      addTime: new Date().getTime()
-    }
-    t._listeners[type].push(listenerObj)
+      t._addEventListener.apply(t, arg)
+      t._listeners = t._listeners || {}
+      t._listeners[type] = t._listeners[type] || []
+      const listenerObj = {
+        target: t,
+        type,
+        listener,
+        listenerProxy,
+        options: arg[2],
+        addTime: new Date().getTime()
+      }
+      t._listeners[type].push(listenerObj)
 
-    /* 挂载到全局对象用于观测调试 */
-    if (config.debug) {
-      window._listenerList_[type] = window._listenerList_[type] || []
-      window._listenerList_[type].push(listenerObj)
+      /* 挂载到全局对象用于观测调试 */
+      if (config.debug) {
+        window._listenerList_[type] = window._listenerList_[type] || []
+        window._listenerList_[type].push(listenerObj)
+      }
+    } catch (e) {
+      t._addEventListener.apply(t, arg)
+      // console.error(e)
     }
   }
 
@@ -96,37 +105,42 @@ function hackEventListener (config) {
     const arg = arguments
     const type = arg[0]
     const listener = arg[1]
-    const listenerSymbol = Symbol.for(listener)
 
-    if (!(listener instanceof Function)) {
+    if (!listener) {
       return false
     }
 
-    /* 对arg[1]重新赋值，以便正确卸载对应的监听函数 */
-    arg[1] = listener[listenerSymbol] || listener
+    try {
+      /* 对arg[1]重新赋值，以便正确卸载对应的监听函数 */
+      const listenerSymbol = Symbol.for(listener)
+      arg[1] = listener[listenerSymbol] || listener
 
-    this._removeEventListener.apply(this, arg)
-    this._listeners = this._listeners || {}
-    this._listeners[type] = this._listeners[type] || []
+      this._removeEventListener.apply(this, arg)
+      this._listeners = this._listeners || {}
+      this._listeners[type] = this._listeners[type] || []
 
-    const result = []
-    this._listeners[type].forEach(listenerObj => {
-      if (listenerObj.listener !== listener) {
-        result.push(listenerObj)
-      }
-    })
-    this._listeners[type] = result
-
-    /* 从全局列表中移除 */
-    if (config.debug) {
       const result = []
-      const listenerTypeList = window._listenerList_[type] || []
-      listenerTypeList.forEach(listenerObj => {
+      this._listeners[type].forEach(listenerObj => {
         if (listenerObj.listener !== listener) {
           result.push(listenerObj)
         }
       })
-      window._listenerList_[type] = result
+      this._listeners[type] = result
+
+      /* 从全局列表中移除 */
+      if (config.debug) {
+        const result = []
+        const listenerTypeList = window._listenerList_[type] || []
+        listenerTypeList.forEach(listenerObj => {
+          if (listenerObj.listener !== listener) {
+            result.push(listenerObj)
+          }
+        })
+        window._listenerList_[type] = result
+      }
+    } catch (e) {
+      this._removeEventListener.apply(this, arg)
+      console.error(e)
     }
   }
 }
