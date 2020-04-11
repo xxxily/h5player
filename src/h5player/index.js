@@ -25,7 +25,8 @@ import {
 
 import {
   debug,
-  isRegisterKey
+  isRegisterKey,
+  getPageWindow
 } from './helper'
 
 (async function () {
@@ -113,6 +114,24 @@ import {
       })
       return wrapDom
     },
+
+    /* 挂载到页面上的window对象，用于调试 */
+    async mountToGlobal () {
+      try {
+        const pageWindow = await getPageWindow()
+        if (pageWindow) {
+          pageWindow._h5Player = h5Player || 'null'
+          if (window.top !== window) {
+            pageWindow._h5PlayerInFrame = h5Player || 'null'
+          }
+          pageWindow._window = window
+          debug.log('h5Player对象已成功挂载到全局')
+        }
+      } catch (e) {
+        debug.error(e)
+      }
+    },
+
     /**
      * 初始化播放器实例
      * @param isSingle 是否为单实例video标签
@@ -173,6 +192,8 @@ import {
       mouseObserver.on(player, 'click', function (event, offset, target) {
         // debug.log('捕捉到鼠标点击事件：', event, offset, target)
       })
+
+      debug.isDebugMode() && t.mountToGlobal()
     },
 
     /**
@@ -1362,10 +1383,7 @@ import {
     })
 
     if (isInCrossOriginFrame()) {
-      window._h5PlayerForDebug_ = h5Player
       debug.log('当前处于跨域受限的Iframe中，h5Player相关功能可能无法正常开启')
-    } else {
-      window.top._h5PlayerForDebug_ = h5Player
     }
 
     /* 初始化跨Tab控制逻辑 */

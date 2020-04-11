@@ -8,6 +8,10 @@ function createDebugMethod (name) {
   }
 
   return function () {
+    if (!window._debugMode_) {
+      return false
+    }
+
     const arg = Array.from(arguments)
     arg.unshift(`color: white; background-color: ${bgColorMap[name] || '#95B46A'}`)
     arg.unshift('%c h5player message:')
@@ -18,7 +22,10 @@ function createDebugMethod (name) {
 var debug = {
   log: createDebugMethod('log'),
   error: createDebugMethod('error'),
-  info: createDebugMethod('info')
+  info: createDebugMethod('info'),
+  isDebugMode () {
+    return Boolean(window._debugMode_)
+  }
 }
 
 /* 当前用到的快捷键 */
@@ -78,8 +85,39 @@ function isRegisterKey (event) {
     hasUseKey.keyList.includes(key)
 }
 
+/**
+ * 由于tampermonkey对window对象进行了封装，我们实际访问到的window并非页面真实的window
+ * 这就导致了如果我们需要将某些对象挂载到页面的window进行调试的时候就无法挂载了
+ * 所以必须使用特殊手段才能访问到页面真实的window对象，于是就有了下面这个函数
+ * @returns {Promise<void>}
+ */
+async function getPageWindow () {
+  return new Promise(function (resolve, reject) {
+    if (window._pageWindow) {
+      return resolve(window._pageWindow)
+    }
+
+    const listenEventList = ['load', 'mousemove', 'scroll']
+
+    function getWin () {
+      window._pageWindow = this
+      // debug.log('getPageWindow succeed')
+      listenEventList.forEach(eventType => {
+        window.removeEventListener(eventType, getWin, true)
+      })
+      resolve(window._pageWindow)
+    }
+
+    listenEventList.forEach(eventType => {
+      window.addEventListener(eventType, getWin, true)
+    })
+  })
+}
+getPageWindow()
+
 export {
   debug,
   hasUseKey,
-  isRegisterKey
+  isRegisterKey,
+  getPageWindow
 }

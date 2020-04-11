@@ -10,7 +10,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.2.6
+// @version      3.2.7
 // @description  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
 // @description:en  HTML5 video playback enhanced script, supports all H5 video playback websites, full-length shortcut key control, supports: double-speed playback / accelerated playback, video screenshots, picture-in-picture, full-page webpage, brightness, saturation, contrast, custom configuration enhancement And other functions.
 // @description:zh  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
@@ -1397,6 +1397,10 @@ function createDebugMethod (name) {
   };
 
   return function () {
+    if (!window._debugMode_) {
+      return false
+    }
+
     const arg = Array.from(arguments);
     arg.unshift(`color: white; background-color: ${bgColorMap[name] || '#95B46A'}`);
     arg.unshift('%c h5player message:');
@@ -1407,7 +1411,10 @@ function createDebugMethod (name) {
 var debug = {
   log: createDebugMethod('log'),
   error: createDebugMethod('error'),
-  info: createDebugMethod('info')
+  info: createDebugMethod('info'),
+  isDebugMode () {
+    return Boolean(window._debugMode_)
+  }
 };
 
 /* 当前用到的快捷键 */
@@ -1466,6 +1473,36 @@ function isRegisterKey (event) {
   return hasUseKey.keyCodeList.includes(keyCode) ||
     hasUseKey.keyList.includes(key)
 }
+
+/**
+ * 由于tampermonkey对window对象进行了封装，我们实际访问到的window并非页面真实的window
+ * 这就导致了如果我们需要将某些对象挂载到页面的window进行调试的时候就无法挂载了
+ * 所以必须使用特殊手段才能访问到页面真实的window对象，于是就有了下面这个函数
+ * @returns {Promise<void>}
+ */
+async function getPageWindow () {
+  return new Promise(function (resolve, reject) {
+    if (window._pageWindow) {
+      return resolve(window._pageWindow)
+    }
+
+    const listenEventList = ['load', 'mousemove', 'scroll'];
+
+    function getWin () {
+      window._pageWindow = this;
+      // debug.log('getPageWindow succeed')
+      listenEventList.forEach(eventType => {
+        window.removeEventListener(eventType, getWin, true);
+      });
+      resolve(window._pageWindow);
+    }
+
+    listenEventList.forEach(eventType => {
+      window.addEventListener(eventType, getWin, true);
+    });
+  })
+}
+getPageWindow();
 
 /*!
  * @name         crossTabCtl.js
@@ -1620,6 +1657,24 @@ const crossTabCtl = {
       });
       return wrapDom
     },
+
+    /* 挂载到页面上的window对象，用于调试 */
+    async mountToGlobal () {
+      try {
+        const pageWindow = await getPageWindow();
+        if (pageWindow) {
+          pageWindow._h5Player = h5Player || 'null';
+          if (window.top !== window) {
+            pageWindow._h5PlayerInFrame = h5Player || 'null';
+          }
+          pageWindow._window = window;
+          debug.log('h5Player对象已成功挂载到全局');
+        }
+      } catch (e) {
+        debug.error(e);
+      }
+    },
+
     /**
      * 初始化播放器实例
      * @param isSingle 是否为单实例video标签
@@ -1680,6 +1735,8 @@ const crossTabCtl = {
       mouseObserver.on(player, 'click', function (event, offset, target) {
         // debug.log('捕捉到鼠标点击事件：', event, offset, target)
       });
+
+      debug.isDebugMode() && t.mountToGlobal();
     },
 
     /**
@@ -2869,10 +2926,7 @@ const crossTabCtl = {
     });
 
     if (isInCrossOriginFrame()) {
-      window._h5PlayerForDebug_ = h5Player;
       debug.log('当前处于跨域受限的Iframe中，h5Player相关功能可能无法正常开启');
-    } else {
-      window.top._h5PlayerForDebug_ = h5Player;
     }
 
     /* 初始化跨Tab控制逻辑 */
