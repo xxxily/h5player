@@ -39,10 +39,12 @@
 // @grant        GM_getTabs
 // @grant        GM_openInTab
 // @grant        GM_download
+// @grant        GM_xmlhttpRequest
 // @run-at       document-start
 // @require      https://unpkg.com/vue@2.6.11/dist/vue.min.js
 // @require      https://unpkg.com/element-ui@2.13.0/lib/index.js
 // @resource     elementUiCss https://unpkg.com/element-ui@2.13.0/lib/theme-chalk/index.css
+// @connect      127.0.0.1
 // @license      GPL
 // ==/UserScript==
 (function (w) { if (w) { w.name = 'h5player'; } })();
@@ -685,8 +687,7 @@ const taskConf = {
       // 隐藏水印
       hideDom('.iqp-logo-box');
       // 移除暂停广告
-      // eslint-disable-next-line no-undef
-      GM_addStyle(`
+      window.GM_addStyle(`
           div[templatetype="common_pause"]{ display:none }
           .iqp-logo-box{ display:none !important }
       `);
@@ -927,8 +928,7 @@ class FullScreen {
 			}
 		`;
     if (!window._hasInitFullPageStyle_) {
-      // eslint-disable-next-line no-undef
-      GM_addStyle(fullPageStyle);
+      window.GM_addStyle(fullPageStyle);
       window._hasInitFullPageStyle_ = true;
     }
 
@@ -1667,7 +1667,7 @@ const crossTabCtl = {
           if (window.top !== window) {
             pageWindow._h5PlayerInFrame = h5Player || 'null';
           }
-          pageWindow._window = window;
+          pageWindow._window = window || '';
           debug.log('h5Player对象已成功挂载到全局');
         }
       } catch (e) {

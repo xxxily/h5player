@@ -124,7 +124,7 @@ import {
           if (window.top !== window) {
             pageWindow._h5PlayerInFrame = h5Player || 'null'
           }
-          pageWindow._window = window
+          pageWindow._window = window || ''
           debug.log('h5Player对象已成功挂载到全局')
         }
       } catch (e) {

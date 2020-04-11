@@ -104,8 +104,7 @@ const taskConf = {
       // 隐藏水印
       hideDom('.iqp-logo-box')
       // 移除暂停广告
-      // eslint-disable-next-line no-undef
-      GM_addStyle(`
+      window.GM_addStyle(`
           div[templatetype="common_pause"]{ display:none }
           .iqp-logo-box{ display:none !important }
       `)

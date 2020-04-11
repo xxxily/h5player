@@ -23,8 +23,7 @@ class FullScreen {
 			}
 		`
     if (!window._hasInitFullPageStyle_) {
-      // eslint-disable-next-line no-undef
-      GM_addStyle(fullPageStyle)
+      window.GM_addStyle(fullPageStyle)
       window._hasInitFullPageStyle_ = true
     }
 

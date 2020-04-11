@@ -32,9 +32,59 @@
 // @grant        GM_notification
 // @grant        GM_setClipboard
 // @grant        GM_info
-// @require      http://127.0.0.1:3086/dist/h5player.js
+// @require      https://unpkg.com/vue@2.6.11/dist/vue.min.js
+// @require      https://unpkg.com/element-ui@2.13.0/lib/index.js
+// @resource     elementUiCss https://unpkg.com/element-ui@2.13.0/lib/theme-chalk/index.css
+// @connect      127.0.0.1
 // ==/UserScript==
 
+window._debugMode_ = true
+const _debugTools_ = {
+  ajax: window.GM_xmlhttpRequest || function () { console.log('GM_xmlhttpRequest 未注册，不能进行接口请求') },
+  http: function(){ return this.ajax.apply(null, arguments) },
+  get: function(url ,data){
+    return new Promise((resolve, reject) => {
+      this.ajax({
+        method: 'GET',
+        url: url,
+        data: data,
+        onerror: err => reject(err),
+        onload: res => resolve(res)
+      })
+    })
+  },
+  debugScriptUrl: 'http://127.0.0.1:3086/dist/h5player.js',
+  getDebugScript(){
+    const t = this
+    return new Promise((resolve, reject) => {
+      t.get(t.debugScriptUrl+'?t='+Date.now()).catch(err => {
+        console.log('脚本内容加载出错~')
+      }).then(res => {
+        window.GM_setValue('debugScript', res.responseText)
+        console.log('脚本内容更新成功~')
+
+        resolve(res.responseText)
+      })
+    })
+  },
+  runScriptText(scriptText){
+    const runtimeFunc = new Function('window', 'document', 'alert', scriptText)
+    runtimeFunc(window, document, window.alert)
+  },
+  async init(){
+    const debugScript = window.GM_getValue('debugScript') || `
+      console.log('未存在要调试的脚本')
+    `
+    this.runScriptText(debugScript)
+
+    const newDebugScript = await this.getDebugScript()
+    if(newDebugScript && newDebugScript !== debugScript){
+      window.location.reload()
+    }
+  }
+}
+
+_debugTools_.init()
 
 /**
  * 使用说明：
