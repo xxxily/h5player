@@ -10,7 +10,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.2.7
+// @version      3.2.8
 // @description  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
 // @description:en  HTML5 video playback enhanced script, supports all H5 video playback websites, full-length shortcut key control, supports: double-speed playback / accelerated playback, video screenshots, picture-in-picture, full-page webpage, brightness, saturation, contrast, custom configuration enhancement And other functions.
 // @description:zh  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
@@ -353,7 +353,7 @@ function hackEventListener (config) {
   const tmpArr = [];
   proxyNodeType.forEach(type => {
     if (typeof type === 'string') {
-      tmpArr.push(type.toUpperCase);
+      tmpArr.push(type.toUpperCase());
     }
   });
   proxyNodeType = tmpArr;
@@ -387,10 +387,13 @@ function hackEventListener (config) {
        */
       const listenerSymbol = Symbol.for(listener);
       let listenerProxy = null;
-      if (config.proxyAll) {
+      if (config.proxyAll || proxyNodeType.includes(t.nodeName)) {
         try {
           listenerProxy = new Proxy(listener, {
             apply (target, ctx, args) {
+              // const event = args[0]
+              // console.log(event.type, event, target)
+
               /* 让外部通过 _listenerProxyApplyHandler_ 控制事件的执行 */
               if (t._listenerProxyApplyHandler_ instanceof Function) {
                 const handlerResult = t._listenerProxyApplyHandler_(target, ctx, args, arg);
@@ -407,12 +410,11 @@ function hackEventListener (config) {
           listener[listenerSymbol] = listenerProxy;
 
           /* 使用listenerProxy替代本来应该进行侦听的listener */
-          // arg[1] = listenerProxy
+          arg[1] = listenerProxy;
         } catch (e) {
           // console.error('listenerProxy error:', e)
         }
       }
-
       t._addEventListener.apply(t, arg);
       t._listeners = t._listeners || {};
       t._listeners[type] = t._listeners[type] || [];
@@ -480,6 +482,18 @@ function hackEventListener (config) {
       console.error(e);
     }
   };
+
+  /* 对document下的事件侦听方法进行hack */
+  try {
+    if (document.addEventListener !== EVENT.addEventListener) {
+      document.addEventListener = EVENT.addEventListener;
+    }
+    if (document.removeEventListener !== EVENT.removeEventListener) {
+      document.removeEventListener = EVENT.removeEventListener;
+    }
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 const quickSort = function (arr) {
@@ -665,7 +679,8 @@ const taskConf = {
     webFullScreen: '[data-text="网页全屏"]',
     // autoPlay: '.bilibili-player-video-btn-start',
     switchPlayStatus: '.bilibili-player-video-btn-start',
-    next: '.bilibili-player-video-btn-next'
+    next: '.bilibili-player-video-btn-next',
+    init: function (h5Player, taskConf) {}
   },
   't.bilibili.com': {
     fullScreen: 'button[name="fullscreen-button"]'
@@ -1610,7 +1625,7 @@ const crossTabCtl = {
   hackAttachShadow();
   hackEventListener({
     // proxyAll: true,
-    // proxyNodeType: ['video'],
+    proxyNodeType: ['video'],
     debug: debug.isDebugMode()
   });
 
@@ -1702,6 +1717,11 @@ const crossTabCtl = {
       t.initPlaybackRate();
       t.isFoucs();
       t.proxyPlayerInstance(player);
+
+      // player.addEventListener('durationchange', () => {
+      //   debug.log('当前视频长度：', player.duration)
+      // })
+      // player.setAttribute('preload', 'auto')
 
       /* 增加通用全屏，网页全屏api */
       player._fullScreen_ = new FullScreen(player);

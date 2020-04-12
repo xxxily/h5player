@@ -16,7 +16,7 @@ function hackEventListener (config) {
   const tmpArr = []
   proxyNodeType.forEach(type => {
     if (typeof type === 'string') {
-      tmpArr.push(type.toUpperCase)
+      tmpArr.push(type.toUpperCase())
     }
   })
   proxyNodeType = tmpArr
@@ -50,10 +50,13 @@ function hackEventListener (config) {
        */
       const listenerSymbol = Symbol.for(listener)
       let listenerProxy = null
-      if (config.proxyAll) {
+      if (config.proxyAll || proxyNodeType.includes(t.nodeName)) {
         try {
           listenerProxy = new Proxy(listener, {
             apply (target, ctx, args) {
+              // const event = args[0]
+              // console.log(event.type, event, target)
+
               /* 让外部通过 _listenerProxyApplyHandler_ 控制事件的执行 */
               if (t._listenerProxyApplyHandler_ instanceof Function) {
                 const handlerResult = t._listenerProxyApplyHandler_(target, ctx, args, arg)
@@ -70,12 +73,11 @@ function hackEventListener (config) {
           listener[listenerSymbol] = listenerProxy
 
           /* 使用listenerProxy替代本来应该进行侦听的listener */
-          // arg[1] = listenerProxy
+          arg[1] = listenerProxy
         } catch (e) {
           // console.error('listenerProxy error:', e)
         }
       }
-
       t._addEventListener.apply(t, arg)
       t._listeners = t._listeners || {}
       t._listeners[type] = t._listeners[type] || []
@@ -142,6 +144,18 @@ function hackEventListener (config) {
       this._removeEventListener.apply(this, arg)
       console.error(e)
     }
+  }
+
+  /* 对document下的事件侦听方法进行hack */
+  try {
+    if (document.addEventListener !== EVENT.addEventListener) {
+      document.addEventListener = EVENT.addEventListener
+    }
+    if (document.removeEventListener !== EVENT.removeEventListener) {
+      document.removeEventListener = EVENT.removeEventListener
+    }
+  } catch (e) {
+    console.error(e)
   }
 }
 

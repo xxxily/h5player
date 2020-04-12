@@ -68,7 +68,8 @@ const taskConf = {
     webFullScreen: '[data-text="网页全屏"]',
     // autoPlay: '.bilibili-player-video-btn-start',
     switchPlayStatus: '.bilibili-player-video-btn-start',
-    next: '.bilibili-player-video-btn-next'
+    next: '.bilibili-player-video-btn-next',
+    init: function (h5Player, taskConf) {}
   },
   't.bilibili.com': {
     fullScreen: 'button[name="fullscreen-button"]'

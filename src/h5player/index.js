@@ -53,7 +53,7 @@ import {
   hackAttachShadow()
   hackEventListener({
     // proxyAll: true,
-    // proxyNodeType: ['video'],
+    proxyNodeType: ['video'],
     debug: debug.isDebugMode()
   })
 
@@ -145,6 +145,11 @@ import {
       t.initPlaybackRate()
       t.isFoucs()
       t.proxyPlayerInstance(player)
+
+      // player.addEventListener('durationchange', () => {
+      //   debug.log('当前视频长度：', player.duration)
+      // })
+      // player.setAttribute('preload', 'auto')
 
       /* 增加通用全屏，网页全屏api */
       player._fullScreen_ = new FullScreen(player)

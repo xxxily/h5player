@@ -6,6 +6,7 @@ import { clone, forIn, getObjKeys, mergeObj, merge, getValByPath } from './objec
 import { quickSort } from './number'
 import { hideDom, eachParentNode, getContainer, loadCSSText, isEditableTarget } from './dom'
 import { fakeUA, userAgentMap } from './fakeUA'
+import { fakeVisible, fakeHidden } from './fakeVisibilityState'
 import { isInIframe, isInCrossOriginFrame } from './iframe'
 import { throttle } from './throttle'
 
@@ -36,6 +37,8 @@ export {
   getContainer,
   fakeUA,
   userAgentMap,
+  fakeVisible,
+  fakeHidden,
   isInIframe,
   isInCrossOriginFrame,
   throttle
