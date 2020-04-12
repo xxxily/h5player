@@ -12,8 +12,10 @@ const simpleApi = require('./bin/simpleApi')
 const visitRecorder = require('./bin/visitRecorder')
 const commonMethods = require('./bin/middleware/commonMethods')
 const baseConfig = require('./bin/baseConfig')
+const socketHander = require('./bin/socket')
 const serviceConfig = baseConfig.staticService
 const app = express()
+const server = require('http').Server(app)
 
 const index = {
   async init () {
@@ -52,7 +54,16 @@ const index = {
     /* 用于其他实例获取静态服务的配置信息 */
     simpleApi.routeController(app, simpleApi.configList, simpleApi.basePath)
 
-    app.listen(serviceConfig.port, () => {
+    // app.listen(serviceConfig.port, () => {
+    //   console.log(`服务器已启动: ${simpleApi.localService}`)
+    //   console.log('可用接口地址：')
+    //   console.log(simpleApi.getRegisteredApiLink().join('\n'))
+    // })
+
+    socketHander.init(server)
+
+    /* 使用了socket后app.listen要改为server.listen */
+    server.listen(serviceConfig.port, () => {
       console.log(`服务器已启动: ${simpleApi.localService}`)
       console.log('可用接口地址：')
       console.log(simpleApi.getRegisteredApiLink().join('\n'))

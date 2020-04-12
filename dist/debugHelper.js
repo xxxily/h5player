@@ -32,6 +32,8 @@
 // @grant        GM_notification
 // @grant        GM_setClipboard
 // @grant        GM_info
+// @require      https://cdnjs.cloudflare.com/ajax/libs/eruda/2.2.1/eruda.js
+// @require      https://cdn.jsdelivr.net/npm/socket.io-client@2/dist/socket.io.js
 // @require      https://unpkg.com/vue@2.6.11/dist/vue.min.js
 // @require      https://unpkg.com/element-ui@2.13.0/lib/index.js
 // @resource     elementUiCss https://unpkg.com/element-ui@2.13.0/lib/theme-chalk/index.css
@@ -39,6 +41,8 @@
 // ==/UserScript==
 
 window._debugMode_ = true
+window.eruda && window.eruda.init()
+
 const _debugTools_ = {
   ajax: window.GM_xmlhttpRequest || function () { console.log('GM_xmlhttpRequest 未注册，不能进行接口请求') },
   http: function(){ return this.ajax.apply(null, arguments) },
@@ -67,6 +71,16 @@ const _debugTools_ = {
       })
     })
   },
+  async debugScriptHasUpdateHandler(){
+    console.log('debugScriptHasUpdate')
+
+    /* 对可视页面进行重载 */
+    if(document.visibilityState === 'visible'){
+      await _debugTools_.getDebugScript()
+      window.location.reload()
+      console.log('window.location.reload')
+    }
+  },
   runScriptText(scriptText){
     const runtimeFunc = new Function('window', 'document', 'alert', scriptText)
     runtimeFunc(window, document, window.alert)
@@ -85,6 +99,13 @@ const _debugTools_ = {
 }
 
 _debugTools_.init()
+
+const socket = window.io.connect('http://127.0.0.1:3086');
+socket.on('connect', function() {
+  console.log('socket connect succeed')
+  socket.off('debugScriptHasUpdate', _debugTools_.debugScriptHasUpdateHandler)
+  socket.on('debugScriptHasUpdate', _debugTools_.debugScriptHasUpdateHandler)
+})
 
 /**
  * 使用说明：

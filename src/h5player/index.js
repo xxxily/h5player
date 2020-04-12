@@ -53,7 +53,8 @@ import {
   hackAttachShadow()
   hackEventListener({
     // proxyAll: true,
-    // proxyNodeType: ['video']
+    // proxyNodeType: ['video'],
+    debug: debug.isDebugMode()
   })
 
   let TCC = null
