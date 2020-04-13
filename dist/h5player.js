@@ -376,7 +376,8 @@ function hackEventListener (config) {
       return false
     }
 
-    // if (/animation/gi.test(type)) {
+    /* 把sourceopen事件干掉，则好多网站视频都将播放不了 */
+    // if (/sourceopen/gi.test(type)) {
     //   console.log('------------------------------')
     //   console.log(type, listener)
     //   return false
@@ -1443,9 +1444,14 @@ function createDebugMethod (name) {
       return false
     }
 
+    const curTime = new Date();
+    const H = curTime.getHours();
+    const M = curTime.getMinutes();
+    const S = curTime.getSeconds();
+
     const arg = Array.from(arguments);
     arg.unshift(`color: white; background-color: ${bgColorMap[name] || '#95B46A'}`);
-    arg.unshift('%c h5player message:');
+    arg.unshift(`%c [${H}:${M}:${S}] h5player message: `);
     console[name].apply(console, arg);
   }
 }
@@ -1618,6 +1624,7 @@ const crossTabCtl = {
 };
 
 (async function () {
+  debug.log('init');
   const mouseObserver = new MouseObserver();
 
   // monkeyMenu.on('设置', function () {

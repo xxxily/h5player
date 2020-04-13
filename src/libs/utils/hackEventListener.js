@@ -39,7 +39,8 @@ function hackEventListener (config) {
       return false
     }
 
-    // if (/animation/gi.test(type)) {
+    /* 把sourceopen事件干掉，则好多网站视频都将播放不了 */
+    // if (/sourceopen/gi.test(type)) {
     //   console.log('------------------------------')
     //   console.log(type, listener)
     //   return false

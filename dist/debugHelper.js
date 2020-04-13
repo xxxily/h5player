@@ -41,7 +41,7 @@
 // ==/UserScript==
 
 window._debugMode_ = true
-window.eruda && window.eruda.init()
+// window.eruda && window.eruda.init()
 
 const _debugTools_ = {
   ajax: window.GM_xmlhttpRequest || function () { console.log('GM_xmlhttpRequest 未注册，不能进行接口请求') },

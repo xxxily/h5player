@@ -12,9 +12,14 @@ function createDebugMethod (name) {
       return false
     }
 
+    const curTime = new Date()
+    const H = curTime.getHours()
+    const M = curTime.getMinutes()
+    const S = curTime.getSeconds()
+
     const arg = Array.from(arguments)
     arg.unshift(`color: white; background-color: ${bgColorMap[name] || '#95B46A'}`)
-    arg.unshift('%c h5player message:')
+    arg.unshift(`%c [${H}:${M}:${S}] h5player message: `)
     console[name].apply(console, arg)
   }
 }
