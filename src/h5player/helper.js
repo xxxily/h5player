@@ -97,11 +97,11 @@ async function getPageWindow () {
       return resolve(window._pageWindow)
     }
 
-    const listenEventList = ['load', 'mousemove', 'scroll']
+    const listenEventList = ['load', 'mousemove', 'scroll', 'get-page-window-event']
 
-    function getWin () {
+    function getWin (event) {
       window._pageWindow = this
-      // debug.log('getPageWindow succeed')
+      // debug.log('getPageWindow succeed', event)
       listenEventList.forEach(eventType => {
         window.removeEventListener(eventType, getWin, true)
       })
@@ -111,6 +111,9 @@ async function getPageWindow () {
     listenEventList.forEach(eventType => {
       window.addEventListener(eventType, getWin, true)
     })
+
+    /* 自行派发事件以便用最短的时候获得pageWindow对象 */
+    window.dispatchEvent(new window.Event('get-page-window-event'))
   })
 }
 getPageWindow()

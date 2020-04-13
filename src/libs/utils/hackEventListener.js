@@ -39,6 +39,12 @@ function hackEventListener (config) {
       return false
     }
 
+    // if (/animation/gi.test(type)) {
+    //   console.log('------------------------------')
+    //   console.log(type, listener)
+    //   return false
+    // }
+
     /**
      * 使用了Symbol之后，某些页面下会和 raven-js发生冲突，所以必须进行 try catch
      * TODO 如何解决该问题待研究，测试页面：https://xueqiu.com/S/SZ300498
@@ -154,6 +160,13 @@ function hackEventListener (config) {
     if (document.removeEventListener !== EVENT.removeEventListener) {
       document.removeEventListener = EVENT.removeEventListener
     }
+
+    // if (window.addEventListener !== EVENT.addEventListener) {
+    //   window.addEventListener = EVENT.addEventListener
+    // }
+    // if (window.removeEventListener !== EVENT.removeEventListener) {
+    //   window.removeEventListener = EVENT.removeEventListener
+    // }
   } catch (e) {
     console.error(e)
   }

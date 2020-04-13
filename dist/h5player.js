@@ -376,6 +376,12 @@ function hackEventListener (config) {
       return false
     }
 
+    // if (/animation/gi.test(type)) {
+    //   console.log('------------------------------')
+    //   console.log(type, listener)
+    //   return false
+    // }
+
     /**
      * 使用了Symbol之后，某些页面下会和 raven-js发生冲突，所以必须进行 try catch
      * TODO 如何解决该问题待研究，测试页面：https://xueqiu.com/S/SZ300498
@@ -491,6 +497,13 @@ function hackEventListener (config) {
     if (document.removeEventListener !== EVENT.removeEventListener) {
       document.removeEventListener = EVENT.removeEventListener;
     }
+
+    // if (window.addEventListener !== EVENT.addEventListener) {
+    //   window.addEventListener = EVENT.addEventListener
+    // }
+    // if (window.removeEventListener !== EVENT.removeEventListener) {
+    //   window.removeEventListener = EVENT.removeEventListener
+    // }
   } catch (e) {
     console.error(e);
   }
@@ -1515,11 +1528,11 @@ async function getPageWindow () {
       return resolve(window._pageWindow)
     }
 
-    const listenEventList = ['load', 'mousemove', 'scroll'];
+    const listenEventList = ['load', 'mousemove', 'scroll', 'get-page-window-event'];
 
-    function getWin () {
+    function getWin (event) {
       window._pageWindow = this;
-      // debug.log('getPageWindow succeed')
+      // debug.log('getPageWindow succeed', event)
       listenEventList.forEach(eventType => {
         window.removeEventListener(eventType, getWin, true);
       });
@@ -1529,6 +1542,9 @@ async function getPageWindow () {
     listenEventList.forEach(eventType => {
       window.addEventListener(eventType, getWin, true);
     });
+
+    /* 自行派发事件以便用最短的时候获得pageWindow对象 */
+    window.dispatchEvent(new window.Event('get-page-window-event'));
   })
 }
 getPageWindow();
@@ -2969,6 +2985,10 @@ const crossTabCtl = {
   } catch (e) {
     debug.error(e);
   }
+
+  // h5playerUi.init()
+
+  // debugCode.init(h5Player)
 
   // document.addEventListener('visibilitychange', function () {
   //   if (!document.hidden) {

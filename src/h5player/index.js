@@ -8,6 +8,7 @@ import { getTabId } from './getId'
 import monkeyMenu from './monkeyMenu'
 import monkeyMsg from './monkeyMsg'
 import crossTabCtl from './crossTabCtl'
+import h5playerUi from './ui/index'
 import {
   ready,
   hackAttachShadow,
@@ -28,6 +29,8 @@ import {
   isRegisterKey,
   getPageWindow
 } from './helper'
+
+import debugCode from './debugCode'
 
 (async function () {
   const mouseObserver = new MouseObserver()
@@ -1397,6 +1400,10 @@ import {
   } catch (e) {
     debug.error(e)
   }
+
+  // h5playerUi.init()
+
+  // debugCode.init(h5Player)
 
   // document.addEventListener('visibilitychange', function () {
   //   if (!document.hidden) {
