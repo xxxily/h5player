@@ -1,4 +1,3 @@
-'use strict'
 const path = require('path')
 const utils = require('./utils')
 const rootPath = require('./rootPath')
@@ -11,9 +10,7 @@ const webpackConfig = {
   output: {
     path: config.build.assetsRoot,
     filename: utils.assetsPath('[name].js'),
-    publicPath: process.env.NODE_ENV === 'production'
-      ? config.build.assetsPublicPath
-      : config.dev.assetsPublicPath
+    publicPath: config.dev.assetsPublicPath
   },
   externals: {
     vue: 'Vue'

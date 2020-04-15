@@ -1,14 +1,10 @@
-'use strict'
 const utils = require('./utils')
 const webpack = require('webpack')
 const config = require('./config/index')
-const appEntry = require('./webpack.entrys')
-const htmlTemplates = require('./html-template-factory')
 const merge = require('webpack-merge')
 const path = require('path')
 const baseWebpackConfig = require('./webpack.base.conf')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
-const MiniCssTextPlugin = require('mini-css-extract-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin')
 const portfinder = require('portfinder')
@@ -64,17 +60,19 @@ const devWebpackConfig = merge(baseWebpackConfig, {
     after: config.dev.after || function (app) {}
   },
   plugins: [
-
-    new webpack.DefinePlugin({
-      'process.env': require('../config/dev.env')
+    new HtmlWebpackPlugin({
+      filename: config.build.index,
+      template: 'index.html',
+      inject: true,
+      minify: {
+        removeComments: true,
+        collapseWhitespace: true,
+        removeAttributeQuotes: true
+      },
+      chunksSortMode: 'dependency'
     }),
-
     /* 使用热替换插件 */
     new webpack.HotModuleReplacementPlugin(),
-
-    new MiniCssTextPlugin({
-      filename: utils.assetsPath('[name].css')
-    }),
 
     // copy custom static assets
     new CopyWebpackPlugin([
@@ -108,22 +106,6 @@ module.exports = new Promise((resolve, reject) => {
       }
 
       const successMessages = [`Your application is running here: ${protocol}://${host}:${port}`]
-
-      /* 增加可用的访问入口提示 */
-      const templatePages = htmlTemplates.getTemplatePages()
-      if (templatePages) {
-        successMessages.push('The page entry you might want to visit:')
-        Object.values(templatePages).forEach(function (pagesPath) {
-          const pagesName = path.basename(pagesPath)
-          let url = `${protocol}://${host}:${port}/vp/module/${pagesName}`
-
-          if (utils.isFixMode()) {
-            url = `${protocol}://${host}:${port}/vp/${pagesName}`
-          }
-
-          successMessages.push(url)
-        })
-      }
 
       // Add FriendlyErrorsPlugin
       devWebpackConfig.plugins.push(new FriendlyErrorsPlugin({
