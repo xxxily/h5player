@@ -6,12 +6,10 @@ module.exports = {
         modules: false,
         targets: {
           browsers: [
-            '> 3%',
-            'last 2 versions',
-            'not ie <= 10'
+            'chrome > 42'
           ]
         },
-        useBuiltIns: 'entry'
+        useBuiltIns: 'usage'
       }
     ]
   ]

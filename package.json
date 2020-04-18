@@ -8,13 +8,15 @@
     "rollup": "rollup -w -c config/rollup.config.js",
     "h5player:prod": "npm run rollup --mode-dev --proj-h5player",
     "server": "node bin/staticService/index.js",
-    "ui-dev": "cross-env BABEL_ENV=development webpack-dev-server --inline --config bin/webpack/webpack.dev.conf.js"
+    "ui-dev": "cross-env BABEL_ENV=development webpack-dev-server --inline --config bin/webpack/webpack.dev.conf.js",
+    "ui-build": "cross-env BABEL_ENV=production webpack-cli --inline --config bin/webpack/webpack.prod.conf.js"
   },
   "dependencies": {},
   "devDependencies": {
     "@babel/cli": "^7.6.0",
     "@babel/core": "^7.6.0",
     "@babel/preset-env": "^7.6.0",
+    "babel-eslint": "^10.1.0",
     "babel-loader": "^8.1.0",
     "babel-plugin-dynamic-import-node": "^2.3.0",
     "babel-plugin-transform-vue-jsx": "^3.7.0",
@@ -34,6 +36,7 @@
     "eslint-plugin-standard": "^4.0.0",
     "eslint-plugin-vue": "^6.2.2",
     "express": "^4.17.1",
+    "friendly-errors-webpack-plugin": "^1.7.0",
     "fs-extra": "^8.1.0",
     "glob": "^7.1.6",
     "html-webpack-plugin": "^4.2.0",
@@ -54,6 +57,7 @@
     "url-loader": "^4.1.0",
     "vue-loader": "^15.9.1",
     "vue-template-compiler": "^2.6.11",
+    "webpack": "^4.42.1",
     "webpack-bundle-analyzer": "^3.6.1",
     "webpack-cli": "^3.3.11",
     "webpack-dev-server": "^3.10.3",

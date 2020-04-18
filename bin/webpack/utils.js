@@ -1,6 +1,6 @@
 const path = require('path')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-const config = require('../config/bin/index')
+const config = require('./config/index')
 
 module.exports = {
   assetsPath: function (_path) {

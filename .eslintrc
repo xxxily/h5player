@@ -7,8 +7,8 @@
     "expect": true,
     "sinon": true
   },
-  "plugins": ["import", "node", "promise", "standard"],
-  "extends": ["standard"],
+  "plugins": ["import", "node", "promise", "standard", "vue"],
+  "extends": ["standard", "plugin:vue/recommended"],
   "rules": {
      "no-tabs": ["warn"]
     // 禁止特定的全局变量

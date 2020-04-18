@@ -1,16 +1,15 @@
 const path = require('path')
 const utils = require('./utils')
 const rootPath = require('./rootPath')
-const config = require('./config/index')
 
 /* webpack基本配置 */
 const webpackConfig = {
-  context: path.resolve(__dirname, '../'),
-  entry: path.join(rootPath, ''),
+  entry: path.join(rootPath, 'src/h5player/ui/index.js'),
   output: {
-    path: config.build.assetsRoot,
-    filename: utils.assetsPath('[name].js'),
-    publicPath: config.dev.assetsPublicPath
+    path: path.join(rootPath, 'dist/'),
+    filename: 'h5player-ui.js',
+    library: 'h5playerUi',
+    libraryTarget: 'umd'
   },
   externals: {
     vue: 'Vue'

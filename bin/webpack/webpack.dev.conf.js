@@ -1,10 +1,9 @@
-const utils = require('./utils')
 const webpack = require('webpack')
 const config = require('./config/index')
 const merge = require('webpack-merge')
 const path = require('path')
+const rootPath = require('./rootPath')
 const baseWebpackConfig = require('./webpack.base.conf')
-const CopyWebpackPlugin = require('copy-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin')
 const portfinder = require('portfinder')
@@ -15,14 +14,6 @@ const PORT = process.env.PORT && Number(process.env.PORT)
 /* 跟基础配置信息进行合并，组合出开发环境的配置信息 */
 const devWebpackConfig = merge(baseWebpackConfig, {
   mode: 'development',
-  module: {
-    rules: utils.styleLoaders({
-      hotReload: true,
-      extract: true,
-      sourceMap: config.dev.cssSourceMap,
-      usePostCSS: true
-    })
-  },
   // cheap-module-eval-source-map is faster for development
   devtool: config.dev.devtool,
   // these devServer options should be customized in /config/index.js
@@ -61,27 +52,17 @@ const devWebpackConfig = merge(baseWebpackConfig, {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      filename: config.build.index,
-      template: 'index.html',
+      filename: 'index.html',
+      template: path.join(rootPath, 'src/h5player/ui/index.html'),
       inject: true,
       minify: {
-        removeComments: true,
-        collapseWhitespace: true,
-        removeAttributeQuotes: true
-      },
-      chunksSortMode: 'dependency'
+        removeComments: false,
+        collapseWhitespace: false,
+        removeAttributeQuotes: false
+      }
     }),
     /* 使用热替换插件 */
-    new webpack.HotModuleReplacementPlugin(),
-
-    // copy custom static assets
-    new CopyWebpackPlugin([
-      {
-        from: path.resolve(__dirname, '../static'),
-        to: config.dev.assetsSubDirectory,
-        ignore: ['.*']
-      }
-    ])
+    new webpack.HotModuleReplacementPlugin()
   ]
 })
 
@@ -113,8 +94,6 @@ module.exports = new Promise((resolve, reject) => {
           messages: successMessages
         },
         onErrors: config.dev.notifyOnErrors
-          ? utils.createNotifierCallback()
-          : undefined
       }))
 
       resolve(devWebpackConfig)
