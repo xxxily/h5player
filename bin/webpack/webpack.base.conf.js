@@ -4,6 +4,7 @@ const rootPath = require('./rootPath')
 
 /* webpack基本配置 */
 const webpackConfig = {
+  context: path.join(rootPath, 'src/h5player/ui/'),
   entry: path.join(rootPath, 'src/h5player/ui/index.js'),
   output: {
     path: path.join(rootPath, 'dist/'),
@@ -36,11 +37,10 @@ const webpackConfig = {
       },
       {
         test: /\.js$/,
-        loader: 'babel-loader?cacheDirectory=true',
+        loader: 'babel-loader',
         exclude: [
           /node_modules/
-        ],
-        include: []
+        ]
       },
       {
         test: /\.scss$/,
@@ -50,7 +50,7 @@ const webpackConfig = {
         test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
         loader: 'url-loader',
         options: {
-          limit: 10000,
+          limit: 30000,
           name: utils.assetsPath('img/[name].[hash:7].[ext]')
         }
       },

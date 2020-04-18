@@ -8,13 +8,14 @@
     "rollup": "rollup -w -c config/rollup.config.js",
     "h5player:prod": "npm run rollup --mode-dev --proj-h5player",
     "server": "node bin/staticService/index.js",
-    "ui-dev": "cross-env BABEL_ENV=development webpack-dev-server --inline --config bin/webpack/webpack.dev.conf.js",
-    "ui-build": "cross-env BABEL_ENV=production webpack-cli --inline --config bin/webpack/webpack.prod.conf.js"
+    "ui-dev": "webpack-dev-server --inline --config bin/webpack/webpack.dev.conf.js",
+    "ui-build": "webpack-cli --inline --config bin/webpack/webpack.prod.conf.js"
   },
   "dependencies": {},
   "devDependencies": {
     "@babel/cli": "^7.6.0",
     "@babel/core": "^7.6.0",
+    "@babel/plugin-transform-runtime": "^7.9.0",
     "@babel/preset-env": "^7.6.0",
     "babel-eslint": "^10.1.0",
     "babel-loader": "^8.1.0",
@@ -65,12 +66,7 @@
     "webpack-parallel-uglify-plugin": "^1.1.2"
   },
   "engines": {
-    "node": ">= 8.0.0",
-    "npm": ">= 5.2.0"
-  },
-  "browserslist": [
-    "> 1%",
-    "last 2 versions",
-    "not ie <= 8"
-  ]
+    "node": ">= 10.0.0",
+    "npm": ">= 6.0.0"
+  }
 }

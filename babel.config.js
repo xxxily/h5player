@@ -5,12 +5,16 @@ module.exports = {
       {
         modules: false,
         targets: {
-          browsers: [
-            'chrome > 42'
-          ]
+          /* 49是个分界线，const输出不再转换成var */
+          // chrome: '49',
+          chrome: '52'
         },
+        corejs: '3',
         useBuiltIns: 'usage'
       }
     ]
+  ],
+  plugins: [
+    '@babel/plugin-transform-runtime'
   ]
 }
