@@ -1,6 +1,7 @@
 'use strict'
 const webpack = require('webpack')
 const config = require('./config/index')
+const utils = require('./utils')
 const merge = require('webpack-merge')
 const baseWebpackConfig = require('./webpack.base.conf')
 
@@ -16,20 +17,18 @@ const webpackConfig = merge(baseWebpackConfig, {
     /* 压缩打包代码 */
     minimize: true
   },
-
+  module: {
+    rules: [
+      ...utils.styleLoaders({
+        useStyleLoader: true,
+        hotReload: false,
+        extract: false,
+        sourceMap: false,
+        usePostCSS: false
+      })
+    ]
+  },
   plugins: [
-    // new HtmlWebpackPlugin({
-    //   filename: config.build.index,
-    //   template: 'index.html',
-    //   inject: true,
-    //   minify: {
-    //     removeComments: true,
-    //     collapseWhitespace: true,
-    //     removeAttributeQuotes: true
-    //   },
-    //   chunksSortMode: 'dependency'
-    // }),
-
     // keep module.id stable when vendor modules does not change
     new webpack.HashedModuleIdsPlugin()
 

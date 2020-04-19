@@ -2,6 +2,7 @@ const webpack = require('webpack')
 const config = require('./config/index')
 const merge = require('webpack-merge')
 const path = require('path')
+const utils = require('./utils')
 const rootPath = require('./rootPath')
 const baseWebpackConfig = require('./webpack.base.conf')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
@@ -49,6 +50,17 @@ const devWebpackConfig = merge(baseWebpackConfig, {
     },
     before: config.dev.before || function (app) {},
     after: config.dev.after || function (app) {}
+  },
+  module: {
+    rules: [
+      ...utils.styleLoaders({
+        hotReload: true,
+        sourceMap: true,
+        useStyleLoader: true,
+        extract: false,
+        usePostCSS: false
+      })
+    ]
   },
   plugins: [
     new HtmlWebpackPlugin({

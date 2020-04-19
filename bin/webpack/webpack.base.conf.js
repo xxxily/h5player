@@ -1,6 +1,7 @@
 const path = require('path')
 const utils = require('./utils')
 const rootPath = require('./rootPath')
+const VueLoaderPlugin = require('vue-loader/lib/plugin')
 
 /* webpack基本配置 */
 const webpackConfig = {
@@ -42,10 +43,16 @@ const webpackConfig = {
           /node_modules/
         ]
       },
-      {
-        test: /\.scss$/,
-        loaders: ['style', 'css', 'sass']
-      },
+      // {
+      //   test: /\.(scss|sass)$/,
+      //   loaders: [
+      //     'css-hot',
+      //     'vue-style-loader',
+      //     'style-loader',
+      //     'css-loader',
+      //     'sass-loader'
+      //   ]
+      // },
       {
         test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
         loader: 'url-loader',
@@ -72,7 +79,9 @@ const webpackConfig = {
       }
     ]
   },
-  plugins: [],
+  plugins: [
+    new VueLoaderPlugin()
+  ],
   node: {
     setImmediate: false,
     dgram: 'empty',

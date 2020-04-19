@@ -27,6 +27,18 @@ module.exports = {
       }
     }
 
+    const styleLoader = {
+      loader: 'style-loader',
+      options: {
+        // insert: (element) => {
+        //   window.renderH5playeruiCss = function (callback) {
+        //     // document.querySelector('h5-player-ui').shadowRoot.appendChild(element)
+        //     callback && callback(element)
+        //   }
+        // }
+      }
+    }
+
     // generate loader string to be used with extract text plugin
     function generateLoaders (loader, loaderOptions) {
       const loaders = options.usePostCSS ? [cssLoader, postcssLoader] : [cssLoader]
@@ -38,6 +50,10 @@ module.exports = {
             sourceMap: options.sourceMap
           })
         })
+      }
+
+      if (options.useStyleLoader) {
+        loaders.unshift(styleLoader)
       }
 
       // Extract CSS when that option is specified
@@ -58,7 +74,7 @@ module.exports = {
     // https://vue-loader.vuejs.org/en/configurations/extract-css.html
     return {
       css: generateLoaders(),
-      postcss: generateLoaders(),
+      // postcss: generateLoaders(),
       // less: generateLoaders('less'),
       // stylus: generateLoaders('stylus'),
       // styl: generateLoaders('stylus'),

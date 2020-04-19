@@ -6,29 +6,48 @@
  * @date         2020/4/13 am 10:12
  * @github       https://github.com/xxxily
  */
+
+import App from './app'
+
 const h5playerUi = {
-  init () {
+  init (useShadow) {
+    let uiRoot = null
     const ui = document.createElement('h5-player-ui')
-    ui.attachShadow({ mode: 'open' })
-    const uiRoot = ui.shadowRoot
+    if (useShadow) {
+      ui.attachShadow({ mode: 'open' })
+      uiRoot = ui.shadowRoot
+    }
 
     const wrap = document.createElement('div')
     wrap.id = 'h5-player-app'
-    wrap.innerHTML = '{{message}}'
-    uiRoot.appendChild(wrap)
+    if (uiRoot) {
+      uiRoot.appendChild(wrap)
+    } else {
+      ui.appendChild(wrap)
+    }
 
-    var app = new window.Vue({
+    const app = new window.Vue({
       el: wrap,
-      data: {
-        message: 'Hello Vue!'
-      }
+      components: { App },
+      template: '<App />'
     })
+
+    window['h5playerUi-app'] = app
 
     /* 插入到html文档中 */
     if (!document.querySelector('h5-player-ui')) {
       document.body.appendChild(ui)
+      window.renderH5playeruiCss(element => {
+        if (uiRoot) {
+          uiRoot.appendChild(element)
+        } else {
+          ui.appendChild(element)
+        }
+      })
     }
   }
 }
+
+h5playerUi.init()
 
 export default h5playerUi
