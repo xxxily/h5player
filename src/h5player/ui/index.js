@@ -10,6 +10,12 @@
 import App from './app'
 
 const h5playerUi = {
+  addElementUiCss () {
+    if (window.GM_getResourceText && window.GM_addStyle) {
+      const elementUiCss = window.GM_getResourceText('elementUiCss')
+      window.GM_addStyle(elementUiCss)
+    }
+  },
   init (useShadow) {
     let uiRoot = null
     const ui = document.createElement('h5-player-ui')

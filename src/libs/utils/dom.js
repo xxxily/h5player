@@ -60,11 +60,27 @@ function getContainer (el, noRecursive) {
   return container
 }
 
-function loadCSSText (cssText) {
+/**
+ * 动态加载css内容
+ * @param cssText {String} -必选 样式的文本内容
+ * @param id {String} -可选 指定样式文本的id号，如果已存在对应id号则不会再次插入
+ * @returns {HTMLStyleElement}
+ */
+function loadCSSText (cssText, id) {
+  if (id && document.getElementById(id)) {
+    return false
+  }
+
   const style = document.createElement('style')
   const head = document.head || document.getElementsByTagName('head')[0]
   style.appendChild(document.createTextNode(cssText))
   head.appendChild(style)
+
+  if (id) {
+    style.setAttribute('id', id)
+  }
+
+  return style
 }
 
 /**

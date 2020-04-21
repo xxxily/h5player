@@ -8,7 +8,8 @@
  */
 
 import monkeyMsg from './monkeyMsg'
-import { debug, isRegisterKey } from './helper'
+import debug from './debug'
+import { isRegisterKey } from './helper'
 import { curTabId } from './getId'
 import {
   isEditableTarget

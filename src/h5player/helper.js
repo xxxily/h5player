@@ -1,38 +1,3 @@
-function createDebugMethod (name) {
-  name = name || 'info'
-
-  const bgColorMap = {
-    info: '#2274A5',
-    log: '#95B46A',
-    error: '#D33F49'
-  }
-
-  return function () {
-    if (!window._debugMode_) {
-      return false
-    }
-
-    const curTime = new Date()
-    const H = curTime.getHours()
-    const M = curTime.getMinutes()
-    const S = curTime.getSeconds()
-
-    const arg = Array.from(arguments)
-    arg.unshift(`color: white; background-color: ${bgColorMap[name] || '#95B46A'}`)
-    arg.unshift(`%c [${H}:${M}:${S}] h5player message: `)
-    console[name].apply(console, arg)
-  }
-}
-
-var debug = {
-  log: createDebugMethod('log'),
-  error: createDebugMethod('error'),
-  info: createDebugMethod('info'),
-  isDebugMode () {
-    return Boolean(window._debugMode_)
-  }
-}
-
 /* 当前用到的快捷键 */
 const hasUseKey = {
   keyCodeList: [13, 16, 17, 18, 27, 32, 37, 38, 39, 40, 49, 50, 51, 52, 67, 68, 69, 70, 73, 74, 75, 78, 79, 80, 81, 82, 83, 84, 85, 87, 88, 89, 90, 97, 98, 99, 100, 220],
@@ -124,7 +89,6 @@ async function getPageWindow () {
 getPageWindow()
 
 export {
-  debug,
   hasUseKey,
   isRegisterKey,
   getPageWindow

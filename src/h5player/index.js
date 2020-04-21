@@ -8,7 +8,7 @@ import { getTabId } from './getId'
 import monkeyMenu from './monkeyMenu'
 import monkeyMsg from './monkeyMsg'
 import crossTabCtl from './crossTabCtl'
-// import h5playerUi from './ui/index'
+import debug from './debug'
 import {
   ready,
   hackAttachShadow,
@@ -25,15 +25,12 @@ import {
 } from '../libs/utils/index'
 
 import {
-  debug,
   isRegisterKey,
   getPageWindow
 } from './helper'
 
-import debugCode from './debugCode'
-
 (async function () {
-  debug.log('init')
+  debug.log('h5Player init')
   const mouseObserver = new MouseObserver()
 
   // monkeyMenu.on('设置', function () {
