@@ -905,6 +905,11 @@ const taskConf = {
     init: function (h5Player, taskConf) {
       h5Player.player().setAttribute('crossOrigin', 'anonymous');
     }
+  },
+  'yixi.tv': {
+    init: function (h5Player, taskConf) {
+      h5Player.player().setAttribute('crossOrigin', 'anonymous');
+    }
   }
 };
 
@@ -1097,7 +1102,7 @@ class FullScreen {
 var videoCapturer = {
   /**
    * 进行截图操作
-   * @param video {Dmon} -必选 video dom 标签
+   * @param video {dom} -必选 video dom 标签
    * @returns {boolean}
    */
   capture (video, download, title) {

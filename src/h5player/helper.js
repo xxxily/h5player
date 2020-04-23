@@ -88,8 +88,21 @@ async function getPageWindow () {
 }
 getPageWindow()
 
+/* 通过同步的方式获取pageWindow */
+function getPageWindowSync () {
+  if (document._win_) return document._win_
+
+  const head = document.head || document.querySelector('head')
+  const script = document.createElement('script')
+  script.appendChild(document.createTextNode('document._win_ = window'))
+  head.appendChild(script)
+
+  return document._win_
+}
+
 export {
   hasUseKey,
   isRegisterKey,
-  getPageWindow
+  getPageWindow,
+  getPageWindowSync
 }

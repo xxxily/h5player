@@ -280,6 +280,11 @@ const taskConf = {
     init: function (h5Player, taskConf) {
       h5Player.player().setAttribute('crossOrigin', 'anonymous')
     }
+  },
+  'yixi.tv': {
+    init: function (h5Player, taskConf) {
+      h5Player.player().setAttribute('crossOrigin', 'anonymous')
+    }
   }
 }
 

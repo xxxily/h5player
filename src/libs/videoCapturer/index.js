@@ -9,7 +9,7 @@
 var videoCapturer = {
   /**
    * 进行截图操作
-   * @param video {Dmon} -必选 video dom 标签
+   * @param video {dom} -必选 video dom 标签
    * @returns {boolean}
    */
   capture (video, download, title) {
