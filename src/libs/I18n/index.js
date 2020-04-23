@@ -2,7 +2,7 @@
  * 简单的i18n库
  */
 
-class i18n {
+class I18n {
   constructor (config) {
     console.log(config)
   }
@@ -22,4 +22,4 @@ class i18n {
 
   exists () {}
 }
-export default i18n
+export default I18n
