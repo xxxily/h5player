@@ -679,9 +679,23 @@ const taskConf = {
     exclude: /\t/
   },
   'youtube.com': {
-    // webFullScreen: 'button.ytp-size-button',
+    webFullScreen: 'button.ytp-size-button',
     fullScreen: 'button.ytp-fullscreen-button',
-    next: '.ytp-next-button'
+    next: '.ytp-next-button',
+    shortcuts: {
+      register: [
+        'escape'
+      ],
+      callback: function (h5Player, taskConf, data) {
+        const { event } = data;
+        if (event.keyCode === 27) {
+          /* 取消播放下一个推荐的视频 */
+          if (document.querySelector('.ytp-upnext').style.display !== 'none') {
+            document.querySelector('.ytp-upnext-cancel-button').click();
+          }
+        }
+      }
+    }
   },
   'netflix.com': {
     fullScreen: 'button.button-nfplayerFullscreen',
@@ -689,12 +703,41 @@ const taskConf = {
     subtractCurrentTime: 'button.button-nfplayerBackTen'
   },
   'bilibili.com': {
-    fullScreen: '[data-text="进入全屏"]',
-    webFullScreen: '[data-text="网页全屏"]',
+    // fullScreen: '[data-text="进入全屏"]',
+    // webFullScreen: '[data-text="网页全屏"]',
+    fullScreen: '.bilibili-player-video-btn-fullscreen',
+    webFullScreen: function () {
+      const webFullscreen = document.querySelector('.bilibili-player-video-web-fullscreen');
+      if (webFullscreen) {
+        webFullscreen.click();
+
+        /* 取消弹幕框聚焦，干扰了快捷键的操作 */
+        setTimeout(function () {
+          document.querySelector('.bilibili-player-video-danmaku-input').blur();
+        }, 1000 * 0.1);
+
+        return true
+      }
+    },
     // autoPlay: '.bilibili-player-video-btn-start',
     switchPlayStatus: '.bilibili-player-video-btn-start',
     next: '.bilibili-player-video-btn-next',
-    init: function (h5Player, taskConf) {}
+    init: function (h5Player, taskConf) {},
+    shortcuts: {
+      register: [
+        'escape'
+      ],
+      callback: function (h5Player, taskConf, data) {
+        const { event } = data;
+        if (event.keyCode === 27) {
+          /* 退出网页全屏 */
+          const webFullscreen = document.querySelector('.bilibili-player-video-web-fullscreen');
+          if (webFullscreen.classList.contains('closed')) {
+            webFullscreen.click();
+          }
+        }
+      }
+    }
   },
   't.bilibili.com': {
     fullScreen: 'button[name="fullscreen-button"]'
@@ -983,7 +1026,11 @@ class FullScreen {
     window.addEventListener('keyup', (event) => {
       const key = event.key.toLowerCase();
       if (key === 'escape') {
-        this.exit();
+        if (this.isFull()) {
+          this.exit();
+        } else if (this.isFullScreen()) {
+          this.exitFullScreen();
+        }
       }
     }, true);
 

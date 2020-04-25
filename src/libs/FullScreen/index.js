@@ -30,7 +30,11 @@ class FullScreen {
     window.addEventListener('keyup', (event) => {
       const key = event.key.toLowerCase()
       if (key === 'escape') {
-        this.exit()
+        if (this.isFull()) {
+          this.exit()
+        } else if (this.isFullScreen()) {
+          this.exitFullScreen()
+        }
       }
     }, true)
 
