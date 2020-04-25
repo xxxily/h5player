@@ -949,6 +949,9 @@ const taskConf = {
       h5Player.player().setAttribute('crossOrigin', 'anonymous');
     }
   },
+  'chaoxing.com': {
+    fullScreen: '.vjs-fullscreen-control'
+  },
   'yixi.tv': {
     init: function (h5Player, taskConf) {
       h5Player.player().setAttribute('crossOrigin', 'anonymous');
