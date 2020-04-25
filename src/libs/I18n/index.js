@@ -30,7 +30,7 @@ class I18n {
       result = t.getValByPath(t._languages[t._defaultLanguage] || {}, path)
     }
 
-    return result
+    return result || ''
   }
 
   /* 当前语言值 */
@@ -71,4 +71,24 @@ class I18n {
     return result
   }
 }
+
+/* 使用demo */
+// const i18n = new I18n({
+//   defaultLanguage: 'zh',
+//   locale: 'en',
+//   languages: {
+//     zh: {
+//       demo: '11111',
+//       test: '111112'
+//     },
+//     en: {
+//       demo: '2222222222',
+//       aaa: {
+//         bbb: '111111'
+//       }
+//     }
+//   }
+// })
+// console.log(i18n.t('test'))
+
 export default I18n
