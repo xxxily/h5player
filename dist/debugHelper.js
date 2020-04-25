@@ -57,6 +57,37 @@ const _debugTools_ = {
       })
     })
   },
+
+  /* 通过同步的方式获取pageWindow */
+  getPageWindowSync () {
+    if (document._win_) return document._win_
+
+    const head = document.head || document.querySelector('head')
+    const script = document.createElement('script')
+    script.appendChild(document.createTextNode('document._win_ = window'))
+    head.appendChild(script)
+    head.removeChild(script)
+
+    return document._win_
+  },
+
+  loadScriptText (scriptText, id) {
+    if (id && document.getElementById(id)) {
+      return false
+    }
+
+    const script = document.createElement('script')
+    const head = document.head || document.getElementsByTagName('head')[0]
+    script.appendChild(document.createTextNode(scriptText))
+    head.appendChild(script)
+
+    if (id) {
+      script.setAttribute('id', id)
+    }
+
+    return script
+  },
+
   debugScriptUrl: 'http://127.0.0.1:3086/dist/h5player.js',
   getDebugScript(){
     const t = this
@@ -85,13 +116,26 @@ const _debugTools_ = {
     const runtimeFunc = new Function('window', 'document', 'alert', scriptText)
     runtimeFunc(window, document, window.alert)
   },
+
   async init(){
+    const t = this
+    const pageWindow = t.getPageWindowSync()
+
+    /* 将tampermonkey特有的方法或属性挂载到页面的windo上 */
+    Reflect.ownKeys(window).forEach(key=>{
+      if( window[key] && !pageWindow[key] ){
+        // console.log('挂载：' + key)
+        pageWindow[key] = window[key]
+      }
+    })
+
     const debugScript = window.GM_getValue('debugScript') || `
       console.log('未存在要调试的脚本')
     `
-    this.runScriptText(debugScript)
+    // t.runScriptText(debugScript)
+    t.loadScriptText(debugScript)
 
-    const newDebugScript = await this.getDebugScript()
+    const newDebugScript = await t.getDebugScript()
     if(newDebugScript && newDebugScript !== debugScript){
       window.location.reload()
     }
