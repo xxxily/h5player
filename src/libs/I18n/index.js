@@ -5,7 +5,7 @@
 class I18n {
   constructor (config) {
     this._languages = {}
-    this._locale = ''
+    this._locale = this.getClientLang()
     this._defaultLanguage = ''
     this.init(config)
   }
@@ -15,6 +15,7 @@ class I18n {
 
     const t = this
     t._locale = config.locale || t._locale
+    /* 指定当前要是使用的语言环境，默认无需指定，会自动读取 */
     t._languages = config.languages || t._languages
     t._defaultLanguage = config.defaultLanguage || t._defaultLanguage
   }
@@ -69,6 +70,11 @@ class I18n {
     }
 
     return result
+  }
+
+  /* 获取客户端当前的语言环境 */
+  getClientLang () {
+    return navigator.languages ? navigator.languages[0] : navigator.language
   }
 }
 

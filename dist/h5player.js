@@ -1351,6 +1351,86 @@ class MouseObserver {
   }
 }
 
+/**
+ * 简单的i18n库
+ */
+
+class I18n {
+  constructor (config) {
+    this._languages = {};
+    this._locale = this.getClientLang();
+    this._defaultLanguage = '';
+    this.init(config);
+  }
+
+  init (config) {
+    if (!config) return false
+
+    const t = this;
+    t._locale = config.locale || t._locale;
+    /* 指定当前要是使用的语言环境，默认无需指定，会自动读取 */
+    t._languages = config.languages || t._languages;
+    t._defaultLanguage = config.defaultLanguage || t._defaultLanguage;
+  }
+
+  use () {}
+
+  t (path) {
+    const t = this;
+    let result = t.getValByPath(t._languages[t._locale] || {}, path);
+
+    /* 版本回退 */
+    if (!result && t._locale !== t._defaultLanguage) {
+      result = t.getValByPath(t._languages[t._defaultLanguage] || {}, path);
+    }
+
+    return result || ''
+  }
+
+  /* 当前语言值 */
+  language () {
+    return this._locale
+  }
+
+  languages () {
+    return this._languages
+  }
+
+  changeLanguage (locale) {
+    if (this._languages[locale]) {
+      this._languages = locale;
+      return locale
+    } else {
+      return false
+    }
+  }
+
+  /**
+   * 根据文本路径获取对象里面的值
+   * @param obj {Object} -必选 要操作的对象
+   * @param path {String} -必选 路径信息
+   * @returns {*}
+   */
+  getValByPath (obj, path) {
+    path = path || '';
+    const pathArr = path.split('.');
+    let result = obj;
+
+    /* 递归提取结果值 */
+    for (let i = 0; i < pathArr.length; i++) {
+      if (!result) break
+      result = result[pathArr[i]];
+    }
+
+    return result
+  }
+
+  /* 获取客户端当前的语言环境 */
+  getClientLang () {
+    return navigator.languages ? navigator.languages[0] : navigator.language
+  }
+}
+
 /* 用于获取全局唯一的id */
 function getId () {
   let gID = window.GM_getValue('_global_id_');
@@ -1692,21 +1772,180 @@ const crossTabCtl = {
   }
 };
 
+var zhCN = {
+  about: '关于',
+  issues: '反馈',
+  setting: '设置',
+  tipsMsg: {
+    playspeed: '播放速度：',
+    forward: '前进：',
+    backward: '后退：',
+    seconds: '秒',
+    volume: '音量：',
+    nextframe: '定位：下一帧',
+    previousframe: '定位：上一帧',
+    stopframe: '定格帧画面：',
+    play: '播放',
+    pause: '暂停',
+    arpl: '允许自动恢复播放进度',
+    drpl: '禁止自动恢复播放进度',
+    brightness: '图像亮度：',
+    contrast: '图像对比度：',
+    saturation: '图像饱和度：',
+    hue: '图像色相：',
+    blur: '图像模糊度：',
+    imgattrreset: '图像属性：复位',
+    imgrotate: '画面旋转：',
+    onplugin: '启用h5Player插件',
+    offplugin: '禁用h5Player插件',
+    globalmode: '全局模式：',
+    playbackrestored: '为你恢复上次播放进度',
+    playbackrestoreoff: '恢复播放进度功能已禁用，按 SHIFT+R 可开启该功能',
+    horizontal: '水平位移：',
+    vertical: '垂直位移：',
+    videozoom: '视频缩放率：'
+  }
+};
+
+var enUS = {
+  about: 'about',
+  issues: 'issues',
+  setting: 'setting',
+  tipsMsg: {
+    playspeed: 'Speed: ',
+    forward: 'Forward: ',
+    backward: 'Backward: ',
+    seconds: 'sec',
+    volume: 'Volume: ',
+    nextframe: 'Next frame',
+    previousframe: 'Previous frame',
+    stopframe: 'Stopframe: ',
+    play: 'Play',
+    pause: 'Pause',
+    arpl: 'Allow auto resume playback progress',
+    drpl: 'Disable auto resume playback progress',
+    brightness: 'Brightness: ',
+    contrast: 'Contrast: ',
+    saturation: 'Saturation: ',
+    hue: 'HUE: ',
+    blur: 'Blur: ',
+    imgattrreset: 'Attributes: reset',
+    imgrotate: 'Picture rotation: ',
+    onplugin: 'ON h5Player plugin',
+    offplugin: 'OFF h5Player plugin',
+    globalmode: 'Global mode: ',
+    playbackrestored: 'Restored the last playback progress for you',
+    playbackrestoreoff: 'The function of restoring the playback progress is disabled. Press SHIFT+R to turn on the function',
+    horizontal: 'Horizontal displacement: ',
+    vertical: 'Vertical displacement: ',
+    videozoom: 'Video zoom: '
+  },
+  demo: 'demo-test'
+};
+
+var ru = {
+  about: 'около',
+  issues: 'обратная связь',
+  setting: 'установка',
+  tipsMsg: {
+    playspeed: 'Скорость: ',
+    forward: 'Вперёд: ',
+    backward: 'Назад: ',
+    seconds: ' сек',
+    volume: 'Громкость: ',
+    nextframe: 'Следующий кадр',
+    previousframe: 'Предыдущий кадр',
+    stopframe: 'Стоп-кадр: ',
+    play: 'Запуск',
+    pause: 'Пауза',
+    arpl: 'Разрешить автоматическое возобновление прогресса воспроизведения',
+    drpl: 'Запретить автоматическое возобновление прогресса воспроизведения',
+    brightness: 'Яркость: ',
+    contrast: 'Контраст: ',
+    saturation: 'Насыщенность: ',
+    hue: 'Оттенок: ',
+    blur: 'Размытие: ',
+    imgattrreset: 'Атрибуты: сброс',
+    imgrotate: 'Поворот изображения: ',
+    onplugin: 'ВКЛ: плагин воспроизведения',
+    offplugin: 'ВЫКЛ: плагин воспроизведения',
+    globalmode: 'Глобальный режим:',
+    playbackrestored: 'Восстановлен последний прогресс воспроизведения',
+    playbackrestoreoff: 'Функция восстановления прогресса воспроизведения отключена. Нажмите SHIFT + R, чтобы включить функцию',
+    horizontal: 'Горизонтальное смещение: ',
+    vertical: 'Вертикальное смещение: ',
+    videozoom: 'Увеличить видео: '
+  }
+};
+
+var zhTW = {
+  about: '關於',
+  issues: '反饋',
+  setting: '設置',
+  tipsMsg: {
+    playspeed: '播放速度：',
+    forward: '向前：',
+    backward: '向後：',
+    seconds: '秒',
+    volume: '音量：',
+    nextframe: '定位：下一幀',
+    previousframe: '定位：上一幀',
+    stopframe: '定格幀畫面：',
+    play: '播放',
+    pause: '暫停',
+    arpl: '允許自動恢復播放進度',
+    drpl: '禁止自動恢復播放進度',
+    brightness: '圖像亮度：',
+    contrast: '圖像對比度：',
+    saturation: '圖像飽和度：',
+    hue: '圖像色相：',
+    blur: '圖像模糊度：',
+    imgattrreset: '圖像屬性：復位',
+    imgrotate: '畫面旋轉：',
+    onplugin: '啟用h5Player插件',
+    offplugin: '禁用h5Player插件',
+    globalmode: '全局模式：',
+    playbackrestored: '為你恢復上次播放進度',
+    playbackrestoreoff: '恢復播放進度功能已禁用，按 SHIFT+R 可開啟該功能',
+    horizontal: '水平位移：',
+    vertical: '垂直位移：',
+    videozoom: '視頻縮放率：'
+  }
+};
+
+const messages = {
+  'zh-CN': zhCN,
+  zh: zhCN,
+  'zh-HK': zhTW,
+  'zh-TW': zhTW,
+  'en-US': enUS,
+  en: enUS,
+  ru: ru
+};
+
 (async function () {
   debug.log('h5Player init');
+
+  const i18n = new I18n({
+    defaultLanguage: 'en',
+    /* 指定当前要是使用的语言环境，默认无需指定，会自动读取 */
+    locale: 'en',
+    languages: messages
+  });
+
   const mouseObserver = new MouseObserver();
 
-  // monkeyMenu.on('设置', function () {
+  // monkeyMenu.on('i18n.t('setting')', function () {
   //   window.alert('功能开发中，敬请期待...')
   // })
-  monkeyMenu.on('关于', function () {
+  monkeyMenu.on(i18n.t('about'), function () {
     window.GM_openInTab('https://github.com/xxxily/h5player', {
       active: true,
       insert: true,
       setParent: true
     });
   });
-  monkeyMenu.on('反馈', function () {
+  monkeyMenu.on(i18n.t('issues'), function () {
     window.GM_openInTab('https://github.com/xxxily/h5player/issues', {
       active: true,
       insert: true,
@@ -1971,7 +2210,7 @@ const crossTabCtl = {
 
       /* 本身处于1倍播放速度的时候不再提示 */
       if (!num && curPlaybackRate === 1) return
-      !notips && t.tips('播放速度：' + player.playbackRate + '倍');
+      !notips && t.tips(i18n.t('tipsMsg.playspeed') + player.playbackRate);
     },
     /* 恢复播放速度，还原到1倍速度、或恢复到上次的倍速 */
     resetPlaybackRate: function (player) {
@@ -2043,14 +2282,14 @@ const crossTabCtl = {
           TCC.doTask('addCurrentTime');
         } else {
           player.currentTime += _num;
-          !notips && t.tips('前进：' + _num + '秒');
+          !notips && t.tips(i18n.t('tipsMsg.forward') + _num + i18n.t('tipsMsg.seconds'));
         }
       } else {
         if (taskConf.subtractCurrentTime) {
           TCC.doTask('subtractCurrentTime');
         } else {
           player.currentTime -= _num;
-          !notips && t.tips('后退：' + _num + '秒');
+          !notips && t.tips(i18n.t('tipsMsg.backward') + _num + i18n.t('tipsMsg.seconds'));
         }
       }
     },
@@ -2082,7 +2321,7 @@ const crossTabCtl = {
       /* 条件音量的时候顺便把静音模式关闭 */
       player.muted = false;
 
-      t.tips('音量：' + parseInt(player.volume * 100) + '%');
+      t.tips(i18n.t('tipsMsg.volume') + parseInt(player.volume * 100) + '%');
     },
 
     /* 设置视频画面的缩放与位移 */
@@ -2092,12 +2331,12 @@ const crossTabCtl = {
       scale = t.scale = typeof scale === 'undefined' ? t.scale : Number(scale).toFixed(1);
       translate = t.translate = translate || t.translate;
       player.style.transform = `scale(${scale}) translate(${translate.x}px, ${translate.y}px) rotate(${t.rotate}deg)`;
-      let tipsMsg = `视频缩放率：${scale * 100}%`;
+      let tipsMsg = i18n.t('tipsMsg.videozoom') + `${scale * 100}%`;
       if (translate.x) {
-        tipsMsg += `，水平位移：${t.translate.x}px`;
+        tipsMsg += ` ${i18n.t('tipsMsg.horizontal')}${t.translate.x}px`;
       }
       if (translate.y) {
-        tipsMsg += `，垂直位移：${t.translate.y}px`;
+        tipsMsg += ` ${i18n.t('tipsMsg.vertical')}${t.translate.y}px`;
       }
       t.tips(tipsMsg);
     },
@@ -2121,11 +2360,11 @@ const crossTabCtl = {
       player._hangUp_ && player._hangUp_('play', 400);
 
       if (perFps === 1) {
-        t.tips('定位：下一帧');
+        t.tips(i18n.t('tipsMsg.nextframe'));
       } else if (perFps === -1) {
-        t.tips('定位：上一帧');
+        t.tips(i18n.t('tipsMsg.previousframe'));
       } else {
-        t.tips('定格帧画面：' + perFps);
+        t.tips(i18n.t('tipsMsg.stopframe') + perFps);
       }
     },
 
@@ -2172,14 +2411,14 @@ const crossTabCtl = {
           TCC.doTask('play');
         } else {
           player.play();
-          t.tips('播放');
+          t.tips(i18n.t('tipsMsg.play'));
         }
       } else {
         if (taskConf.pause) {
           TCC.doTask('pause');
         } else {
           player.pause();
-          t.tips('暂停');
+          t.tips(i18n.t('tipsMsg.pause'));
         }
       }
     },
@@ -2200,10 +2439,10 @@ const crossTabCtl = {
 
       /* 操作提示 */
       if (isAllowRestorePlayProgress) {
-        t.tips('允许自动恢复播放进度');
+        t.tips(i18n.t('tipsMsg.arpl'));
         t.setPlayProgress(t.player());
       } else {
-        t.tips('禁止自动恢复播放进度');
+        t.tips(i18n.t('tipsMsg.drpl'));
       }
     },
     tipsClassName: 'html_player_enhance_tips',
@@ -2534,7 +2773,7 @@ const crossTabCtl = {
         t.filter.key[0] += 0.1;
         t.filter.key[0] = t.filter.key[0].toFixed(2);
         t.filter.setup();
-        t.tips('图像亮度增加：' + parseInt(t.filter.key[0] * 100) + '%');
+        t.tips(i18n.t('tipsMsg.brightness') + parseInt(t.filter.key[0] * 100) + '%');
       }
       // 按键W：亮度减少%
       if (keyCode === 87) {
@@ -2543,7 +2782,7 @@ const crossTabCtl = {
           t.filter.key[0] = t.filter.key[0].toFixed(2);
           t.filter.setup();
         }
-        t.tips('图像亮度减少：' + parseInt(t.filter.key[0] * 100) + '%');
+        t.tips(i18n.t('tipsMsg.brightness') + parseInt(t.filter.key[0] * 100) + '%');
       }
 
       // 按键T：对比度增加%
@@ -2551,7 +2790,7 @@ const crossTabCtl = {
         t.filter.key[1] += 0.1;
         t.filter.key[1] = t.filter.key[1].toFixed(2);
         t.filter.setup();
-        t.tips('图像对比度增加：' + parseInt(t.filter.key[1] * 100) + '%');
+        t.tips(i18n.t('tipsMsg.contrast') + parseInt(t.filter.key[1] * 100) + '%');
       }
       // 按键R：对比度减少%
       if (keyCode === 82) {
@@ -2560,7 +2799,7 @@ const crossTabCtl = {
           t.filter.key[1] = t.filter.key[1].toFixed(2);
           t.filter.setup();
         }
-        t.tips('图像对比度减少：' + parseInt(t.filter.key[1] * 100) + '%');
+        t.tips(i18n.t('tipsMsg.contrast') + parseInt(t.filter.key[1] * 100) + '%');
       }
 
       // 按键U：饱和度增加%
@@ -2568,7 +2807,7 @@ const crossTabCtl = {
         t.filter.key[2] += 0.1;
         t.filter.key[2] = t.filter.key[2].toFixed(2);
         t.filter.setup();
-        t.tips('图像饱和度增加：' + parseInt(t.filter.key[2] * 100) + '%');
+        t.tips(i18n.t('tipsMsg.saturation') + parseInt(t.filter.key[2] * 100) + '%');
       }
       // 按键Y：饱和度减少%
       if (keyCode === 89) {
@@ -2577,27 +2816,27 @@ const crossTabCtl = {
           t.filter.key[2] = t.filter.key[2].toFixed(2);
           t.filter.setup();
         }
-        t.tips('图像饱和度减少：' + parseInt(t.filter.key[2] * 100) + '%');
+        t.tips(i18n.t('tipsMsg.saturation') + parseInt(t.filter.key[2] * 100) + '%');
       }
 
       // 按键O：色相增加 1 度
       if (keyCode === 79) {
         t.filter.key[3] += 1;
         t.filter.setup();
-        t.tips('图像色相增加：' + t.filter.key[3] + '度');
+        t.tips(i18n.t('tipsMsg.hue') + t.filter.key[3] + '度');
       }
       // 按键I：色相减少 1 度
       if (keyCode === 73) {
         t.filter.key[3] -= 1;
         t.filter.setup();
-        t.tips('图像色相减少：' + t.filter.key[3] + '度');
+        t.tips(i18n.t('tipsMsg.hue') + t.filter.key[3] + '度');
       }
 
       // 按键K：模糊增加 1 px
       if (keyCode === 75) {
         t.filter.key[4] += 1;
         t.filter.setup();
-        t.tips('图像模糊增加：' + t.filter.key[4] + 'PX');
+        t.tips(i18n.t('tipsMsg.blur') + t.filter.key[4] + 'PX');
       }
       // 按键J：模糊减少 1 px
       if (keyCode === 74) {
@@ -2605,13 +2844,13 @@ const crossTabCtl = {
           t.filter.key[4] -= 1;
           t.filter.setup();
         }
-        t.tips('图像模糊减少：' + t.filter.key[4] + 'PX');
+        t.tips(i18n.t('tipsMsg.blur') + t.filter.key[4] + 'PX');
       }
 
       // 按键Q：图像复位
       if (keyCode === 81) {
         t.filter.reset();
-        t.tips('图像属性：复位');
+        t.tips(i18n.t('tipsMsg.imgattrreset'));
       }
 
       // 按键S：画面旋转 90 度
@@ -2619,7 +2858,7 @@ const crossTabCtl = {
         t.rotate += 90;
         if (t.rotate % 360 === 0) t.rotate = 0;
         player.style.transform = `scale(${t.scale}) translate(${t.translate.x}px, ${t.translate.y}px) rotate( ${t.rotate}deg)`;
-        t.tips('画面旋转：' + t.rotate + '度');
+        t.tips(i18n.t('tipsMsg.imgrotate') + t.rotate + '°');
       }
 
       // 按键回车，进入全屏
@@ -2739,9 +2978,9 @@ const crossTabCtl = {
       if (event.ctrlKey && keyCode === 32) {
         t.enable = !t.enable;
         if (t.enable) {
-          t.tips('启用h5Player插件');
+          t.tips(i18n.t('tipsMsg.onplugin'));
         } else {
-          t.tips('禁用h5Player插件');
+          t.tips(i18n.t('tipsMsg.offplugin'));
         }
       }
 
@@ -2754,9 +2993,9 @@ const crossTabCtl = {
       if (event.ctrlKey && keyCode === 220) {
         t.globalMode = !t.globalMode;
         if (t.globalMode) {
-          t.tips('全局模式');
+          t.tips(i18n.t('tipsMsg.globalmode') + ' ON');
         } else {
-          t.tips('禁用全局模式');
+          t.tips(i18n.t('tipsMsg.globalmode') + ' OFF');
         }
       }
 
@@ -2854,10 +3093,10 @@ const crossTabCtl = {
       if (t.isAllowRestorePlayProgress()) {
         player.currentTime = curTime || player.currentTime;
         if (curTime > 3) {
-          t.tips('为你恢复上次播放进度~');
+          t.tips(i18n.t('tipsMsg.playbackrestored'));
         }
       } else {
-        t.tips('恢复播放进度功能已禁用，按shift+r可开启该功能');
+        t.tips(i18n.t('tipsMsg.playbackrestoreoff'));
       }
     },
     /**

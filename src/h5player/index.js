@@ -4,11 +4,13 @@ import fakeConfig from './fakeConfig'
 import FullScreen from '../libs/FullScreen/index'
 import videoCapturer from '../libs/videoCapturer/index'
 import MouseObserver from '../libs/MouseObserver/index'
+import I18n from '../libs/I18n/index'
 import { getTabId } from './getId'
 import monkeyMenu from './monkeyMenu'
 import monkeyMsg from './monkeyMsg'
 import crossTabCtl from './crossTabCtl'
 import debug from './debug'
+import langMessage from './locale/core-lang/index'
 import {
   ready,
   hackAttachShadow,
@@ -31,19 +33,27 @@ import {
 
 (async function () {
   debug.log('h5Player init')
+
+  const i18n = new I18n({
+    defaultLanguage: 'en',
+    /* 指定当前要是使用的语言环境，默认无需指定，会自动读取 */
+    locale: 'en',
+    languages: langMessage
+  })
+
   const mouseObserver = new MouseObserver()
 
-  // monkeyMenu.on('设置', function () {
+  // monkeyMenu.on('i18n.t('setting')', function () {
   //   window.alert('功能开发中，敬请期待...')
   // })
-  monkeyMenu.on('关于', function () {
+  monkeyMenu.on(i18n.t('about'), function () {
     window.GM_openInTab('https://github.com/xxxily/h5player', {
       active: true,
       insert: true,
       setParent: true
     })
   })
-  monkeyMenu.on('反馈', function () {
+  monkeyMenu.on(i18n.t('issues'), function () {
     window.GM_openInTab('https://github.com/xxxily/h5player/issues', {
       active: true,
       insert: true,
@@ -308,7 +318,7 @@ import {
 
       /* 本身处于1倍播放速度的时候不再提示 */
       if (!num && curPlaybackRate === 1) return
-      !notips && t.tips('播放速度：' + player.playbackRate + '倍')
+      !notips && t.tips(i18n.t('tipsMsg.playspeed') + player.playbackRate)
     },
     /* 恢复播放速度，还原到1倍速度、或恢复到上次的倍速 */
     resetPlaybackRate: function (player) {
@@ -380,14 +390,14 @@ import {
           TCC.doTask('addCurrentTime')
         } else {
           player.currentTime += _num
-          !notips && t.tips('前进：' + _num + '秒')
+          !notips && t.tips(i18n.t('tipsMsg.forward') + _num + i18n.t('tipsMsg.seconds'))
         }
       } else {
         if (taskConf.subtractCurrentTime) {
           TCC.doTask('subtractCurrentTime')
         } else {
           player.currentTime -= _num
-          !notips && t.tips('后退：' + _num + '秒')
+          !notips && t.tips(i18n.t('tipsMsg.backward') + _num + i18n.t('tipsMsg.seconds'))
         }
       }
     },
@@ -419,7 +429,7 @@ import {
       /* 条件音量的时候顺便把静音模式关闭 */
       player.muted = false
 
-      t.tips('音量：' + parseInt(player.volume * 100) + '%')
+      t.tips(i18n.t('tipsMsg.volume') + parseInt(player.volume * 100) + '%')
     },
 
     /* 设置视频画面的缩放与位移 */
@@ -429,12 +439,12 @@ import {
       scale = t.scale = typeof scale === 'undefined' ? t.scale : Number(scale).toFixed(1)
       translate = t.translate = translate || t.translate
       player.style.transform = `scale(${scale}) translate(${translate.x}px, ${translate.y}px) rotate(${t.rotate}deg)`
-      let tipsMsg = `视频缩放率：${scale * 100}%`
+      let tipsMsg = i18n.t('tipsMsg.videozoom') + `${scale * 100}%`
       if (translate.x) {
-        tipsMsg += `，水平位移：${t.translate.x}px`
+        tipsMsg += ` ${i18n.t('tipsMsg.horizontal')}${t.translate.x}px`
       }
       if (translate.y) {
-        tipsMsg += `，垂直位移：${t.translate.y}px`
+        tipsMsg += ` ${i18n.t('tipsMsg.vertical')}${t.translate.y}px`
       }
       t.tips(tipsMsg)
     },
@@ -458,11 +468,11 @@ import {
       player._hangUp_ && player._hangUp_('play', 400)
 
       if (perFps === 1) {
-        t.tips('定位：下一帧')
+        t.tips(i18n.t('tipsMsg.nextframe'))
       } else if (perFps === -1) {
-        t.tips('定位：上一帧')
+        t.tips(i18n.t('tipsMsg.previousframe'))
       } else {
-        t.tips('定格帧画面：' + perFps)
+        t.tips(i18n.t('tipsMsg.stopframe') + perFps)
       }
     },
 
@@ -509,14 +519,14 @@ import {
           TCC.doTask('play')
         } else {
           player.play()
-          t.tips('播放')
+          t.tips(i18n.t('tipsMsg.play'))
         }
       } else {
         if (taskConf.pause) {
           TCC.doTask('pause')
         } else {
           player.pause()
-          t.tips('暂停')
+          t.tips(i18n.t('tipsMsg.pause'))
         }
       }
     },
@@ -537,10 +547,10 @@ import {
 
       /* 操作提示 */
       if (isAllowRestorePlayProgress) {
-        t.tips('允许自动恢复播放进度')
+        t.tips(i18n.t('tipsMsg.arpl'))
         t.setPlayProgress(t.player())
       } else {
-        t.tips('禁止自动恢复播放进度')
+        t.tips(i18n.t('tipsMsg.drpl'))
       }
     },
     tipsClassName: 'html_player_enhance_tips',
@@ -871,7 +881,7 @@ import {
         t.filter.key[0] += 0.1
         t.filter.key[0] = t.filter.key[0].toFixed(2)
         t.filter.setup()
-        t.tips('图像亮度增加：' + parseInt(t.filter.key[0] * 100) + '%')
+        t.tips(i18n.t('tipsMsg.brightness') + parseInt(t.filter.key[0] * 100) + '%')
       }
       // 按键W：亮度减少%
       if (keyCode === 87) {
@@ -880,7 +890,7 @@ import {
           t.filter.key[0] = t.filter.key[0].toFixed(2)
           t.filter.setup()
         }
-        t.tips('图像亮度减少：' + parseInt(t.filter.key[0] * 100) + '%')
+        t.tips(i18n.t('tipsMsg.brightness') + parseInt(t.filter.key[0] * 100) + '%')
       }
 
       // 按键T：对比度增加%
@@ -888,7 +898,7 @@ import {
         t.filter.key[1] += 0.1
         t.filter.key[1] = t.filter.key[1].toFixed(2)
         t.filter.setup()
-        t.tips('图像对比度增加：' + parseInt(t.filter.key[1] * 100) + '%')
+        t.tips(i18n.t('tipsMsg.contrast') + parseInt(t.filter.key[1] * 100) + '%')
       }
       // 按键R：对比度减少%
       if (keyCode === 82) {
@@ -897,7 +907,7 @@ import {
           t.filter.key[1] = t.filter.key[1].toFixed(2)
           t.filter.setup()
         }
-        t.tips('图像对比度减少：' + parseInt(t.filter.key[1] * 100) + '%')
+        t.tips(i18n.t('tipsMsg.contrast') + parseInt(t.filter.key[1] * 100) + '%')
       }
 
       // 按键U：饱和度增加%
@@ -905,7 +915,7 @@ import {
         t.filter.key[2] += 0.1
         t.filter.key[2] = t.filter.key[2].toFixed(2)
         t.filter.setup()
-        t.tips('图像饱和度增加：' + parseInt(t.filter.key[2] * 100) + '%')
+        t.tips(i18n.t('tipsMsg.saturation') + parseInt(t.filter.key[2] * 100) + '%')
       }
       // 按键Y：饱和度减少%
       if (keyCode === 89) {
@@ -914,27 +924,27 @@ import {
           t.filter.key[2] = t.filter.key[2].toFixed(2)
           t.filter.setup()
         }
-        t.tips('图像饱和度减少：' + parseInt(t.filter.key[2] * 100) + '%')
+        t.tips(i18n.t('tipsMsg.saturation') + parseInt(t.filter.key[2] * 100) + '%')
       }
 
       // 按键O：色相增加 1 度
       if (keyCode === 79) {
         t.filter.key[3] += 1
         t.filter.setup()
-        t.tips('图像色相增加：' + t.filter.key[3] + '度')
+        t.tips(i18n.t('tipsMsg.hue') + t.filter.key[3] + '度')
       }
       // 按键I：色相减少 1 度
       if (keyCode === 73) {
         t.filter.key[3] -= 1
         t.filter.setup()
-        t.tips('图像色相减少：' + t.filter.key[3] + '度')
+        t.tips(i18n.t('tipsMsg.hue') + t.filter.key[3] + '度')
       }
 
       // 按键K：模糊增加 1 px
       if (keyCode === 75) {
         t.filter.key[4] += 1
         t.filter.setup()
-        t.tips('图像模糊增加：' + t.filter.key[4] + 'PX')
+        t.tips(i18n.t('tipsMsg.blur') + t.filter.key[4] + 'PX')
       }
       // 按键J：模糊减少 1 px
       if (keyCode === 74) {
@@ -942,13 +952,13 @@ import {
           t.filter.key[4] -= 1
           t.filter.setup()
         }
-        t.tips('图像模糊减少：' + t.filter.key[4] + 'PX')
+        t.tips(i18n.t('tipsMsg.blur') + t.filter.key[4] + 'PX')
       }
 
       // 按键Q：图像复位
       if (keyCode === 81) {
         t.filter.reset()
-        t.tips('图像属性：复位')
+        t.tips(i18n.t('tipsMsg.imgattrreset'))
       }
 
       // 按键S：画面旋转 90 度
@@ -956,7 +966,7 @@ import {
         t.rotate += 90
         if (t.rotate % 360 === 0) t.rotate = 0
         player.style.transform = `scale(${t.scale}) translate(${t.translate.x}px, ${t.translate.y}px) rotate( ${t.rotate}deg)`
-        t.tips('画面旋转：' + t.rotate + '度')
+        t.tips(i18n.t('tipsMsg.imgrotate') + t.rotate + '°')
       }
 
       // 按键回车，进入全屏
@@ -1076,9 +1086,9 @@ import {
       if (event.ctrlKey && keyCode === 32) {
         t.enable = !t.enable
         if (t.enable) {
-          t.tips('启用h5Player插件')
+          t.tips(i18n.t('tipsMsg.onplugin'))
         } else {
-          t.tips('禁用h5Player插件')
+          t.tips(i18n.t('tipsMsg.offplugin'))
         }
       }
 
@@ -1091,9 +1101,9 @@ import {
       if (event.ctrlKey && keyCode === 220) {
         t.globalMode = !t.globalMode
         if (t.globalMode) {
-          t.tips('全局模式')
+          t.tips(i18n.t('tipsMsg.globalmode') + ' ON')
         } else {
-          t.tips('禁用全局模式')
+          t.tips(i18n.t('tipsMsg.globalmode') + ' OFF')
         }
       }
 
@@ -1191,10 +1201,10 @@ import {
       if (t.isAllowRestorePlayProgress()) {
         player.currentTime = curTime || player.currentTime
         if (curTime > 3) {
-          t.tips('为你恢复上次播放进度~')
+          t.tips(i18n.t('tipsMsg.playbackrestored'))
         }
       } else {
-        t.tips('恢复播放进度功能已禁用，按shift+r可开启该功能')
+        t.tips(i18n.t('tipsMsg.playbackrestoreoff'))
       }
     },
     /**
