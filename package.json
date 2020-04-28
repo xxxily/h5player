@@ -11,7 +11,9 @@
     "ui-dev": "webpack-dev-server --inline --config bin/webpack/webpack.dev.conf.js",
     "ui-build": "webpack-cli --inline --config bin/webpack/webpack.prod.conf.js"
   },
-  "dependencies": {},
+  "dependencies": {
+    "vue": "^2.6.11"
+  },
   "devDependencies": {
     "@babel/cli": "^7.6.0",
     "@babel/core": "^7.6.0",

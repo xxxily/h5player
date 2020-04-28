@@ -43,7 +43,9 @@ const h5playerUi = {
     /* 插入到html文档中 */
     if (!document.querySelector('h5-player-ui')) {
       document.body.appendChild(ui)
-      window.renderH5playeruiCss(element => {
+
+      /* 动态插入css */
+      window.renderH5playeruiCss && window.renderH5playeruiCss(element => {
         if (uiRoot) {
           uiRoot.appendChild(element)
         } else {
