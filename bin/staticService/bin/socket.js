@@ -16,7 +16,8 @@ const socketHander = {
     }
 
     const debugScript = path.join(rootPath, 'dist/h5player.js')
-    t.debugScriptWatcher = chokidar.watch(debugScript).on('change', (path) => {
+    const uiScript = path.join(rootPath, 'dist/h5player-ui.js')
+    t.debugScriptWatcher = chokidar.watch([debugScript, uiScript]).on('change', (path) => {
       console.log('debugScriptHasUpdate:' + path)
 
       /* 通知页面更新脚本 */

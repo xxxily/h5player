@@ -89,6 +89,7 @@ const _debugTools_ = {
   },
 
   debugScriptUrl: 'http://127.0.0.1:3086/dist/h5player.js',
+  uiScriptUrl: 'http://127.0.0.1:3086/dist/h5player-ui.js',
   getDebugScript(){
     const t = this
     return new Promise((resolve, reject) => {
@@ -102,12 +103,27 @@ const _debugTools_ = {
       })
     })
   },
+
+  getUiScript(){
+    const t = this
+    return new Promise((resolve, reject) => {
+      t.get(t.uiScriptUrl+'?t='+Date.now()).catch(err => {
+        console.log('脚本内容加载出错~')
+      }).then(res => {
+        window.GM_setValue('uiScript', res.responseText)
+        console.log('脚本内容更新成功~')
+        resolve(res.responseText)
+      })
+    })
+  },
+
   async debugScriptHasUpdateHandler(){
     console.log('debugScriptHasUpdate')
 
     /* 对可视页面进行重载 */
     if(document.visibilityState === 'visible'){
       await _debugTools_.getDebugScript()
+      await _debugTools_.getUiScript()
       window.location.reload()
       console.log('window.location.reload')
     }
@@ -135,8 +151,14 @@ const _debugTools_ = {
     // t.runScriptText(debugScript)
     t.loadScriptText(debugScript)
 
+    const uiScript = window.GM_getValue('uiScript') || `
+      console.log('未存在要调试的脚本')
+    `
+    t.loadScriptText(uiScript)
+
     const newDebugScript = await t.getDebugScript()
-    if(newDebugScript && newDebugScript !== debugScript){
+    const newUiScript = await t.getUiScript()
+    if((newDebugScript && newDebugScript !== debugScript) || (newUiScript && newUiScript !== uiScript)){
       window.location.reload()
     }
   }

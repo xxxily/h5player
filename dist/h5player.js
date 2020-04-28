@@ -1617,7 +1617,7 @@ var debug = Debug$1.create('h5player message:');
 /* 当前用到的快捷键 */
 const hasUseKey = {
   keyCodeList: [13, 16, 17, 18, 27, 32, 37, 38, 39, 40, 49, 50, 51, 52, 67, 68, 69, 70, 73, 74, 75, 78, 79, 80, 81, 82, 83, 84, 85, 87, 88, 89, 90, 97, 98, 99, 100, 220],
-  keyList: ['enter', 'shift', 'control', 'alt', 'escape', ' ', 'arrowleft', 'arrowright', 'arrowright', 'arrowup', 'arrowdown', '1', '2', '3', '4', 'c', 'd', 'e', 'f', 'i', 'j', 'k', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'w', 'x', 'y', 'z', '\\', '|'],
+  keyList: ['enter', 'shift', 'control', 'alt', 'escape', ' ', 'arrowleft', 'arrowright', 'arrowup', 'arrowdown', '1', '2', '3', '4', 'c', 'd', 'e', 'f', 'i', 'j', 'k', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'w', 'x', 'y', 'z', '\\', '|'],
   keyMap: {
     enter: 13,
     shift: 16,
@@ -2209,8 +2209,11 @@ const messages = {
       player.playbackRate = curPlaybackRate;
 
       /* 本身处于1倍播放速度的时候不再提示 */
-      if (!num && curPlaybackRate === 1) return
-      !notips && t.tips(i18n.t('tipsMsg.playspeed') + player.playbackRate);
+      if (!num && curPlaybackRate === 1) {
+        return true
+      } else {
+        !notips && t.tips(i18n.t('tipsMsg.playspeed') + player.playbackRate);
+      }
     },
     /* 恢复播放速度，还原到1倍速度、或恢复到上次的倍速 */
     resetPlaybackRate: function (player) {

@@ -317,8 +317,11 @@ import {
       player.playbackRate = curPlaybackRate
 
       /* 本身处于1倍播放速度的时候不再提示 */
-      if (!num && curPlaybackRate === 1) return
-      !notips && t.tips(i18n.t('tipsMsg.playspeed') + player.playbackRate)
+      if (!num && curPlaybackRate === 1) {
+        return true
+      } else {
+        !notips && t.tips(i18n.t('tipsMsg.playspeed') + player.playbackRate)
+      }
     },
     /* 恢复播放速度，还原到1倍速度、或恢复到上次的倍速 */
     resetPlaybackRate: function (player) {
