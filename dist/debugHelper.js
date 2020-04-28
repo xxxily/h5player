@@ -43,6 +43,9 @@
 window._debugMode_ = true
 // window.eruda && window.eruda.init()
 
+const elementUiCss = window.GM_getResourceText ("elementUiCss")
+window.GM_addStyle (elementUiCss)
+
 const _debugTools_ = {
   ajax: window.GM_xmlhttpRequest || function () { console.log('GM_xmlhttpRequest 未注册，不能进行接口请求') },
   http: function () { return this.ajax.apply(null, arguments) },
