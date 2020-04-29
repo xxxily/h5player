@@ -88,7 +88,11 @@ async function getPageWindow () {
 }
 getPageWindow()
 
-/* 通过同步的方式获取pageWindow */
+/**
+ * 通过同步的方式获取pageWindow
+ * 注意同步获取的方式需要将脚本写入head，部分网站由于安全策略会导致写入失败，而无法正常获取
+ * @returns {*}
+ */
 function getPageWindowSync () {
   if (document._win_) return document._win_
 

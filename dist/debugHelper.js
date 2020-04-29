@@ -46,6 +46,18 @@ window._debugMode_ = true
 const elementUiCss = window.GM_getResourceText ("elementUiCss")
 window.GM_addStyle (elementUiCss)
 
+/**
+ * 后续可以将font文件转成base64，以便更好嵌入到所有网站
+ * 转换网址：https://www.giftofspeed.com/base64-encoder/
+ */
+const elementFonts = `
+@font-face {
+  font-family: element-icons;
+  src: url("https://unpkg.com/element-ui@2.13.0/lib/theme-chalk/fonts/element-icons.woff") format("woff");
+}
+`
+window.GM_addStyle (elementFonts)
+
 const _debugTools_ = {
   ajax: window.GM_xmlhttpRequest || function () { console.log('GM_xmlhttpRequest 未注册，不能进行接口请求') },
   http: function () { return this.ajax.apply(null, arguments) },

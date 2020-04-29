@@ -44,7 +44,7 @@ const h5playerUi = {
     if (!document.querySelector('h5-player-ui')) {
       document.body.appendChild(ui)
 
-      /* 动态插入css */
+      /* 动态插入css，暂不使用该方式 */
       window.renderH5playeruiCss && window.renderH5playeruiCss(element => {
         if (uiRoot) {
           uiRoot.appendChild(element)

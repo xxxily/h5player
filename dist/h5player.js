@@ -873,6 +873,10 @@ const taskConf = {
       h5Player.player().parentNode.querySelector('.vjs-fullscreen-control').click();
     }
   },
+  // 'pornhub.com': {
+  //   fullScreen: 'div[class*="icon-fullscreen"]',
+  //   webFullScreen: 'div[class*="icon-size-large"]'
+  // },
   'facebook.com': {
     fullScreen: function (h5Player, taskConf) {
       const actionBtn = h5Player.player().parentNode.querySelectorAll('button');
