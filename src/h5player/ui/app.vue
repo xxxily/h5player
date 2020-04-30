@@ -2,7 +2,9 @@
   <div class="h5player-ui-wrap">
     <el-drawer
       title="设置"
-      :visible.sync="drawer"
+      :size="String('600px')"
+      :modal-append-to-body="Boolean(false)"
+      :visible.sync="appStatus.openSettingPanel"
       :direction="direction"
       :before-close="handleClose"
     >
@@ -24,7 +26,7 @@
             </el-form-item>
 
             <el-form-item label="播放速度：">
-              <el-input placeholder="请输入内容"></el-input>
+              <el-input placeholder="请输入内容" />
             </el-form-item>
           </el-form>
         </el-collapse-item>
@@ -46,12 +48,14 @@
   </div>
 </template>
 <script>
+import appStatus from './data'
 export default {
   name: 'App',
   components: {},
   data () {
     return {
-      drawer: true,
+      appStatus,
+      drawer: appStatus.openSettingPanel,
       direction: 'rtl',
       autoPlay: true
     }
@@ -71,11 +75,22 @@ export default {
 </script>
 
 <style lang="scss">
-  .h5player-ui-wrap{
+  /*h5-player-ui {*/
+  /*  position: fixed;*/
+  /*  left: 0;*/
+  /*  top: 0;*/
+  /*  width: 100%;*/
+  /*  height: 100%;*/
+  /*  z-index: 99999999;*/
+  /*  pointer-events: none;*/
+  /*}*/
+
+  .h5player-ui-wrap {
     /*background-color:#00a1d6;*/
     /*color:#fffbe5;*/
   }
-  .el-drawer__body{
-    padding:20px;
+
+  .el-drawer__body {
+    padding: 20px;
   }
 </style>

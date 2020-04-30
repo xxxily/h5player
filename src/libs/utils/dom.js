@@ -64,15 +64,16 @@ function getContainer (el, noRecursive) {
  * 动态加载css内容
  * @param cssText {String} -必选 样式的文本内容
  * @param id {String} -可选 指定样式文本的id号，如果已存在对应id号则不会再次插入
+ * @param insetTo {Dom} -可选 指定插入到哪
  * @returns {HTMLStyleElement}
  */
-function loadCSSText (cssText, id) {
+function loadCSSText (cssText, id, insetTo) {
   if (id && document.getElementById(id)) {
     return false
   }
 
   const style = document.createElement('style')
-  const head = document.head || document.getElementsByTagName('head')[0]
+  const head = insetTo || document.head || document.getElementsByTagName('head')[0]
   style.appendChild(document.createTextNode(cssText))
   head.appendChild(style)
 

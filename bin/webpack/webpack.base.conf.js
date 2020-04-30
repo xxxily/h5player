@@ -11,6 +11,8 @@ const webpackConfig = {
     path: path.join(rootPath, 'dist/'),
     filename: 'h5player-ui.js',
     library: 'h5playerUi',
+    /* 移除default字段，见：https://twindy.org/webpackda-bao-umdde-exportwen-ti/ */
+    libraryExport: 'default',
     libraryTarget: 'umd'
   },
   externals: {

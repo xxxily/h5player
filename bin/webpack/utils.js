@@ -30,12 +30,22 @@ module.exports = {
     const styleLoader = {
       loader: 'style-loader',
       options: {
-        // insert: (element) => {
-        //   window.renderH5playeruiCss = function (callback) {
-        //     // document.querySelector('h5-player-ui').shadowRoot.appendChild(element)
-        //     callback && callback(element)
-        //   }
-        // }
+        insert: (element) => {
+          /* 在tampermonkey里无法直接访问页面的window，所以将window挂载到document上 */
+          document._win_ = window
+
+          if (!window._h5playerUiCss_) {
+            window._h5playerUiCss_ = []
+          }
+          window._h5playerUiCss_.push(element)
+          if (window._h5playerUiCssInsertCallback_ instanceof Function) {
+            window._h5playerUiCssInsertCallback_(element)
+          }
+
+          document._renderH5playeruiCss_ = function (callback) {
+            callback && callback(window._h5playerUiCss_ || [element])
+          }
+        }
       }
     }
 
