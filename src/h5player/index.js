@@ -479,6 +479,26 @@ import {
       }
     },
 
+    /**
+     * 切换画中画功能
+     */
+    togglePictureInPicture () {
+      const player = this.player()
+      if (window._isPictureInPicture_) {
+        document.exitPictureInPicture().then(() => {
+          window._isPictureInPicture_ = null
+        }).catch(() => {
+          window._isPictureInPicture_ = null
+        })
+      } else {
+        player.requestPictureInPicture && player.requestPictureInPicture().then(() => {
+          window._isPictureInPicture_ = true
+        }).catch(() => {
+          window._isPictureInPicture_ = null
+        })
+      }
+    },
+
     /* 播放下一个视频，默认是没有这个功能的，只有在TCC里配置了next字段才会有该功能 */
     setNextVideo () {
       const isDo = TCC.doTask('next')
@@ -740,19 +760,7 @@ import {
 
         // 进入或退出画中画模式
         if (key === 'p') {
-          if (window._isPictureInPicture_) {
-            document.exitPictureInPicture().then(() => {
-              window._isPictureInPicture_ = null
-            }).catch(() => {
-              window._isPictureInPicture_ = null
-            })
-          } else {
-            player.requestPictureInPicture && player.requestPictureInPicture().then(() => {
-              window._isPictureInPicture_ = true
-            }).catch(() => {
-              window._isPictureInPicture_ = null
-            })
-          }
+          t.togglePictureInPicture()
         }
 
         // 截图并下载保存
