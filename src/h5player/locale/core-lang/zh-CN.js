@@ -24,11 +24,14 @@ export default {
     imgrotate: '画面旋转：',
     onplugin: '启用h5Player插件',
     offplugin: '禁用h5Player插件',
-    globalmode: '全局模式：',
+    onglobalmode: '全局模式： ON',
+    offglobalmode: '全局模式： OFF',
     playbackrestored: '为你恢复上次播放进度',
     playbackrestoreoff: '恢复播放进度功能已禁用，按 SHIFT+R 可开启该功能',
     horizontal: '水平位移：',
     vertical: '垂直位移：',
-    videozoom: '视频缩放率：'
+    videozoom: '视频缩放率：',
+    playbackRate: '播放速度：',
+    frames: '倍'
   }
 }

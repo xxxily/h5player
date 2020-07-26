@@ -714,7 +714,7 @@ import {
     filter: {
       key: [1, 1, 1, 0, 0],
       setup: function () {
-        var view = 'brightness({0}) contrast({1}) saturate({2}) hue-rotate({3}deg) blur({4}px)'
+        var view = 'brightness({0}%) contrast({1}%) saturate({2}%) hue-rotate({3}deg) blur({4}px)'
         for (var i = 0; i < 5; i++) {
           view = view.replace('{' + i + '}', String(this.key[i]))
           this.key[i] = Number(this.key[i])
@@ -889,73 +889,71 @@ import {
 
       // 按键E：亮度增加%
       if (keyCode === 69) {
-        t.filter.key[0] += 0.1
-        t.filter.key[0] = t.filter.key[0].toFixed(2)
+        t.filter.key[0] += 10
         t.filter.setup()
-        t.tips(i18n.t('tipsMsg.brightness') + parseInt(t.filter.key[0] * 100) + '%')
+        t.tips(i18n.t('tipsMsg.brightness') + t.filter.key[0] + '%')
       }
       // 按键W：亮度减少%
       if (keyCode === 87) {
         if (t.filter.key[0] > 0) {
-          t.filter.key[0] -= 0.1
-          t.filter.key[0] = t.filter.key[0].toFixed(2)
+          t.filter.key[0] -= 10
           t.filter.setup()
         }
-        t.tips(i18n.t('tipsMsg.brightness') + parseInt(t.filter.key[0] * 100) + '%')
+        t.tips(i18n.t('tipsMsg.brightness') + t.filter.key[0] + '%')
       }
 
       // 按键T：对比度增加%
       if (keyCode === 84) {
-        t.filter.key[1] += 0.1
-        t.filter.key[1] = t.filter.key[1].toFixed(2)
+        t.filter.key[1] += 10
         t.filter.setup()
-        t.tips(i18n.t('tipsMsg.contrast') + parseInt(t.filter.key[1] * 100) + '%')
+        t.tips(i18n.t('tipsMsg.contrast') + t.filter.key[1] + '%')
       }
       // 按键R：对比度减少%
       if (keyCode === 82) {
         if (t.filter.key[1] > 0) {
-          t.filter.key[1] -= 0.1
-          t.filter.key[1] = t.filter.key[1].toFixed(2)
+          t.filter.key[1] -= 10
           t.filter.setup()
         }
-        t.tips(i18n.t('tipsMsg.contrast') + parseInt(t.filter.key[1] * 100) + '%')
+        t.tips(i18n.t('tipsMsg.contrast') + t.filter.key[1]+ '%')
       }
 
       // 按键U：饱和度增加%
       if (keyCode === 85) {
-        t.filter.key[2] += 0.1
-        t.filter.key[2] = t.filter.key[2].toFixed(2)
+        t.filter.key[2] += 10
         t.filter.setup()
-        t.tips(i18n.t('tipsMsg.saturation') + parseInt(t.filter.key[2] * 100) + '%')
+        t.tips(i18n.t('tipsMsg.saturation') + t.filter.key[2] + '%')
       }
       // 按键Y：饱和度减少%
       if (keyCode === 89) {
         if (t.filter.key[2] > 0) {
-          t.filter.key[2] -= 0.1
-          t.filter.key[2] = t.filter.key[2].toFixed(2)
+          t.filter.key[2] -= 10
           t.filter.setup()
         }
-        t.tips(i18n.t('tipsMsg.saturation') + parseInt(t.filter.key[2] * 100) + '%')
+        t.tips(i18n.t('tipsMsg.saturation') + t.filter.key[2] + '%')
       }
 
       // 按键O：色相增加 1 度
       if (keyCode === 79) {
         t.filter.key[3] += 1
+        if (t.filter.key[3] == 360)
+          t.filter.key[3] = 0
         t.filter.setup()
-        t.tips(i18n.t('tipsMsg.hue') + t.filter.key[3] + '度')
+        t.tips(i18n.t('tipsMsg.hue') + t.filter.key[3] + '°')
       }
       // 按键I：色相减少 1 度
       if (keyCode === 73) {
         t.filter.key[3] -= 1
+        if (t.filter.key[3] == -360)
+          t.filter.key[3] = 0
         t.filter.setup()
-        t.tips(i18n.t('tipsMsg.hue') + t.filter.key[3] + '度')
+        t.tips(i18n.t('tipsMsg.hue') + t.filter.key[3] + '°')
       }
 
       // 按键K：模糊增加 1 px
       if (keyCode === 75) {
         t.filter.key[4] += 1
         t.filter.setup()
-        t.tips(i18n.t('tipsMsg.blur') + t.filter.key[4] + 'PX')
+        t.tips(i18n.t('tipsMsg.blur') + t.filter.key[4] + 'px')
       }
       // 按键J：模糊减少 1 px
       if (keyCode === 74) {
@@ -963,7 +961,7 @@ import {
           t.filter.key[4] -= 1
           t.filter.setup()
         }
-        t.tips(i18n.t('tipsMsg.blur') + t.filter.key[4] + 'PX')
+        t.tips(i18n.t('tipsMsg.blur') + t.filter.key[4] + 'px')
       }
 
       // 按键Q：图像复位
@@ -1112,9 +1110,9 @@ import {
       if (event.ctrlKey && keyCode === 220) {
         t.globalMode = !t.globalMode
         if (t.globalMode) {
-          t.tips(i18n.t('tipsMsg.globalmode') + ' ON')
+          t.tips(i18n.t('tipsMsg.onglobalmode'))
         } else {
-          t.tips(i18n.t('tipsMsg.globalmode') + ' OFF')
+          t.tips(i18n.t('tipsMsg.offglobalmode'))
         }
       }
 
