@@ -8,15 +8,15 @@ const appStatus = {
     defaultSpeed: 1
   },
   keyMap: {
-    playspeed: '',
+    playSpeed: '',
     playAndPause: '',
     volumeUp: '',
     volumeDown: '',
     mute: '',
     forward: '',
     backward: '',
-    nextframe: '',
-    previousframe: ''
+    frameNext: '',
+    framePrevious: ''
   }
 }
 export default appStatus
