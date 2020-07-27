@@ -27,7 +27,7 @@ export default {
     globalModeOn: 'Global mode： ON',
     globalModeOff: 'Global mode： OFF',
     playbackRestored: 'The last playback position restored',
-    playbackRestoreOff: 'Restoring the playback position is disabled. Press SHIFT+R to turn on the function',
+    playbackRestoreOff: 'Press Shift+R to turn on restoring playback position',
     horizontal: 'Horizontal displacement: ',
     vertical: 'Vertical displacement: ',
     videoZoom: 'Video zoom: ',

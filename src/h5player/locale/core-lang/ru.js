@@ -20,18 +20,18 @@ export default {
     saturation: 'Насыщенность: ',
     hue: 'Оттенок: ',
     blur: 'Размытие: ',
-    filterReset: 'Установки изображения сброшены',
-    rotate: 'Поворот изображения: ',
+    filterReset: 'Фильтры сброшены',
+    rotate: 'Поворот: ',
     pluginOn: 'h5Player включен',
     pluginOff: 'h5Player выключен',
     globalModeOn: 'Глобальный режим включен',
     globalModeOff: 'Глобальный режим выключен',
-    playbackRestored: 'Восстановлен последний прогресс воспроизведения',
-    playbackRestoreOff: 'Функция восстановления прогресса воспроизведения отключена. Нажмите SHIFT + R, чтобы включить функцию',
+    playbackRestored: 'Восстановлено последнее место',
+    playbackRestoreOff: 'Включить запоминание последнего места: Shift+R',
     horizontal: 'Горизонтальное смещение: ',
     vertical: 'Вертикальное смещение: ',
     videoZoom: 'Масштаб: ',
     playbackRate: 'Частота видео： ',
-    framesPerSecond: 'кадров/сек'
+    framesPerSecond: ' кадров/сек'
   }
 }
