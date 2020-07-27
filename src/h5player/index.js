@@ -1088,7 +1088,7 @@ import {
       // 按ctrl+\ 键进入聚焦或取消聚焦状态，用于视频标签被遮挡的场景
       if (event.ctrlKey && keyCode === 220) {
         t.globalMode = !t.globalMode
-        const state = t.enable ? 'On' : 'Off'
+        const state = t.globalMode ? 'On' : 'Off'
         t.tips(i18n.t('tipsMsg.globalMode' + state))
       }
 
