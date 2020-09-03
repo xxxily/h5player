@@ -10,7 +10,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.3.0
+// @version      3.3.1
 // @description  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
 // @description:en  HTML5 video playback enhanced script, supports all H5 video playback websites, full-length shortcut key control, supports: double-speed playback / accelerated playback, video screenshots, picture-in-picture, full-page webpage, brightness, saturation, contrast, custom configuration enhancement And other functions.
 // @description:zh  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
@@ -744,12 +744,16 @@ const taskConf = {
   },
   'live.bilibili.com': {
     init: function () {
-      if (!JSON.stringify._hasHack_) {
-        JSON.stringify = function (arg1) {
-          console.error('JSON.stringify:', arg1);
-        };
+      if (!JSON._stringifySource_) {
+        JSON._stringifySource_ = JSON.stringify;
 
-        JSON.stringify._hasHack_ = true;
+        JSON.stringify = function (arg1) {
+          try {
+            return JSON._stringifySource_.apply(this, arguments)
+          } catch (e) {
+            console.error('JSON.stringify 解释出错：', e, arg1);
+          }
+        };
       }
     },
     fullScreen: '.bilibili-live-player-video-controller-fullscreen-btn button',

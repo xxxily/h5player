@@ -119,12 +119,16 @@ const taskConf = {
   },
   'live.bilibili.com': {
     init: function () {
-      if (!JSON.stringify._hasHack_) {
-        JSON.stringify = function (arg1) {
-          console.error('JSON.stringify:', arg1)
-        }
+      if (!JSON._stringifySource_) {
+        JSON._stringifySource_ = JSON.stringify
 
-        JSON.stringify._hasHack_ = true
+        JSON.stringify = function (arg1) {
+          try {
+            return JSON._stringifySource_.apply(this, arguments)
+          } catch (e) {
+            console.error('JSON.stringify 解释出错：', e, arg1)
+          }
+        }
       }
     },
     fullScreen: '.bilibili-live-player-video-controller-fullscreen-btn button',
