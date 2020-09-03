@@ -118,6 +118,15 @@ const taskConf = {
     fullScreen: 'button[name="fullscreen-button"]'
   },
   'live.bilibili.com': {
+    init: function () {
+      if (!JSON.stringify._hasHack_) {
+        JSON.stringify = function (arg1) {
+          console.error('JSON.stringify:', arg1)
+        }
+
+        JSON.stringify._hasHack_ = true
+      }
+    },
     fullScreen: '.bilibili-live-player-video-controller-fullscreen-btn button',
     webFullScreen: '.bilibili-live-player-video-controller-web-fullscreen-btn button',
     switchPlayStatus: '.bilibili-live-player-video-controller-start-btn button'

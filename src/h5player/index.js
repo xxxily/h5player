@@ -1137,8 +1137,13 @@ import {
       if (!progressMap) {
         progressMap = {}
       } else {
-        progressMap = JSON.parse(progressMap)
+        try {
+          progressMap = JSON.parse(progressMap)
+        } catch (e) {
+          progressMap = {}
+        }
       }
+
       if (!player) {
         return progressMap
       } else {

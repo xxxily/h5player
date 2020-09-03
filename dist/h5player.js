@@ -743,6 +743,15 @@ const taskConf = {
     fullScreen: 'button[name="fullscreen-button"]'
   },
   'live.bilibili.com': {
+    init: function () {
+      if (!JSON.stringify._hasHack_) {
+        JSON.stringify = function (arg1) {
+          console.error('JSON.stringify:', arg1);
+        };
+
+        JSON.stringify._hasHack_ = true;
+      }
+    },
     fullScreen: '.bilibili-live-player-video-controller-fullscreen-btn button',
     webFullScreen: '.bilibili-live-player-video-controller-web-fullscreen-btn button',
     switchPlayStatus: '.bilibili-live-player-video-controller-start-btn button'
@@ -2375,6 +2384,26 @@ const messages = {
       }
     },
 
+    /**
+     * 切换画中画功能
+     */
+    togglePictureInPicture () {
+      const player = this.player();
+      if (window._isPictureInPicture_) {
+        document.exitPictureInPicture().then(() => {
+          window._isPictureInPicture_ = null;
+        }).catch(() => {
+          window._isPictureInPicture_ = null;
+        });
+      } else {
+        player.requestPictureInPicture && player.requestPictureInPicture().then(() => {
+          window._isPictureInPicture_ = true;
+        }).catch(() => {
+          window._isPictureInPicture_ = null;
+        });
+      }
+    },
+
     /* 播放下一个视频，默认是没有这个功能的，只有在TCC里配置了next字段才会有该功能 */
     setNextVideo () {
       const isDo = TCC.doTask('next');
@@ -2636,19 +2665,7 @@ const messages = {
 
         // 进入或退出画中画模式
         if (key === 'p') {
-          if (window._isPictureInPicture_) {
-            document.exitPictureInPicture().then(() => {
-              window._isPictureInPicture_ = null;
-            }).catch(() => {
-              window._isPictureInPicture_ = null;
-            });
-          } else {
-            player.requestPictureInPicture && player.requestPictureInPicture().then(() => {
-              window._isPictureInPicture_ = true;
-            }).catch(() => {
-              window._isPictureInPicture_ = null;
-            });
-          }
+          t.togglePictureInPicture();
         }
 
         // 截图并下载保存
@@ -3025,8 +3042,13 @@ const messages = {
       if (!progressMap) {
         progressMap = {};
       } else {
-        progressMap = JSON.parse(progressMap);
+        try {
+          progressMap = JSON.parse(progressMap);
+        } catch (e) {
+          progressMap = {};
+        }
       }
+
       if (!player) {
         return progressMap
       } else {
