@@ -1,38 +1,25 @@
 ---
 name: Bug report
 about: Create a report to help us improve
-title: ''
-labels: ''
+title: "[BUG]"
+labels: bug
 assignees: ''
 
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+<!--
+这里是 issue 模板，请按照模板格式进行 issue 提交。
+如果你提交的 issue 没有按照 issue 模板来创建，将很有可能会被直接关闭。
+-->
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+1. **问题描述**
+<!-- 请在此处填写 -->
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+2. **出现上述问题的地址**
+<!-- 请在此处填写 -->
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+3. **你使用的浏览器与浏览器版本信息**
+<!-- 请在此处填写 -->
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
-
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
-
-**Additional context**
-Add any other context about the problem here.
+4. **其他附注信息**
+<!-- 请在此处填写 -->
