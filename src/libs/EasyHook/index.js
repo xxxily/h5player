@@ -26,4 +26,5 @@ var myWin = new Proxy(window, {
       : target[name]
   }
 })
+
 console.log(myWin)
