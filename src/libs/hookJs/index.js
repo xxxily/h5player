@@ -38,6 +38,7 @@ const hookJs = {
     }
   },
   _hookMethodcGenerator (parentObj, methodName, originMethod, context) {
+    context = context || parentObj
     const hookMethod = function () {
       let execResult = null
       const execArgs = arguments
@@ -67,13 +68,13 @@ const hookJs = {
       } else {
         if (errorHooks.length) {
           try {
-            execResult = originMethod.apply(context || parentObj, arguments)
+            execResult = originMethod.apply(context, arguments)
           } catch (e) {
             runHooks(errorHooks, e)
             throw e
           }
         } else {
-          execResult = originMethod.apply(parentObj, arguments)
+          execResult = originMethod.apply(context, arguments)
         }
       }
 
@@ -97,12 +98,20 @@ const hookJs = {
     hookMethod.isHook = true
     return hookMethod
   },
+  _getObjKeysByRule (obj, rule) {
+    if (rule === '*') {
+      //
+    }
+    return rule
+  },
   hook (parentObj, hookMethods, fn, context, type = 'before') {
     if (!util.isRef(parentObj) || !util.isFn(fn) || !hookMethods) {
       return false
     }
 
     const t = this
+
+    hookMethods = t._getObjKeysByRule(parentObj, hookMethods)
     hookMethods = Array.isArray(hookMethods) ? hookMethods : [hookMethods]
 
     hookMethods.forEach(methodName => {
