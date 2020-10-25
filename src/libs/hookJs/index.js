@@ -8,9 +8,11 @@
  */
 
 const util = {
+  toStrCall: (obj) => Object.prototype.toString.call(obj).replace('[object ', '').replace(']', ''),
   isObj: obj => Object.prototype.toString.call(obj) === '[object Object]',
   /* 判断是否为引用类型，用于更宽泛的场景 */
   isRef: obj => typeof obj === 'object',
+  isReg: obj => Object.prototype.toString.call(obj) === '[object RegExp]',
   isFn: obj => obj instanceof Function,
   isAsyncFn: fn => Object.prototype.toString.call(fn) === '[object AsyncFunction]',
   isPromise: obj => Object.prototype.toString.call(obj) === '[object Promise]',
@@ -99,10 +101,31 @@ const hookJs = {
     return hookMethod
   },
   _getObjKeysByRule (obj, rule) {
+    let result = rule
+
     if (rule === '*') {
-      //
+      /* 不包含原型链的遍历 */
+      result = Object.keys(obj)
+    } else if (rule === '**') {
+      /* 包含原型链的遍历 */
+      const tmpArr = []
+      for (const key in obj) {
+        tmpArr.push(key)
+      }
+      result = tmpArr
+    } else if (util.isReg(rule)) {
+      /* 正则匹配 */
+      const tmpArr = []
+      result = Object.keys(obj)
+      result.forEach(keyName => {
+        if (rule.test(keyName)) {
+          tmpArr.push(keyName)
+        }
+      })
+      result = tmpArr
     }
-    return rule
+
+    return result
   },
   hook (parentObj, hookMethods, fn, context, type = 'before') {
     if (!util.isRef(parentObj) || !util.isFn(fn) || !hookMethods) {
@@ -140,6 +163,7 @@ const hookJs = {
       return false
     }
 
+    hookMethods = this._getObjKeysByRule(parentObj, hookMethods)
     hookMethods = Array.isArray(hookMethods) ? hookMethods : [hookMethods]
 
     hookMethods.forEach(methodName => {
@@ -191,12 +215,8 @@ const hookJs = {
   }
 }
 
-hookJs.hook(window, 'alert', function () {
-  console.log('----------------------------')
-})
-
-hookJs.hook(window, 'alert', function () {
-  console.log('22222222222222222222')
+hookJs.hook(window, '**', function (execArgs, parentObj, methodName, originMethod, info) {
+  console.log('----------------------------', methodName, execArgs)
 })
 
 alert(1111)
@@ -207,4 +227,4 @@ alert(1111)
 //   hookJs[name] = (obj, hookMethods, fn, context) => hookJs.hook(obj, hookMethods, fn, name, context)
 // })
 
-export default hookJs
+// export default hookJs
