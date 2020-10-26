@@ -107,7 +107,13 @@ const hookJs = {
     return hookMethod
   },
   _getObjKeysByRule (obj, rule) {
+    let excludeRule = null
     let result = rule
+
+    if (util.isObj(rule) && rule.include) {
+      excludeRule = rule.exclude
+      rule = rule.include
+    }
 
     if (rule === '*') {
       /* 不包含原型链的遍历 */
@@ -128,6 +134,32 @@ const hookJs = {
           tmpArr.push(keyName)
         }
       })
+      result = tmpArr
+    }
+
+    /* 如果存在排除规则，则需要进行排除 */
+    if (excludeRule) {
+      const tmpArr = []
+      result = Array.isArray(result) ? result : [result]
+      if (util.isReg(excludeRule)) {
+        result.forEach(keyName => {
+          if (!excludeRule.test(keyName)) {
+            tmpArr.push(keyName)
+          }
+        })
+      } else if (Array.isArray(excludeRule)) {
+        result.forEach(keyName => {
+          if (!excludeRule.includes(keyName)) {
+            tmpArr.push(keyName)
+          }
+        })
+      } else {
+        result.forEach(keyName => {
+          if (excludeRule !== keyName) {
+            tmpArr.push(keyName)
+          }
+        })
+      }
       result = tmpArr
     }
 
@@ -235,22 +267,25 @@ const hookJs = {
   }
 }
 
-const excludeList = ['setAttribute', 'getAttribute', 'removeAttribute', 'createElement', 'createTextNode']
-const hookCallback = function (execArgs, parentObj, methodName, originMethod, info, ctx) {
-  if (!excludeList.includes(methodName)) {
-    console.log(`[${methodName}]`)
-  }
+const hookRule = {
+  include: '**',
+  exclude: ['setAttribute', 'getAttribute', 'hasAttribute', 'removeAttribute', 'createElement', 'createTextNode', 'querySelectorAll', 'querySelector', 'getElementsByTagName', 'getElementsByName', 'getElementById', 'getElementsByClassName', 'getBoundingClientRect', 'getItem']
 }
-hookJs.hook(window.document, '**', hookCallback)
-hookJs.hook(window, '**', hookCallback)
-hookJs.hook(window.HTMLElement.prototype, '**', hookCallback)
-hookJs.hook(window.localStorage, '**', hookCallback)
+
+const hookCallback = function (execArgs, parentObj, methodName, originMethod, info, ctx) {
+  console.log(`${Object.prototype.toString.call(parentObj)} [${methodName}] `, parentObj === ctx)
+}
+hookJs.hook(window.document, hookRule, hookCallback)
+hookJs.hook(window, hookRule, hookCallback)
+hookJs.hook(window.HTMLElement.prototype, hookRule, hookCallback)
+hookJs.hook(window.EventTarget.prototype, hookRule, hookCallback)
+hookJs.hook(window.localStorage, hookRule, hookCallback)
 
 setTimeout(function () {
-  hookJs.unHook(window, '**')
-  hookJs.unHook(window.document, '**')
-  hookJs.unHook(window.HTMLElement.prototype, '**')
-  hookJs.unHook(window.HTMLVideoElement.prototype, '**')
+  // hookJs.unHook(window, '**')
+  // hookJs.unHook(window.document, '**')
+  // hookJs.unHook(window.HTMLElement.prototype, '**')
+  // hookJs.unHook(window.HTMLVideoElement.prototype, '**')
 }, 1000 * 1)
 
 // export default hookJs
