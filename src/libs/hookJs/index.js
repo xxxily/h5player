@@ -39,76 +39,7 @@ const hookJs = {
       hookMethod[hookKeyName].push(fn)
     }
   },
-  _hookMethodcGenerator (parentObj, methodName, originMethod, context) {
-    context = context || parentObj
-    const hookMethod = function () {
-      let execResult = null
-      const execArgs = arguments
-      const errorHooks = hookMethod.errorHooks || []
-      const hangUpHooks = hookMethod.hangUpHooks || []
-      const replaceHooks = hookMethod.replaceHooks || []
-
-      function runHooks (hooks, info) {
-        if (Array.isArray(hooks)) {
-          hooks.forEach(fn => {
-            if (util.isFn(fn)) {
-              fn(execArgs, parentObj, methodName, originMethod, info)
-            }
-          })
-        }
-      }
-
-      runHooks(hookMethod.beforeHooks)
-
-      if (hangUpHooks.length || replaceHooks.length) {
-        /**
-         * 当存在hangUpHooks或replaceHooks的时候是不会触发原来函数的
-         * 本质上来说hangUpHooks和replaceHooks是一样的，只是外部的定义描述不一致和分类不一致而已
-         */
-        runHooks(hookMethod.hangUpHooks)
-        runHooks(hookMethod.replaceHooks)
-      } else {
-        if (errorHooks.length) {
-          try {
-            execResult = originMethod.apply(context, arguments)
-          } catch (e) {
-            runHooks(errorHooks, e)
-            throw e
-          }
-        } else {
-          execResult = originMethod.apply(context, arguments)
-          /* 使用代理进行hook比直接运行originMethod.apply的错误率更低 */
-          // execResult = new Proxy(originMethod, {
-          //   apply (target, ctx, args) {
-          //     return target.apply(ctx, args)
-          //   }
-          // })
-        }
-      }
-
-      /* 执行afterHooks，但如果返回的是Promise则需进一步细分处理 */
-      if (util.isPromise(execResult)) {
-        execResult.then(() => {
-          runHooks(hookMethod.afterHooks)
-          return Promise.resolve.apply(Promise, arguments)
-        }).catch(err => {
-          runHooks(errorHooks, err)
-          return Promise.reject(err)
-        })
-      } else {
-        runHooks(hookMethod.afterHooks)
-      }
-
-      return execResult
-    }
-
-    hookMethod.originMethod = originMethod
-    hookMethod.isHook = true
-
-    console.log(`[has hook method] ${Object.prototype.toString.call(parentObj)} ${methodName}`)
-
-    return hookMethod
-  },
+  /* 使用代理进行hook比直接运行originMethod.apply的错误率更低 */
   _proxyMethodcGenerator (parentObj, methodName, originMethod, context) {
     const hookMethod = new Proxy(originMethod, {
       apply (target, ctx, args) {
@@ -171,7 +102,7 @@ const hookJs = {
     hookMethod.originMethod = originMethod
     hookMethod.isHook = true
 
-    console.log(`[has hook method] ${Object.prototype.toString.call(parentObj)} ${methodName}`)
+    window._debugMode_ && console.log(`[hook method] ${Object.prototype.toString.call(parentObj)} ${methodName}`)
 
     return hookMethod
   },
@@ -249,6 +180,12 @@ const hookJs = {
     hookMethods = Array.isArray(hookMethods) ? hookMethods : [hookMethods]
 
     hookMethods.forEach(methodName => {
+      try {
+        if (!parentObj[methodName]) return false
+      } catch (e) {
+        return false
+      }
+
       const hookMethod = parentObj[methodName]
       const originMethod = hookMethod.originMethod
 
@@ -276,6 +213,7 @@ const hookJs = {
         /* 彻底还原被hook的函数 */
         if (util.isFn(originMethod)) {
           parentObj[methodName] = originMethod
+          window._debugMode_ && console.log(`[unHook method] ${Object.prototype.toString.call(parentObj)} ${methodName}`)
         }
       }
     })
@@ -297,60 +235,22 @@ const hookJs = {
   }
 }
 
-// hookJs.hook(window.document, '**', function (execArgs, parentObj, methodName, originMethod, info) {
-//   console.log(`[${methodName}]`, execArgs)
-// })
-
-async function getPageWindow () {
-  return new Promise(function (resolve, reject) {
-    if (window._pageWindow) {
-      return resolve(window._pageWindow)
-    }
-
-    const listenEventList = ['load', 'mousemove', 'scroll', 'get-page-window-event']
-
-    function getWin (event) {
-      window._pageWindow = this
-      // debug.log('getPageWindow succeed', event)
-      listenEventList.forEach(eventType => {
-        window.removeEventListener(eventType, getWin, true)
-      })
-      resolve(window._pageWindow)
-    }
-
-    listenEventList.forEach(eventType => {
-      window.addEventListener(eventType, getWin, true)
-    })
-
-    /* 自行派发事件以便用最短的时候获得pageWindow对象 */
-    window.dispatchEvent(new window.Event('get-page-window-event'))
-  })
+const excludeList = ['setAttribute', 'getAttribute', 'removeAttribute', 'createElement', 'createTextNode']
+const hookCallback = function (execArgs, parentObj, methodName, originMethod, info, ctx) {
+  if (!excludeList.includes(methodName)) {
+    console.log(`[${methodName}]`)
+  }
 }
-// getPageWindow()
+hookJs.hook(window.document, '**', hookCallback)
+hookJs.hook(window, '**', hookCallback)
+hookJs.hook(window.HTMLElement.prototype, '**', hookCallback)
+hookJs.hook(window.localStorage, '**', hookCallback)
 
-async function hookInit () {
-  const window = await getPageWindow()
-
-  hookJs.hook(window.document, '**', function (execArgs, parentObj, methodName, originMethod, info) {
-    console.log(`[${methodName}]`)
-  })
-
-  hookJs.hook(window, '**', function (execArgs, parentObj, methodName, originMethod, info) {
-    console.log(`[${methodName}]`)
-  })
-
-  hookJs.hook(window.HTMLElement.prototype, '**', function (execArgs, parentObj, methodName, originMethod, info) {
-    console.log(`[${methodName}]`)
-  })
-}
-hookInit()
-
-// alert(1111)
-
-// 通过遍历扩展hookJs的unHook方法
-// const extendEasyJs = ['before', 'after', 'replace']
-// extendEasyJs.forEach(name => {
-//   hookJs[name] = (obj, hookMethods, fn, context) => hookJs.hook(obj, hookMethods, fn, name, context)
-// })
+setTimeout(function () {
+  hookJs.unHook(window, '**')
+  hookJs.unHook(window.document, '**')
+  hookJs.unHook(window.HTMLElement.prototype, '**')
+  hookJs.unHook(window.HTMLVideoElement.prototype, '**')
+}, 1000 * 1)
 
 // export default hookJs
