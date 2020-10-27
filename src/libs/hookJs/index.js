@@ -30,6 +30,17 @@ const util = {
 }
 
 const hookJs = {
+  _hookCacheData: {},
+  _getItemId () {
+    const t = this
+    if (!t._itemId_) { t._itemId_ = 1 }
+    t._itemId_ += 1
+    return t._itemId_
+  },
+  _gethookMethodById (itemId) {
+    if (util.isFn(itemId)) { itemId = itemId._hookId }
+    return this._hookCacheData[itemId]
+  },
   _addHook (hookMethod, fn, type) {
     const hookKeyName = type + 'Hooks'
     if (!hookMethod[hookKeyName]) {
@@ -50,6 +61,7 @@ const hookJs = {
     }
   },
   _hookMethodcGenerator (parentObj, methodName, originMethod, context) {
+    const t = this
     context = context || parentObj
     const hookMethod = function () {
       let execResult = null
@@ -106,6 +118,10 @@ const hookJs = {
       return execResult
     }
 
+    const hookId = t._getItemId()
+    hookMethod._hookId = originMethod._hookId = hookId
+    t._hookCacheData[hookId] = hookMethod
+
     hookMethod.originMethod = originMethod
     hookMethod.isHook = true
 
@@ -115,12 +131,26 @@ const hookJs = {
   },
   /* 使用代理进行hook比直接运行originMethod.apply的错误率更低，但性能也会稍差些 */
   _proxyMethodcGenerator (parentObj, methodName, originMethod, context, noProxy) {
+    const t = this
+    let hookMethod = t._gethookMethodById(originMethod)
+
+    /* 存在缓存则使用缓存的hookMethod */
+    if (util.isFn(hookMethod)) {
+      if (!hookMethod.isHook) {
+        /* 重新标注被hook状态 */
+        hookMethod.isHook = true
+        util.debug.log(`[hook method] ${util.toStr(parentObj)} ${methodName}`)
+      }
+      return hookMethod
+    }
+
     /* 不存在代理对象或为了提高性能指定不使用代理方式进行hook时，则使用_hookMethodcGenerator进行hook */
     if (!window.Proxy || noProxy) {
       return this._hookMethodcGenerator.apply(this, arguments)
     }
 
-    const hookMethod = new Proxy(originMethod, {
+    /* 注意：使用Proxy代理，hookMethod和originMethod将共用同一对象 */
+    hookMethod = new Proxy(originMethod, {
       apply (target, ctx, args) {
         ctx = context || ctx
         let execResult = null
@@ -177,6 +207,10 @@ const hookJs = {
         return execResult
       }
     })
+
+    const hookId = t._getItemId()
+    hookMethod._hookId = originMethod._hookId = hookId
+    t._hookCacheData[hookId] = hookMethod
 
     hookMethod.originMethod = originMethod
     hookMethod.isHook = true
@@ -282,12 +316,10 @@ const hookJs = {
         return false
       }
 
-      if (originMethod.isHook) {
-        hookMethod = originMethod
-      } else {
-        hookMethod = t._proxyMethodcGenerator(parentObj, methodName, originMethod, context, noProxy)
+      hookMethod = t._proxyMethodcGenerator(parentObj, methodName, originMethod, context, noProxy)
 
-        /* 使用hookMethod接管需要被hook的方法 */
+      /* 使用hookMethod接管需要被hook的方法 */
+      if (parentObj[methodName] !== hookMethod) {
         parentObj[methodName] = hookMethod
       }
 
@@ -299,7 +331,8 @@ const hookJs = {
       return false
     }
 
-    hookMethods = this._getObjKeysByRule(parentObj, hookMethods)
+    const t = this
+    hookMethods = t._getObjKeysByRule(parentObj, hookMethods)
     hookMethods = Array.isArray(hookMethods) ? hookMethods : [hookMethods]
 
     hookMethods.forEach(methodName => {
@@ -337,6 +370,13 @@ const hookJs = {
       } else {
         /* 彻底还原被hook的函数 */
         if (util.isFn(originMethod)) {
+          Object.keys(hookMethod).forEach(keyName => {
+            if (/Hooks$/.test(keyName) && Array.isArray(hookMethod[keyName])) {
+              hookMethod[keyName] = []
+            }
+          })
+
+          hookMethod.isHook = false
           parentObj[methodName] = originMethod
           util.debug.log(`[unHook method] ${util.toStr(parentObj)} ${methodName}`)
         }
@@ -362,13 +402,11 @@ const hookJs = {
 
 const hookRule = {
   include: '**',
-  exclude12: ['setAttribute', 'getAttribute', 'hasAttribute', 'removeAttribute', 'createElement', 'createTextNode', 'querySelectorAll', 'querySelector', 'getElementsByTagName', 'getElementsByName', 'getElementById', 'getElementsByClassName', 'getBoundingClientRect', 'getItem']
+  exclude: ['setAttribute', 'getAttribute', 'hasAttribute', 'removeAttribute', 'createElement', 'createTextNode', 'querySelectorAll', 'querySelector', 'getElementsByTagName', 'getElementsByName', 'getElementById', 'getElementsByClassName', 'getBoundingClientRect', 'getItem']
 }
 
 const hookCallback = function (execArgs, parentObj, methodName, originMethod, info, ctx) {
-  if (hookRule.exclude12.includes(methodName)) {
-
-  }
+  if (hookRule.exclude.includes(methodName)) {}
   console.log(`${util.toStr(parentObj)} [${methodName}] `, parentObj === ctx)
 }
 
@@ -382,7 +420,6 @@ async function getPageWindow () {
 
     function getWin (event) {
       window._pageWindow = this
-      // debug.log('getPageWindow succeed', event)
       listenEventList.forEach(eventType => {
         window.removeEventListener(eventType, getWin, true)
       })
@@ -400,20 +437,21 @@ async function getPageWindow () {
 
 async function hookJsInit () {
   const window = await getPageWindow()
+  window.hookJs = hookJs
   const noProxy = false
   hookJs.hook(window, hookRule, hookCallback, null, '', noProxy)
   hookJs.hook(window.document, hookRule, hookCallback, null, '', noProxy)
   hookJs.hook(window.HTMLElement.prototype, hookRule, hookCallback, null, '', noProxy)
-  hookJs.hook(window.EventTarget.prototype, hookRule, hookCallback, null, '', noProxy)
+  // hookJs.hook(window.EventTarget.prototype, hookRule, hookCallback, null, '', noProxy)
   hookJs.hook(window.localStorage, hookRule, hookCallback, null, '', noProxy)
 
   setTimeout(function () {
-    hookJs.unHook(window, '**')
-    hookJs.unHook(window.document, '**')
-    hookJs.unHook(window.HTMLElement.prototype, '**')
-    hookJs.unHook(window.HTMLVideoElement.prototype, '**')
-    hookJs.unHook(window.EventTarget.prototype, '**')
-    hookJs.unHook(window.localStorage, '**')
+    // hookJs.unHook(window, '**')
+    // hookJs.unHook(window.document, '**')
+    // hookJs.unHook(window.HTMLElement.prototype, '**')
+    // hookJs.unHook(window.HTMLVideoElement.prototype, '**')
+    // hookJs.unHook(window.EventTarget.prototype, '**')
+    // hookJs.unHook(window.localStorage, '**')
   }, 1000 * 1)
 }
 hookJsInit()
