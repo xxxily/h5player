@@ -8,7 +8,7 @@
  */
 
 const util = {
-  toStrCall: (obj) => Object.prototype.toString.call(obj).replace('[object ', '').replace(']', ''),
+  toStr: (obj) => Object.prototype.toString.call(obj),
   isObj: obj => Object.prototype.toString.call(obj) === '[object Object]',
   /* 判断是否为引用类型，用于更宽泛的场景 */
   isRef: obj => typeof obj === 'object',
@@ -16,7 +16,17 @@ const util = {
   isFn: obj => obj instanceof Function,
   isAsyncFn: fn => Object.prototype.toString.call(fn) === '[object AsyncFunction]',
   isPromise: obj => Object.prototype.toString.call(obj) === '[object Promise]',
-  firstUpperCase: str => str.replace(/^\S/, s => s.toUpperCase())
+  firstUpperCase: str => str.replace(/^\S/, s => s.toUpperCase()),
+  debug: {
+    log () {
+      let log = window.console.log
+      /* 如果log也被hook了，则使用未被hook前的log函数 */
+      if (log.originMethod) { log = log.originMethod }
+      if (window._debugMode_) {
+        log.apply(window.console, arguments)
+      }
+    }
+  }
 }
 
 const hookJs = {
@@ -39,8 +49,77 @@ const hookJs = {
       hookMethod[hookKeyName].push(fn)
     }
   },
-  /* 使用代理进行hook比直接运行originMethod.apply的错误率更低 */
-  _proxyMethodcGenerator (parentObj, methodName, originMethod, context) {
+  _hookMethodcGenerator (parentObj, methodName, originMethod, context) {
+    context = context || parentObj
+    const hookMethod = function () {
+      let execResult = null
+      const execArgs = arguments
+      const errorHooks = hookMethod.errorHooks || []
+      const hangUpHooks = hookMethod.hangUpHooks || []
+      const replaceHooks = hookMethod.replaceHooks || []
+
+      function runHooks (hooks, info) {
+        if (Array.isArray(hooks)) {
+          hooks.forEach(fn => {
+            if (util.isFn(fn)) {
+              fn(execArgs, parentObj, methodName, originMethod, info, context)
+            }
+          })
+        }
+      }
+
+      runHooks(hookMethod.beforeHooks)
+
+      if (hangUpHooks.length || replaceHooks.length) {
+        /**
+         * 当存在hangUpHooks或replaceHooks的时候是不会触发原来函数的
+         * 本质上来说hangUpHooks和replaceHooks是一样的，只是外部的定义描述不一致和分类不一致而已
+         */
+        runHooks(hookMethod.hangUpHooks)
+        runHooks(hookMethod.replaceHooks)
+      } else {
+        if (errorHooks.length) {
+          try {
+            execResult = originMethod.apply(context, arguments)
+          } catch (e) {
+            runHooks(errorHooks, e)
+            throw e
+          }
+        } else {
+          execResult = originMethod.apply(context, arguments)
+        }
+      }
+
+      /* 执行afterHooks，但如果返回的是Promise则需进一步细分处理 */
+      if (util.isPromise(execResult)) {
+        execResult.then(() => {
+          runHooks(hookMethod.afterHooks)
+          return Promise.resolve.apply(Promise, arguments)
+        }).catch(err => {
+          runHooks(errorHooks, err)
+          return Promise.reject(err)
+        })
+      } else {
+        runHooks(hookMethod.afterHooks)
+      }
+
+      return execResult
+    }
+
+    hookMethod.originMethod = originMethod
+    hookMethod.isHook = true
+
+    util.debug.log(`[hook method] ${util.toStr(parentObj)} ${methodName}`)
+
+    return hookMethod
+  },
+  /* 使用代理进行hook比直接运行originMethod.apply的错误率更低，但性能也会稍差些 */
+  _proxyMethodcGenerator (parentObj, methodName, originMethod, context, noProxy) {
+    /* 不存在代理对象或为了提高性能指定不使用代理方式进行hook时，则使用_hookMethodcGenerator进行hook */
+    if (!window.Proxy || noProxy) {
+      return this._hookMethodcGenerator.apply(this, arguments)
+    }
+
     const hookMethod = new Proxy(originMethod, {
       apply (target, ctx, args) {
         ctx = context || ctx
@@ -102,7 +181,7 @@ const hookJs = {
     hookMethod.originMethod = originMethod
     hookMethod.isHook = true
 
-    window._debugMode_ && console.log(`[hook method] ${Object.prototype.toString.call(parentObj)} ${methodName}`)
+    util.debug.log(`[hook method] ${util.toStr(parentObj)} ${methodName}`)
 
     return hookMethod
   },
@@ -165,7 +244,19 @@ const hookJs = {
 
     return result
   },
-  hook (parentObj, hookMethods, fn, context, type = 'before') {
+  /**
+   * hook 核心函数
+   * @param parentObj {Object} -必选 被hook函数依赖的父对象
+   * @param hookMethods {Object|Array|RegExp|string} -必选 被hook函数的函数名或函数名的匹配规则
+   * @param fn {Function} -必选 hook之后的回调方法
+   * @param context {Object} -可选 指定运行被hook函数时的上下文对象
+   * @param type {String} -可选 默认before，指定运行hook函数回调的时机，可选字符串：before、after、replace、error、hangUp
+   * @param noProxy {Boolean} -可选 默认false，不使用Proxy进行hook，以获得更高性能，但也意味着通用性更差些，对于要hook HTMLElement.prototype、EventTarget.prototype这些对象里面的非实例的函数往往会失败而导致被hook函数执行出错
+   * @returns {boolean}
+   */
+  hook (parentObj, hookMethods, fn, context, type, noProxy) {
+    type = type || 'before'
+
     if (!util.isRef(parentObj) || !util.isFn(fn) || !hookMethods) {
       return false
     }
@@ -194,7 +285,7 @@ const hookJs = {
       if (originMethod.isHook) {
         hookMethod = originMethod
       } else {
-        hookMethod = t._proxyMethodcGenerator(parentObj, methodName, originMethod, context)
+        hookMethod = t._proxyMethodcGenerator(parentObj, methodName, originMethod, context, noProxy)
 
         /* 使用hookMethod接管需要被hook的方法 */
         parentObj[methodName] = hookMethod
@@ -213,7 +304,7 @@ const hookJs = {
 
     hookMethods.forEach(methodName => {
       try {
-        if (!parentObj[methodName]) return false
+        if (!parentObj[methodName] || !parentObj[methodName].originMethod) return false
       } catch (e) {
         return false
       }
@@ -233,19 +324,21 @@ const hookJs = {
           /* 删除指定类型下的指定hook函数 */
           for (let i = 0; i < hooks.length; i++) {
             if (fn === hooks[i]) {
-              hookMethod[hookKeyName] = hookMethod[hookKeyName].split()
+              hookMethod[hookKeyName].splice(i, 1)
+              util.debug.log(`[unHook ${hookKeyName} func] ${util.toStr(parentObj)} ${methodName}`, fn)
               break
             }
           }
         } else {
           /* 删除指定类型下的所有hook函数 */
           hookMethod[hookKeyName] = []
+          util.debug.log(`[unHook all ${hookKeyName}] ${util.toStr(parentObj)} ${methodName}`)
         }
       } else {
         /* 彻底还原被hook的函数 */
         if (util.isFn(originMethod)) {
           parentObj[methodName] = originMethod
-          window._debugMode_ && console.log(`[unHook method] ${Object.prototype.toString.call(parentObj)} ${methodName}`)
+          util.debug.log(`[unHook method] ${util.toStr(parentObj)} ${methodName}`)
         }
       }
     })
@@ -269,23 +362,60 @@ const hookJs = {
 
 const hookRule = {
   include: '**',
-  exclude: ['setAttribute', 'getAttribute', 'hasAttribute', 'removeAttribute', 'createElement', 'createTextNode', 'querySelectorAll', 'querySelector', 'getElementsByTagName', 'getElementsByName', 'getElementById', 'getElementsByClassName', 'getBoundingClientRect', 'getItem']
+  exclude12: ['setAttribute', 'getAttribute', 'hasAttribute', 'removeAttribute', 'createElement', 'createTextNode', 'querySelectorAll', 'querySelector', 'getElementsByTagName', 'getElementsByName', 'getElementById', 'getElementsByClassName', 'getBoundingClientRect', 'getItem']
 }
 
 const hookCallback = function (execArgs, parentObj, methodName, originMethod, info, ctx) {
-  console.log(`${Object.prototype.toString.call(parentObj)} [${methodName}] `, parentObj === ctx)
-}
-hookJs.hook(window.document, hookRule, hookCallback)
-hookJs.hook(window, hookRule, hookCallback)
-hookJs.hook(window.HTMLElement.prototype, hookRule, hookCallback)
-hookJs.hook(window.EventTarget.prototype, hookRule, hookCallback)
-hookJs.hook(window.localStorage, hookRule, hookCallback)
+  if (hookRule.exclude12.includes(methodName)) {
 
-setTimeout(function () {
-  // hookJs.unHook(window, '**')
-  // hookJs.unHook(window.document, '**')
-  // hookJs.unHook(window.HTMLElement.prototype, '**')
-  // hookJs.unHook(window.HTMLVideoElement.prototype, '**')
-}, 1000 * 1)
+  }
+  console.log(`${util.toStr(parentObj)} [${methodName}] `, parentObj === ctx)
+}
+
+async function getPageWindow () {
+  return new Promise(function (resolve, reject) {
+    if (window._pageWindow) {
+      return resolve(window._pageWindow)
+    }
+
+    const listenEventList = ['load', 'mousemove', 'scroll', 'get-page-window-event']
+
+    function getWin (event) {
+      window._pageWindow = this
+      // debug.log('getPageWindow succeed', event)
+      listenEventList.forEach(eventType => {
+        window.removeEventListener(eventType, getWin, true)
+      })
+      resolve(window._pageWindow)
+    }
+
+    listenEventList.forEach(eventType => {
+      window.addEventListener(eventType, getWin, true)
+    })
+
+    /* 自行派发事件以便用最短的时候获得pageWindow对象 */
+    window.dispatchEvent(new window.Event('get-page-window-event'))
+  })
+}
+
+async function hookJsInit () {
+  const window = await getPageWindow()
+  const noProxy = false
+  hookJs.hook(window, hookRule, hookCallback, null, '', noProxy)
+  hookJs.hook(window.document, hookRule, hookCallback, null, '', noProxy)
+  hookJs.hook(window.HTMLElement.prototype, hookRule, hookCallback, null, '', noProxy)
+  hookJs.hook(window.EventTarget.prototype, hookRule, hookCallback, null, '', noProxy)
+  hookJs.hook(window.localStorage, hookRule, hookCallback, null, '', noProxy)
+
+  setTimeout(function () {
+    hookJs.unHook(window, '**')
+    hookJs.unHook(window.document, '**')
+    hookJs.unHook(window.HTMLElement.prototype, '**')
+    hookJs.unHook(window.HTMLVideoElement.prototype, '**')
+    hookJs.unHook(window.EventTarget.prototype, '**')
+    hookJs.unHook(window.localStorage, '**')
+  }, 1000 * 1)
+}
+hookJsInit()
 
 // export default hookJs
