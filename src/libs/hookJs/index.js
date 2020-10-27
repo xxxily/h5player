@@ -446,12 +446,12 @@ async function hookJsInit () {
   hookJs.hook(window.localStorage, hookRule, hookCallback, null, '', noProxy)
 
   setTimeout(function () {
-    // hookJs.unHook(window, '**')
-    // hookJs.unHook(window.document, '**')
-    // hookJs.unHook(window.HTMLElement.prototype, '**')
-    // hookJs.unHook(window.HTMLVideoElement.prototype, '**')
-    // hookJs.unHook(window.EventTarget.prototype, '**')
-    // hookJs.unHook(window.localStorage, '**')
+    hookJs.unHook(window, '**')
+    hookJs.unHook(window.document, '**')
+    hookJs.unHook(window.HTMLElement.prototype, '**')
+    hookJs.unHook(window.HTMLVideoElement.prototype, '**')
+    hookJs.unHook(window.EventTarget.prototype, '**')
+    hookJs.unHook(window.localStorage, '**')
   }, 1000 * 1)
 }
 hookJsInit()
