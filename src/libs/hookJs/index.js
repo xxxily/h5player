@@ -226,6 +226,7 @@ const hookJs = {
     if (util.isObj(rule) && rule.include) {
       excludeRule = rule.exclude
       rule = rule.include
+      result = rule
     }
 
     if (rule === '*') {
@@ -400,13 +401,13 @@ const hookJs = {
   }
 }
 
-const hookRule = {
-  include: '**',
-  exclude: ['setAttribute', 'getAttribute', 'hasAttribute', 'removeAttribute', 'createElement', 'createTextNode', 'querySelectorAll', 'querySelector', 'getElementsByTagName', 'getElementsByName', 'getElementById', 'getElementsByClassName', 'getBoundingClientRect', 'getItem']
-}
+// const hookRule = {
+//   include: '**',
+//   exclude: ['setAttribute', 'getAttribute', 'hasAttribute', 'removeAttribute', 'createElement', 'createTextNode', 'querySelectorAll', 'querySelector', 'getElementsByTagName', 'getElementsByName', 'getElementById', 'getElementsByClassName', 'getBoundingClientRect', 'getItem']
+// }
+const hookRule = ['setInterval', 'setTimeout', 'clearInterval', 'clearTimeout']
 
 const hookCallback = function (execArgs, parentObj, methodName, originMethod, info, ctx) {
-  if (hookRule.exclude.includes(methodName)) {}
   console.log(`${util.toStr(parentObj)} [${methodName}] `, parentObj === ctx)
 }
 
@@ -446,12 +447,12 @@ async function hookJsInit () {
   hookJs.hook(window.localStorage, hookRule, hookCallback, null, '', noProxy)
 
   setTimeout(function () {
-    hookJs.unHook(window, '**')
-    hookJs.unHook(window.document, '**')
-    hookJs.unHook(window.HTMLElement.prototype, '**')
-    hookJs.unHook(window.HTMLVideoElement.prototype, '**')
-    hookJs.unHook(window.EventTarget.prototype, '**')
-    hookJs.unHook(window.localStorage, '**')
+    // hookJs.unHook(window, '**')
+    // hookJs.unHook(window.document, '**')
+    // hookJs.unHook(window.HTMLElement.prototype, '**')
+    // hookJs.unHook(window.HTMLVideoElement.prototype, '**')
+    // hookJs.unHook(window.EventTarget.prototype, '**')
+    // hookJs.unHook(window.localStorage, '**')
   }, 1000 * 1)
 }
 hookJsInit()
