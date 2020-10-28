@@ -30,17 +30,6 @@ const util = {
 }
 
 const hookJs = {
-  _hookCacheData: {},
-  _getItemId () {
-    const t = this
-    if (!t._itemId_) { t._itemId_ = 1 }
-    t._itemId_ += 1
-    return t._itemId_
-  },
-  _gethookMethodById (itemId) {
-    if (util.isFn(itemId)) { itemId = itemId._hookId }
-    return this._hookCacheData[itemId]
-  },
   _addHook (hookMethod, fn, type) {
     const hookKeyName = type + 'Hooks'
     if (!hookMethod[hookKeyName]) {
@@ -118,10 +107,6 @@ const hookJs = {
       return execResult
     }
 
-    const hookId = t._getItemId()
-    hookMethod._hookId = originMethod._hookId = hookId
-    t._hookCacheData[hookId] = hookMethod
-
     hookMethod.originMethod = originMethod
     hookMethod.isHook = true
 
@@ -132,10 +117,11 @@ const hookJs = {
   /* 使用代理进行hook比直接运行originMethod.apply的错误率更低，但性能也会稍差些 */
   _proxyMethodcGenerator (parentObj, methodName, originMethod, context, noProxy, proxyHandler) {
     const t = this
-    let hookMethod = t._gethookMethodById(originMethod)
+    let hookMethod = null
 
     /* 存在缓存则使用缓存的hookMethod */
-    if (util.isFn(hookMethod)) {
+    if (t.isHook(originMethod)) {
+      hookMethod = originMethod
       if (!hookMethod.isHook) {
         /* 重新标注被hook状态 */
         hookMethod.isHook = true
@@ -209,10 +195,6 @@ const hookJs = {
       ...proxyHandler
     })
 
-    const hookId = t._getItemId()
-    hookMethod._hookId = originMethod._hookId = hookId
-    t._hookCacheData[hookId] = hookMethod
-
     hookMethod.originMethod = originMethod
     hookMethod.isHook = true
 
@@ -282,6 +264,14 @@ const hookJs = {
     }
 
     return result
+  },
+  /**
+   * 判断某个函数是否已经被hook
+   * @param fn {Function} -必选 要判断的函数
+   * @returns {boolean}
+   */
+  isHook (fn) {
+    return fn && util.isFn(fn.originMethod) && fn !== fn.originMethod
   },
   /**
    * hook 核心函数
@@ -359,7 +349,7 @@ const hookJs = {
       const hookMethod = parentObj[methodName]
       const originMethod = hookMethod.originMethod
 
-      if (!util.isFn(hookMethod) || !hookMethod.isHook) {
+      if (!t.isHook(hookMethod)) {
         return false
       }
 
@@ -378,8 +368,10 @@ const hookJs = {
           }
         } else {
           /* 删除指定类型下的所有hook函数 */
-          hookMethod[hookKeyName] = []
-          util.debug.log(`[unHook all ${hookKeyName}] ${util.toStr(parentObj)} ${methodName}`)
+          if (Array.isArray(hookMethod[hookKeyName])) {
+            hookMethod[hookKeyName] = []
+            util.debug.log(`[unHook all ${hookKeyName}] ${util.toStr(parentObj)} ${methodName}`)
+          }
         }
       } else {
         /* 彻底还原被hook的函数 */
@@ -419,14 +411,38 @@ const hookJs = {
   }
 }
 
-const hookRule = {
-  include: '**',
-  exclude: ['setAttribute', 'getAttribute', 'hasAttribute', 'removeAttribute', 'createElement', 'createTextNode', 'querySelectorAll', 'querySelector', 'getElementsByTagName', 'getElementsByName', 'getElementById', 'getElementsByClassName', 'getBoundingClientRect', 'addEventListener', '_addEventListener', 'hasChildNodes', 'appendChild', 'getItem', 'requestAnimationFrame', 'setTimeout', 'setInterval', 'clearInterval', 'clearTimeout', 'cancelAnimationFrame', 'constructor', 'prototype', 'Boolean', 'Object', 'String', 'Number']
-}
-// const hookRule = ['setInterval', 'setTimeout', 'clearInterval', 'clearTimeout']
+// var hookRule = {
+//   include: '**',
+//   exclude: ['setAttribute', 'getAttribute', 'hasAttribute', 'removeAttribute', 'createElement', 'createTextNode', 'querySelectorAll', 'querySelector', 'getElementsByTagName', 'getElementsByName', 'getElementById', 'getElementsByClassName', 'getBoundingClientRect', 'addEventListener', '_addEventListener', 'hasChildNodes', 'appendChild', 'getItem', 'requestAnimationFrame', 'setTimeout', 'setInterval', 'clearInterval', 'clearTimeout', 'cancelAnimationFrame', 'constructor', 'prototype', 'Boolean', 'Object', 'String', 'Number']
+// }
+var hookRule = ['setInterval', 'setTimeout', 'clearInterval', 'clearTimeout']
 
-const hookCallback = function (execArgs, parentObj, methodName, originMethod, info, ctx) {
-  console.log(`${util.toStr(parentObj)} [${methodName}] `, parentObj === ctx)
+var hookCallback = function (execArgs, parentObj, methodName, originMethod, info, ctx) {
+  console.log(`${util.toStr(parentObj)} [${methodName}] `)
+}
+// hookJs.hook(window, hookRule, hookCallback)
+
+function timeHook (window) {
+  var hookRule = ['setInterval', 'setTimeout', 'clearInterval', 'clearTimeout']
+
+  var hookCallback = function (execArgs, parentObj, methodName, originMethod, info, ctx) {
+    if (['setTimeout', 'setInterval'].includes(methodName)) {
+      execArgs[1] = execArgs[1] * (window.timeRate || 2)
+    }
+    console.log(`${util.toStr(parentObj)} [${methodName}] `, execArgs)
+  }
+
+  hookJs.hook(window, hookRule, hookCallback)
+
+  document.addEventListener('keydown', function (event) {
+    console.log(Number(event.key))
+    if (event.ctrlKey && event.altKey) {
+      const num = Number(event.key)
+      if (num > 0) {
+        window.timeRate = num
+      }
+    }
+  }, true)
 }
 
 async function getPageWindow () {
@@ -457,18 +473,19 @@ async function getPageWindow () {
 async function hookJsInit () {
   const window = await getPageWindow()
   window.hookJs = hookJs
-  hookJs.hook(window, hookRule, hookCallback)
-  hookJs.hook(window.document, hookRule, hookCallback)
-  hookJs.hook(window.HTMLElement.prototype, hookRule, hookCallback)
-  hookJs.hook(window.EventTarget.prototype, hookRule, hookCallback)
-  hookJs.hook(window.localStorage, hookRule, hookCallback)
+  timeHook(window)
+  // hookJs.hook(window, hookRule, hookCallback)
+  // hookJs.hook(window.document, hookRule, hookCallback)
+  // hookJs.hook(window.HTMLElement.prototype, hookRule, hookCallback)
+  // hookJs.hook(window.EventTarget.prototype, hookRule, hookCallback)
+  // hookJs.hook(window.localStorage, hookRule, hookCallback)
 
   setTimeout(function () {
     // hookJs.unHook(window, '**')
-    hookJs.unHook(window.document, '**')
-    hookJs.unHook(window.HTMLElement.prototype, '**')
-    hookJs.unHook(window.HTMLVideoElement.prototype, '**')
-    hookJs.unHook(window.EventTarget.prototype, '**')
+    // hookJs.unHook(window.document, '**')
+    // hookJs.unHook(window.HTMLElement.prototype, '**')
+    // hookJs.unHook(window.HTMLVideoElement.prototype, '**')
+    // hookJs.unHook(window.EventTarget.prototype, '**')
     // hookJs.unHook(window.localStorage, '**')
   }, 1000 * 1)
 }
