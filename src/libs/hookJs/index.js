@@ -327,6 +327,14 @@ const hookJs = {
       t._addHook(hookMethod, fn, type)
     })
   },
+  /**
+   * 取消对某个函数的hook
+   * @param parentObj {Object} -必选 要取消被hook函数依赖的父对象
+   * @param hookMethods {Object|Array|RegExp|string} -必选 要取消被hook函数的函数名或函数名的匹配规则
+   * @param type {String} -可选 默认before，指定要取消的hook类型，可选字符串：before、after、replace、error、hangUp，如果不指定该选项则取消所有类型下的所有回调
+   * @param fn {Function} -必选 取消指定的hook回调函数，如果不指定该选项则取消对应type类型下的所有回调
+   * @returns {boolean}
+   */
   unHook (parentObj, hookMethods, type, fn) {
     if (!util.isRef(parentObj) || !hookMethods) {
       return false
@@ -384,18 +392,23 @@ const hookJs = {
       }
     })
   },
+  /* 源函数运行前的hook */
   before (obj, hookMethods, fn, context) {
     return this.hook(obj, hookMethods, fn, 'before', context)
   },
+  /* 源函数运行后的hook */
   after (obj, hookMethods, fn, context) {
     return this.hook(obj, hookMethods, fn, 'after', context)
   },
+  /* 替换掉要hook的函数，不再运行源函数，换成运行其他逻辑 */
   replace (obj, hookMethods, fn, context) {
     return this.hook(obj, hookMethods, fn, 'replace', context)
   },
+  /* 源函数运行出错时的hook */
   error (obj, hookMethods, fn, context) {
     return this.hook(obj, hookMethods, fn, 'error', context)
   },
+  /* 底层实现逻辑与replace一样，都是替换掉要hook的函数，不再运行源函数，只不过是为了明确语义，将源函数挂起不再执行，原则上也不再执行其他逻辑，如果要执行其他逻辑请使用replace hook */
   hangUp (obj, hookMethods, fn, context) {
     return this.hook(obj, hookMethods, fn, 'hangUp', context)
   }
