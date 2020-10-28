@@ -231,13 +231,18 @@ const hookJs = {
     }
 
     /**
-     * Object.keys与Reflect.ownKeys的区别见：
+     * for in、Object.keys与Reflect.ownKeys的区别见：
      * https://es6.ruanyifeng.com/#docs/object#%E5%B1%9E%E6%80%A7%E7%9A%84%E9%81%8D%E5%8E%86
      */
     if (rule === '*') {
       result = Object.keys(obj)
     } else if (rule === '**') {
       result = Reflect.ownKeys(obj)
+    } else if (rule === '***') {
+      /* 包含自身、继承、可枚举、不可枚举的属性 */
+      const tmpArr = []
+      for (const key in obj) { tmpArr.push(key) }
+      result = Array.from(new Set(tmpArr.concat(Reflect.ownKeys(obj))))
     } else if (util.isReg(rule)) {
       /* 正则匹配 */
       const tmpArr = []
