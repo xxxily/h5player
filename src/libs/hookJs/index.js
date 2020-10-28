@@ -229,16 +229,14 @@ const hookJs = {
       result = rule
     }
 
+    /**
+     * Object.keys与Reflect.ownKeys的区别见：
+     * https://es6.ruanyifeng.com/#docs/object#%E5%B1%9E%E6%80%A7%E7%9A%84%E9%81%8D%E5%8E%86
+     */
     if (rule === '*') {
-      /* 不包含原型链的遍历 */
       result = Object.keys(obj)
     } else if (rule === '**') {
-      /* 包含原型链的遍历 */
-      const tmpArr = []
-      for (const key in obj) {
-        tmpArr.push(key)
-      }
-      result = tmpArr
+      result = Reflect.ownKeys(obj)
     } else if (util.isReg(rule)) {
       /* 正则匹配 */
       const tmpArr = []
@@ -401,11 +399,11 @@ const hookJs = {
   }
 }
 
-// const hookRule = {
-//   include: '**',
-//   exclude: ['setAttribute', 'getAttribute', 'hasAttribute', 'removeAttribute', 'createElement', 'createTextNode', 'querySelectorAll', 'querySelector', 'getElementsByTagName', 'getElementsByName', 'getElementById', 'getElementsByClassName', 'getBoundingClientRect', 'getItem']
-// }
-const hookRule = ['setInterval', 'setTimeout', 'clearInterval', 'clearTimeout']
+const hookRule = {
+  include: '**',
+  exclude: ['setAttribute', 'getAttribute', 'hasAttribute', 'removeAttribute', 'createElement', 'createTextNode', 'querySelectorAll', 'querySelector', 'getElementsByTagName', 'getElementsByName', 'getElementById', 'getElementsByClassName', 'getBoundingClientRect', 'getItem', 'requestAnimationFrame', 'setTimeout', 'setInterval', 'clearInterval', 'clearTimeout', 'cancelAnimationFrame']
+}
+// const hookRule = ['setInterval', 'setTimeout', 'clearInterval', 'clearTimeout']
 
 const hookCallback = function (execArgs, parentObj, methodName, originMethod, info, ctx) {
   console.log(`${util.toStr(parentObj)} [${methodName}] `, parentObj === ctx)
@@ -443,15 +441,15 @@ async function hookJsInit () {
   hookJs.hook(window, hookRule, hookCallback, null, '', noProxy)
   hookJs.hook(window.document, hookRule, hookCallback, null, '', noProxy)
   hookJs.hook(window.HTMLElement.prototype, hookRule, hookCallback, null, '', noProxy)
-  // hookJs.hook(window.EventTarget.prototype, hookRule, hookCallback, null, '', noProxy)
+  hookJs.hook(window.EventTarget.prototype, hookRule, hookCallback, null, '', noProxy)
   hookJs.hook(window.localStorage, hookRule, hookCallback, null, '', noProxy)
 
   setTimeout(function () {
     // hookJs.unHook(window, '**')
-    // hookJs.unHook(window.document, '**')
-    // hookJs.unHook(window.HTMLElement.prototype, '**')
-    // hookJs.unHook(window.HTMLVideoElement.prototype, '**')
-    // hookJs.unHook(window.EventTarget.prototype, '**')
+    hookJs.unHook(window.document, '**')
+    hookJs.unHook(window.HTMLElement.prototype, '**')
+    hookJs.unHook(window.HTMLVideoElement.prototype, '**')
+    hookJs.unHook(window.EventTarget.prototype, '**')
     // hookJs.unHook(window.localStorage, '**')
   }, 1000 * 1)
 }
