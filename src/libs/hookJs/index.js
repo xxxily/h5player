@@ -130,7 +130,7 @@ const hookJs = {
     return hookMethod
   },
   /* 使用代理进行hook比直接运行originMethod.apply的错误率更低，但性能也会稍差些 */
-  _proxyMethodcGenerator (parentObj, methodName, originMethod, context, noProxy) {
+  _proxyMethodcGenerator (parentObj, methodName, originMethod, context, noProxy, proxyHandler) {
     const t = this
     let hookMethod = t._gethookMethodById(originMethod)
 
@@ -205,7 +205,8 @@ const hookJs = {
         }
 
         return execResult
-      }
+      },
+      ...proxyHandler
     })
 
     const hookId = t._getItemId()
@@ -282,12 +283,13 @@ const hookJs = {
    * @param parentObj {Object} -必选 被hook函数依赖的父对象
    * @param hookMethods {Object|Array|RegExp|string} -必选 被hook函数的函数名或函数名的匹配规则
    * @param fn {Function} -必选 hook之后的回调方法
-   * @param context {Object} -可选 指定运行被hook函数时的上下文对象
    * @param type {String} -可选 默认before，指定运行hook函数回调的时机，可选字符串：before、after、replace、error、hangUp
+   * @param context {Object} -可选 指定运行被hook函数时的上下文对象
+   * @param proxyHandler {Object} -可选 默认使用的是Proxy的apply handler进行hook，如果你有特殊需求也可以配置自己的handler以实现更复杂的功能
    * @param noProxy {Boolean} -可选 默认false，不使用Proxy进行hook，以获得更高性能，但也意味着通用性更差些，对于要hook HTMLElement.prototype、EventTarget.prototype这些对象里面的非实例的函数往往会失败而导致被hook函数执行出错
    * @returns {boolean}
    */
-  hook (parentObj, hookMethods, fn, context, type, noProxy) {
+  hook (parentObj, hookMethods, fn, type, context, proxyHandler, noProxy) {
     type = type || 'before'
 
     if (!util.isRef(parentObj) || !util.isFn(fn) || !hookMethods) {
@@ -315,7 +317,7 @@ const hookJs = {
         return false
       }
 
-      hookMethod = t._proxyMethodcGenerator(parentObj, methodName, originMethod, context, noProxy)
+      hookMethod = t._proxyMethodcGenerator(parentObj, methodName, originMethod, context, proxyHandler, noProxy)
 
       /* 使用hookMethod接管需要被hook的方法 */
       if (parentObj[methodName] !== hookMethod) {
@@ -383,25 +385,25 @@ const hookJs = {
     })
   },
   before (obj, hookMethods, fn, context) {
-    return this.hook(obj, hookMethods, fn, context, 'before')
+    return this.hook(obj, hookMethods, fn, 'before', context)
   },
   after (obj, hookMethods, fn, context) {
-    return this.hook(obj, hookMethods, fn, context, 'after')
+    return this.hook(obj, hookMethods, fn, 'after', context)
   },
   replace (obj, hookMethods, fn, context) {
-    return this.hook(obj, hookMethods, fn, context, 'replace')
+    return this.hook(obj, hookMethods, fn, 'replace', context)
   },
   error (obj, hookMethods, fn, context) {
-    return this.hook(obj, hookMethods, fn, context, 'error')
+    return this.hook(obj, hookMethods, fn, 'error', context)
   },
   hangUp (obj, hookMethods, fn, context) {
-    return this.hook(obj, hookMethods, fn, context, 'hangUp')
+    return this.hook(obj, hookMethods, fn, 'hangUp', context)
   }
 }
 
 const hookRule = {
   include: '**',
-  exclude: ['setAttribute', 'getAttribute', 'hasAttribute', 'removeAttribute', 'createElement', 'createTextNode', 'querySelectorAll', 'querySelector', 'getElementsByTagName', 'getElementsByName', 'getElementById', 'getElementsByClassName', 'getBoundingClientRect', 'getItem', 'requestAnimationFrame', 'setTimeout', 'setInterval', 'clearInterval', 'clearTimeout', 'cancelAnimationFrame']
+  exclude: ['setAttribute', 'getAttribute', 'hasAttribute', 'removeAttribute', 'createElement', 'createTextNode', 'querySelectorAll', 'querySelector', 'getElementsByTagName', 'getElementsByName', 'getElementById', 'getElementsByClassName', 'getBoundingClientRect', 'addEventListener', '_addEventListener', 'hasChildNodes', 'appendChild', 'getItem', 'requestAnimationFrame', 'setTimeout', 'setInterval', 'clearInterval', 'clearTimeout', 'cancelAnimationFrame', 'constructor', 'prototype', 'Boolean', 'Object', 'String', 'Number']
 }
 // const hookRule = ['setInterval', 'setTimeout', 'clearInterval', 'clearTimeout']
 
@@ -437,12 +439,11 @@ async function getPageWindow () {
 async function hookJsInit () {
   const window = await getPageWindow()
   window.hookJs = hookJs
-  const noProxy = false
-  hookJs.hook(window, hookRule, hookCallback, null, '', noProxy)
-  hookJs.hook(window.document, hookRule, hookCallback, null, '', noProxy)
-  hookJs.hook(window.HTMLElement.prototype, hookRule, hookCallback, null, '', noProxy)
-  hookJs.hook(window.EventTarget.prototype, hookRule, hookCallback, null, '', noProxy)
-  hookJs.hook(window.localStorage, hookRule, hookCallback, null, '', noProxy)
+  hookJs.hook(window, hookRule, hookCallback)
+  hookJs.hook(window.document, hookRule, hookCallback)
+  hookJs.hook(window.HTMLElement.prototype, hookRule, hookCallback)
+  hookJs.hook(window.EventTarget.prototype, hookRule, hookCallback)
+  hookJs.hook(window.localStorage, hookRule, hookCallback)
 
   setTimeout(function () {
     // hookJs.unHook(window, '**')
