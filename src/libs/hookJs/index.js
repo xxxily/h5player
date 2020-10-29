@@ -50,7 +50,6 @@ const hookJs = {
     }
   },
   _hookMethodcGenerator (parentObj, methodName, originMethod, context) {
-    const t = this
     context = context || parentObj
     const hookMethod = function () {
       let execResult = null
@@ -108,6 +107,7 @@ const hookJs = {
     }
 
     hookMethod.originMethod = originMethod
+    originMethod.hookMethod = hookMethod
     hookMethod.isHook = true
 
     util.debug.log(`[hook method] ${util.toStr(parentObj)} ${methodName}`)
@@ -122,6 +122,11 @@ const hookJs = {
     /* 存在缓存则使用缓存的hookMethod */
     if (t.isHook(originMethod)) {
       hookMethod = originMethod
+    } else if (t.isHook(originMethod.hookMethod)) {
+      hookMethod = originMethod.hookMethod
+    }
+
+    if (hookMethod) {
       if (!hookMethod.isHook) {
         /* 重新标注被hook状态 */
         hookMethod.isHook = true
@@ -196,6 +201,7 @@ const hookJs = {
     })
 
     hookMethod.originMethod = originMethod
+    originMethod.hookMethod = hookMethod
     hookMethod.isHook = true
 
     util.debug.log(`[hook method] ${util.toStr(parentObj)} ${methodName}`)
@@ -212,6 +218,16 @@ const hookJs = {
       result = rule
     }
 
+    /* 获取包含自身、继承、可枚举、不可枚举的键名 */
+    let allKeys = []
+    function getAllKeys () {
+      if (allKeys.length) { return allKeys }
+      const tmpArr = []
+      for (const key in obj) { tmpArr.push(key) }
+      allKeys = Array.from(new Set(tmpArr.concat(Reflect.ownKeys(obj))))
+      return allKeys
+    }
+
     /**
      * for in、Object.keys与Reflect.ownKeys的区别见：
      * https://es6.ruanyifeng.com/#docs/object#%E5%B1%9E%E6%80%A7%E7%9A%84%E9%81%8D%E5%8E%86
@@ -221,46 +237,21 @@ const hookJs = {
     } else if (rule === '**') {
       result = Reflect.ownKeys(obj)
     } else if (rule === '***') {
-      /* 包含自身、继承、可枚举、不可枚举的属性 */
-      const tmpArr = []
-      for (const key in obj) { tmpArr.push(key) }
-      result = Array.from(new Set(tmpArr.concat(Reflect.ownKeys(obj))))
+      result = getAllKeys()
     } else if (util.isReg(rule)) {
-      /* 正则匹配 */
-      const tmpArr = []
-      result = Object.keys(obj)
-      result.forEach(keyName => {
-        if (rule.test(keyName)) {
-          tmpArr.push(keyName)
-        }
-      })
-      result = tmpArr
+      result = getAllKeys().filter(keyName => rule.test(keyName))
     }
 
     /* 如果存在排除规则，则需要进行排除 */
     if (excludeRule) {
-      const tmpArr = []
       result = Array.isArray(result) ? result : [result]
       if (util.isReg(excludeRule)) {
-        result.forEach(keyName => {
-          if (!excludeRule.test(keyName)) {
-            tmpArr.push(keyName)
-          }
-        })
+        result = result.filter(keyName => !excludeRule.test(keyName))
       } else if (Array.isArray(excludeRule)) {
-        result.forEach(keyName => {
-          if (!excludeRule.includes(keyName)) {
-            tmpArr.push(keyName)
-          }
-        })
+        result = result.filter(keyName => !excludeRule.includes(keyName))
       } else {
-        result.forEach(keyName => {
-          if (excludeRule !== keyName) {
-            tmpArr.push(keyName)
-          }
-        })
+        result = result.filter(keyName => excludeRule !== keyName)
       }
-      result = tmpArr
     }
 
     return result
@@ -427,7 +418,7 @@ function timeHook (window) {
 
   var hookCallback = function (execArgs, parentObj, methodName, originMethod, info, ctx) {
     if (['setTimeout', 'setInterval'].includes(methodName)) {
-      execArgs[1] = execArgs[1] * (window.timeRate || 2)
+      execArgs[1] = execArgs[1] * (window.timeRate || 1)
     }
     console.log(`${util.toStr(parentObj)} [${methodName}] `, execArgs)
   }
@@ -435,14 +426,18 @@ function timeHook (window) {
   hookJs.hook(window, hookRule, hookCallback)
 
   document.addEventListener('keydown', function (event) {
-    console.log(Number(event.key))
     if (event.ctrlKey && event.altKey) {
       const num = Number(event.key)
       if (num > 0) {
-        window.timeRate = num
+        window.timeRate = 1 / num
+        console.log(`[当前时间倍率]${window.timeRate}`)
       }
     }
   }, true)
+}
+
+function historyHook (window) {
+
 }
 
 async function getPageWindow () {
@@ -474,6 +469,7 @@ async function hookJsInit () {
   const window = await getPageWindow()
   window.hookJs = hookJs
   timeHook(window)
+  historyHook(window)
   // hookJs.hook(window, hookRule, hookCallback)
   // hookJs.hook(window.document, hookRule, hookCallback)
   // hookJs.hook(window.HTMLElement.prototype, hookRule, hookCallback)
