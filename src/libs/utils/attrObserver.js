@@ -25,7 +25,7 @@ function attrObserver (selector, fn, attrFilter, shadowRoot) {
     observer.observe(element, observeOpts)
   }
 
-  if (typeof selector === 'string') {
+  if (typeof selector === 'string' || Array.isArray(selector)) {
     ready(selector, element => _attrObserver(element), shadowRoot)
   } else if (/Element/.test(Object.prototype.toString.call(selector))) {
     _attrObserver(selector)
