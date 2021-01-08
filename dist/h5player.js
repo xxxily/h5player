@@ -10,7 +10,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.3.0
+// @version      3.3.1
 // @description  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
 // @description:en  HTML5 video playback enhanced script, supports all H5 video playback websites, full-length shortcut key control, supports: double-speed playback / accelerated playback, video screenshots, picture-in-picture, full-page webpage, brightness, saturation, contrast, custom configuration enhancement And other functions.
 // @description:zh  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
@@ -510,6 +510,22 @@ function hackEventListener (config) {
   }
 }
 
+const quickSort = function (arr) {
+  if (arr.length <= 1) { return arr }
+  var pivotIndex = Math.floor(arr.length / 2);
+  var pivot = arr.splice(pivotIndex, 1)[0];
+  var left = [];
+  var right = [];
+  for (var i = 0; i < arr.length; i++) {
+    if (arr[i] < pivot) {
+      left.push(arr[i]);
+    } else {
+      right.push(arr[i]);
+    }
+  }
+  return quickSort(left).concat([pivot], quickSort(right))
+};
+
 function hideDom (selector, delay) {
   setTimeout(function () {
     const dom = document.querySelector(selector);
@@ -727,6 +743,19 @@ const taskConf = {
     fullScreen: 'button[name="fullscreen-button"]'
   },
   'live.bilibili.com': {
+    init: function () {
+      if (!JSON._stringifySource_) {
+        JSON._stringifySource_ = JSON.stringify;
+
+        JSON.stringify = function (arg1) {
+          try {
+            return JSON._stringifySource_.apply(this, arguments)
+          } catch (e) {
+            console.error('JSON.stringify 解释出错：', e, arg1);
+          }
+        };
+      }
+    },
     fullScreen: '.bilibili-live-player-video-controller-fullscreen-btn button',
     webFullScreen: '.bilibili-live-player-video-controller-web-fullscreen-btn button',
     switchPlayStatus: '.bilibili-live-player-video-controller-start-btn button'
@@ -1200,6 +1229,146 @@ var videoCapturer = {
 };
 
 /**
+ * 鼠标事件观测对象
+ * 用于实现鼠标事件的穿透响应，有别于pointer-events:none
+ * pointer-events:none是设置当前层允许穿透
+ * 而MouseObserver是：即使不知道target上面存在多少层遮挡，一样可以响应鼠标事件
+ */
+
+class MouseObserver {
+  constructor (observeOpt) {
+    // eslint-disable-next-line no-undef
+    this.observer = new IntersectionObserver((infoList) => {
+      infoList.forEach((info) => {
+        info.target.IntersectionObserverEntry = info;
+      });
+    }, observeOpt || {});
+
+    this.observeList = [];
+  }
+
+  _observe (target) {
+    let hasObserve = false;
+    for (let i = 0; i < this.observeList.length; i++) {
+      const el = this.observeList[i];
+      if (target === el) {
+        hasObserve = true;
+        break
+      }
+    }
+
+    if (!hasObserve) {
+      this.observer.observe(target);
+      this.observeList.push(target);
+    }
+  }
+
+  _unobserve (target) {
+    this.observer.unobserve(target);
+    const newObserveList = [];
+    this.observeList.forEach((el) => {
+      if (el !== target) {
+        newObserveList.push(el);
+      }
+    });
+    this.observeList = newObserveList;
+  }
+
+  /**
+   * 增加事件绑定
+   * @param target {element} -必选 要绑定事件的dom对象
+   * @param type {string} -必选 要绑定的事件，只支持鼠标事件
+   * @param listener {function} -必选 符合触发条件时的响应函数
+   */
+  on (target, type, listener, options) {
+    const t = this;
+    t._observe(target);
+
+    if (!target.MouseObserverEvent) {
+      target.MouseObserverEvent = {};
+    }
+    target.MouseObserverEvent[type] = true;
+
+    if (!t._mouseObserver_) {
+      t._mouseObserver_ = {};
+    }
+
+    if (!t._mouseObserver_[type]) {
+      t._mouseObserver_[type] = [];
+
+      window.addEventListener(type, (event) => {
+        t.observeList.forEach((target) => {
+          const isVisibility = target.IntersectionObserverEntry && target.IntersectionObserverEntry.intersectionRatio > 0;
+          const isReg = target.MouseObserverEvent[event.type] === true;
+          if (isVisibility && isReg) {
+            /* 判断是否符合触发侦听器事件条件 */
+            const bound = target.getBoundingClientRect();
+            const offsetX = event.x - bound.x;
+            const offsetY = event.y - bound.y;
+            const isNeedTap = offsetX <= bound.width && offsetX >= 0 && offsetY <= bound.height && offsetY >= 0;
+
+            if (isNeedTap) {
+              /* 执行监听回调 */
+              const listenerList = t._mouseObserver_[type];
+              listenerList.forEach((listener) => {
+                if (listener instanceof Function) {
+                  listener.call(t, event, {
+                    x: offsetX,
+                    y: offsetY
+                  }, target);
+                }
+              });
+            }
+          }
+        });
+      }, options);
+    }
+
+    /* 将监听回调加入到事件队列 */
+    if (listener instanceof Function) {
+      t._mouseObserver_[type].push(listener);
+    }
+  }
+
+  /**
+   * 解除事件绑定
+   * @param target {element} -必选 要解除事件的dom对象
+   * @param type {string} -必选 要解除的事件，只支持鼠标事件
+   * @param listener {function} -必选 绑定事件时的响应函数
+   * @returns {boolean}
+   */
+  off (target, type, listener) {
+    const t = this;
+    if (!target || !type || !listener || !t._mouseObserver_ || !t._mouseObserver_[type] || !target.MouseObserverEvent || !target.MouseObserverEvent[type]) return false
+
+    const newListenerList = [];
+    const listenerList = t._mouseObserver_[type];
+    let isMatch = false;
+    listenerList.forEach((listenerItem) => {
+      if (listenerItem === listener) {
+        isMatch = true;
+      } else {
+        newListenerList.push(listenerItem);
+      }
+    });
+
+    if (isMatch) {
+      t._mouseObserver_[type] = newListenerList;
+
+      /* 侦听器已被完全移除 */
+      if (newListenerList.length === 0) {
+        delete target.MouseObserverEvent[type];
+      }
+
+      /* 当MouseObserverEvent为空对象时移除观测对象 */
+      if (JSON.stringify(target.MouseObserverEvent[type]) === '{}') {
+        t._unobserve(target);
+      }
+    }
+  }
+}
+
+/**
  * 简单的i18n库
  */
 
@@ -1625,14 +1794,14 @@ var zhCN = {
   issues: '反馈',
   setting: '设置',
   tipsMsg: {
-    playSpeed: '播放速度：',
+    playspeed: '播放速度：',
     forward: '前进：',
     backward: '后退：',
     seconds: '秒',
     volume: '音量：',
-    frameNext: '定位：下一帧',
-    framePrevious: '定位：上一帧',
-    frameStop: '定格帧画面：',
+    nextframe: '定位：下一帧',
+    previousframe: '定位：上一帧',
+    stopframe: '定格帧画面：',
     play: '播放',
     pause: '暂停',
     arpl: '允许自动恢复播放进度',
@@ -1642,19 +1811,16 @@ var zhCN = {
     saturation: '图像饱和度：',
     hue: '图像色相：',
     blur: '图像模糊度：',
-    filterReset: '图像属性：复位',
-    rotate: '画面旋转：',
-    pluginOn: '启用h5Player插件',
-    pluginOff: '禁用h5Player插件',
-    globalModeOn: '全局模式： ON',
-    globalModeOff: '全局模式： OFF',
-    playbackRestored: '为你恢复上次播放进度',
-    playbackRestoreOff: '恢复播放进度功能已禁用，按 SHIFT+R 可开启该功能',
+    imgattrreset: '图像属性：复位',
+    imgrotate: '画面旋转：',
+    onplugin: '启用h5Player插件',
+    offplugin: '禁用h5Player插件',
+    globalmode: '全局模式：',
+    playbackrestored: '为你恢复上次播放进度',
+    playbackrestoreoff: '恢复播放进度功能已禁用，按 SHIFT+R 可开启该功能',
     horizontal: '水平位移：',
     vertical: '垂直位移：',
-    videoZoom: '视频缩放率：',
-    playbackRate: '播放速度：',
-    framesPerSecond: '倍'
+    videozoom: '视频缩放率：'
   }
 };
 
@@ -1663,74 +1829,69 @@ var enUS = {
   issues: 'issues',
   setting: 'setting',
   tipsMsg: {
-    playSpeed: 'Speed: ',
+    playspeed: 'Speed: ',
     forward: 'Forward: ',
     backward: 'Backward: ',
     seconds: 'sec',
     volume: 'Volume: ',
-    frameNext: 'Next frame',
-    framePrevious: 'Previous frame',
-    frameStop: 'Stopframe: ',
+    nextframe: 'Next frame',
+    previousframe: 'Previous frame',
+    stopframe: 'Stopframe: ',
     play: 'Play',
     pause: 'Pause',
-    arpl: 'Auto resume playback position: ON',
-    drpl: 'Auto resume playback position: OFF',
+    arpl: 'Allow auto resume playback progress',
+    drpl: 'Disable auto resume playback progress',
     brightness: 'Brightness: ',
     contrast: 'Contrast: ',
     saturation: 'Saturation: ',
-    hue: 'Hue: ',
+    hue: 'HUE: ',
     blur: 'Blur: ',
-    filterReset: 'Image filters: reset',
-    rotate: 'Picture rotation: ',
-    pluginOn: 'h5Player plugin: ON',
-    pluginOff: 'h5Player plugin: OFF',
-    globalModeOn: 'Global mode： ON',
-    globalModeOff: 'Global mode： OFF',
-    playbackRestored: 'The last playback position restored',
-    playbackRestoreOff: 'Restoring the playback position is disabled. Press SHIFT+R to turn on the function',
+    imgattrreset: 'Attributes: reset',
+    imgrotate: 'Picture rotation: ',
+    onplugin: 'ON h5Player plugin',
+    offplugin: 'OFF h5Player plugin',
+    globalmode: 'Global mode: ',
+    playbackrestored: 'Restored the last playback progress for you',
+    playbackrestoreoff: 'The function of restoring the playback progress is disabled. Press SHIFT+R to turn on the function',
     horizontal: 'Horizontal displacement: ',
     vertical: 'Vertical displacement: ',
-    videoZoom: 'Video zoom: ',
-    playbackRate: 'Playback rate： ',
-    framesPerSecond: ' fps'
-  }
+    videozoom: 'Video zoom: '
+  },
+  demo: 'demo-test'
 };
 
 var ru = {
-  about: 'О скрипте',
-  issues: 'Оставить отзыв',
-  setting: 'Настройки',
+  about: 'около',
+  issues: 'обратная связь',
+  setting: 'установка',
   tipsMsg: {
-    playSpeed: 'Скорость: ',
+    playspeed: 'Скорость: ',
     forward: 'Вперёд: ',
     backward: 'Назад: ',
     seconds: ' сек',
     volume: 'Громкость: ',
-    frameNext: 'Следующий кадр',
-    framePrevious: 'Предыдущий кадр',
-    frameStop: 'Стоп-кадр: ',
-    play: 'Воспроизведение',
+    nextframe: 'Следующий кадр',
+    previousframe: 'Предыдущий кадр',
+    stopframe: 'Стоп-кадр: ',
+    play: 'Запуск',
     pause: 'Пауза',
-    arpl: 'Запоминать последнее место',
-    drpl: 'Не запоминать последнее место',
+    arpl: 'Разрешить автоматическое возобновление прогресса воспроизведения',
+    drpl: 'Запретить автоматическое возобновление прогресса воспроизведения',
     brightness: 'Яркость: ',
     contrast: 'Контраст: ',
     saturation: 'Насыщенность: ',
     hue: 'Оттенок: ',
     blur: 'Размытие: ',
-    filterReset: 'Установки изображения сброшены',
-    rotate: 'Поворот изображения: ',
-    pluginOn: 'h5Player включен',
-    pluginOff: 'h5Player выключен',
-    globalModeOn: 'Глобальный режим включен',
-    globalModeOff: 'Глобальный режим выключен',
-    playbackRestored: 'Восстановлен последний прогресс воспроизведения',
-    playbackRestoreOff: 'Функция восстановления прогресса воспроизведения отключена. Нажмите SHIFT + R, чтобы включить функцию',
+    imgattrreset: 'Атрибуты: сброс',
+    imgrotate: 'Поворот изображения: ',
+    onplugin: 'ВКЛ: плагин воспроизведения',
+    offplugin: 'ВЫКЛ: плагин воспроизведения',
+    globalmode: 'Глобальный режим:',
+    playbackrestored: 'Восстановлен последний прогресс воспроизведения',
+    playbackrestoreoff: 'Функция восстановления прогресса воспроизведения отключена. Нажмите SHIFT + R, чтобы включить функцию',
     horizontal: 'Горизонтальное смещение: ',
     vertical: 'Вертикальное смещение: ',
-    videoZoom: 'Масштаб: ',
-    playbackRate: 'Частота видео： ',
-    framesPerSecond: 'кадров/сек'
+    videozoom: 'Увеличить видео: '
   }
 };
 
@@ -1739,14 +1900,14 @@ var zhTW = {
   issues: '反饋',
   setting: '設置',
   tipsMsg: {
-    playSpeed: '播放速度：',
+    playspeed: '播放速度：',
     forward: '向前：',
     backward: '向後：',
     seconds: '秒',
     volume: '音量：',
-    frameNext: '定位：下一幀',
-    framePrevious: '定位：上一幀',
-    frameStop: '定格幀畫面：',
+    nextframe: '定位：下一幀',
+    previousframe: '定位：上一幀',
+    stopframe: '定格幀畫面：',
     play: '播放',
     pause: '暫停',
     arpl: '允許自動恢復播放進度',
@@ -1756,19 +1917,16 @@ var zhTW = {
     saturation: '圖像飽和度：',
     hue: '圖像色相：',
     blur: '圖像模糊度：',
-    filterReset: '圖像屬性：復位',
-    rotate: '畫面旋轉：',
-    pluginOn: '啟用h5Player插件',
-    pluginOff: '禁用h5Player插件',
-    globalModeOn: '全局模式： ON',
-    globalModeOff: '全局模式： OFF',
-    playbackRestored: '為你恢復上次播放進度',
-    playbackRestoreOff: '恢復播放進度功能已禁用，按 SHIFT+R 可開啟該功能',
+    imgattrreset: '圖像屬性：復位',
+    imgrotate: '畫面旋轉：',
+    onplugin: '啟用h5Player插件',
+    offplugin: '禁用h5Player插件',
+    globalmode: '全局模式：',
+    playbackrestored: '為你恢復上次播放進度',
+    playbackrestoreoff: '恢復播放進度功能已禁用，按 SHIFT+R 可開啟該功能',
     horizontal: '水平位移：',
     vertical: '垂直位移：',
-    videoZoom: '視頻縮放率：',
-    playbackRate: '播放速度：',
-    framesPerSecond: '倍'
+    videozoom: '視頻縮放率：'
   }
 };
 
@@ -1779,8 +1937,7 @@ const messages = {
   'zh-TW': zhTW,
   'en-US': enUS,
   en: enUS,
-  ru: ru,
-  'ru-RU': ru,
+  ru: ru
 };
 
 (async function () {
@@ -1793,7 +1950,7 @@ const messages = {
     languages: messages
   });
 
-  // const mouseObserver = new MouseObserver()
+  const mouseObserver = new MouseObserver();
 
   // monkeyMenu.on('i18n.t('setting')', function () {
   //   window.alert('功能开发中，敬请期待...')
@@ -1867,7 +2024,7 @@ const messages = {
 
       let wrapDom = null;
       const playerBox = player.getBoundingClientRect();
-      eachParentNode(player, (parent) => {
+      eachParentNode(player, function (parent) {
         if (parent === document || !parent.getBoundingClientRect) return
         const parentBox = parent.getBoundingClientRect();
         if (parentBox.width && parentBox.height) {
@@ -1906,7 +2063,7 @@ const messages = {
 
       const player = t.playerInstance;
       t.initPlaybackRate();
-      t.isFocus();
+      t.isFoucs();
       t.proxyPlayerInstance(player);
 
       // player.addEventListener('durationchange', () => {
@@ -1922,7 +2079,7 @@ const messages = {
       player._listenerProxyApplyHandler_ = t.playerEventHandler;
 
       if (!player._hasCanplayEvent_) {
-        player.addEventListener('canplay', (event) => {
+        player.addEventListener('canplay', function (event) {
           t.initAutoPlay(player);
         });
         player._hasCanplayEvent_ = true;
@@ -1931,7 +2088,7 @@ const messages = {
       /* 播放的时候进行相关同步操作 */
       if (!player._hasPlayingInitEvent_) {
         let setPlaybackRateOnPlayingCount = 0;
-        player.addEventListener('playing', (event) => {
+        player.addEventListener('playing', function (event) {
           if (setPlaybackRateOnPlayingCount === 0) {
             /* 同步之前设定的播放速度 */
             t.setPlaybackRate();
@@ -1958,11 +2115,9 @@ const messages = {
       }
 
       /* 注册鼠标响应事件 */
-      /*
-      mouseObserver.on(player, 'click', (event, offset, target) => {
-        debug.log('捕捉到鼠标点击事件：', event, offset, target)
-      })
-      */
+      mouseObserver.on(player, 'click', function (event, offset, target) {
+        // debug.log('捕捉到鼠标点击事件：', event, offset, target)
+      });
 
       debug.isDebugMode() && t.mountToGlobal();
     },
@@ -2074,7 +2229,7 @@ const messages = {
       if (!num && curPlaybackRate === 1) {
         return true
       } else {
-        !notips && t.tips(i18n.t('tipsMsg.playSpeed') + player.playbackRate);
+        !notips && t.tips(i18n.t('tipsMsg.playspeed') + player.playbackRate);
       }
     },
     /* 恢复播放速度，还原到1倍速度、或恢复到上次的倍速 */
@@ -2082,14 +2237,14 @@ const messages = {
       const t = this;
       player = player || t.player();
 
-      const curPlaybackRate = Number(player.playbackRate);
-      const newPlaybackRate = curPlaybackRate === 1 ? t.lastPlaybackRate : 1;
-      if (curPlaybackRate !== 1) {
-        t.lastPlaybackRate = curPlaybackRate;
+      const oldPlaybackRate = Number(player.playbackRate);
+      const playbackRate = oldPlaybackRate === 1 ? t.lastPlaybackRate : 1;
+      if (oldPlaybackRate !== 1) {
+        t.lastPlaybackRate = oldPlaybackRate;
       }
 
-      player.playbackRate = newPlaybackRate;
-      t.setPlaybackRate(newPlaybackRate);
+      player.playbackRate = playbackRate;
+      t.setPlaybackRate(player.playbackRate);
     },
     /**
      * 初始化自动播放逻辑
@@ -2129,7 +2284,7 @@ const messages = {
       }
     },
     /* 设置播放进度 */
-    setCurrentTime: function (num, noTips) {
+    setCurrentTime: function (num, notips) {
       if (!num) return
       num = Number(num);
       const _num = Math.abs(Number(num.toFixed(1)));
@@ -2147,14 +2302,14 @@ const messages = {
           TCC.doTask('addCurrentTime');
         } else {
           player.currentTime += _num;
-          !noTips && t.tips(i18n.t('tipsMsg.forward') + _num + i18n.t('tipsMsg.seconds'));
+          !notips && t.tips(i18n.t('tipsMsg.forward') + _num + i18n.t('tipsMsg.seconds'));
         }
       } else {
         if (taskConf.subtractCurrentTime) {
           TCC.doTask('subtractCurrentTime');
         } else {
           player.currentTime -= _num;
-          !noTips && t.tips(i18n.t('tipsMsg.backward') + _num + i18n.t('tipsMsg.seconds'));
+          !notips && t.tips(i18n.t('tipsMsg.backward') + _num + i18n.t('tipsMsg.seconds'));
         }
       }
     },
@@ -2165,31 +2320,44 @@ const messages = {
       const player = t.player();
 
       num = Number(num);
-      let newVol = player.volume + num;
+      const _num = Math.abs(Number(num.toFixed(2)));
+      const curVol = player.volume;
+      let newVol = curVol;
 
-      if (newVol > 1) newVol = 1;
-      if (newVol < 0) newVol = 0;
+      if (num > 0) {
+        newVol += _num;
+        if (newVol > 1) {
+          newVol = 1;
+        }
+      } else {
+        newVol -= _num;
+        if (newVol < 0) {
+          newVol = 0;
+        }
+      }
 
       player.volume = newVol;
 
       /* 条件音量的时候顺便把静音模式关闭 */
       player.muted = false;
 
-      t.tips(i18n.t('tipsMsg.volume') + Math.trunc(player.volume * 100) + '%');
+      t.tips(i18n.t('tipsMsg.volume') + parseInt(player.volume * 100) + '%');
     },
 
     /* 设置视频画面的缩放与位移 */
     setTransform (scale, translate) {
       const t = this;
       const player = t.player();
-
-      scale = t.scale = scale ? t.scale : Number(scale).toFixed(1);
+      scale = t.scale = typeof scale === 'undefined' ? t.scale : Number(scale).toFixed(1);
       translate = t.translate = translate || t.translate;
       player.style.transform = `scale(${scale}) translate(${translate.x}px, ${translate.y}px) rotate(${t.rotate}deg)`;
-
-      let tipsMsg = `${i18n.t('tipsMsg.videoZoom')}${scale * 100}%`;
-      if (translate.x) tipsMsg += ` ${i18n.t('tipsMsg.horizontal')}${translate.x}px`;
-      if (translate.y) tipsMsg += ` ${i18n.t('tipsMsg.vertical')}${translate.y}px`;
+      let tipsMsg = i18n.t('tipsMsg.videozoom') + `${scale * 100}%`;
+      if (translate.x) {
+        tipsMsg += ` ${i18n.t('tipsMsg.horizontal')}${t.translate.x}px`;
+      }
+      if (translate.y) {
+        tipsMsg += ` ${i18n.t('tipsMsg.vertical')}${t.translate.y}px`;
+      }
       t.tips(tipsMsg);
     },
 
@@ -2212,11 +2380,11 @@ const messages = {
       player._hangUp_ && player._hangUp_('play', 400);
 
       if (perFps === 1) {
-        t.tips(i18n.t('tipsMsg.frameNext'));
+        t.tips(i18n.t('tipsMsg.nextframe'));
       } else if (perFps === -1) {
-        t.tips(i18n.t('tipsMsg.framePrevious'));
+        t.tips(i18n.t('tipsMsg.previousframe'));
       } else {
-        t.tips(i18n.t('tipsMsg.frameStop') + perFps);
+        t.tips(i18n.t('tipsMsg.stopframe') + perFps);
       }
     },
 
@@ -2388,11 +2556,13 @@ const messages = {
       const style = tipsDom.style;
       tipsDom.innerText = str;
 
-      this.on_off.forEach(clearTimeout);
+      for (var i = 0; i < 3; i++) {
+        if (this.on_off[i]) clearTimeout(this.on_off[i]);
+      }
 
       function showTips () {
         style.display = 'block';
-        t.on_off[0] = setTimeout(() => {
+        t.on_off[0] = setTimeout(function () {
           style.opacity = 1;
         }, 50);
         t.on_off[1] = setTimeout(function () {
@@ -2408,7 +2578,9 @@ const messages = {
       if (style.display === 'block') {
         style.display = 'none';
         clearTimeout(this.on_off[3]);
-        t.on_off[2] = setTimeout(showTips, 100);
+        t.on_off[2] = setTimeout(function () {
+          showTips();
+        }, 100);
       } else {
         showTips();
       }
@@ -2417,7 +2589,7 @@ const messages = {
     initTips: function () {
       const t = h5Player;
       const parentNode = t.getTipsContainer();
-      if (parentNode.getElementsByClassName(t.tipsClassName).length) return
+      if (parentNode.querySelector('.' + t.tipsClassName)) return
 
       // top: 50%;
       // left: 50%;
@@ -2441,7 +2613,7 @@ const messages = {
       `;
       const tips = document.createElement('div');
       tips.setAttribute('style', tipsStyle);
-      tips.classList.add(t.tipsClassName);
+      tips.setAttribute('class', t.tipsClassName);
       parentNode.appendChild(tips);
     },
     on_off: new Array(3),
@@ -2449,46 +2621,41 @@ const messages = {
     fps: 30,
     /* 滤镜效果 */
     filter: {
-      keys: {
-        brightness: 100,
-        contrast: 100,
-        saturate: 100,
-        hue: 0,
-        blur: 0
-      },
+      key: [1, 1, 1, 0, 0],
       setup: function () {
-        const k = this.keys;
-        const view = `brightness(${k.brightness}%) contrast(${k.contrast}%) saturate(${k.saturate}%) hue-rotate(${k.hue}deg) blur(${k.blur}px)`;
+        var view = 'brightness({0}) contrast({1}) saturate({2}) hue-rotate({3}deg) blur({4}px)';
+        for (var i = 0; i < 5; i++) {
+          view = view.replace('{' + i + '}', String(this.key[i]));
+          this.key[i] = Number(this.key[i]);
+        }
         h5Player.player().style.filter = view;
       },
       reset: function () {
-        Object.assign(this.keys, {
-          brightness: 100,
-          contrast: 100,
-          saturate: 100,
-          hue: 0,
-          blur: 0
-        });
+        this.key[0] = 1;
+        this.key[1] = 1;
+        this.key[2] = 1;
+        this.key[3] = 0;
+        this.key[4] = 0;
         this.setup();
       }
     },
-    _isFocus: false,
+    _isFoucs: false,
 
     /* 播放器的聚焦事件 */
-    isFocus: function () {
+    isFoucs: function () {
       const t = h5Player;
       const player = t.player();
       if (!player) return
 
-      player.addEventListener('mouseenter', () => {
-        t._isFocus = true;
-      });
-      player.addEventListener('mouseleave', () => {
-        t._isFocus = false;
-      });
+      player.onmouseenter = function (e) {
+        h5Player._isFoucs = true;
+      };
+      player.onmouseleave = function (e) {
+        h5Player._isFoucs = false;
+      };
     },
     /* 播放器事件响应器 */
-    playerTrigger: function (player, event) {
+    palyerTrigger: function (player, event) {
       if (!player || !event) return
       const t = h5Player;
       const keyCode = event.keyCode;
@@ -2631,87 +2798,87 @@ const messages = {
 
       // 按键E：亮度增加%
       if (keyCode === 69) {
-        t.filter.keys.brightness += 10;
+        t.filter.key[0] += 0.1;
+        t.filter.key[0] = t.filter.key[0].toFixed(2);
         t.filter.setup();
-        t.tips(i18n.t('tipsMsg.brightness') + t.filter.keys.brightness + '%');
+        t.tips(i18n.t('tipsMsg.brightness') + parseInt(t.filter.key[0] * 100) + '%');
       }
       // 按键W：亮度减少%
       if (keyCode === 87) {
-        if (t.filter.keys.brightness > 0) {
-          t.filter.keys.brightness -= 10;
+        if (t.filter.key[0] > 0) {
+          t.filter.key[0] -= 0.1;
+          t.filter.key[0] = t.filter.key[0].toFixed(2);
           t.filter.setup();
         }
-        t.tips(i18n.t('tipsMsg.brightness') + t.filter.keys.brightness + '%');
+        t.tips(i18n.t('tipsMsg.brightness') + parseInt(t.filter.key[0] * 100) + '%');
       }
 
       // 按键T：对比度增加%
       if (keyCode === 84) {
-        t.filter.keys.contrast += 10;
+        t.filter.key[1] += 0.1;
+        t.filter.key[1] = t.filter.key[1].toFixed(2);
         t.filter.setup();
-        t.tips(i18n.t('tipsMsg.contrast') + t.filter.keys.contrast + '%');
+        t.tips(i18n.t('tipsMsg.contrast') + parseInt(t.filter.key[1] * 100) + '%');
       }
       // 按键R：对比度减少%
       if (keyCode === 82) {
-        if (t.filter.keys.contrast > 0) {
-          t.filter.keys.contrast -= 10;
+        if (t.filter.key[1] > 0) {
+          t.filter.key[1] -= 0.1;
+          t.filter.key[1] = t.filter.key[1].toFixed(2);
           t.filter.setup();
         }
-        t.tips(i18n.t('tipsMsg.contrast') + t.filter.keys.contrast + '%');
+        t.tips(i18n.t('tipsMsg.contrast') + parseInt(t.filter.key[1] * 100) + '%');
       }
 
       // 按键U：饱和度增加%
       if (keyCode === 85) {
-        t.filter.keys.saturate += 10;
+        t.filter.key[2] += 0.1;
+        t.filter.key[2] = t.filter.key[2].toFixed(2);
         t.filter.setup();
-        t.tips(i18n.t('tipsMsg.saturation') + t.filter.keys.saturate + '%');
+        t.tips(i18n.t('tipsMsg.saturation') + parseInt(t.filter.key[2] * 100) + '%');
       }
       // 按键Y：饱和度减少%
       if (keyCode === 89) {
-        if (t.filter.keys.saturate > 0) {
-          t.filter.keys.saturate -= 10;
+        if (t.filter.key[2] > 0) {
+          t.filter.key[2] -= 0.1;
+          t.filter.key[2] = t.filter.key[2].toFixed(2);
           t.filter.setup();
         }
-        t.tips(i18n.t('tipsMsg.saturation') + t.filter.keys.saturate + '%');
+        t.tips(i18n.t('tipsMsg.saturation') + parseInt(t.filter.key[2] * 100) + '%');
       }
 
       // 按键O：色相增加 1 度
       if (keyCode === 79) {
-        t.filter.keys.hue += 1;
-        if (t.filter.keys.hue === 360) {
-          t.filter.keys.hue = 0;
-        }
+        t.filter.key[3] += 1;
         t.filter.setup();
-        t.tips(i18n.t('tipsMsg.hue') + t.filter.keys.hue + '°');
+        t.tips(i18n.t('tipsMsg.hue') + t.filter.key[3] + '度');
       }
       // 按键I：色相减少 1 度
       if (keyCode === 73) {
-        t.filter.keys.hue -= 1;
-        if (t.filter.keys.hue === -360) {
-          t.filter.keys.hue = 0;
-        }
+        t.filter.key[3] -= 1;
         t.filter.setup();
-        t.tips(i18n.t('tipsMsg.hue') + t.filter.keys.hue + '°');
+        t.tips(i18n.t('tipsMsg.hue') + t.filter.key[3] + '度');
       }
 
       // 按键K：模糊增加 1 px
       if (keyCode === 75) {
-        t.filter.keys.blur += 1;
+        t.filter.key[4] += 1;
         t.filter.setup();
-        t.tips(i18n.t('tipsMsg.blur') + t.filter.keys.blur + 'px');
+        t.tips(i18n.t('tipsMsg.blur') + t.filter.key[4] + 'PX');
       }
       // 按键J：模糊减少 1 px
       if (keyCode === 74) {
-        if (t.filter.keys.blur > 0) {
-          t.filter.keys.blur -= 1;
+        if (t.filter.key[4] > 0) {
+          t.filter.key[4] -= 1;
           t.filter.setup();
         }
-        t.tips(i18n.t('tipsMsg.blur') + t.filter.keys.blur + 'px');
+        t.tips(i18n.t('tipsMsg.blur') + t.filter.key[4] + 'PX');
       }
 
       // 按键Q：图像复位
       if (keyCode === 81) {
         t.filter.reset();
-        t.tips(i18n.t('tipsMsg.filterReset'));
+        t.tips(i18n.t('tipsMsg.imgattrreset'));
       }
 
       // 按键S：画面旋转 90 度
@@ -2719,7 +2886,7 @@ const messages = {
         t.rotate += 90;
         if (t.rotate % 360 === 0) t.rotate = 0;
         player.style.transform = `scale(${t.scale}) translate(${t.translate.x}px, ${t.translate.y}px) rotate( ${t.rotate}deg)`;
-        t.tips(i18n.t('tipsMsg.rotate') + t.rotate + '°');
+        t.tips(i18n.t('tipsMsg.imgrotate') + t.rotate + '°');
       }
 
       // 按键回车，进入全屏
@@ -2775,7 +2942,12 @@ const messages = {
         list.forEach((shortcut) => {
           const regKey = shortcut.split('+');
           if (combineKey.length === regKey.length) {
-            const allMatch = regKey.every((key) => combineKey.includes(key));
+            let allMatch = true;
+            regKey.forEach((key) => {
+              if (!combineKey.includes(key)) {
+                allMatch = false;
+              }
+            });
             if (allMatch) {
               hasReg = true;
             }
@@ -2785,21 +2957,23 @@ const messages = {
         return hasReg
       }
 
-      if (!confIsCorrect || !isRegister()) return false
+      if (confIsCorrect && isRegister()) {
+        // 执行自定义快捷键操作
+        const isDo = TCC.doTask('shortcuts', {
+          event,
+          player,
+          h5Player
+        });
 
-      // 执行自定义快捷键操作
-      const isDo = TCC.doTask('shortcuts', {
-        event,
-        player,
-        h5Player
-      });
+        if (isDo) {
+          event.stopPropagation();
+          event.preventDefault();
+        }
 
-      if (isDo) {
-        event.stopPropagation();
-        event.preventDefault();
+        return isDo
+      } else {
+        return false
       }
-
-      return isDo
     },
 
     /* 按键响应方法 */
@@ -2831,8 +3005,11 @@ const messages = {
       /* 切换插件的可用状态 */
       if (event.ctrlKey && keyCode === 32) {
         t.enable = !t.enable;
-        const state = t.enable ? 'On' : 'Off';
-        t.tips(i18n.t('tipsMsg.plugin' + state));
+        if (t.enable) {
+          t.tips(i18n.t('tipsMsg.onplugin'));
+        } else {
+          t.tips(i18n.t('tipsMsg.offplugin'));
+        }
       }
 
       if (!t.enable) {
@@ -2843,18 +3020,21 @@ const messages = {
       // 按ctrl+\ 键进入聚焦或取消聚焦状态，用于视频标签被遮挡的场景
       if (event.ctrlKey && keyCode === 220) {
         t.globalMode = !t.globalMode;
-        const state = t.enable ? 'On' : 'Off';
-        t.tips(i18n.t('tipsMsg.globalMode' + state));
+        if (t.globalMode) {
+          t.tips(i18n.t('tipsMsg.globalmode') + ' ON');
+        } else {
+          t.tips(i18n.t('tipsMsg.globalmode') + ' OFF');
+        }
       }
 
       /* 非全局模式下，不聚焦则不执行快捷键的操作 */
-      if (!t.globalMode && !t._isFocus) return
+      if (!t.globalMode && !t._isFoucs) return
 
       /* 判断是否执行了自定义快捷键操作，如果是则不再响应后面默认定义操作 */
       if (t.runCustomShortcuts(player, event) === true) return
 
       /* 响应播放器相关操作 */
-      t.playerTrigger(player, event);
+      t.palyerTrigger(player, event);
     },
 
     /**
@@ -2862,14 +3042,21 @@ const messages = {
      * @param player -可选 对应的h5 播放器对象， 如果不传，则获取到的是整个播放进度表，传则获取当前播放器的播放进度
      */
     getPlayProgress: function (player) {
-      let progressMap = {};
-      if (!isInCrossOriginFrame()) {
-        progressMap = JSON.parse(window.localStorage.getItem('_h5_player_play_progress_'));
+      let progressMap = isInCrossOriginFrame() ? null : window.localStorage.getItem('_h5_player_play_progress_');
+      if (!progressMap) {
+        progressMap = {};
+      } else {
+        try {
+          progressMap = JSON.parse(progressMap);
+        } catch (e) {
+          progressMap = {};
+        }
       }
+
       if (!player) {
         return progressMap
       } else {
-        let keyName = location.href || player.src;
+        let keyName = window.location.href || player.src;
         keyName += player.duration;
         if (progressMap[keyName]) {
           return progressMap[keyName].progress
@@ -2898,15 +3085,15 @@ const messages = {
           /* 只保存最近10个视频的播放进度 */
           if (list.length > 10) {
             /* 根据更新的时间戳，取出最早添加播放进度的记录项 */
-            const timeList = [];
-            list.forEach((keyName) => {
+            let timeList = [];
+            list.forEach(function (keyName) {
               progressMap[keyName] && progressMap[keyName].t && timeList.push(progressMap[keyName].t);
             });
-            timeList.sort();
+            timeList = quickSort(timeList);
             const timestamp = timeList[0];
 
             /* 删除最早添加的记录项 */
-            list.forEach((keyName) => {
+            list.forEach(function (keyName) {
               if (progressMap[keyName].t === timestamp) {
                 delete progressMap[keyName];
               }
@@ -2939,53 +3126,51 @@ const messages = {
       if (t.isAllowRestorePlayProgress()) {
         player.currentTime = curTime || player.currentTime;
         if (curTime > 3) {
-          t.tips(i18n.t('tipsMsg.playbackRestored'));
+          t.tips(i18n.t('tipsMsg.playbackrestored'));
         }
       } else {
-        t.tips(i18n.t('tipsMsg.playbackRestoreOff'));
+        t.tips(i18n.t('tipsMsg.playbackrestoreoff'));
       }
     },
     /**
      * 检测h5播放器是否存在
+     * @param callback
      */
-    detectH5Player: function () {
+    detecH5Player: function () {
       const t = this;
       const playerList = t.getPlayerList();
 
-      if (!playerList.length) return
+      if (playerList.length) {
+        debug.log('检测到HTML5视频！');
 
-      debug.log('检测到HTML5视频！');
+        /* 单video实例标签的情况 */
+        if (playerList.length === 1) {
+          t.playerInstance = playerList[0];
+          t.initPlayerInstance(true);
+        } else {
+          /* 多video实例标签的情况 */
+          playerList.forEach(function (player) {
+            /* 鼠标移到其上面的时候重新指定实例 */
+            if (player._hasMouseRedirectEvent_) return
+            player.addEventListener('mouseenter', function (event) {
+              t.playerInstance = event.target;
+              t.initPlayerInstance(false);
+            });
+            player._hasMouseRedirectEvent_ = true;
 
-      /* 单video实例标签的情况 */
-      if (playerList.length === 1) {
-        t.playerInstance = playerList[0];
-        t.initPlayerInstance(true);
-        return
+            /* 播放器开始播放的时候重新指向实例 */
+            if (player._hasPlayingRedirectEvent_) return
+            player.addEventListener('playing', function (event) {
+              t.playerInstance = event.target;
+              t.initPlayerInstance(false);
+
+              /* 同步之前设定的播放速度 */
+              t.setPlaybackRate();
+            });
+            player._hasPlayingRedirectEvent_ = true;
+          });
+        }
       }
-
-      /* 多video实例标签的情况 */
-      playerList.forEach((player) => {
-        /* 鼠标移到其上面的时候重新指定实例 */
-        if (!player._hasMouseRedirectEvent_) {
-          player._hasMouseRedirectEvent_ = true;
-          player.addEventListener('mouseenter', (event) => {
-            t.playerInstance = event.target;
-            t.initPlayerInstance(false);
-          });
-        }
-
-        /* 播放器开始播放的时候重新指向实例 */
-        if (!player._hasPlayingRedirectEvent_) {
-          player._hasPlayingRedirectEvent_ = true;
-          player.addEventListener('playing', (event) => {
-            t.playerInstance = event.target;
-            t.initPlayerInstance(false);
-
-            /* 同步之前设定的播放速度 */
-            t.setPlaybackRate();
-          });
-        }
-      });
     },
     /* 指定取消响应某些事件的列表 */
     _hangUpPlayerEventList_: [],
@@ -3007,9 +3192,14 @@ const messages = {
       });
 
       clearTimeout(t._hangUpPlayerEventTimer_);
-      t._hangUpPlayerEventTimer_ = setTimeout(() => {
-        /* Remove not hanged events */
-        t._hangUpPlayerEventList_ = t._hangUpPlayerEventList_.filter(cancelType => !eventType.includes(cancelType));
+      t._hangUpPlayerEventTimer_ = setTimeout(function () {
+        const newList = [];
+        t._hangUpPlayerEventList_.forEach(cancelType => {
+          if (!eventType.includes(cancelType)) {
+            newList.push(cancelType);
+          }
+        });
+        t._hangUpPlayerEventList_ = newList;
       }, timeout);
     },
     /**
@@ -3053,7 +3243,7 @@ const messages = {
             const fakeEvent = newVal.data;
             fakeEvent.stopPropagation = () => {};
             fakeEvent.preventDefault = () => {};
-            t.playerTrigger(player, fakeEvent);
+            t.palyerTrigger(player, fakeEvent);
             debug.log('模拟触发操作成功');
           }
         }, 80);
@@ -3080,7 +3270,7 @@ const messages = {
       t._hasBindEvent_ = true;
     },
     init: function (global) {
-      const t = this;
+      var t = this;
       if (global) {
         /* 绑定键盘事件 */
         t.bindEvent();
@@ -3102,13 +3292,13 @@ const messages = {
         // }
 
         /* 对配置了ua伪装的域名进行伪装 */
-        const host = location.host;
+        const host = window.location.host;
         if (fakeConfig[host]) {
           t.setFakeUA(fakeConfig[host]);
         }
       } else {
         /* 检测是否存在H5播放器 */
-        t.detectH5Player();
+        t.detecH5Player();
       }
     },
     load: false
@@ -3122,12 +3312,16 @@ const messages = {
     h5Player.init(true);
 
     /* 检测到有视频标签就进行初始化 */
-    ready('video', h5Player.init);
+    ready('video', function () {
+      h5Player.init();
+    });
 
     /* 检测shadow dom 下面的video */
-    document.addEventListener('addShadowRoot', (e) => {
+    document.addEventListener('addShadowRoot', function (e) {
       const shadowRoot = e.detail.shadowRoot;
-      ready('video', h5Player.init, shadowRoot);
+      ready('video', function (element) {
+        h5Player.init();
+      }, shadowRoot);
     });
 
     if (isInCrossOriginFrame()) {
@@ -3144,7 +3338,7 @@ const messages = {
 
   // debugCode.init(h5Player)
 
-  // document.addEventListener('visibilitychange', () => {
+  // document.addEventListener('visibilitychange', function () {
   //   if (!document.hidden) {
   //     h5Player.initAutoPlay()
   //   }
