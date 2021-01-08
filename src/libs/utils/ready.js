@@ -6,11 +6,10 @@
  * 参考：https://javascript.ruanyifeng.com/dom/mutationobserver.html
  */
 function ready (selector, fn, shadowRoot) {
-  const listeners = []
   const win = window
-  const doc = shadowRoot || win.document
+  const docRoot = shadowRoot || win.document.documentElement
   const MutationObserver = win.MutationObserver || win.WebKitMutationObserver
-  let observer
+  const listeners = docRoot._MutationListeners || []
 
   function $ready (selector, fn) {
     // 储存选择器和回调函数
@@ -18,33 +17,41 @@ function ready (selector, fn, shadowRoot) {
       selector: selector,
       fn: fn
     })
-    if (!observer) {
-      // 监听document变化
-      observer = new MutationObserver(check)
-      observer.observe(shadowRoot || doc.documentElement, {
+
+    /* 增加监听对象 */
+    if (!docRoot._MutationListeners || !docRoot._MutationObserver) {
+      docRoot._MutationListeners = listeners
+      docRoot._MutationObserver = new MutationObserver(() => {
+        for (let i = 0; i < docRoot._MutationListeners.length; i++) {
+          const item = docRoot._MutationListeners[i]
+          check(item.selector, item.fn)
+        }
+      })
+
+      docRoot._MutationObserver.observe(docRoot, {
         childList: true,
         subtree: true
       })
     }
-    // 检查该节点是否已经在DOM中
-    check()
+
+    // 检查节点是否已经在DOM中
+    check(selector, fn)
   }
 
-  function check () {
-    for (let i = 0; i < listeners.length; i++) {
-      var listener = listeners[i]
-      var elements = doc.querySelectorAll(listener.selector)
-      for (let j = 0; j < elements.length; j++) {
-        var element = elements[j]
-        if (!element._isMutationReady_) {
-          element._isMutationReady_ = true
-          listener.fn.call(element, element)
-        }
+  function check (selector, fn) {
+    const elements = docRoot.querySelectorAll(selector)
+    for (let i = 0; i < elements.length; i++) {
+      const element = elements[i]
+      element._MutationReadyList_ = element._MutationReadyList_ || []
+      if (!element._MutationReadyList_.includes(fn)) {
+        element._MutationReadyList_.push(fn)
+        fn.call(element, element)
       }
     }
   }
 
-  $ready(selector, fn)
+  const selectorArr = Array.isArray(selector) ? selector : [selector]
+  selectorArr.forEach(selector => $ready(selector, fn))
 }
 
 export default ready

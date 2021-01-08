@@ -27,7 +27,7 @@ const isObj = obj => isType(obj, 'object')
 const isErr = obj => isType(obj, 'error')
 const isArr = obj => isType(obj, 'array')
 const isRegExp = obj => isType(obj, 'regexp')
-const isFunction = obj => isType(obj, 'function')
+const isFunction = obj => obj instanceof Function
 const isUndefined = obj => isType(obj, 'undefined')
 const isNull = obj => isType(obj, 'null')
 

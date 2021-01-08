@@ -1,4 +1,5 @@
 import ready from './ready'
+import attrObserver from './attrObserver'
 import hackAttachShadow from './hackAttachShadow'
 import hackEventListener from './hackEventListener'
 import { getType, isType, isObj, isErr, isArr, isRegExp, isFunction, isUndefined, isNull } from './typeof'
@@ -11,6 +12,7 @@ import { throttle } from './throttle'
 
 export {
   ready,
+  attrObserver,
   hackAttachShadow,
   hackEventListener,
   getType,
