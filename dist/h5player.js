@@ -1824,6 +1824,41 @@ var zhCN = {
   }
 };
 
+var jaJP = {
+  about: 'スクリプトについて',
+  issues: 'フィードバック',
+  setting: '設定',
+  tipsMsg: {
+    playspeed: '再生速度：',
+    forward: '早送り：',
+    backward: '早戻し：',
+    seconds: '秒',
+    volume: '音量：',
+    nextframe: '次のフレーム',
+    previousframe: '前のフレーム',
+    stopframe: 'フリーズ：',
+    play: '再生',
+    pause: '一時停止',
+    arpl: '自動再開を有効にする',
+    drpl: '自動再開を無効にする',
+    brightness: '明るさ：',
+    contrast: 'コントラスト：',
+    saturation: '飽和：',
+    hue: '色相：',
+    blur: 'ぼかし：',
+    imgattrreset: '画像をリセット',
+    imgrotate: '画面の回転：',
+    onplugin: 'h5Playerプラグインを有効',
+    offplugin: 'h5Playerプラグインを無効',
+    globalmode: 'グローバルモード：',
+    playbackrestored: '再生状況を復元します',
+    playbackrestoreoff: '再生状況を復元する機能が無効になっています、SHIFT + Rを押して機能をオンにします',
+    horizontal: '水平変位：',
+    vertical: '垂直変位：',
+    videozoom: 'ビデオズーム率：'
+  }
+};
+
 var enUS = {
   about: 'about',
   issues: 'issues',
@@ -1933,6 +1968,8 @@ var zhTW = {
 const messages = {
   'zh-CN': zhCN,
   zh: zhCN,
+  ja: jaJP,
+  'ja-JP': jaJP,
   'zh-HK': zhTW,
   'zh-TW': zhTW,
   'en-US': enUS,
