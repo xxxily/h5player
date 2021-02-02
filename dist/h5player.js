@@ -185,7 +185,19 @@ class Tips {
     const tipsDom = document.createElement('div');
     tipsDom.setAttribute('style', tipsStyle);
     tipsDom.setAttribute('class', opts.className);
-    tipsDom.innerHTML = opts.content;
+
+    const contenDom = document.createElement('div');
+    contenDom.setAttribute('class', 'tooltips-content');
+    contenDom.innerHTML = opts.content;
+    tipsDom.appendChild(contenDom);
+
+    const styleDom = document.createElement('style');
+    styleDom.appendChild(document.createTextNode(`
+      .${opts.className}[data-popper-reference-hidden] { visibility: hidden; pointer-events: none; }
+      .${opts.className}[data-popper-escaped] { visibility: hidden; pointer-events: none; }
+    `));
+    tipsDom.appendChild(styleDom);
+
     return tipsDom
   }
 
@@ -221,7 +233,7 @@ class Tips {
     const t = this;
 
     if (str && t.tooltip) {
-      const contentEl = t.tooltip.querySelector('.content');
+      const contentEl = t.tooltip.querySelector('.tooltips-content');
       contentEl && (contentEl.innerHTML = str);
     }
   }
