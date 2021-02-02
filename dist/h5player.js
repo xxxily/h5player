@@ -41,6 +41,7 @@
 // @grant        GM_download
 // @grant        GM_xmlhttpRequest
 // @run-at       document-start
+// @require      https://unpkg.com/@popperjs/core@2.6.0/dist/umd/popper.js
 // @require      https://unpkg.com/vue@2.6.11/dist/vue.min.js
 // @require      https://unpkg.com/element-ui@2.13.0/lib/index.js
 // @resource     elementUiCss https://unpkg.com/element-ui@2.13.0/lib/theme-chalk/index.css
@@ -48,6 +49,223 @@
 // @license      GPL
 // ==/UserScript==
 (function (w) { if (w) { w.name = 'h5player'; } })();
+
+/* 当前用到的快捷键 */
+const hasUseKey = {
+  keyCodeList: [13, 16, 17, 18, 27, 32, 37, 38, 39, 40, 49, 50, 51, 52, 67, 68, 69, 70, 73, 74, 75, 78, 79, 80, 81, 82, 83, 84, 85, 87, 88, 89, 90, 97, 98, 99, 100, 220],
+  keyList: ['enter', 'shift', 'control', 'alt', 'escape', ' ', 'arrowleft', 'arrowright', 'arrowup', 'arrowdown', '1', '2', '3', '4', 'c', 'd', 'e', 'f', 'i', 'j', 'k', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'w', 'x', 'y', 'z', '\\', '|'],
+  keyMap: {
+    enter: 13,
+    shift: 16,
+    ctrl: 17,
+    alt: 18,
+    esc: 27,
+    space: 32,
+    '←': 37,
+    '↑': 38,
+    '→': 39,
+    '↓': 40,
+    1: 49,
+    2: 50,
+    3: 51,
+    4: 52,
+    c: 67,
+    d: 68,
+    e: 69,
+    f: 70,
+    i: 73,
+    j: 74,
+    k: 75,
+    n: 78,
+    o: 79,
+    p: 80,
+    q: 81,
+    r: 82,
+    s: 83,
+    t: 84,
+    u: 85,
+    w: 87,
+    x: 88,
+    y: 89,
+    z: 90,
+    pad1: 97,
+    pad2: 98,
+    pad3: 99,
+    pad4: 100,
+    '\\': 220
+  }
+};
+
+/**
+ * 判断当前按键是否注册为需要用的按键
+ * 用于减少对其它键位的干扰
+ */
+function isRegisterKey (event) {
+  const keyCode = event.keyCode;
+  const key = event.key.toLowerCase();
+  return hasUseKey.keyCodeList.includes(keyCode) ||
+    hasUseKey.keyList.includes(key)
+}
+
+/**
+ * 由于tampermonkey对window对象进行了封装，我们实际访问到的window并非页面真实的window
+ * 这就导致了如果我们需要将某些对象挂载到页面的window进行调试的时候就无法挂载了
+ * 所以必须使用特殊手段才能访问到页面真实的window对象，于是就有了下面这个函数
+ * @returns {Promise<void>}
+ */
+async function getPageWindow () {
+  return new Promise(function (resolve, reject) {
+    if (window._pageWindow) {
+      return resolve(window._pageWindow)
+    }
+
+    const listenEventList = ['load', 'mousemove', 'scroll', 'get-page-window-event'];
+
+    function getWin (event) {
+      window._pageWindow = this;
+      // debug.log('getPageWindow succeed', event)
+      listenEventList.forEach(eventType => {
+        window.removeEventListener(eventType, getWin, true);
+      });
+      resolve(window._pageWindow);
+    }
+
+    listenEventList.forEach(eventType => {
+      window.addEventListener(eventType, getWin, true);
+    });
+
+    /* 自行派发事件以便用最短的时候获得pageWindow对象 */
+    window.dispatchEvent(new window.Event('get-page-window-event'));
+  })
+}
+getPageWindow();
+
+const Popper = window.Popper;
+
+class Tips {
+  constructor (opts = {}) {
+    opts.fontSize = opts.fontSize || 16;
+    opts.className = opts.className || 'tooltips_el';
+
+    this.popperInstance = null;
+    this.reference = null;
+    this.tooltip = null;
+    this.opts = opts;
+
+    if (opts.reference) {
+      this.create(opts.reference);
+      this.show('111111111111111');
+    }
+  }
+
+  createTipsDom (opts = {}) {
+    opts.fontSize = opts.fontSize || 16;
+    opts.className = opts.className || 'tooltips_el';
+    opts.content = opts.content || 'no msg...';
+
+    const tipsStyle = `
+      position: absolute;
+      z-index: 999999;
+      font-size: ${opts.fontSize}px;
+      padding: 5px 10px;
+      background: rgba(0,0,0,0.4);
+      color:white;
+      top: 0;
+      left: 0;
+      opacity: 0;
+      border-bottom-right-radius: 5px;
+      display: none;
+      -webkit-font-smoothing: subpixel-antialiased;
+      font-family: 'microsoft yahei', Verdana, Geneva, sans-serif;
+      -webkit-user-select: none;
+    `;
+    // 过渡动画
+    // transition: all 500ms ease;
+
+    const tipsDom = document.createElement('div');
+    tipsDom.setAttribute('style', tipsStyle);
+    tipsDom.setAttribute('class', opts.className);
+    tipsDom.innerHTML = opts.content;
+    return tipsDom
+  }
+
+  create (reference) {
+    const t = this;
+
+    /* 没提供参考对象或已创建实例 */
+    if (!reference || t.popperInstance) {
+      return t.popperInstance
+    }
+
+    t.reference = reference;
+    t.tooltip = t.createTipsDom(t.opts);
+
+    const parentNode = reference.parentNode || reference;
+    parentNode.appendChild(t.tooltip);
+
+    t.popperInstance = Popper.createPopper(reference, t.tooltip, {
+      modifiers: [
+        {
+          name: 'offset',
+          options: {
+            offset: [0, 8]
+          }
+        }
+      ]
+    });
+
+    return t.popperInstance
+  }
+
+  setTips (str) {
+    const t = this;
+
+    if (str && t.tooltip) {
+      const contentEl = t.tooltip.querySelector('.content');
+      contentEl && (contentEl.innerHTML = str);
+    }
+  }
+
+  show (str) {
+    const t = this;
+
+    if (t.reference && t.tooltip) {
+      t.setTips(str);
+      t.tooltip.style.display = 'block';
+      t.tooltip.style.opacity = 1;
+    }
+  }
+
+  hide () {
+    const t = this;
+
+    if (t.reference && t.tooltip) {
+      t.tooltip.style.display = 'none';
+      t.tooltip.style.opacity = 0;
+    }
+  }
+
+  destroy () {
+    const t = this;
+    t.reference = null;
+
+    if (t.tooltip && t.tooltip.parentNode) {
+      t.tooltip.parentNode.removeChild(t.tooltip);
+    }
+    t.tooltip = null;
+
+    t.popperInstance && t.popperInstance.destroy();
+    t.popperInstance = null;
+  }
+}
+
+async function init () {
+  const win = await getPageWindow();
+  if (win) {
+    win.Tips = Tips;
+  }
+}
+init();
 
 /*!
  * @name         utils.js
@@ -252,11 +470,10 @@ class TCC {
  * 参考：https://javascript.ruanyifeng.com/dom/mutationobserver.html
  */
 function ready (selector, fn, shadowRoot) {
-  const listeners = [];
   const win = window;
-  const doc = shadowRoot || win.document;
+  const docRoot = shadowRoot || win.document.documentElement;
   const MutationObserver = win.MutationObserver || win.WebKitMutationObserver;
-  let observer;
+  const listeners = docRoot._MutationListeners || [];
 
   function $ready (selector, fn) {
     // 储存选择器和回调函数
@@ -264,33 +481,41 @@ function ready (selector, fn, shadowRoot) {
       selector: selector,
       fn: fn
     });
-    if (!observer) {
-      // 监听document变化
-      observer = new MutationObserver(check);
-      observer.observe(shadowRoot || doc.documentElement, {
+
+    /* 增加监听对象 */
+    if (!docRoot._MutationListeners || !docRoot._MutationObserver) {
+      docRoot._MutationListeners = listeners;
+      docRoot._MutationObserver = new MutationObserver(() => {
+        for (let i = 0; i < docRoot._MutationListeners.length; i++) {
+          const item = docRoot._MutationListeners[i];
+          check(item.selector, item.fn);
+        }
+      });
+
+      docRoot._MutationObserver.observe(docRoot, {
         childList: true,
         subtree: true
       });
     }
-    // 检查该节点是否已经在DOM中
-    check();
+
+    // 检查节点是否已经在DOM中
+    check(selector, fn);
   }
 
-  function check () {
-    for (let i = 0; i < listeners.length; i++) {
-      var listener = listeners[i];
-      var elements = doc.querySelectorAll(listener.selector);
-      for (let j = 0; j < elements.length; j++) {
-        var element = elements[j];
-        if (!element._isMutationReady_) {
-          element._isMutationReady_ = true;
-          listener.fn.call(element, element);
-        }
+  function check (selector, fn) {
+    const elements = docRoot.querySelectorAll(selector);
+    for (let i = 0; i < elements.length; i++) {
+      const element = elements[i];
+      element._MutationReadyList_ = element._MutationReadyList_ || [];
+      if (!element._MutationReadyList_.includes(fn)) {
+        element._MutationReadyList_.push(fn);
+        fn.call(element, element);
       }
     }
   }
 
-  $ready(selector, fn);
+  const selectorArr = Array.isArray(selector) ? selector : [selector];
+  selectorArr.forEach(selector => $ready(selector, fn));
 }
 
 /**
@@ -1630,96 +1855,6 @@ class Debug {
 var Debug$1 = new Debug();
 
 var debug = Debug$1.create('h5player message:');
-
-/* 当前用到的快捷键 */
-const hasUseKey = {
-  keyCodeList: [13, 16, 17, 18, 27, 32, 37, 38, 39, 40, 49, 50, 51, 52, 67, 68, 69, 70, 73, 74, 75, 78, 79, 80, 81, 82, 83, 84, 85, 87, 88, 89, 90, 97, 98, 99, 100, 220],
-  keyList: ['enter', 'shift', 'control', 'alt', 'escape', ' ', 'arrowleft', 'arrowright', 'arrowup', 'arrowdown', '1', '2', '3', '4', 'c', 'd', 'e', 'f', 'i', 'j', 'k', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'w', 'x', 'y', 'z', '\\', '|'],
-  keyMap: {
-    enter: 13,
-    shift: 16,
-    ctrl: 17,
-    alt: 18,
-    esc: 27,
-    space: 32,
-    '←': 37,
-    '↑': 38,
-    '→': 39,
-    '↓': 40,
-    1: 49,
-    2: 50,
-    3: 51,
-    4: 52,
-    c: 67,
-    d: 68,
-    e: 69,
-    f: 70,
-    i: 73,
-    j: 74,
-    k: 75,
-    n: 78,
-    o: 79,
-    p: 80,
-    q: 81,
-    r: 82,
-    s: 83,
-    t: 84,
-    u: 85,
-    w: 87,
-    x: 88,
-    y: 89,
-    z: 90,
-    pad1: 97,
-    pad2: 98,
-    pad3: 99,
-    pad4: 100,
-    '\\': 220
-  }
-};
-
-/**
- * 判断当前按键是否注册为需要用的按键
- * 用于减少对其它键位的干扰
- */
-function isRegisterKey (event) {
-  const keyCode = event.keyCode;
-  const key = event.key.toLowerCase();
-  return hasUseKey.keyCodeList.includes(keyCode) ||
-    hasUseKey.keyList.includes(key)
-}
-
-/**
- * 由于tampermonkey对window对象进行了封装，我们实际访问到的window并非页面真实的window
- * 这就导致了如果我们需要将某些对象挂载到页面的window进行调试的时候就无法挂载了
- * 所以必须使用特殊手段才能访问到页面真实的window对象，于是就有了下面这个函数
- * @returns {Promise<void>}
- */
-async function getPageWindow () {
-  return new Promise(function (resolve, reject) {
-    if (window._pageWindow) {
-      return resolve(window._pageWindow)
-    }
-
-    const listenEventList = ['load', 'mousemove', 'scroll', 'get-page-window-event'];
-
-    function getWin (event) {
-      window._pageWindow = this;
-      // debug.log('getPageWindow succeed', event)
-      listenEventList.forEach(eventType => {
-        window.removeEventListener(eventType, getWin, true);
-      });
-      resolve(window._pageWindow);
-    }
-
-    listenEventList.forEach(eventType => {
-      window.addEventListener(eventType, getWin, true);
-    });
-
-    /* 自行派发事件以便用最短的时候获得pageWindow对象 */
-    window.dispatchEvent(new window.Event('get-page-window-event'));
-  })
-}
-getPageWindow();
 
 /*!
  * @name         crossTabCtl.js

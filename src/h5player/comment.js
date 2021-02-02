@@ -41,6 +41,7 @@
 // @grant        GM_download
 // @grant        GM_xmlhttpRequest
 // @run-at       document-start
+// @require      https://unpkg.com/@popperjs/core@2.6.0/dist/umd/popper.js
 // @require      https://unpkg.com/vue@2.6.11/dist/vue.min.js
 // @require      https://unpkg.com/element-ui@2.13.0/lib/index.js
 // @resource     elementUiCss https://unpkg.com/element-ui@2.13.0/lib/theme-chalk/index.css

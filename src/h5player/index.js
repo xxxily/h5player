@@ -1,4 +1,5 @@
 import './comment'
+import './tips'
 import h5PlayerTccInit from './h5PlayerTccInit'
 import fakeConfig from './fakeConfig'
 import FullScreen from '../libs/FullScreen/index'
