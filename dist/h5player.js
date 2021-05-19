@@ -10,7 +10,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.3.1
+// @version      3.3.2
 // @description  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
 // @description:en  HTML5 video playback enhanced script, supports all H5 video playback websites, full-length shortcut key control, supports: double-speed playback / accelerated playback, video screenshots, picture-in-picture, full-page webpage, brightness, saturation, contrast, custom configuration enhancement And other functions.
 // @description:zh  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
@@ -2187,7 +2187,17 @@ const messages = {
   ru: ru
 };
 
-(async function () {
+/* 保存重要的原始函数，防止被外部脚本污染 */
+const originalMethods = {
+  Object: {
+    defineProperty: Object.defineProperty,
+    defineProperties: Object.defineProperties
+  },
+  setInterval: window.setInterval,
+  setTimeout: window.setTimeout
+}
+
+;(async function () {
   debug.log('h5Player init');
 
   const i18n = new I18n({
@@ -2470,7 +2480,18 @@ const messages = {
       !isInCrossOriginFrame() && window.localStorage.setItem('_h5_player_playback_rate_', curPlaybackRate);
 
       t.playbackRate = curPlaybackRate;
+
+      delete player.playbackRate;
       player.playbackRate = curPlaybackRate;
+      originalMethods.Object.defineProperty.call(Object, player, 'playbackRate', {
+        configurable: true,
+        get: function () {
+          return curPlaybackRate
+        },
+        set: function () {}
+      });
+
+      // player.playbackRate = curPlaybackRate
 
       /* 本身处于1倍播放速度的时候不再提示 */
       if (!num && curPlaybackRate === 1) {
@@ -2490,8 +2511,7 @@ const messages = {
         t.lastPlaybackRate = oldPlaybackRate;
       }
 
-      player.playbackRate = playbackRate;
-      t.setPlaybackRate(player.playbackRate);
+      t.setPlaybackRate(playbackRate);
     },
     /**
      * 初始化自动播放逻辑

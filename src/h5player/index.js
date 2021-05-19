@@ -32,7 +32,17 @@ import {
   getPageWindow
 } from './helper'
 
-(async function () {
+/* 保存重要的原始函数，防止被外部脚本污染 */
+const originalMethods = {
+  Object: {
+    defineProperty: Object.defineProperty,
+    defineProperties: Object.defineProperties
+  },
+  setInterval: window.setInterval,
+  setTimeout: window.setTimeout
+}
+
+;(async function () {
   debug.log('h5Player init')
 
   const i18n = new I18n({
@@ -315,7 +325,18 @@ import {
       !isInCrossOriginFrame() && window.localStorage.setItem('_h5_player_playback_rate_', curPlaybackRate)
 
       t.playbackRate = curPlaybackRate
+
+      delete player.playbackRate
       player.playbackRate = curPlaybackRate
+      originalMethods.Object.defineProperty.call(Object, player, 'playbackRate', {
+        configurable: true,
+        get: function () {
+          return curPlaybackRate
+        },
+        set: function () {}
+      })
+
+      // player.playbackRate = curPlaybackRate
 
       /* 本身处于1倍播放速度的时候不再提示 */
       if (!num && curPlaybackRate === 1) {
@@ -335,8 +356,7 @@ import {
         t.lastPlaybackRate = oldPlaybackRate
       }
 
-      player.playbackRate = playbackRate
-      t.setPlaybackRate(player.playbackRate)
+      t.setPlaybackRate(playbackRate)
     },
     /**
      * 初始化自动播放逻辑
