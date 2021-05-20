@@ -227,7 +227,18 @@ const originalMethods = {
         // debug.log('捕捉到鼠标点击事件：', event, offset, target)
       })
 
-      debug.isDebugMode() && t.mountToGlobal()
+      if (debug.isDebugMode()) {
+        t.mountToGlobal()
+        player.addEventListener('loadeddata', function () {
+          debug.log('video dom:', player)
+          debug.log('video url:', player.src)
+          debug.log('video duration:', player.duration)
+        })
+
+        player.addEventListener('durationchange', function () {
+          debug.log('video durationchange:', player.duration)
+        })
+      }
     },
 
     /**

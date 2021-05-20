@@ -2442,10 +2442,13 @@ function hackDefineProperty () {
       option.configurable = true;
     }
 
-    if (target instanceof HTMLVideoElement && key === 'playbackRate') {
-      if (!option.configurable) {
-        option.configurable = true;
-        debug.log('禁止对playbackRate进行锁定');
+    if (target instanceof HTMLVideoElement) {
+      const unLockProperties = ['playbackRate', 'currentTime', 'volume', 'muted'];
+      if (unLockProperties.includes(key)) {
+        if (!option.configurable) {
+          option.configurable = true;
+          debug.log(`禁止对${key}进行锁定`);
+        }
       }
     }
 
@@ -2822,7 +2825,18 @@ const originalMethods = {
         // debug.log('捕捉到鼠标点击事件：', event, offset, target)
       });
 
-      debug.isDebugMode() && t.mountToGlobal();
+      if (debug.isDebugMode()) {
+        t.mountToGlobal();
+        player.addEventListener('loadeddata', function () {
+          debug.log('video dom:', player);
+          debug.log('video url:', player.src);
+          debug.log('video duration:', player.duration);
+        });
+
+        player.addEventListener('durationchange', function () {
+          debug.log('video durationchange:', player.duration);
+        });
+      }
     },
 
     /**

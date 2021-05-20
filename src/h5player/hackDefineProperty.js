@@ -14,10 +14,13 @@ function hackDefineProperty () {
       option.configurable = true
     }
 
-    if (target instanceof HTMLVideoElement && key === 'playbackRate') {
-      if (!option.configurable) {
-        option.configurable = true
-        debug.log('禁止对playbackRate进行锁定')
+    if (target instanceof HTMLVideoElement) {
+      const unLockProperties = ['playbackRate', 'currentTime', 'volume', 'muted']
+      if (unLockProperties.includes(key)) {
+        if (!option.configurable) {
+          option.configurable = true
+          debug.log(`禁止对${key}进行锁定`)
+        }
       }
     }
 
