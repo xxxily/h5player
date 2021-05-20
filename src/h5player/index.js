@@ -34,7 +34,9 @@ import {
 } from './helper'
 
 /* 禁止对playbackRate进行锁定 */
-hackDefineProperty()
+if (location.href.includes('pan.baidu.com') || location.href.includes('v.qq.com')) {
+  hackDefineProperty()
+}
 
 window._debugMode_ = true
 
