@@ -272,7 +272,7 @@ const hookJs = {
     classHook = toBoolean(classHook)
     type = type || 'before'
 
-    if (!util.isRef(parentObj) || !util.isFn(fn) || !hookMethods) {
+    if ((!util.isRef(parentObj) && !util.isFn(parentObj)) || !util.isFn(fn) || !hookMethods) {
       return false
     }
 

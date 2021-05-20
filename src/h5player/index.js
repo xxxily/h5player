@@ -11,6 +11,7 @@ import monkeyMenu from './monkeyMenu'
 import monkeyMsg from './monkeyMsg'
 import crossTabCtl from './crossTabCtl'
 import debug from './debug'
+import hackDefineProperty from './hackDefineProperty'
 import langMessage from './locale/core-lang/index'
 import {
   ready,
@@ -31,6 +32,11 @@ import {
   isRegisterKey,
   getPageWindow
 } from './helper'
+
+/* 禁止对playbackRate进行锁定 */
+hackDefineProperty()
+
+window._debugMode_ = true
 
 /* 保存重要的原始函数，防止被外部脚本污染 */
 const originalMethods = {
@@ -328,15 +334,17 @@ const originalMethods = {
 
       delete player.playbackRate
       player.playbackRate = curPlaybackRate
-      originalMethods.Object.defineProperty.call(Object, player, 'playbackRate', {
-        configurable: true,
-        get: function () {
-          return curPlaybackRate
-        },
-        set: function () {}
-      })
-
-      // player.playbackRate = curPlaybackRate
+      try {
+        originalMethods.Object.defineProperty.call(Object, player, 'playbackRate', {
+          configurable: true,
+          get: function () {
+            return curPlaybackRate
+          },
+          set: function () {}
+        })
+      } catch (e) {
+        debug.error('解锁playbackRate失败', e)
+      }
 
       /* 本身处于1倍播放速度的时候不再提示 */
       if (!num && curPlaybackRate === 1) {
