@@ -16,7 +16,7 @@ import langMessage from './locale/core-lang/index'
 import {
   ready,
   hackAttachShadow,
-  hackEventListener,
+  // hackEventListener,
   isObj,
   quickSort,
   eachParentNode,
@@ -83,11 +83,11 @@ const originalMethods = {
   })
 
   hackAttachShadow()
-  hackEventListener({
-    // proxyAll: true,
-    proxyNodeType: ['video'],
-    debug: debug.isDebugMode()
-  })
+  // hackEventListener({
+  //   // proxyAll: true,
+  //   proxyNodeType: ['video'],
+  //   debug: debug.isDebugMode()
+  // })
 
   let TCC = null
   const h5Player = {
@@ -178,17 +178,11 @@ const originalMethods = {
       t.isFoucs()
       t.proxyPlayerInstance(player)
 
-      // player.addEventListener('durationchange', () => {
-      //   debug.log('当前视频长度：', player.duration)
-      // })
       // player.setAttribute('preload', 'auto')
 
       /* 增加通用全屏，网页全屏api */
       player._fullScreen_ = new FullScreen(player)
       player._fullPageScreen_ = new FullScreen(player, true)
-
-      /* 注册播放器的事件代理处理器 */
-      player._listenerProxyApplyHandler_ = t.playerEventHandler
 
       if (!player._hasCanplayEvent_) {
         player.addEventListener('canplay', function (event) {
@@ -1305,53 +1299,6 @@ const originalMethods = {
             player._hasPlayingRedirectEvent_ = true
           })
         }
-      }
-    },
-    /* 指定取消响应某些事件的列表 */
-    _hangUpPlayerEventList_: [],
-    /**
-     * 挂起播放器的某些事件，注意：挂起时间过长容易出现较多副作用
-     * @param eventType {String|Array} -必选 要挂起的事件类型，可以是单个事件也可以是多个事件
-     * @param timeout {Number} -可选 调用挂起事件函数后，多久后失效，恢复正常事件响应，默认200ms
-     */
-    hangUpPlayerEvent (eventType, timeout) {
-      const t = h5Player
-      t._hangUpPlayerEventList_ = t._hangUpPlayerEventList_ || []
-      eventType = Array.isArray(eventType) ? eventType : [eventType]
-      timeout = timeout || 200
-
-      eventType.forEach(type => {
-        if (!t._hangUpPlayerEventList_.includes(type)) {
-          t._hangUpPlayerEventList_.push(type)
-        }
-      })
-
-      clearTimeout(t._hangUpPlayerEventTimer_)
-      t._hangUpPlayerEventTimer_ = setTimeout(function () {
-        const newList = []
-        t._hangUpPlayerEventList_.forEach(cancelType => {
-          if (!eventType.includes(cancelType)) {
-            newList.push(cancelType)
-          }
-        })
-        t._hangUpPlayerEventList_ = newList
-      }, timeout)
-    },
-    /**
-     * 播放器里的所有事件代理处理器
-     * @param target
-     * @param ctx
-     * @param args
-     * @param listenerArgs
-     */
-    playerEventHandler (target, ctx, args, listenerArgs) {
-      const t = h5Player
-      const eventType = listenerArgs[0]
-
-      /* 取消对某些事件的响应 */
-      if (t._hangUpPlayerEventList_.includes(eventType) || t._hangUpPlayerEventList_.includes('all')) {
-        debug.log(`播放器[${eventType}]事件被取消`)
-        return false
       }
     },
     /* 绑定相关事件 */
