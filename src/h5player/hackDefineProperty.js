@@ -6,8 +6,6 @@ import debug from './debug'
  * 参考： https://greasyfork.org/zh-CN/scripts/372673
  */
 
-// import hookJs from '../libs/hookJs'
-
 function hackDefineProperty () {
   const originalMethods = {
     Object: Object,
@@ -25,7 +23,7 @@ function hackDefineProperty () {
     })
 
     if (definePropertyLogger.length >= 100) {
-      console.log('definePropertyLogger:', definePropertyLogger)
+      debug.log('definePropertyLogger:', definePropertyLogger)
       definePropertyLogger = []
     }
 
@@ -46,73 +44,41 @@ function hackDefineProperty () {
     return [target, key, option]
   }
 
-  // Object.defineProperty = function () {
-  //   const args = arguments
-  //
-  //   const option = args[2]
-  //   const ele = args[0]
-  //   const key = args[1]
-  //   const afterArgs = hookDefineDetails(ele, key, option)
-  //   afterArgs.forEach((arg, i) => {
-  //     args[i] = arg
-  //   })
-  //
-  //   return originalMethods.defineProperty.apply(originalMethods.Object, args)
-  // }
+  Object.defineProperty = function () {
+    const args = arguments
 
-  // Object.defineProperties = function () {
-  //   const args = arguments
-  //
-  //   const option = args[1]
-  //   const ele = args[0]
-  //   if (ele && ele instanceof Element) {
-  //     Object.keys(option).forEach(key => {
-  //       const o = option[key]
-  //       const afterArgs = hookDefineDetails(ele, key, o)
-  //       args[0] = afterArgs[0]
-  //       delete option[key]
-  //       option[afterArgs[1]] = afterArgs[2]
-  //     })
-  //   }
-  //
-  //   return originalMethods.defineProperties.apply(originalMethods.Object, args)
-  // }
+    const option = args[2]
+    const ele = args[0]
+    const key = args[1]
+    const afterArgs = hookDefineDetails(ele, key, option)
+    afterArgs.forEach((arg, i) => {
+      args[i] = arg
+    })
 
-  Object.defineProperty = new Proxy(originalMethods.defineProperty, {
-    apply: function (target, ctx, args) {
-      const option = args[2]
-      const ele = args[0]
-      const key = args[1]
-      const afterArgs = hookDefineDetails(ele, key, option)
-      afterArgs.forEach((arg, i) => {
-        args[i] = arg
+    return originalMethods.defineProperty.apply(originalMethods.Object, args)
+  }
+
+  Object.defineProperties = function () {
+    const args = arguments
+
+    const option = args[1]
+    const ele = args[0]
+    if (ele && ele instanceof Element) {
+      Object.keys(option).forEach(key => {
+        const o = option[key]
+        const afterArgs = hookDefineDetails(ele, key, o)
+        args[0] = afterArgs[0]
+        delete option[key]
+        option[afterArgs[1]] = afterArgs[2]
       })
-
-      return target.apply(ctx, args)
     }
-  })
 
-  Object.defineProperties = new Proxy(originalMethods.defineProperties, {
-    apply: function (target, ctx, args) {
-      const option = args[1]
-      const ele = args[0]
-      if (ele && ele instanceof Element) {
-        Object.keys(option).forEach(key => {
-          const o = option[key]
-          const afterArgs = hookDefineDetails(ele, key, o)
-          args[0] = afterArgs[0]
-          delete option[key]
-          option[afterArgs[1]] = afterArgs[2]
-        })
-      }
-
-      return target.apply(ctx, args)
-    }
-  })
+    return originalMethods.defineProperties.apply(originalMethods.Object, args)
+  }
 
   setTimeout(function () {
     if (definePropertyLogger.length) {
-      console.log('definePropertyLogger:', definePropertyLogger)
+      debug.log('definePropertyLogger:', definePropertyLogger)
       definePropertyLogger = []
     }
   }, 1000 * 10)
