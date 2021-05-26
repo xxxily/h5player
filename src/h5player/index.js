@@ -33,11 +33,7 @@ import {
   getPageWindow
 } from './helper'
 
-/* 禁止对playbackRate进行锁定 */
-// if (location.href.includes('pan.baidu.com') || location.href.includes('v.qq.com')) {
-//   hackDefineProperty()
-// }
-
+/* 禁止对playbackRate等属性进行锁定 */
 hackDefineProperty()
 
 window._debugMode_ = true
@@ -67,8 +63,15 @@ const originalMethods = {
   // monkeyMenu.on('i18n.t('setting')', function () {
   //   window.alert('功能开发中，敬请期待...')
   // })
-  monkeyMenu.on(i18n.t('about'), function () {
-    window.GM_openInTab('https://github.com/xxxily/h5player', {
+  monkeyMenu.on(i18n.t('hotkeys'), function () {
+    window.GM_openInTab('https://github.com/xxxily/h5player#%E5%BF%AB%E6%8D%B7%E9%94%AE%E5%88%97%E8%A1%A8', {
+      active: true,
+      insert: true,
+      setParent: true
+    })
+  })
+  monkeyMenu.on(i18n.t('donate'), function () {
+    window.GM_openInTab('https://github.com/xxxily/h5player/blob/master/donate.png', {
       active: true,
       insert: true,
       setParent: true

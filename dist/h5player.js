@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.3.4
+// @version      3.3.5
 // @description  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
 // @description:en  HTML5 video playback enhanced script, supports all H5 video playback websites, full-length shortcut key control, supports: double-speed playback / accelerated playback, video screenshots, picture-in-picture, full-page webpage, brightness, saturation, contrast, custom configuration enhancement And other functions.
 // @description:zh  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
@@ -2277,7 +2277,7 @@ const hookJs = {
  * 参考： https://greasyfork.org/zh-CN/scripts/372673
  */
 
-function hookDefineProperCore (target, key, option) {
+function hackDefineProperCore (target, key, option) {
   if (option && target && target instanceof Element && typeof key === 'string' && key.indexOf('on') >= 0) {
     option.configurable = true;
   }
@@ -2295,12 +2295,12 @@ function hookDefineProperCore (target, key, option) {
   return [target, key, option]
 }
 
-function hackDefinePropertyByhookJs () {
+function hackDefineProperty () {
   hookJs.before(Object, 'defineProperty', function (args, parentObj, methodName, originMethod, execInfo, ctx) {
     const option = args[2];
     const ele = args[0];
     const key = args[1];
-    const afterArgs = hookDefineProperCore(ele, key, option);
+    const afterArgs = hackDefineProperCore(ele, key, option);
     afterArgs.forEach((arg, i) => {
       args[i] = arg;
     });
@@ -2312,7 +2312,7 @@ function hackDefinePropertyByhookJs () {
     if (ele && ele instanceof Element) {
       Object.keys(properties).forEach(key => {
         const option = properties[key];
-        const afterArgs = hookDefineProperCore(ele, key, option);
+        const afterArgs = hackDefineProperCore(ele, key, option);
         args[0] = afterArgs[0];
         delete properties[key];
         properties[afterArgs[1]] = afterArgs[2];
@@ -2321,55 +2321,12 @@ function hackDefinePropertyByhookJs () {
   });
 }
 
-function hackDefineProperty (useHookJs) {
-  if (useHookJs) {
-    hackDefinePropertyByhookJs();
-    return true
-  }
-
-  const originalMethods = {
-    Object: Object,
-    defineProperty: Object.defineProperty,
-    defineProperties: Object.defineProperties
-  };
-
-  Object.defineProperty = function () {
-    const args = arguments;
-
-    const option = args[2];
-    const ele = args[0];
-    const key = args[1];
-    const afterArgs = hookDefineProperCore(ele, key, option);
-    afterArgs.forEach((arg, i) => {
-      args[i] = arg;
-    });
-
-    return originalMethods.defineProperty.apply(originalMethods.Object, args)
-  };
-
-  Object.defineProperties = function () {
-    const args = arguments;
-
-    const properties = args[1];
-    const ele = args[0];
-    if (ele && ele instanceof Element) {
-      Object.keys(properties).forEach(key => {
-        const option = properties[key];
-        const afterArgs = hookDefineProperCore(ele, key, option);
-        args[0] = afterArgs[0];
-        delete properties[key];
-        properties[afterArgs[1]] = afterArgs[2];
-      });
-    }
-
-    return originalMethods.defineProperties.apply(originalMethods.Object, args)
-  };
-}
-
 var zhCN = {
   about: '关于',
   issues: '反馈',
   setting: '设置',
+  hotkeys: '快捷键',
+  donate: '赞赏',
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '前进：',
@@ -2405,6 +2362,8 @@ var enUS = {
   about: 'about',
   issues: 'issues',
   setting: 'setting',
+  hotkeys: 'hotkeys',
+  donate: 'donate',
   tipsMsg: {
     playspeed: 'Speed: ',
     forward: 'Forward: ',
@@ -2441,6 +2400,8 @@ var ru = {
   about: 'около',
   issues: 'обратная связь',
   setting: 'установка',
+  hotkeys: 'горячие клавиши',
+  donate: 'пожертвовать',
   tipsMsg: {
     playspeed: 'Скорость: ',
     forward: 'Вперёд: ',
@@ -2476,6 +2437,8 @@ var zhTW = {
   about: '關於',
   issues: '反饋',
   setting: '設置',
+  hotkeys: '快捷鍵',
+  donate: '讚賞',
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '向前：',
@@ -2517,11 +2480,7 @@ const messages = {
   ru: ru
 };
 
-/* 禁止对playbackRate进行锁定 */
-// if (location.href.includes('pan.baidu.com') || location.href.includes('v.qq.com')) {
-//   hackDefineProperty()
-// }
-
+/* 禁止对playbackRate等属性进行锁定 */
 hackDefineProperty();
 
 window._debugMode_ = true;
@@ -2551,8 +2510,15 @@ const originalMethods = {
   // monkeyMenu.on('i18n.t('setting')', function () {
   //   window.alert('功能开发中，敬请期待...')
   // })
-  monkeyMenu.on(i18n.t('about'), function () {
-    window.GM_openInTab('https://github.com/xxxily/h5player', {
+  monkeyMenu.on(i18n.t('hotkeys'), function () {
+    window.GM_openInTab('https://github.com/xxxily/h5player#%E5%BF%AB%E6%8D%B7%E9%94%AE%E5%88%97%E8%A1%A8', {
+      active: true,
+      insert: true,
+      setParent: true
+    });
+  });
+  monkeyMenu.on(i18n.t('donate'), function () {
+    window.GM_openInTab('https://github.com/xxxily/h5player/blob/master/donate.png', {
       active: true,
       insert: true,
       setParent: true

@@ -2,6 +2,8 @@ export default {
   about: 'около',
   issues: 'обратная связь',
   setting: 'установка',
+  hotkeys: 'горячие клавиши',
+  donate: 'пожертвовать',
   tipsMsg: {
     playspeed: 'Скорость: ',
     forward: 'Вперёд: ',
