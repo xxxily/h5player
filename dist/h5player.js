@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.3.5
+// @version      3.3.6
 // @description  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
 // @description:en  HTML5 video playback enhanced script, supports all H5 video playback websites, full-length shortcut key control, supports: double-speed playback / accelerated playback, video screenshots, picture-in-picture, full-page webpage, brightness, saturation, contrast, custom configuration enhancement And other functions.
 // @description:zh  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
@@ -19,7 +19,7 @@
 // @description:ru  HTML5 улучшенный сценарий воспроизведения видео, поддерживает все веб-сайты воспроизведения видео H5, полноразмерное управление с помощью сочетания клавиш, поддерживает: двухскоростное воспроизведение / ускоренное воспроизведение, скриншоты видео, картинка в картинке, полностраничную веб-страницу, яркость, насыщенность, контрастность, улучшение пользовательской конфигурации И другие функции.
 // @description:de  Verbessertes Skript für die HTML5-Videowiedergabe, unterstützt alle H5-Videowiedergabewebsites, Tastenkombination in voller Länge, unterstützt: Wiedergabe mit doppelter Geschwindigkeit / beschleunigte Wiedergabe, Video-Screenshots, Bild-in-Bild, ganzseitige Webseite, Helligkeit, Sättigung, Kontrast, benutzerdefinierte Konfigurationsverbesserung Und andere Funktionen.
 // @author       ankvps
-// @icon         https://raw.githubusercontent.com/xxxily/h5player/master/logo.png
+// @icon         https://cdn.jsdelivr.net/gh/xxxily/h5player@master/logo.png
 // @match        http://*/*
 // @match        https://*/*
 // @grant        unsafeWindow
@@ -1912,7 +1912,7 @@ const hookJs = {
     }
 
     if (!hasSameHook) {
-      if (classHook) { fn.classHook = true; }
+      fn.classHook = classHook || false;
       hookMethod[hookKeyName].push(fn);
     }
   },
@@ -2286,8 +2286,9 @@ function hackDefineProperCore (target, key, option) {
     const unLockProperties = ['playbackRate', 'currentTime', 'volume', 'muted'];
     if (unLockProperties.includes(key)) {
       if (!option.configurable) {
-        option.configurable = true;
         debug.log(`禁止对${key}进行锁定`);
+        option.configurable = true;
+        key = key + '_hack';
       }
     }
   }
@@ -3071,14 +3072,14 @@ const originalMethods = {
       // 使用getContainer获取到的父节点弊端太多，暂时弃用
       // const _tispContainer_ = player._tispContainer_  ||  getContainer(player);
 
-      let tispContainer = player._tispContainer_ || player.parentNode;
+      let tispContainer = player.parentNode;
+
       /* 如果父节点为无长宽的元素，则再往上查找一级 */
       const containerBox = tispContainer.getBoundingClientRect();
       if ((!containerBox.width || !containerBox.height) && tispContainer.parentNode) {
         tispContainer = tispContainer.parentNode;
       }
 
-      if (!player._tispContainer_) { player._tispContainer_ = tispContainer; }
       return tispContainer
     },
     tips: function (str) {
