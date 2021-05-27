@@ -387,7 +387,9 @@ const originalMethods = {
       const player = p || t.player()
 
       // 在轮询重试的时候，如果实例变了，或处于隐藏页面中则不进行自动播放操作
-      if (!player || (p && p !== t.player()) || document.hidden) return
+      if ((!p && t.hasInitAutoPlay) || !player || (p && p !== t.player()) || document.hidden) return
+
+      t.hasInitAutoPlay = true
 
       const taskConf = TCC.getTaskConfig()
       if (player && taskConf.autoPlay && player.paused) {
@@ -1423,9 +1425,7 @@ const originalMethods = {
 
   // debugCode.init(h5Player)
 
-  // document.addEventListener('visibilitychange', function () {
-  //   if (!document.hidden) {
-  //     h5Player.initAutoPlay()
-  //   }
-  // })
+  document.addEventListener('visibilitychange', function () {
+    h5Player.initAutoPlay()
+  })
 })()
