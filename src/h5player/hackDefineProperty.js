@@ -16,8 +16,9 @@ function hackDefineProperCore (target, key, option) {
     const unLockProperties = ['playbackRate', 'currentTime', 'volume', 'muted']
     if (unLockProperties.includes(key)) {
       if (!option.configurable) {
-        option.configurable = true
         debug.log(`禁止对${key}进行锁定`)
+        option.configurable = true
+        key = key + '_hack'
       }
     }
   }
