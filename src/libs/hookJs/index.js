@@ -59,7 +59,7 @@ const hookJs = {
     }
 
     if (!hasSameHook) {
-      if (classHook) { fn.classHook = true }
+      fn.classHook = classHook || false
       hookMethod[hookKeyName].push(fn)
     }
   },
