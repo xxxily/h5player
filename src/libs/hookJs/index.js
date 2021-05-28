@@ -181,7 +181,7 @@ const hookJs = {
       } else {
         handler.apply = function (target, ctx, args) {
           ctx = context || ctx
-          return t._runHooks(parentObj, methodName, originMethod, hookMethod, target, ctx, args)
+          return t._runHooks(parentObj, methodName, originMethod, hookMethod, target, ctx, args, false)
         }
       }
 
