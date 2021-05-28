@@ -175,7 +175,7 @@ const hookJs = {
       /* 下面的写法确定了proxyHandler是无法覆盖construct和apply操作的 */
       if (classHook) {
         handler.construct = function (target, args, newTarget) {
-          context = context || parentObj
+          context = context || this
           return t._runHooks(parentObj, methodName, originMethod, hookMethod, target, context, args, true)
         }
       } else {
@@ -187,8 +187,8 @@ const hookJs = {
 
       hookMethod = new Proxy(originMethod, handler)
     } else {
-      context = context || parentObj
       hookMethod = function () {
+        context = context || this
         return t._runHooks(parentObj, methodName, originMethod, hookMethod, originMethod, context, arguments, classHook)
       }
     }
