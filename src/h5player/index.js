@@ -34,12 +34,14 @@ import {
   getPageWindow
 } from './helper'
 
+window._debugMode_ = true
+
 /* 禁止对playbackRate等属性进行锁定 */
 hackDefineProperty()
 
-hackEventListener()
+// hackEventListener()
 
-window._debugMode_ = true
+hackAttachShadow()
 
 /* 保存重要的原始函数，防止被外部脚本污染 */
 const originalMethods = {
@@ -88,7 +90,6 @@ const originalMethods = {
     })
   })
 
-  hackAttachShadow()
   // hackEventListener({
   //   // proxyAll: true,
   //   proxyNodeType: ['video'],

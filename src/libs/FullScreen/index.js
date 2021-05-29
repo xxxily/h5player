@@ -1,13 +1,22 @@
 /**
  * 元素全屏API，同时兼容网页全屏
  */
+import hackAttachShadow from '../utils/hackAttachShadow'
+import { loadCSSText, isInShadow } from '../utils/dom'
 
+hackAttachShadow()
 class FullScreen {
   constructor (dom, pageMode) {
     this.dom = dom
+    this.shadowRoot = null
+    this.fullStatus = false
     // 默认全屏模式，如果传入pageMode则表示进行的是页面全屏操作
     this.pageMode = pageMode || false
     const fullPageStyle = `
+      ._webfullscreen_box_size_ {
+				width: 100% !important;
+				height: 100% !important;
+			}
       ._webfullscreen_ {
         display: block !important;
 				position: fixed !important;
@@ -22,18 +31,27 @@ class FullScreen {
 				z-index: 999999 !important;
 			}
 		`
+    /* 将样式插入到全局页面中 */
     if (!window._hasInitFullPageStyle_) {
       window.GM_addStyle(fullPageStyle)
       window._hasInitFullPageStyle_ = true
     }
 
+    /* 将样式插入到shadowRoot中 */
+    const shadowRoot = isInShadow(dom, true)
+    if (shadowRoot) {
+      this.shadowRoot = shadowRoot
+      loadCSSText(fullPageStyle, 'fullPageStyle', shadowRoot)
+    }
+
+    const t = this
     window.addEventListener('keyup', (event) => {
       const key = event.key.toLowerCase()
       if (key === 'escape') {
-        if (this.isFull()) {
-          this.exit()
-        } else if (this.isFullScreen()) {
-          this.exitFullScreen()
+        if (t.isFull()) {
+          t.exit()
+        } else if (t.isFullScreen()) {
+          t.exitFullScreen()
         }
       }
     }, true)
@@ -81,7 +99,7 @@ class FullScreen {
   }
 
   isFull () {
-    return this.dom.classList.contains('_webfullscreen_')
+    return this.dom.classList.contains('_webfullscreen_') || this.fullStatus
   }
 
   isFullScreen () {
@@ -104,18 +122,42 @@ class FullScreen {
     if (t.dom === container) {
       needSetIndex = true
     }
-    this.eachParentNode(t.dom, function (parentNode) {
-      parentNode.classList.add('_webfullscreen_')
-      if (container === parentNode || needSetIndex) {
-        needSetIndex = true
-        parentNode.classList.add('_webfullscreen_zindex_')
+
+    function addFullscreenStyleToParentNode (node) {
+      t.eachParentNode(node, function (parentNode) {
+        parentNode.classList.add('_webfullscreen_')
+        if (container === parentNode || needSetIndex) {
+          needSetIndex = true
+          parentNode.classList.add('_webfullscreen_zindex_')
+        }
+      })
+    }
+    addFullscreenStyleToParentNode(t.dom)
+
+    /* 判断dom自身是否需要加上webfullscreen样式 */
+    if (t.dom.parentNode) {
+      const domBox = t.dom.getBoundingClientRect()
+      const domParentBox = t.dom.parentNode.getBoundingClientRect()
+      if (domParentBox.width - domBox.width >= 5) {
+        t.dom.classList.add('_webfullscreen_')
       }
-    })
-    t.dom.classList.add('_webfullscreen_')
+
+      if (t.shadowRoot && t.shadowRoot._shadowHost) {
+        const shadowHost = t.shadowRoot._shadowHost
+        const shadowHostBox = shadowHost.getBoundingClientRect()
+        if (shadowHostBox.width <= domBox.width) {
+          shadowHost.classList.add('_webfullscreen_')
+          addFullscreenStyleToParentNode(shadowHost)
+        }
+      }
+    }
+
     const fullScreenMode = !t.pageMode
     if (fullScreenMode) {
       t.enterFullScreen()
     }
+
+    this.fullStatus = true
   }
 
   exitFullScreen () {
@@ -126,15 +168,28 @@ class FullScreen {
 
   exit () {
     const t = this
+
+    function removeFullscreenStyleToParentNode (node) {
+      t.eachParentNode(node, function (parentNode) {
+        parentNode.classList.remove('_webfullscreen_')
+        parentNode.classList.remove('_webfullscreen_zindex_')
+      })
+    }
+    removeFullscreenStyleToParentNode(t.dom)
+
     t.dom.classList.remove('_webfullscreen_')
-    this.eachParentNode(t.dom, function (parentNode) {
-      parentNode.classList.remove('_webfullscreen_')
-      parentNode.classList.remove('_webfullscreen_zindex_')
-    })
+
+    if (t.shadowRoot && t.shadowRoot._shadowHost) {
+      const shadowHost = t.shadowRoot._shadowHost
+      shadowHost.classList.remove('_webfullscreen_')
+      removeFullscreenStyleToParentNode(shadowHost)
+    }
+
     const fullScreenMode = !t.pageMode
     if (fullScreenMode || t.isFullScreen()) {
       t.exitFullScreen()
     }
+    this.fullStatus = false
   }
 
   toggle () {

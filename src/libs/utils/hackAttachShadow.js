@@ -19,6 +19,9 @@ function hackAttachShadow () {
       // 存一份shadowDomList
       window._shadowDomList_.push(shadowRoot)
 
+      /* 让shadowRoot里面的元素有机会访问shadowHost */
+      shadowRoot._shadowHost = this
+
       // 在document下面添加 addShadowRoot 自定义事件
       const shadowEvent = new window.CustomEvent('addShadowRoot', {
         shadowRoot,
@@ -36,7 +39,7 @@ function hackAttachShadow () {
     }
     window._hasHackAttachShadow_ = true
   } catch (e) {
-    console.error('hackAttachShadow error by h5player plug-in')
+    console.error('hackAttachShadow error by h5player plug-in', e)
   }
 }
 

@@ -153,6 +153,14 @@ const taskConf = {
       }, 200)
     }
   },
+  'ixigua.com': {
+    fullScreen: 'xg-fullscreen.xgplayer-fullscreen',
+    webFullScreen: 'xg-cssfullscreen.xgplayer-cssfullscreen'
+  },
+  'tv.sohu.com': {
+    fullScreen: 'button[data-title="网页全屏"]',
+    webFullScreen: 'button[data-title="全屏"]'
+  },
   'iqiyi.com': {
     fullScreen: '.iqp-btn-fullscreen',
     webFullScreen: '.iqp-btn-webscreen',

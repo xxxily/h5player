@@ -95,4 +95,23 @@ function isEditableTarget (target) {
   return isEditable || isInputDom
 }
 
-export { hideDom, eachParentNode, loadCSSText, getContainer, isEditableTarget }
+/**
+ * 判断某个元素是否处于shadowDom里面
+ * 参考：https://www.coder.work/article/299700
+ * @param node
+ * @returns {boolean}
+ */
+function isInShadow (node, returnShadowRoot) {
+  for (; node; node = node.parentNode) {
+    if (node.toString() === '[object ShadowRoot]') {
+      if (returnShadowRoot) {
+        return node
+      } else {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+export { hideDom, eachParentNode, loadCSSText, getContainer, isEditableTarget, isInShadow }

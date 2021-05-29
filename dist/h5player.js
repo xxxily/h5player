@@ -649,6 +649,9 @@ function hackAttachShadow () {
       // 存一份shadowDomList
       window._shadowDomList_.push(shadowRoot);
 
+      /* 让shadowRoot里面的元素有机会访问shadowHost */
+      shadowRoot._shadowHost = this;
+
       // 在document下面添加 addShadowRoot 自定义事件
       const shadowEvent = new window.CustomEvent('addShadowRoot', {
         shadowRoot,
@@ -666,7 +669,7 @@ function hackAttachShadow () {
     };
     window._hasHackAttachShadow_ = true;
   } catch (e) {
-    console.error('hackAttachShadow error by h5player plug-in');
+    console.error('hackAttachShadow error by h5player plug-in', e);
   }
 }
 
@@ -713,6 +716,30 @@ function eachParentNode (dom, fn) {
 }
 
 /**
+ * 动态加载css内容
+ * @param cssText {String} -必选 样式的文本内容
+ * @param id {String} -可选 指定样式文本的id号，如果已存在对应id号则不会再次插入
+ * @param insetTo {Dom} -可选 指定插入到哪
+ * @returns {HTMLStyleElement}
+ */
+function loadCSSText (cssText, id, insetTo) {
+  if (id && document.getElementById(id)) {
+    return false
+  }
+
+  const style = document.createElement('style');
+  const head = insetTo || document.head || document.getElementsByTagName('head')[0];
+  style.appendChild(document.createTextNode(cssText));
+  head.appendChild(style);
+
+  if (id) {
+    style.setAttribute('id', id);
+  }
+
+  return style
+}
+
+/**
  * 判断当前元素是否为可编辑元素
  * @param target
  * @returns Boolean
@@ -721,6 +748,25 @@ function isEditableTarget (target) {
   const isEditable = target.getAttribute && target.getAttribute('contenteditable') === 'true';
   const isInputDom = /INPUT|TEXTAREA|SELECT/.test(target.nodeName);
   return isEditable || isInputDom
+}
+
+/**
+ * 判断某个元素是否处于shadowDom里面
+ * 参考：https://www.coder.work/article/299700
+ * @param node
+ * @returns {boolean}
+ */
+function isInShadow (node, returnShadowRoot) {
+  for (; node; node = node.parentNode) {
+    if (node.toString() === '[object ShadowRoot]') {
+      if (returnShadowRoot) {
+        return node
+      } else {
+        return true
+      }
+    }
+  }
+  return false
 }
 
 /* ua信息伪装 */
@@ -937,6 +983,14 @@ const taskConf = {
         }
       }, 200);
     }
+  },
+  'ixigua.com': {
+    fullScreen: 'xg-fullscreen.xgplayer-fullscreen',
+    webFullScreen: 'xg-cssfullscreen.xgplayer-cssfullscreen'
+  },
+  'tv.sohu.com': {
+    fullScreen: 'button[data-title="网页全屏"]',
+    webFullScreen: 'button[data-title="全屏"]'
   },
   'iqiyi.com': {
     fullScreen: '.iqp-btn-fullscreen',
@@ -1170,12 +1224,19 @@ const fakeConfig = {
  * 元素全屏API，同时兼容网页全屏
  */
 
+hackAttachShadow();
 class FullScreen {
   constructor (dom, pageMode) {
     this.dom = dom;
+    this.shadowRoot = null;
+    this.fullStatus = false;
     // 默认全屏模式，如果传入pageMode则表示进行的是页面全屏操作
     this.pageMode = pageMode || false;
     const fullPageStyle = `
+      ._webfullscreen_box_size_ {
+				width: 100% !important;
+				height: 100% !important;
+			}
       ._webfullscreen_ {
         display: block !important;
 				position: fixed !important;
@@ -1190,18 +1251,27 @@ class FullScreen {
 				z-index: 999999 !important;
 			}
 		`;
+    /* 将样式插入到全局页面中 */
     if (!window._hasInitFullPageStyle_) {
       window.GM_addStyle(fullPageStyle);
       window._hasInitFullPageStyle_ = true;
     }
 
+    /* 将样式插入到shadowRoot中 */
+    const shadowRoot = isInShadow(dom, true);
+    if (shadowRoot) {
+      this.shadowRoot = shadowRoot;
+      loadCSSText(fullPageStyle, 'fullPageStyle', shadowRoot);
+    }
+
+    const t = this;
     window.addEventListener('keyup', (event) => {
       const key = event.key.toLowerCase();
       if (key === 'escape') {
-        if (this.isFull()) {
-          this.exit();
-        } else if (this.isFullScreen()) {
-          this.exitFullScreen();
+        if (t.isFull()) {
+          t.exit();
+        } else if (t.isFullScreen()) {
+          t.exitFullScreen();
         }
       }
     }, true);
@@ -1249,7 +1319,7 @@ class FullScreen {
   }
 
   isFull () {
-    return this.dom.classList.contains('_webfullscreen_')
+    return this.dom.classList.contains('_webfullscreen_') || this.fullStatus
   }
 
   isFullScreen () {
@@ -1272,18 +1342,42 @@ class FullScreen {
     if (t.dom === container) {
       needSetIndex = true;
     }
-    this.eachParentNode(t.dom, function (parentNode) {
-      parentNode.classList.add('_webfullscreen_');
-      if (container === parentNode || needSetIndex) {
-        needSetIndex = true;
-        parentNode.classList.add('_webfullscreen_zindex_');
+
+    function addFullscreenStyleToParentNode (node) {
+      t.eachParentNode(node, function (parentNode) {
+        parentNode.classList.add('_webfullscreen_');
+        if (container === parentNode || needSetIndex) {
+          needSetIndex = true;
+          parentNode.classList.add('_webfullscreen_zindex_');
+        }
+      });
+    }
+    addFullscreenStyleToParentNode(t.dom);
+
+    /* 判断dom自身是否需要加上webfullscreen样式 */
+    if (t.dom.parentNode) {
+      const domBox = t.dom.getBoundingClientRect();
+      const domParentBox = t.dom.parentNode.getBoundingClientRect();
+      if (domParentBox.width - domBox.width >= 5) {
+        t.dom.classList.add('_webfullscreen_');
       }
-    });
-    t.dom.classList.add('_webfullscreen_');
+
+      if (t.shadowRoot && t.shadowRoot._shadowHost) {
+        const shadowHost = t.shadowRoot._shadowHost;
+        const shadowHostBox = shadowHost.getBoundingClientRect();
+        if (shadowHostBox.width <= domBox.width) {
+          shadowHost.classList.add('_webfullscreen_');
+          addFullscreenStyleToParentNode(shadowHost);
+        }
+      }
+    }
+
     const fullScreenMode = !t.pageMode;
     if (fullScreenMode) {
       t.enterFullScreen();
     }
+
+    this.fullStatus = true;
   }
 
   exitFullScreen () {
@@ -1294,15 +1388,28 @@ class FullScreen {
 
   exit () {
     const t = this;
+
+    function removeFullscreenStyleToParentNode (node) {
+      t.eachParentNode(node, function (parentNode) {
+        parentNode.classList.remove('_webfullscreen_');
+        parentNode.classList.remove('_webfullscreen_zindex_');
+      });
+    }
+    removeFullscreenStyleToParentNode(t.dom);
+
     t.dom.classList.remove('_webfullscreen_');
-    this.eachParentNode(t.dom, function (parentNode) {
-      parentNode.classList.remove('_webfullscreen_');
-      parentNode.classList.remove('_webfullscreen_zindex_');
-    });
+
+    if (t.shadowRoot && t.shadowRoot._shadowHost) {
+      const shadowHost = t.shadowRoot._shadowHost;
+      shadowHost.classList.remove('_webfullscreen_');
+      removeFullscreenStyleToParentNode(shadowHost);
+    }
+
     const fullScreenMode = !t.pageMode;
     if (fullScreenMode || t.isFullScreen()) {
       t.exitFullScreen();
     }
+    this.fullStatus = false;
   }
 
   toggle () {
@@ -2357,30 +2464,6 @@ function hackDefineProperty () {
   });
 }
 
-function hackEventListener () {
-  // const hookJsPro = hookJs.hookJsPro()
-  hookJs.before(window.EventTarget.prototype, 'addEventListener', function (args) {
-    // const type = args[0]
-    // const listener = args[1]
-    // const eventFilter = ['click', 'mouse', 'touch', 'key', 'toggle', 'change', 'reset', 'resize', 'error']
-    //
-    // let isHitEventFilter = false
-    // for (let i = 0; i < eventFilter.length; i++) {
-    //   const str = eventFilter[i]
-    //   if (type && type.startsWith && type.startsWith(str)) {
-    //     isHitEventFilter = true
-    //     break
-    //   }
-    // }
-    //
-    // if (!listener || isHitEventFilter) {
-    //   return false
-    // }
-    //
-    // debug.info('addEventListener:', type)
-  });
-}
-
 var zhCN = {
   about: '关于',
   issues: '反馈',
@@ -2540,12 +2623,14 @@ const messages = {
   ru: ru
 };
 
+window._debugMode_ = true;
+
 /* 禁止对playbackRate等属性进行锁定 */
 hackDefineProperty();
 
-hackEventListener();
+// hackEventListener()
 
-window._debugMode_ = true;
+hackAttachShadow();
 
 /* 保存重要的原始函数，防止被外部脚本污染 */
 const originalMethods = {
@@ -2594,7 +2679,6 @@ const originalMethods = {
     });
   });
 
-  hackAttachShadow();
   // hackEventListener({
   //   // proxyAll: true,
   //   proxyNodeType: ['video'],
