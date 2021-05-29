@@ -200,8 +200,23 @@ class HookJs {
     } else {
       hookMethod = function () {
         context = context || this
+        // return originMethod.apply(context, arguments)
         return t._runHooks(parentObj, methodName, originMethod, hookMethod, originMethod, context, arguments, classHook)
       }
+
+      /* 确保子对象和原型链跟originMethod保持一致 */
+      const keys = Reflect.ownKeys(originMethod)
+      keys.forEach(keyName => {
+        Object.defineProperty(hookMethod, keyName, {
+          get: function () {
+            return originMethod[keyName]
+          },
+          set: function (val) {
+            originMethod[keyName] = val
+          }
+        })
+      })
+      hookMethod.prototype = originMethod.prototype
     }
 
     hookMethod.originMethod = originMethod

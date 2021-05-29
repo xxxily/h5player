@@ -12,6 +12,7 @@ import monkeyMsg from './monkeyMsg'
 import crossTabCtl from './crossTabCtl'
 import debug from './debug'
 import hackDefineProperty from './hackDefineProperty'
+import hackEventListener from './hackEventListener'
 import langMessage from './locale/core-lang/index'
 import {
   ready,
@@ -35,6 +36,8 @@ import {
 
 /* 禁止对playbackRate等属性进行锁定 */
 hackDefineProperty()
+
+hackEventListener()
 
 window._debugMode_ = true
 
