@@ -100,4 +100,6 @@ PS：本脚基于：[HTML5播放器增强插件](https://greasyfork.org/users/49
 * [https://github.com/xxxily/h5player/blob/master/changeLog.md](https://github.com/xxxily/h5player/blob/master/changeLog.md)
 
 ## 给我赞赏
-* [https://github.com/xxxily/h5player/blob/master/donate.png](https://github.com/xxxily/h5player/blob/master/donate.png)
+如果我的努力给你带来了便利，请不要吝啬你的赞赏
+
+![如果我的努力给你带来了便利，请不要吝啬你的赞赏](https://cdn.jsdelivr.net/gh/xxxily/h5player@master/donate.png "如果我的努力给你带来了便利，请不要吝啬你的赞赏")

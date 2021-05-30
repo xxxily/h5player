@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.3.6
+// @version      3.3.7
 // @description  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
 // @description:en  HTML5 video playback enhanced script, supports all H5 video playback websites, full-length shortcut key control, supports: double-speed playback / accelerated playback, video screenshots, picture-in-picture, full-page webpage, brightness, saturation, contrast, custom configuration enhancement And other functions.
 // @description:zh  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
@@ -582,6 +582,7 @@ class TCC {
 function ready (selector, fn, shadowRoot) {
   const win = window;
   const docRoot = shadowRoot || win.document.documentElement;
+  if (!docRoot) return false
   const MutationObserver = win.MutationObserver || win.WebKitMutationObserver;
   const listeners = docRoot._MutationListeners || [];
 
@@ -2005,6 +2006,7 @@ const util = {
 class HookJs {
   constructor (useProxy) {
     this.useProxy = useProxy || false;
+    this.hookPropertiesKeyName = '_hookProperties' + Date.now();
   }
 
   hookJsPro () {
@@ -2013,14 +2015,15 @@ class HookJs {
 
   _addHook (hookMethod, fn, type, classHook) {
     const hookKeyName = type + 'Hooks';
-    if (!hookMethod[hookKeyName]) {
-      hookMethod[hookKeyName] = [];
+    const hookMethodProperties = hookMethod[this.hookPropertiesKeyName];
+    if (!hookMethodProperties[hookKeyName]) {
+      hookMethodProperties[hookKeyName] = [];
     }
 
     /* 注册（储存）要被调用的hook函数，同时防止重复注册 */
     let hasSameHook = false;
-    for (let i = 0; i < hookMethod[hookKeyName].length; i++) {
-      if (fn === hookMethod[hookKeyName][i]) {
+    for (let i = 0; i < hookMethodProperties[hookKeyName].length; i++) {
+      if (fn === hookMethodProperties[hookKeyName][i]) {
         hasSameHook = true;
         break
       }
@@ -2028,16 +2031,17 @@ class HookJs {
 
     if (!hasSameHook) {
       fn.classHook = classHook || false;
-      hookMethod[hookKeyName].push(fn);
+      hookMethodProperties[hookKeyName].push(fn);
     }
   }
 
-  _runHooks (parentObj, methodName, originMethod, hookMethod, target, ctx, args, classHook) {
-    const beforeHooks = hookMethod.beforeHooks || [];
-    const afterHooks = hookMethod.afterHooks || [];
-    const errorHooks = hookMethod.errorHooks || [];
-    const hangUpHooks = hookMethod.hangUpHooks || [];
-    const replaceHooks = hookMethod.replaceHooks || [];
+  _runHooks (parentObj, methodName, originMethod, hookMethod, target, ctx, args, classHook, hookPropertiesKeyName) {
+    const hookMethodProperties = hookMethod[hookPropertiesKeyName];
+    const beforeHooks = hookMethodProperties.beforeHooks || [];
+    const afterHooks = hookMethodProperties.afterHooks || [];
+    const errorHooks = hookMethodProperties.errorHooks || [];
+    const hangUpHooks = hookMethodProperties.hangUpHooks || [];
+    const replaceHooks = hookMethodProperties.replaceHooks || [];
     const execInfo = {
       result: null,
       error: null,
@@ -2125,14 +2129,14 @@ class HookJs {
     /* 存在缓存则使用缓存的hookMethod */
     if (t.isHook(originMethod)) {
       hookMethod = originMethod;
-    } else if (t.isHook(originMethod.hookMethod)) {
-      hookMethod = originMethod.hookMethod;
+    } else if (originMethod[t.hookPropertiesKeyName] && t.isHook(originMethod[t.hookPropertiesKeyName].hookMethod)) {
+      hookMethod = originMethod[t.hookPropertiesKeyName].hookMethod;
     }
 
     if (hookMethod) {
-      if (!hookMethod.isHook) {
+      if (!hookMethod[t.hookPropertiesKeyName].isHook) {
         /* 重新标注被hook状态 */
-        hookMethod.isHook = true;
+        hookMethod[t.hookPropertiesKeyName].isHook = true;
         util.debug.log(`[hook method] ${util.toStr(parentObj)} ${methodName}`);
       }
       return hookMethod
@@ -2147,21 +2151,25 @@ class HookJs {
       if (classHook) {
         handler.construct = function (target, args, newTarget) {
           context = context || this;
-          return t._runHooks(parentObj, methodName, originMethod, hookMethod, target, context, args, true)
+          return t._runHooks(parentObj, methodName, originMethod, hookMethod, target, context, args, true, t.hookPropertiesKeyName)
         };
       } else {
         handler.apply = function (target, ctx, args) {
           ctx = context || ctx;
-          return t._runHooks(parentObj, methodName, originMethod, hookMethod, target, ctx, args, false)
+          return t._runHooks(parentObj, methodName, originMethod, hookMethod, target, ctx, args, false, t.hookPropertiesKeyName)
         };
       }
 
       hookMethod = new Proxy(originMethod, handler);
     } else {
       hookMethod = function () {
-        context = context || this;
-        // return originMethod.apply(context, arguments)
-        return t._runHooks(parentObj, methodName, originMethod, hookMethod, originMethod, context, arguments, classHook)
+        /**
+         * 注意此处不能通过 context = context || this
+         * 然后通过把context当ctx传递过去
+         * 这将导致ctx引用错误
+         */
+        const ctx = context || this;
+        return t._runHooks(parentObj, methodName, originMethod, hookMethod, originMethod, ctx, arguments, classHook, t.hookPropertiesKeyName)
       };
 
       /* 确保子对象和原型链跟originMethod保持一致 */
@@ -2179,10 +2187,12 @@ class HookJs {
       hookMethod.prototype = originMethod.prototype;
     }
 
-    hookMethod.originMethod = originMethod;
-    originMethod.hookMethod = hookMethod;
-    hookMethod.isHook = true;
-    hookMethod.classHook = classHook;
+    const hookMethodProperties = hookMethod[t.hookPropertiesKeyName] = {};
+
+    hookMethodProperties.originMethod = originMethod;
+    hookMethodProperties.hookMethod = hookMethod;
+    hookMethodProperties.isHook = true;
+    hookMethodProperties.classHook = classHook;
 
     util.debug.log(`[hook method] ${util.toStr(parentObj)} ${methodName}`);
 
@@ -2234,7 +2244,11 @@ class HookJs {
    * @returns {boolean}
    */
   isHook (fn) {
-    return Boolean(fn && util.isFn(fn.originMethod) && fn !== fn.originMethod)
+    if (!fn || !fn[this.hookPropertiesKeyName]) {
+      return false
+    }
+    const hookMethodProperties = fn[this.hookPropertiesKeyName];
+    return util.isFn(hookMethodProperties.originMethod) && fn !== hookMethodProperties.originMethod
   }
 
   /**
@@ -2297,7 +2311,8 @@ class HookJs {
 
       hookMethod = t._proxyMethodcGenerator(parentObj, methodName, originMethod, classHook, context, proxyHandler);
 
-      if (hookMethod.classHook !== classHook) {
+      const hookMethodProperties = hookMethod[t.hookPropertiesKeyName];
+      if (hookMethodProperties.classHook !== classHook) {
         util.debug.log(`${util.toStr(parentObj)} [${methodName}] Cannot support functions hook and classes hook at the same time `);
         return false
       }
@@ -2332,52 +2347,58 @@ class HookJs {
     const t = this;
     hookMethods = t._getObjKeysByRule(parentObj, hookMethods);
     hookMethods.forEach(methodName => {
-      if (!t.isAllowHook(parentObj, methodName) || !parentObj[methodName].originMethod) {
+      if (!t.isAllowHook(parentObj, methodName)) {
         return false
       }
 
       const hookMethod = parentObj[methodName];
-      const originMethod = hookMethod.originMethod;
 
       if (!t.isHook(hookMethod)) {
         return false
       }
 
+      const hookMethodProperties = hookMethod[t.hookPropertiesKeyName];
+      const originMethod = hookMethodProperties.originMethod;
+
       if (type) {
         const hookKeyName = type + 'Hooks';
-        const hooks = hookMethod[hookKeyName] || [];
+        const hooks = hookMethodProperties[hookKeyName] || [];
 
         if (fn) {
           /* 删除指定类型下的指定hook函数 */
           for (let i = 0; i < hooks.length; i++) {
             if (fn === hooks[i]) {
-              hookMethod[hookKeyName].splice(i, 1);
+              hookMethodProperties[hookKeyName].splice(i, 1);
               util.debug.log(`[unHook ${hookKeyName} func] ${util.toStr(parentObj)} ${methodName}`, fn);
               break
             }
           }
         } else {
           /* 删除指定类型下的所有hook函数 */
-          if (Array.isArray(hookMethod[hookKeyName])) {
-            hookMethod[hookKeyName] = [];
+          if (Array.isArray(hookMethodProperties[hookKeyName])) {
+            hookMethodProperties[hookKeyName] = [];
             util.debug.log(`[unHook all ${hookKeyName}] ${util.toStr(parentObj)} ${methodName}`);
           }
         }
       } else {
         /* 彻底还原被hook的函数 */
         if (util.isFn(originMethod)) {
-          Object.keys(hookMethod).forEach(keyName => {
-            if (/Hooks$/.test(keyName) && Array.isArray(hookMethod[keyName])) {
-              hookMethod[keyName] = [];
-            }
-          });
-
-          hookMethod.isHook = false;
           parentObj[methodName] = originMethod;
-          delete parentObj[methodName].originMethod;
-          delete parentObj[methodName].hookMethod;
-          delete parentObj[methodName].isHook;
-          delete parentObj[methodName].isClassHook;
+          delete parentObj[methodName][t.hookPropertiesKeyName];
+
+          // Object.keys(hookMethod).forEach(keyName => {
+          //   if (/Hooks$/.test(keyName) && Array.isArray(hookMethod[keyName])) {
+          //     hookMethod[keyName] = []
+          //   }
+          // })
+          //
+          // hookMethod.isHook = false
+          // parentObj[methodName] = originMethod
+          // delete parentObj[methodName].originMethod
+          // delete parentObj[methodName].hookMethod
+          // delete parentObj[methodName].isHook
+          // delete parentObj[methodName].isClassHook
+
           util.debug.log(`[unHook method] ${util.toStr(parentObj)} ${methodName}`);
         }
       }
@@ -2665,7 +2686,7 @@ const originalMethods = {
     });
   });
   monkeyMenu.on(i18n.t('donate'), function () {
-    window.GM_openInTab('https://github.com/xxxily/h5player/blob/master/donate.png', {
+    window.GM_openInTab('https://cdn.jsdelivr.net/gh/xxxily/h5player@master/donate.png', {
       active: true,
       insert: true,
       setParent: true

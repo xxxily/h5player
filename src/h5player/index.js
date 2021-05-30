@@ -12,12 +12,11 @@ import monkeyMsg from './monkeyMsg'
 import crossTabCtl from './crossTabCtl'
 import debug from './debug'
 import hackDefineProperty from './hackDefineProperty'
-import hackEventListener from './hackEventListener'
+// import hackEventListener from './hackEventListener'
 import langMessage from './locale/core-lang/index'
 import {
   ready,
   hackAttachShadow,
-  // hackEventListener,
   isObj,
   quickSort,
   eachParentNode,
@@ -76,7 +75,7 @@ const originalMethods = {
     })
   })
   monkeyMenu.on(i18n.t('donate'), function () {
-    window.GM_openInTab('https://github.com/xxxily/h5player/blob/master/donate.png', {
+    window.GM_openInTab('https://cdn.jsdelivr.net/gh/xxxily/h5player@master/donate.png', {
       active: true,
       insert: true,
       setParent: true

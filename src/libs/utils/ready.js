@@ -8,6 +8,7 @@
 function ready (selector, fn, shadowRoot) {
   const win = window
   const docRoot = shadowRoot || win.document.documentElement
+  if (!docRoot) return false
   const MutationObserver = win.MutationObserver || win.WebKitMutationObserver
   const listeners = docRoot._MutationListeners || []
 
