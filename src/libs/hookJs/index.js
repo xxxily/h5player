@@ -319,6 +319,18 @@ class HookJs {
    * @returns {boolean}
    */
   hook (parentObj, hookMethods, fn, type, classHook, context, proxyHandler) {
+    /* 支持对象形式的传参 */
+    const opts = arguments[0]
+    if (util.isObj(opts) && opts.parentObj && opts.hookMethods) {
+      parentObj = opts.parentObj
+      hookMethods = opts.hookMethods
+      fn = opts.fn
+      type = opts.type
+      classHook = opts.classHook
+      context = opts.context
+      proxyHandler = opts.proxyHandler
+    }
+
     classHook = toBoolean(classHook)
     type = type || 'before'
 
@@ -442,6 +454,19 @@ class HookJs {
         }
       }
     })
+  }
+
+  _hook (args, type) {
+    const t = this
+    return function (obj, hookMethods, fn, classHook, context, proxyHandler) {
+      const opts = args[0]
+      if (util.isObj(opts) && opts.parentObj && opts.hookMethods) {
+        opts.type = type
+      } else {
+        // args[3] = type
+      }
+      return t.hook.apply(t, args)
+    }
   }
 
   /* 源函数运行前的hook */
