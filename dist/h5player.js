@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.3.7
+// @version      3.3.8
 // @description  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
 // @description:en  HTML5 video playback enhanced script, supports all H5 video playback websites, full-length shortcut key control, supports: double-speed playback / accelerated playback, video screenshots, picture-in-picture, full-page webpage, brightness, saturation, contrast, custom configuration enhancement And other functions.
 // @description:zh  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
@@ -2050,14 +2050,16 @@ class HookJs {
     };
 
     function runHooks (hooks, type) {
+      let hookResult = null;
       execInfo.type = type || '';
       if (Array.isArray(hooks)) {
         hooks.forEach(fn => {
           if (util.isFn(fn) && classHook === fn.classHook) {
-            fn(args, parentObj, methodName, originMethod, execInfo, ctx);
+            hookResult = fn(args, parentObj, methodName, originMethod, execInfo, ctx);
           }
         });
       }
+      return hookResult
     }
 
     const runTarget = (function () {
@@ -2073,7 +2075,11 @@ class HookJs {
       }
     })();
 
-    runHooks(beforeHooks, 'before');
+    const beforeHooksResult = runHooks(beforeHooks, 'before');
+    /* 支持终止后续调用的指令 */
+    if (beforeHooksResult && beforeHooksResult === 'STOP-INVOKE') {
+      return beforeHooksResult
+    }
 
     if (hangUpHooks.length || replaceHooks.length) {
       /**
@@ -2088,8 +2094,11 @@ class HookJs {
           execInfo.result = runTarget();
         } catch (err) {
           execInfo.error = err;
-          runHooks(errorHooks, 'error');
-          throw err
+          const errorHooksResult = runHooks(errorHooks, 'error');
+          /* 支持执行错误后不抛出异常的指令 */
+          if (errorHooksResult && errorHooksResult === 'SKIP-ERROR') ; else {
+            throw err
+          }
         }
       } else {
         execInfo.result = runTarget();
@@ -2459,6 +2468,13 @@ function hackDefineProperCore (target, key, option) {
   return [target, key, option]
 }
 
+function hackDefineProperOnError (args, parentObj, methodName, originMethod, execInfo, ctx) {
+  debug.error(`${methodName} error:`, execInfo.error);
+
+  /* 忽略执行异常 */
+  return 'SKIP-ERROR'
+}
+
 function hackDefineProperty () {
   hookJs.before(Object, 'defineProperty', function (args, parentObj, methodName, originMethod, execInfo, ctx) {
     const option = args[2];
@@ -2483,6 +2499,9 @@ function hackDefineProperty () {
       });
     }
   });
+
+  hookJs.error(Object, 'defineProperty', hackDefineProperOnError);
+  hookJs.error(Object, 'defineProperties', hackDefineProperOnError);
 }
 
 var zhCN = {
@@ -2646,12 +2665,16 @@ const messages = {
 
 window._debugMode_ = true;
 
-/* 禁止对playbackRate等属性进行锁定 */
-hackDefineProperty();
+try {
+  /* 禁止对playbackRate等属性进行锁定 */
+  hackDefineProperty();
 
-// hackEventListener()
+  // hackEventListener()
 
-hackAttachShadow();
+  hackAttachShadow();
+} catch (e) {
+  console.error('h5player hack error', e);
+}
 
 /* 保存重要的原始函数，防止被外部脚本污染 */
 const originalMethods = {
