@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.3.8
+// @version      3.3.9
 // @description  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
 // @description:en  HTML5 video playback enhanced script, supports all H5 video playback websites, full-length shortcut key control, supports: double-speed playback / accelerated playback, video screenshots, picture-in-picture, full-page webpage, brightness, saturation, contrast, custom configuration enhancement And other functions.
 // @description:zh  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
@@ -768,6 +768,30 @@ function isInShadow (node, returnShadowRoot) {
     }
   }
   return false
+}
+
+/**
+ * 判断某个元素是否处于可视区域，适用于被动调用情况，需要高性能，请使用IntersectionObserver
+ * 参考：https://github.com/febobo/web-interview/issues/84
+ * @param element
+ * @returns {boolean}
+ */
+function isInViewPort (element) {
+  const viewWidth = window.innerWidth || document.documentElement.clientWidth;
+  const viewHeight = window.innerHeight || document.documentElement.clientHeight;
+  const {
+    top,
+    right,
+    bottom,
+    left
+  } = element.getBoundingClientRect();
+
+  return (
+    top >= 0 &&
+    left >= 0 &&
+    right <= viewWidth &&
+    bottom <= viewHeight
+  )
 }
 
 /* ua信息伪装 */
@@ -2510,6 +2534,7 @@ var zhCN = {
   setting: '设置',
   hotkeys: '快捷键',
   donate: '赞赏',
+  disableInitAutoPlay: '禁止在此网站自动播放视频',
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '前进：',
@@ -2547,6 +2572,7 @@ var enUS = {
   setting: 'setting',
   hotkeys: 'hotkeys',
   donate: 'donate',
+  disableInitAutoPlay: 'Prohibit autoplay of videos on this site',
   tipsMsg: {
     playspeed: 'Speed: ',
     forward: 'Forward: ',
@@ -2585,6 +2611,7 @@ var ru = {
   setting: 'установка',
   hotkeys: 'горячие клавиши',
   donate: 'пожертвовать',
+  disableInitAutoPlay: 'Запретить автовоспроизведение видео на этом сайте',
   tipsMsg: {
     playspeed: 'Скорость: ',
     forward: 'Вперёд: ',
@@ -2622,6 +2649,7 @@ var zhTW = {
   setting: '設置',
   hotkeys: '快捷鍵',
   donate: '讚賞',
+  disableInitAutoPlay: '禁止在此網站自動播放視頻',
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '向前：',
@@ -3024,7 +3052,22 @@ const originalMethods = {
       const player = p || t.player();
 
       // 在轮询重试的时候，如果实例变了，或处于隐藏页面中则不进行自动播放操作
-      if ((!p && t.hasInitAutoPlay) || !player || (p && p !== t.player()) || document.hidden) return
+      if ((!p && t.hasInitAutoPlay) || !player || (p && p !== t.player()) || document.hidden) {
+        return false
+      }
+
+      /**
+       * 元素不在可视范围，不允许进行初始化自动播放逻辑
+       * 由于iframe下元素的可视范围判断不准确，所以iframe下也禁止初始化自动播放逻辑
+       * TODO 待优化
+       */
+      if (!isInViewPort(player) || isInIframe()) {
+        return false
+      }
+
+      if (window.localStorage.getItem('_disableInitAutoPlay_')) {
+        return false
+      }
 
       t.hasInitAutoPlay = true;
 
@@ -3043,6 +3086,13 @@ const originalMethods = {
           setTimeout(function () {
             t.initAutoPlay(player);
           }, 200);
+        } else {
+          monkeyMenu.on(i18n.t('disableInitAutoPlay'), function () {
+            const confirm = window.confirm(i18n.t('disableInitAutoPlay'));
+            if (confirm) {
+              window.localStorage.setItem('_disableInitAutoPlay_', '1');
+            }
+          });
         }
       }
     },

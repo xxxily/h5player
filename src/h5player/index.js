@@ -25,7 +25,8 @@ import {
   isInIframe,
   isInCrossOriginFrame,
   isEditableTarget,
-  throttle
+  throttle,
+  isInViewPort
 } from '../libs/utils/index'
 
 import {
@@ -394,7 +395,22 @@ const originalMethods = {
       const player = p || t.player()
 
       // 在轮询重试的时候，如果实例变了，或处于隐藏页面中则不进行自动播放操作
-      if ((!p && t.hasInitAutoPlay) || !player || (p && p !== t.player()) || document.hidden) return
+      if ((!p && t.hasInitAutoPlay) || !player || (p && p !== t.player()) || document.hidden) {
+        return false
+      }
+
+      /**
+       * 元素不在可视范围，不允许进行初始化自动播放逻辑
+       * 由于iframe下元素的可视范围判断不准确，所以iframe下也禁止初始化自动播放逻辑
+       * TODO 待优化
+       */
+      if (!isInViewPort(player) || isInIframe()) {
+        return false
+      }
+
+      if (window.localStorage.getItem('_disableInitAutoPlay_')) {
+        return false
+      }
 
       t.hasInitAutoPlay = true
 
@@ -413,6 +429,13 @@ const originalMethods = {
           setTimeout(function () {
             t.initAutoPlay(player)
           }, 200)
+        } else {
+          monkeyMenu.on(i18n.t('disableInitAutoPlay'), function () {
+            const confirm = window.confirm(i18n.t('disableInitAutoPlay'))
+            if (confirm) {
+              window.localStorage.setItem('_disableInitAutoPlay_', '1')
+            }
+          })
         }
       }
     },
