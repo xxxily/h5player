@@ -21,38 +21,7 @@ HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷�
 
 PS：本脚基于：[HTML5播放器增强插件](https://greasyfork.org/users/49622)   但已远超原脚本提供的功能。   
 
-由于之前作者已长期不维护，故接坑自己开干，在原作者的基础上进行了大幅度的代码改造，并采用了全新的项目架构进行开发，维护更加方便，逻辑更加清晰，功能更加强大，兼容更多网站
-
-
-## 其他说明
-1、该脚本是利用业余时间进行开发维护的，有问题欢迎反馈，但不接受任何差评    
-2、如果发现脚本完全不可用，一般都不是脚本本身的问题，建议先删除后再次安装即可
-
-## 支持网站列表
-
-##### 本插件支持支持所有使用HTML5技术进行视频播放的网站
-
-下面列出一些常见网站列表方便点击测试：
-* [https://netflix.com](https://netflix.com)
-* [https://www.ted.com](https://www.ted.com)
-* [https://www.youtube.com](https://www.youtube.com)
-* [https://www.instagram.com](https://www.instagram.com)
-* [https://twitter.com](https://twitter.com)
-* [https://www.pornhub.com](https://www.pornhub.com)
-* [https://www.bilibili.com](https://www.bilibili.com)
-* [https://www.douyu.com](https://www.douyu.com)
-* [https://www.huya.com](https://www.huya.com)
-* [https://www.iqiyi.com](https://www.iqiyi.com)
-* [https://www.youku.com](https://www.youku.com)
-* [https://weibo.com/tv](https://weibo.com/tv)
-* [https://krcom.cn](https://krcom.cn)
-* [https://tv.sohu.com](https://tv.sohu.com)
-* [https://v.qq.com](https://v.qq.com)
-* [网易公开课](https://open.163.com/ted)
-* [QQ音乐 - MV](https://y.qq.com/portal/mv_lib.html)
-
-如果你常去的网站支持不好欢迎提[issues](https://github.com/xxxily/h5player/issues)  
-
+由于之前作者已长期不维护，故接坑自己开干，在原作者的基础上进行了大幅度的代码改造，并采用了全新的项目架构进行开发，维护更加方便，逻辑更加清晰，功能更加强大，兼容更多网站  
   
 ## 快捷键列表
 |  快捷键   | 说明    |
@@ -98,177 +67,37 @@ PS：本脚基于：[HTML5播放器增强插件](https://greasyfork.org/users/49
 | Q | 图像复位 |
 | S | 画面旋转 90 度 |
 
-## 更新说明：
+## 支持网站列表
 
-### 1.1.2
-* 接坑，梳理代码
-* 优化调整部分代码
+##### 本插件支持支持所有使用HTML5技术进行视频播放的网站
 
-### 1.2.0
-* 增加缩放视频画面大小功能
-* 增加对netflix网站的支持
-* 全面调整代码结构
-* 修正部分兼容性问题和相关BUG
-* 脚本代码工程化，代码遵循js standard 规范
-* 完善文档说明
+下面列出一些常见网站列表方便点击测试：
+* [https://netflix.com](https://netflix.com)
+* [https://www.ted.com](https://www.ted.com)
+* [https://www.youtube.com](https://www.youtube.com)
+* [https://www.instagram.com](https://www.instagram.com)
+* [https://twitter.com](https://twitter.com)
+* [https://www.pornhub.com](https://www.pornhub.com)
+* [https://www.bilibili.com](https://www.bilibili.com)
+* [https://www.douyu.com](https://www.douyu.com)
+* [https://www.huya.com](https://www.huya.com)
+* [https://www.iqiyi.com](https://www.iqiyi.com)
+* [https://www.youku.com](https://www.youku.com)
+* [https://weibo.com/tv](https://weibo.com/tv)
+* [https://krcom.cn](https://krcom.cn)
+* [https://tv.sohu.com](https://tv.sohu.com)
+* [https://v.qq.com](https://v.qq.com)
+* [网易公开课](https://open.163.com/ted)
+* [QQ音乐 - MV](https://y.qq.com/portal/mv_lib.html)
 
-### 1.3.0
-* 增加恢复播放进度功能
-* 增加记录播放速度功能
-* 增加禁用插件快捷功能（Ctrl+space）
-* 快捷键变成全局可用，增强兼容
-* 修复其它相关BUG
+如果你常去的网站支持不好欢迎提[issues](https://github.com/xxxily/h5player/issues)
 
+## 其他说明
+1、该脚本是利用业余时间进行开发维护的，有问题欢迎反馈，但不接受任何差评    
+2、如果发现脚本完全不可用，一般都不是脚本本身的问题，建议先删除后再次安装即可
 
-### 2.0.0
-* 解锁shadowdom下的video组件
-* 支持多实例环境
-* 大幅度优化性能，使用更快的侦听方式
-* 代码重构和提炼
-* 修复其它相关BUG
+## 更新日志
+* [https://github.com/xxxily/h5player/blob/master/changeLog.md](https://github.com/xxxily/h5player/blob/master/changeLog.md)
 
-### 2.1.0
-* 实现任务配置中心（TCC）
-* 通过任务配置中心增加某些网站的全屏，网页全屏播放快捷键
-* 修正多实例下不能同步播放速度的问题
-* 优化提示样式
-* 修复其它相关BUG
-
-### 2.2.0
-* 重构任务配置中心代码逻辑
-* 修正B站下暂停播放的兼容逻辑
-* 增加对B站直播的兼容
-* 修复其它相关BUG
-
-### 2.3.0
-* 增加默认的全屏逻辑
-* 增加默认网页全屏逻辑
-* 修复其它相关BUG
-
-### 2.3.2
-* 兼容网易公开课网页
-* 修复亮度、对比度、饱和度非线性调节BUG
-* 优化快进快退等其它细节
-
-### 2.3.3
-* 兼容腾讯视频快捷键操作
-* 增加画中画功能
-* 增加快捷键自定义功能
-
-### 2.4.1
-* 兼容腾讯视频倍速播放
-* 增加画中画功能
-* 增加快捷键自定义功能
-
-### 2.5.0
-* 增加画面移动功能
-* 任务配置中心增加自定义初始化方法
-* 屏蔽部分网站水印
-* 屏蔽iqiyi暂停广告
-* 兼容百度云盘全屏快捷键
-* 修复若干BUG
-
-### 2.5.1
-* 修复快捷键过度占用BUG
-
-### 2.6.0
-* 增加还原播放速度功能
-* 增加Esc退出网页全屏
-* 代码逻辑模块化
-
-### 2.6.1
-* 移除统计功能
-* 兼容跨域iframe下播放
-
-### 3.0.0
-* 支持视频画面截图
-* 支持快捷键跨域控制
-* 增加更多实用模块，便于后续开发
-
-### 3.0.1
-* 修复截图时文件连结过长截图下载失败BUG
-* 增加ico图标
-
-### 3.0.2
-* 修复任务配置中心失效问题
-* 优化操作提示样式降低干扰
-* 优化截图保存文件大小
-* 增加部分网站兼容
-
-### 3.0.3
-* 解决tips引起的样式混乱BUG
-* 优化获取video包裹节点的方法
-* 增加MouseObserver模块
-
-### 3.0.4
-* 增强提示样式在不同网站下的兼容
-* 优化获取video包裹节点的方法
-
-### 3.0.5
-* 增加mac快捷键兼容
-* 优化部分代码逻辑
-
-### 3.1.0
-* 增加自动恢复播放进度的控制选项
-* 修复部分网站tips无法正常显示BUG
-
-### 3.1.1
-* 增加部分网站兼容
-* 优化提示父节点获取逻辑
-
-### 3.1.2
-* 修复火狐下滤镜不兼容导致黑屏的BUG
-* 部分网站增加一键播放下一个视频功能
-* 增强部分网站的兼容
-
-### 3.2.0
-* 增加跨Tab操作画中画视频功能
-
-### 3.2.1
-* 自动恢复设置调整为按域名进行控制
-* 增加对A站的兼容，取消B站的自动播放
-* 其它功能的部分细节优化
-
-### 3.2.2
-* 增加facebook全屏快捷键的兼容
-* 增加快进快退，音量快升快降（ctrl+上下左右箭头）
-* 修复旋转功能BUG
-
-### 3.2.3
-* 支持多语言
-
-### 3.2.4
-* 支持跨域截图
-* 支持对特定事件进行挂起（增强抗干扰能力）
-* 音量调节步长逻辑优化
-
-### 3.2.5
-* 修正部分网站兼容问题
-
-### 3.2.6
-* 修复跨域截图导致的多个网站报错问题
-
-### 3.2.7
-* 修复脚本报错导致的网站页面异常
-
-### 3.2.8
-* 增加调试辅助逻辑实现热更新调试
-* 引入UI相关依赖，准备进行UI界面开发
-* 解决部分网站兼容异常问题
-
-### 3.3.0
-* 提示界面支持国际化
-* 优化B站和油管的部分操作体验
-* 优化部分其他反馈的问题
-
-### 3.3.1
-* 解决B站黑屏问题
-
-### 3.3.2
-* 修复对百度网盘等网站的支持
-
-### 3.3.3
-* 修复百度网盘非VIP会员的视频播放倍速无效问题
-
-### 3.3.4
-* 降低hookJs性能对其他网站的影响（临时方案）
+## 给我赞赏
+* [https://github.com/xxxily/h5player/blob/master/donate.png](https://github.com/xxxily/h5player/blob/master/donate.png)

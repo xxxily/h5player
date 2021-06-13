@@ -33,11 +33,7 @@ import {
   getPageWindow
 } from './helper'
 
-/* 禁止对playbackRate进行锁定 */
-// if (location.href.includes('pan.baidu.com') || location.href.includes('v.qq.com')) {
-//   hackDefineProperty()
-// }
-
+/* 禁止对playbackRate等属性进行锁定 */
 hackDefineProperty()
 
 window._debugMode_ = true
@@ -67,8 +63,15 @@ const originalMethods = {
   // monkeyMenu.on('i18n.t('setting')', function () {
   //   window.alert('功能开发中，敬请期待...')
   // })
-  monkeyMenu.on(i18n.t('about'), function () {
-    window.GM_openInTab('https://github.com/xxxily/h5player', {
+  monkeyMenu.on(i18n.t('hotkeys'), function () {
+    window.GM_openInTab('https://github.com/xxxily/h5player#%E5%BF%AB%E6%8D%B7%E9%94%AE%E5%88%97%E8%A1%A8', {
+      active: true,
+      insert: true,
+      setParent: true
+    })
+  })
+  monkeyMenu.on(i18n.t('donate'), function () {
+    window.GM_openInTab('https://github.com/xxxily/h5player/blob/master/donate.png', {
       active: true,
       insert: true,
       setParent: true
@@ -384,7 +387,9 @@ const originalMethods = {
       const player = p || t.player()
 
       // 在轮询重试的时候，如果实例变了，或处于隐藏页面中则不进行自动播放操作
-      if (!player || (p && p !== t.player()) || document.hidden) return
+      if ((!p && t.hasInitAutoPlay) || !player || (p && p !== t.player()) || document.hidden) return
+
+      t.hasInitAutoPlay = true
 
       const taskConf = TCC.getTaskConfig()
       if (player && taskConf.autoPlay && player.paused) {
@@ -621,14 +626,14 @@ const originalMethods = {
       // 使用getContainer获取到的父节点弊端太多，暂时弃用
       // const _tispContainer_ = player._tispContainer_  ||  getContainer(player);
 
-      let tispContainer = player._tispContainer_ || player.parentNode
+      let tispContainer = player.parentNode
+
       /* 如果父节点为无长宽的元素，则再往上查找一级 */
       const containerBox = tispContainer.getBoundingClientRect()
       if ((!containerBox.width || !containerBox.height) && tispContainer.parentNode) {
         tispContainer = tispContainer.parentNode
       }
 
-      if (!player._tispContainer_) { player._tispContainer_ = tispContainer }
       return tispContainer
     },
     tips: function (str) {
@@ -1420,9 +1425,7 @@ const originalMethods = {
 
   // debugCode.init(h5Player)
 
-  // document.addEventListener('visibilitychange', function () {
-  //   if (!document.hidden) {
-  //     h5Player.initAutoPlay()
-  //   }
-  // })
+  document.addEventListener('visibilitychange', function () {
+    h5Player.initAutoPlay()
+  })
 })()

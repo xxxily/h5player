@@ -94,7 +94,7 @@ const taskConf = {
         return true
       }
     },
-    // autoPlay: '.bilibili-player-video-btn-start',
+    autoPlay: '.bilibili-player-video-btn-start',
     switchPlayStatus: '.bilibili-player-video-btn-start',
     next: '.bilibili-player-video-btn-next',
     init: function (h5Player, taskConf) {},
