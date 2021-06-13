@@ -2,7 +2,6 @@
 // @name         HTML5视频播放器增强脚本
 // @name:en      HTML5 video player enhanced script
 // @name:zh      HTML5视频播放器增强脚本
-// @name:zh-CN   HTML5视频播放器增强脚本
 // @name:zh-TW   HTML5視頻播放器增強腳本
 // @name:ja      HTML5ビデオプレーヤーの拡張スクリプト
 // @name:ko      HTML5 비디오 플레이어 고급 스크립트
@@ -10,11 +9,10 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.3.1
+// @version      3.3.4
 // @description  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
 // @description:en  HTML5 video playback enhanced script, supports all H5 video playback websites, full-length shortcut key control, supports: double-speed playback / accelerated playback, video screenshots, picture-in-picture, full-page webpage, brightness, saturation, contrast, custom configuration enhancement And other functions.
 // @description:zh  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
-// @description:zh-CN  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
 // @description:zh-TW  HTML5視頻播放增強腳本，支持所有H5視頻播放網站，全程快捷鍵控制，支持：倍速播放/加速播放、視頻畫面截圖、畫中畫、網頁全屏、調節亮度、飽和度、對比度、自定義配置功能增強等功能。
 // @description:ja  HTML5ビデオ再生拡張スクリプト、すべてのH5ビデオ再生Webサイト、フルレングスのショートカットキーコントロールをサポート、サポート：倍速再生/加速再生、ビデオスクリーンショット、ピクチャーインピクチャー、フルページWebページ、明るさ、彩度、コントラスト、カスタム構成拡張 そして他の機能。
 // @description:ko  HTML5 비디오 재생 고급 스크립트, 모든 H5 비디오 재생 웹 사이트 지원, 전체 길이 바로 가기 키 제어 지원 : 2 배속 재생 / 가속 재생, 비디오 스크린 샷, PIP (picture-in-picture), 전체 페이지 웹 페이지, 밝기, 채도, 대비, 사용자 정의 구성 향상 그리고 다른 기능들.
@@ -41,6 +39,7 @@
 // @grant        GM_download
 // @grant        GM_xmlhttpRequest
 // @run-at       document-start
+// @require      https://unpkg.com/@popperjs/core@2.6.0/dist/umd/popper.js
 // @require      https://unpkg.com/vue@2.6.11/dist/vue.min.js
 // @require      https://unpkg.com/element-ui@2.13.0/lib/index.js
 // @resource     elementUiCss https://unpkg.com/element-ui@2.13.0/lib/theme-chalk/index.css
@@ -48,6 +47,335 @@
 // @license      GPL
 // ==/UserScript==
 (function (w) { if (w) { w.name = 'h5player'; } })();
+
+/* 当前用到的快捷键 */
+const hasUseKey = {
+  keyCodeList: [13, 16, 17, 18, 27, 32, 37, 38, 39, 40, 49, 50, 51, 52, 67, 68, 69, 70, 73, 74, 75, 78, 79, 80, 81, 82, 83, 84, 85, 87, 88, 89, 90, 97, 98, 99, 100, 220],
+  keyList: ['enter', 'shift', 'control', 'alt', 'escape', ' ', 'arrowleft', 'arrowright', 'arrowup', 'arrowdown', '1', '2', '3', '4', 'c', 'd', 'e', 'f', 'i', 'j', 'k', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'w', 'x', 'y', 'z', '\\', '|'],
+  keyMap: {
+    enter: 13,
+    shift: 16,
+    ctrl: 17,
+    alt: 18,
+    esc: 27,
+    space: 32,
+    '←': 37,
+    '↑': 38,
+    '→': 39,
+    '↓': 40,
+    1: 49,
+    2: 50,
+    3: 51,
+    4: 52,
+    c: 67,
+    d: 68,
+    e: 69,
+    f: 70,
+    i: 73,
+    j: 74,
+    k: 75,
+    n: 78,
+    o: 79,
+    p: 80,
+    q: 81,
+    r: 82,
+    s: 83,
+    t: 84,
+    u: 85,
+    w: 87,
+    x: 88,
+    y: 89,
+    z: 90,
+    pad1: 97,
+    pad2: 98,
+    pad3: 99,
+    pad4: 100,
+    '\\': 220
+  }
+};
+
+/**
+ * 判断当前按键是否注册为需要用的按键
+ * 用于减少对其它键位的干扰
+ */
+function isRegisterKey (event) {
+  const keyCode = event.keyCode;
+  const key = event.key.toLowerCase();
+  return hasUseKey.keyCodeList.includes(keyCode) ||
+    hasUseKey.keyList.includes(key)
+}
+
+/**
+ * 由于tampermonkey对window对象进行了封装，我们实际访问到的window并非页面真实的window
+ * 这就导致了如果我们需要将某些对象挂载到页面的window进行调试的时候就无法挂载了
+ * 所以必须使用特殊手段才能访问到页面真实的window对象，于是就有了下面这个函数
+ * @returns {Promise<void>}
+ */
+async function getPageWindow () {
+  return new Promise(function (resolve, reject) {
+    if (window._pageWindow) {
+      return resolve(window._pageWindow)
+    }
+
+    const listenEventList = ['load', 'mousemove', 'scroll', 'get-page-window-event'];
+
+    function getWin (event) {
+      window._pageWindow = this;
+      // debug.log('getPageWindow succeed', event)
+      listenEventList.forEach(eventType => {
+        window.removeEventListener(eventType, getWin, true);
+      });
+      resolve(window._pageWindow);
+    }
+
+    listenEventList.forEach(eventType => {
+      window.addEventListener(eventType, getWin, true);
+    });
+
+    /* 自行派发事件以便用最短的时候获得pageWindow对象 */
+    window.dispatchEvent(new window.Event('get-page-window-event'));
+  })
+}
+getPageWindow();
+
+function toArray (arg) {
+  arg = Array.isArray(arg) ? arg : [arg];
+  return arg
+}
+
+const Popper = window.Popper;
+class Tips {
+  constructor (opts = {}) {
+    opts.fontSize = opts.fontSize || 16;
+    opts.className = opts.className || 'tooltips_el';
+    opts.content = opts.content || 'tips msg...';
+    opts.styleRule = opts.styleRule || '';
+    opts.show = opts.show || false;
+    opts.popperOpts = opts.popperOpts || {};
+    opts.showEvents = toArray(opts.showEvents || []);
+    opts.hideEvents = toArray(opts.hideEvents || []);
+    opts.toggleEvents = toArray(opts.toggleEvents || []);
+
+    this.popperInstance = null;
+    this.reference = null;
+    this.tooltip = null;
+    this.opts = opts;
+
+    /* 当前tooltip显示还是隐藏的状态标识 */
+    this.status = false;
+
+    if (opts.reference) {
+      this.create(opts.reference);
+      if (opts.show) {
+        this.show();
+      }
+    }
+  }
+
+  _createTipsDom (opts = {}) {
+    const wrapDom = document.createElement('div');
+    wrapDom.setAttribute('class', opts.className);
+
+    const contenDom = document.createElement('div');
+    contenDom.setAttribute('class', 'tooltips-content');
+    contenDom.innerHTML = opts.content;
+    wrapDom.appendChild(contenDom);
+
+    // 过渡动画
+    // transition: all 500ms ease;
+    const styleDom = document.createElement('style');
+    styleDom.appendChild(document.createTextNode(`
+      .${opts.className} {
+        z-index: 999999;
+        font-size: ${opts.fontSize || 16}px;
+        padding: 5px 10px;
+        background: rgba(0,0,0,0.4);
+        color:white;
+        top: 0;
+        left: 0;
+        opacity: 0;
+        border-bottom-right-radius: 5px;
+        display: none;
+        -webkit-font-smoothing: subpixel-antialiased;
+        font-family: 'microsoft yahei', Verdana, Geneva, sans-serif;
+        -webkit-user-select: none;
+      }
+      .${opts.className}[data-popper-reference-hidden] { visibility: hidden; pointer-events: none; }
+      .${opts.className}[data-popper-escaped] { visibility: hidden; pointer-events: none; }
+      ${opts.styleRule || ''}
+    `));
+    wrapDom.appendChild(styleDom);
+
+    return wrapDom
+  }
+
+  /**
+   * 创建可用的tooltip对象
+   * @param reference {Element} -必选 提供给createPopper的reference对象
+   * @returns {null|boolean}
+   */
+  create (reference) {
+    const t = this;
+
+    /* 没引入Popper脚本或没提供参考对象或已创建实例 */
+    if (!Popper || !reference || t.popperInstance) {
+      return t.popperInstance || false
+    }
+
+    t.reference = reference;
+    t.tooltip = t._createTipsDom(t.opts);
+
+    const parentNode = reference.parentNode || reference;
+    parentNode.appendChild(t.tooltip);
+
+    t.popperInstance = Popper.createPopper(reference, t.tooltip, t.opts.popperOpts || {});
+    t._eventsHandler();
+
+    return t.popperInstance
+  }
+
+  /**
+   * 重建tooltip对象
+   * @param reference {Element} -可选 create函数所需参数，没提供则使用之前的reference
+   * @returns {null|boolean}
+   */
+  rebuild (reference) {
+    const t = this;
+    reference = reference || t.reference;
+    t.destroy();
+    return t.create(reference)
+  }
+
+  /**
+   * 绑定和解绑相关事件
+   * @param unbind {Boolean} 默认是绑定相关事件，如果为true则解绑相关事件
+   * @returns {boolean}
+   * @private
+   */
+  _eventsHandler (unbind) {
+    const t = this;
+    if (!t.reference) return false
+
+    const handlerName = unbind ? 'removeEventListener' : 'addEventListener';
+    const eventTypeArr = ['show', 'hide', 'toggle'];
+    eventTypeArr.forEach(eventType => {
+      const eventList = toArray(t.opts[eventType + 'Events']);
+      eventList.forEach(eventName => {
+        t.reference[handlerName](eventName, () => t[eventType]());
+      });
+    });
+  }
+
+  /**
+   * 设置tooltip的内容
+   * @param str {String} -必选 要设置的内容，可以包含HTML内容
+   */
+  setContent (str) {
+    const t = this;
+
+    if (str && t.tooltip) {
+      const contentEl = t.tooltip.querySelector('.tooltips-content');
+      if (contentEl) {
+        contentEl.innerHTML = str;
+        t.opts.content = str;
+      }
+    }
+  }
+
+  /**
+   * 设置tooltip的样式规则
+   * @param rule {String} -必选 要设置的样式规则
+   * @param replace {Boolean} -可选 使用当前样式规则替换之前的所有规则
+   */
+  setStyleRule (rule, replace) {
+    const t = this;
+
+    if (rule && t.tooltip) {
+      const styleEl = t.tooltip.querySelector('style') || document.createElement('style');
+
+      if (replace) {
+        styleEl.innerHTML = '';
+      }
+
+      styleEl.appendChild(document.createTextNode(rule));
+      t.opts.styleRule = rule;
+    }
+  }
+
+  /**
+   * 显示tooltip对象
+   * @param str {String} -可选 修改要显示的内容
+   */
+  show (str) {
+    const t = this;
+
+    if (t.reference && t.tooltip) {
+      t.setContent(str);
+      t.tooltip.style.display = 'block';
+      t.tooltip.style.opacity = 1;
+      t.status = true;
+    }
+  }
+
+  hide () {
+    const t = this;
+
+    if (t.reference && t.tooltip) {
+      t.tooltip.style.display = 'none';
+      t.tooltip.style.opacity = 0;
+      t.status = false;
+    }
+  }
+
+  toggle () {
+    if (this.status === true) {
+      this.hide();
+    } else {
+      this.show();
+    }
+  }
+
+  destroy () {
+    const t = this;
+
+    t._eventsHandler(true);
+    t.reference = null;
+
+    if (t.tooltip && t.tooltip.parentNode) {
+      t.tooltip.parentNode.removeChild(t.tooltip);
+    }
+    t.tooltip = null;
+
+    t.popperInstance && t.popperInstance.destroy();
+    t.popperInstance = null;
+  }
+}
+
+async function init () {
+  const win = await getPageWindow();
+  if (win) {
+    win.Tips = Tips;
+
+    if (location.host === 'www.baidu.com') {
+      var reference = document.querySelector('#s_kw_wrap .soutu-btn') || document.querySelector('#form .soutu-btn');
+
+      var tips = new Tips({
+        fontSize: 12,
+        reference: reference,
+        className: 'test-tooltips',
+        content: '<h1>document.querySelector(\'#s_kw_wrap .soutu-btn\')</h1>',
+        show: true,
+        popperOpts: {},
+        showEvents: ['mouseenter', 'focus'],
+        // hideEvents: ['mouseleave', 'blur'],
+        toggleEvents: ['click']
+      });
+
+      console.log(tips);
+    }
+  }
+}
+init();
 
 /*!
  * @name         utils.js
@@ -252,11 +580,10 @@ class TCC {
  * 参考：https://javascript.ruanyifeng.com/dom/mutationobserver.html
  */
 function ready (selector, fn, shadowRoot) {
-  const listeners = [];
   const win = window;
-  const doc = shadowRoot || win.document;
+  const docRoot = shadowRoot || win.document.documentElement;
   const MutationObserver = win.MutationObserver || win.WebKitMutationObserver;
-  let observer;
+  const listeners = docRoot._MutationListeners || [];
 
   function $ready (selector, fn) {
     // 储存选择器和回调函数
@@ -264,33 +591,41 @@ function ready (selector, fn, shadowRoot) {
       selector: selector,
       fn: fn
     });
-    if (!observer) {
-      // 监听document变化
-      observer = new MutationObserver(check);
-      observer.observe(shadowRoot || doc.documentElement, {
+
+    /* 增加监听对象 */
+    if (!docRoot._MutationListeners || !docRoot._MutationObserver) {
+      docRoot._MutationListeners = listeners;
+      docRoot._MutationObserver = new MutationObserver(() => {
+        for (let i = 0; i < docRoot._MutationListeners.length; i++) {
+          const item = docRoot._MutationListeners[i];
+          check(item.selector, item.fn);
+        }
+      });
+
+      docRoot._MutationObserver.observe(docRoot, {
         childList: true,
         subtree: true
       });
     }
-    // 检查该节点是否已经在DOM中
-    check();
+
+    // 检查节点是否已经在DOM中
+    check(selector, fn);
   }
 
-  function check () {
-    for (let i = 0; i < listeners.length; i++) {
-      var listener = listeners[i];
-      var elements = doc.querySelectorAll(listener.selector);
-      for (let j = 0; j < elements.length; j++) {
-        var element = elements[j];
-        if (!element._isMutationReady_) {
-          element._isMutationReady_ = true;
-          listener.fn.call(element, element);
-        }
+  function check (selector, fn) {
+    const elements = docRoot.querySelectorAll(selector);
+    for (let i = 0; i < elements.length; i++) {
+      const element = elements[i];
+      element._MutationReadyList_ = element._MutationReadyList_ || [];
+      if (!element._MutationReadyList_.includes(fn)) {
+        element._MutationReadyList_.push(fn);
+        fn.call(element, element);
       }
     }
   }
 
-  $ready(selector, fn);
+  const selectorArr = Array.isArray(selector) ? selector : [selector];
+  selectorArr.forEach(selector => $ready(selector, fn));
 }
 
 /**
@@ -332,181 +667,6 @@ function hackAttachShadow () {
     window._hasHackAttachShadow_ = true;
   } catch (e) {
     console.error('hackAttachShadow error by h5player plug-in');
-  }
-}
-
-/**
- * 事件侦听hack
- * @param config.debug {Boolean} -可选 开启调试模式，调试模式下会把所有注册的事件都挂载到 window._listenerList_ 对象下，用于调试分析
- * @param config.proxyNodeType {String|Array} -可选 对某些类型的dom标签的事件进行代理处理
- * 请不要对一些非常常见的标签进行事件代理，过多的代理会造成严重的性能消耗
- */
-function hackEventListener (config) {
-  config = config || {
-    debug: false,
-    proxyAll: false,
-    proxyNodeType: []
-  };
-
-  /* 对proxyNodeType数据进行预处理，将里面的字符变成大写 */
-  let proxyNodeType = Array.isArray(config.proxyNodeType) ? config.proxyNodeType : [config.proxyNodeType];
-  const tmpArr = [];
-  proxyNodeType.forEach(type => {
-    if (typeof type === 'string') {
-      tmpArr.push(type.toUpperCase());
-    }
-  });
-  proxyNodeType = tmpArr;
-
-  const EVENT = window.EventTarget.prototype;
-  if (EVENT._addEventListener) return
-  EVENT._addEventListener = EVENT.addEventListener;
-  EVENT._removeEventListener = EVENT.removeEventListener;
-  // 挂载到全局用于调试
-  window._listenerList_ = window._listenerList_ || {};
-
-  // hack addEventListener
-  EVENT.addEventListener = function () {
-    const t = this;
-    const arg = arguments;
-    const type = arg[0];
-    const listener = arg[1];
-
-    if (!listener) {
-      return false
-    }
-
-    /* 把sourceopen事件干掉，则好多网站视频都将播放不了 */
-    // if (/sourceopen/gi.test(type)) {
-    //   console.log('------------------------------')
-    //   console.log(type, listener)
-    //   return false
-    // }
-
-    /**
-     * 使用了Symbol之后，某些页面下会和 raven-js发生冲突，所以必须进行 try catch
-     * TODO 如何解决该问题待研究，测试页面：https://xueqiu.com/S/SZ300498
-     */
-    try {
-      /**
-       * 对监听函数进行代理
-       * 为了降低对性能的影响，此处只对特定的标签的事件进行代理
-       */
-      const listenerSymbol = Symbol.for(listener);
-      let listenerProxy = null;
-      if (config.proxyAll || proxyNodeType.includes(t.nodeName)) {
-        try {
-          listenerProxy = new Proxy(listener, {
-            apply (target, ctx, args) {
-              // const event = args[0]
-              // console.log(event.type, event, target)
-
-              /* 让外部通过 _listenerProxyApplyHandler_ 控制事件的执行 */
-              if (t._listenerProxyApplyHandler_ instanceof Function) {
-                const handlerResult = t._listenerProxyApplyHandler_(target, ctx, args, arg);
-                if (handlerResult !== undefined) {
-                  return handlerResult
-                }
-              }
-
-              return target.apply(ctx, args)
-            }
-          });
-
-          /* 挂载listenerProxy到自身，方便快速查找 */
-          listener[listenerSymbol] = listenerProxy;
-
-          /* 使用listenerProxy替代本来应该进行侦听的listener */
-          arg[1] = listenerProxy;
-        } catch (e) {
-          // console.error('listenerProxy error:', e)
-        }
-      }
-      t._addEventListener.apply(t, arg);
-      t._listeners = t._listeners || {};
-      t._listeners[type] = t._listeners[type] || [];
-      const listenerObj = {
-        target: t,
-        type,
-        listener,
-        listenerProxy,
-        options: arg[2],
-        addTime: new Date().getTime()
-      };
-      t._listeners[type].push(listenerObj);
-
-      /* 挂载到全局对象用于观测调试 */
-      if (config.debug) {
-        window._listenerList_[type] = window._listenerList_[type] || [];
-        window._listenerList_[type].push(listenerObj);
-      }
-    } catch (e) {
-      t._addEventListener.apply(t, arg);
-      // console.error(e)
-    }
-  };
-
-  // hack removeEventListener
-  EVENT.removeEventListener = function () {
-    const arg = arguments;
-    const type = arg[0];
-    const listener = arg[1];
-
-    if (!listener) {
-      return false
-    }
-
-    try {
-      /* 对arg[1]重新赋值，以便正确卸载对应的监听函数 */
-      const listenerSymbol = Symbol.for(listener);
-      arg[1] = listener[listenerSymbol] || listener;
-
-      this._removeEventListener.apply(this, arg);
-      this._listeners = this._listeners || {};
-      this._listeners[type] = this._listeners[type] || [];
-
-      const result = [];
-      this._listeners[type].forEach(listenerObj => {
-        if (listenerObj.listener !== listener) {
-          result.push(listenerObj);
-        }
-      });
-      this._listeners[type] = result;
-
-      /* 从全局列表中移除 */
-      if (config.debug) {
-        const result = [];
-        const listenerTypeList = window._listenerList_[type] || [];
-        listenerTypeList.forEach(listenerObj => {
-          if (listenerObj.listener !== listener) {
-            result.push(listenerObj);
-          }
-        });
-        window._listenerList_[type] = result;
-      }
-    } catch (e) {
-      this._removeEventListener.apply(this, arg);
-      console.error(e);
-    }
-  };
-
-  /* 对document下的事件侦听方法进行hack */
-  try {
-    if (document.addEventListener !== EVENT.addEventListener) {
-      document.addEventListener = EVENT.addEventListener;
-    }
-    if (document.removeEventListener !== EVENT.removeEventListener) {
-      document.removeEventListener = EVENT.removeEventListener;
-    }
-
-    // if (window.addEventListener !== EVENT.addEventListener) {
-    //   window.addEventListener = EVENT.addEventListener
-    // }
-    // if (window.removeEventListener !== EVENT.removeEventListener) {
-    //   window.removeEventListener = EVENT.removeEventListener
-    // }
-  } catch (e) {
-    console.error(e);
   }
 }
 
@@ -811,63 +971,55 @@ const taskConf = {
       callback: function (h5Player, taskConf, data) {
         const { event } = data;
         const key = event.key.toLowerCase();
-        const speedItems = document.querySelectorAll('.container_inner txpdiv[data-role="txp-button-speed-list"] .txp_menuitem');
+        const keyName = 'customShortcuts_' + key;
 
-        /* 利用sessionStorage下的playbackRate进行设置 */
-        if (window.sessionStorage.playbackRate && /(c|x|z|1|2|3|4)/.test(key)) {
-          const curSpeed = Number(window.sessionStorage.playbackRate);
-          const perSpeed = curSpeed - 0.1 >= 0 ? curSpeed - 0.1 : 0.1;
-          const nextSpeed = curSpeed + 0.1 <= 4 ? curSpeed + 0.1 : 4;
-          let targetSpeed = curSpeed;
-          switch (key) {
-            case 'z' :
-              targetSpeed = 1;
-              break
-            case 'c' :
-              targetSpeed = nextSpeed;
-              break
-            case 'x' :
-              targetSpeed = perSpeed;
-              break
-            default :
-              targetSpeed = Number(key);
-              break
+        if (!h5Player[keyName]) {
+          /* 第一次按下快捷键使用默认逻辑进行调速 */
+          h5Player[keyName] = {
+            time: Date.now(),
+            playbackRate: h5Player.playbackRate
+          };
+          return false
+        } else {
+          /* 第一次操作后的200ms内的操作都是由默认逻辑进行调速 */
+          if (Date.now() - h5Player[keyName].time < 200) {
+            return false
           }
 
-          window.sessionStorage.playbackRate = targetSpeed;
-          h5Player.setCurrentTime(0.01, true);
-          h5Player.setPlaybackRate(targetSpeed, true);
-          return true
-        }
+          /* 判断是否需进行降级处理，利用sessionStorage进行调速 */
+          if (h5Player[keyName] === h5Player.playbackRate || h5Player[keyName] === true) {
+            if (window.sessionStorage.playbackRate && /(c|x|z|1|2|3|4)/.test(key)) {
+              const curSpeed = Number(window.sessionStorage.playbackRate);
+              const perSpeed = curSpeed - 0.1 >= 0 ? curSpeed - 0.1 : 0.1;
+              const nextSpeed = curSpeed + 0.1 <= 4 ? curSpeed + 0.1 : 4;
+              let targetSpeed = curSpeed;
+              switch (key) {
+                case 'z' :
+                  targetSpeed = 1;
+                  break
+                case 'c' :
+                  targetSpeed = nextSpeed;
+                  break
+                case 'x' :
+                  targetSpeed = perSpeed;
+                  break
+                default :
+                  targetSpeed = Number(key);
+                  break
+              }
 
-        /* 模拟点击触发 */
-        if (speedItems.length >= 3 && /(c|x|z)/.test(key)) {
-          let curIndex = 1;
-          speedItems.forEach((item, index) => {
-            if (item.classList.contains('txp_current')) {
-              curIndex = index;
+              window.sessionStorage.playbackRate = targetSpeed;
+              h5Player.setCurrentTime(0.01, true);
+              h5Player.setPlaybackRate(targetSpeed, true);
+              return true
             }
-          });
-          const perIndex = curIndex - 1 >= 0 ? curIndex - 1 : 0;
-          const nextIndex = curIndex + 1 < speedItems.length ? curIndex + 1 : speedItems.length - 1;
 
-          let target = speedItems[1];
-          switch (key) {
-            case 'z' :
-              target = speedItems[1];
-              break
-            case 'c' :
-              target = speedItems[nextIndex];
-              break
-            case 'x' :
-              target = speedItems[perIndex];
-              break
+            /* 标识默认调速方案失效，需启用sessionStorage调速方案 */
+            h5Player[keyName] = true;
+          } else {
+            /* 标识默认调速方案生效 */
+            h5Player[keyName] = false;
           }
-
-          target.click();
-          const speedNum = Number(target.innerHTML.replace('x'));
-          h5Player.setPlaybackRate(speedNum);
-          return true
         }
       }
     },
@@ -1631,96 +1783,6 @@ var Debug$1 = new Debug();
 
 var debug = Debug$1.create('h5player message:');
 
-/* 当前用到的快捷键 */
-const hasUseKey = {
-  keyCodeList: [13, 16, 17, 18, 27, 32, 37, 38, 39, 40, 49, 50, 51, 52, 67, 68, 69, 70, 73, 74, 75, 78, 79, 80, 81, 82, 83, 84, 85, 87, 88, 89, 90, 97, 98, 99, 100, 220],
-  keyList: ['enter', 'shift', 'control', 'alt', 'escape', ' ', 'arrowleft', 'arrowright', 'arrowup', 'arrowdown', '1', '2', '3', '4', 'c', 'd', 'e', 'f', 'i', 'j', 'k', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'w', 'x', 'y', 'z', '\\', '|'],
-  keyMap: {
-    enter: 13,
-    shift: 16,
-    ctrl: 17,
-    alt: 18,
-    esc: 27,
-    space: 32,
-    '←': 37,
-    '↑': 38,
-    '→': 39,
-    '↓': 40,
-    1: 49,
-    2: 50,
-    3: 51,
-    4: 52,
-    c: 67,
-    d: 68,
-    e: 69,
-    f: 70,
-    i: 73,
-    j: 74,
-    k: 75,
-    n: 78,
-    o: 79,
-    p: 80,
-    q: 81,
-    r: 82,
-    s: 83,
-    t: 84,
-    u: 85,
-    w: 87,
-    x: 88,
-    y: 89,
-    z: 90,
-    pad1: 97,
-    pad2: 98,
-    pad3: 99,
-    pad4: 100,
-    '\\': 220
-  }
-};
-
-/**
- * 判断当前按键是否注册为需要用的按键
- * 用于减少对其它键位的干扰
- */
-function isRegisterKey (event) {
-  const keyCode = event.keyCode;
-  const key = event.key.toLowerCase();
-  return hasUseKey.keyCodeList.includes(keyCode) ||
-    hasUseKey.keyList.includes(key)
-}
-
-/**
- * 由于tampermonkey对window对象进行了封装，我们实际访问到的window并非页面真实的window
- * 这就导致了如果我们需要将某些对象挂载到页面的window进行调试的时候就无法挂载了
- * 所以必须使用特殊手段才能访问到页面真实的window对象，于是就有了下面这个函数
- * @returns {Promise<void>}
- */
-async function getPageWindow () {
-  return new Promise(function (resolve, reject) {
-    if (window._pageWindow) {
-      return resolve(window._pageWindow)
-    }
-
-    const listenEventList = ['load', 'mousemove', 'scroll', 'get-page-window-event'];
-
-    function getWin (event) {
-      window._pageWindow = this;
-      // debug.log('getPageWindow succeed', event)
-      listenEventList.forEach(eventType => {
-        window.removeEventListener(eventType, getWin, true);
-      });
-      resolve(window._pageWindow);
-    }
-
-    listenEventList.forEach(eventType => {
-      window.addEventListener(eventType, getWin, true);
-    });
-
-    /* 自行派发事件以便用最短的时候获得pageWindow对象 */
-    window.dispatchEvent(new window.Event('get-page-window-event'));
-  })
-}
-getPageWindow();
-
 /*!
  * @name         crossTabCtl.js
  * @description  跨Tab控制脚本逻辑
@@ -1788,6 +1850,71 @@ const crossTabCtl = {
     t.bindCrossTabEvent();
   }
 };
+
+/**
+ * 禁止对playbackRate进行锁定
+ * 部分播放器会阻止修改playbackRate
+ * 通过hackDefineProperty来反阻止playbackRate的修改
+ * 参考： https://greasyfork.org/zh-CN/scripts/372673
+ */
+
+function hackDefineProperty () {
+  const originalMethods = {
+    Object: Object,
+    defineProperty: Object.defineProperty,
+    defineProperties: Object.defineProperties
+  };
+
+  function hookDefineDetails (target, key, option) {
+    if (option && target && target instanceof Element && typeof key === 'string' && key.indexOf('on') >= 0) {
+      option.configurable = true;
+    }
+
+    if (target instanceof HTMLVideoElement) {
+      const unLockProperties = ['playbackRate', 'currentTime', 'volume', 'muted'];
+      if (unLockProperties.includes(key)) {
+        if (!option.configurable) {
+          option.configurable = true;
+          debug.log(`禁止对${key}进行锁定`);
+        }
+      }
+    }
+
+    return [target, key, option]
+  }
+
+  Object.defineProperty = function () {
+    const args = arguments;
+
+    const option = args[2];
+    const ele = args[0];
+    const key = args[1];
+    const afterArgs = hookDefineDetails(ele, key, option);
+    afterArgs.forEach((arg, i) => {
+      args[i] = arg;
+    });
+
+    return originalMethods.defineProperty.apply(originalMethods.Object, args)
+  };
+
+  Object.defineProperties = function () {
+    const args = arguments;
+
+    const properties = args[1];
+    const ele = args[0];
+    if (ele && ele instanceof Element) {
+      Object.keys(properties).forEach(key => {
+        const option = properties[key];
+        const afterArgs = hookDefineDetails(ele, key, option);
+        args[0] = afterArgs[0];
+        delete properties[key];
+        properties[afterArgs[1]] = afterArgs[2];
+      });
+    }
+
+    return originalMethods.defineProperties.apply(originalMethods.Object, args)
+  };
+}
 
 var zhCN = {
   about: '关于',
@@ -1940,7 +2067,26 @@ const messages = {
   ru: ru
 };
 
-(async function () {
+/* 禁止对playbackRate进行锁定 */
+// if (location.href.includes('pan.baidu.com') || location.href.includes('v.qq.com')) {
+//   hackDefineProperty()
+// }
+
+hackDefineProperty();
+
+window._debugMode_ = true;
+
+/* 保存重要的原始函数，防止被外部脚本污染 */
+const originalMethods = {
+  Object: {
+    defineProperty: Object.defineProperty,
+    defineProperties: Object.defineProperties
+  },
+  setInterval: window.setInterval,
+  setTimeout: window.setTimeout
+}
+
+;(async function () {
   debug.log('h5Player init');
 
   const i18n = new I18n({
@@ -1971,11 +2117,11 @@ const messages = {
   });
 
   hackAttachShadow();
-  hackEventListener({
-    // proxyAll: true,
-    proxyNodeType: ['video'],
-    debug: debug.isDebugMode()
-  });
+  // hackEventListener({
+  //   // proxyAll: true,
+  //   proxyNodeType: ['video'],
+  //   debug: debug.isDebugMode()
+  // })
 
   let TCC = null;
   const h5Player = {
@@ -2066,17 +2212,11 @@ const messages = {
       t.isFoucs();
       t.proxyPlayerInstance(player);
 
-      // player.addEventListener('durationchange', () => {
-      //   debug.log('当前视频长度：', player.duration)
-      // })
       // player.setAttribute('preload', 'auto')
 
       /* 增加通用全屏，网页全屏api */
       player._fullScreen_ = new FullScreen(player);
       player._fullPageScreen_ = new FullScreen(player, true);
-
-      /* 注册播放器的事件代理处理器 */
-      player._listenerProxyApplyHandler_ = t.playerEventHandler;
 
       if (!player._hasCanplayEvent_) {
         player.addEventListener('canplay', function (event) {
@@ -2119,7 +2259,18 @@ const messages = {
         // debug.log('捕捉到鼠标点击事件：', event, offset, target)
       });
 
-      debug.isDebugMode() && t.mountToGlobal();
+      if (debug.isDebugMode()) {
+        t.mountToGlobal();
+        player.addEventListener('loadeddata', function () {
+          debug.log('video dom:', player);
+          debug.log('video url:', player.src);
+          debug.log('video duration:', player.duration);
+        });
+
+        player.addEventListener('durationchange', function () {
+          debug.log('video durationchange:', player.duration);
+        });
+      }
     },
 
     /**
@@ -2223,7 +2374,20 @@ const messages = {
       !isInCrossOriginFrame() && window.localStorage.setItem('_h5_player_playback_rate_', curPlaybackRate);
 
       t.playbackRate = curPlaybackRate;
+
+      delete player.playbackRate;
       player.playbackRate = curPlaybackRate;
+      try {
+        originalMethods.Object.defineProperty.call(Object, player, 'playbackRate', {
+          configurable: true,
+          get: function () {
+            return curPlaybackRate
+          },
+          set: function () {}
+        });
+      } catch (e) {
+        debug.error('解锁playbackRate失败', e);
+      }
 
       /* 本身处于1倍播放速度的时候不再提示 */
       if (!num && curPlaybackRate === 1) {
@@ -2243,8 +2407,7 @@ const messages = {
         t.lastPlaybackRate = oldPlaybackRate;
       }
 
-      player.playbackRate = playbackRate;
-      t.setPlaybackRate(player.playbackRate);
+      t.setPlaybackRate(playbackRate);
     },
     /**
      * 初始化自动播放逻辑
@@ -3170,53 +3333,6 @@ const messages = {
             player._hasPlayingRedirectEvent_ = true;
           });
         }
-      }
-    },
-    /* 指定取消响应某些事件的列表 */
-    _hangUpPlayerEventList_: [],
-    /**
-     * 挂起播放器的某些事件，注意：挂起时间过长容易出现较多副作用
-     * @param eventType {String|Array} -必选 要挂起的事件类型，可以是单个事件也可以是多个事件
-     * @param timeout {Number} -可选 调用挂起事件函数后，多久后失效，恢复正常事件响应，默认200ms
-     */
-    hangUpPlayerEvent (eventType, timeout) {
-      const t = h5Player;
-      t._hangUpPlayerEventList_ = t._hangUpPlayerEventList_ || [];
-      eventType = Array.isArray(eventType) ? eventType : [eventType];
-      timeout = timeout || 200;
-
-      eventType.forEach(type => {
-        if (!t._hangUpPlayerEventList_.includes(type)) {
-          t._hangUpPlayerEventList_.push(type);
-        }
-      });
-
-      clearTimeout(t._hangUpPlayerEventTimer_);
-      t._hangUpPlayerEventTimer_ = setTimeout(function () {
-        const newList = [];
-        t._hangUpPlayerEventList_.forEach(cancelType => {
-          if (!eventType.includes(cancelType)) {
-            newList.push(cancelType);
-          }
-        });
-        t._hangUpPlayerEventList_ = newList;
-      }, timeout);
-    },
-    /**
-     * 播放器里的所有事件代理处理器
-     * @param target
-     * @param ctx
-     * @param args
-     * @param listenerArgs
-     */
-    playerEventHandler (target, ctx, args, listenerArgs) {
-      const t = h5Player;
-      const eventType = listenerArgs[0];
-
-      /* 取消对某些事件的响应 */
-      if (t._hangUpPlayerEventList_.includes(eventType) || t._hangUpPlayerEventList_.includes('all')) {
-        debug.log(`播放器[${eventType}]事件被取消`);
-        return false
       }
     },
     /* 绑定相关事件 */

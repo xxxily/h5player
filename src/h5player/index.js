@@ -1,21 +1,24 @@
 import './comment'
+import './tips'
 import h5PlayerTccInit from './h5PlayerTccInit'
 import fakeConfig from './fakeConfig'
 import FullScreen from '../libs/FullScreen/index'
 import videoCapturer from '../libs/videoCapturer/index'
-// import MouseObserver from '../libs/MouseObserver/index'
+import MouseObserver from '../libs/MouseObserver/index'
 import I18n from '../libs/I18n/index'
 import { getTabId } from './getId'
 import monkeyMenu from './monkeyMenu'
 import monkeyMsg from './monkeyMsg'
 import crossTabCtl from './crossTabCtl'
 import debug from './debug'
+import hackDefineProperty from './hackDefineProperty'
 import langMessage from './locale/core-lang/index'
 import {
   ready,
   hackAttachShadow,
-  hackEventListener,
+  // hackEventListener,
   isObj,
+  quickSort,
   eachParentNode,
   fakeUA,
   userAgentMap,
@@ -30,7 +33,26 @@ import {
   getPageWindow
 } from './helper'
 
-(async function () {
+/* 禁止对playbackRate进行锁定 */
+// if (location.href.includes('pan.baidu.com') || location.href.includes('v.qq.com')) {
+//   hackDefineProperty()
+// }
+
+hackDefineProperty()
+
+window._debugMode_ = true
+
+/* 保存重要的原始函数，防止被外部脚本污染 */
+const originalMethods = {
+  Object: {
+    defineProperty: Object.defineProperty,
+    defineProperties: Object.defineProperties
+  },
+  setInterval: window.setInterval,
+  setTimeout: window.setTimeout
+}
+
+;(async function () {
   debug.log('h5Player init')
 
   const i18n = new I18n({
@@ -40,7 +62,7 @@ import {
     languages: langMessage
   })
 
-  // const mouseObserver = new MouseObserver()
+  const mouseObserver = new MouseObserver()
 
   // monkeyMenu.on('i18n.t('setting')', function () {
   //   window.alert('功能开发中，敬请期待...')
@@ -61,11 +83,11 @@ import {
   })
 
   hackAttachShadow()
-  hackEventListener({
-    // proxyAll: true,
-    proxyNodeType: ['video'],
-    debug: debug.isDebugMode()
-  })
+  // hackEventListener({
+  //   // proxyAll: true,
+  //   proxyNodeType: ['video'],
+  //   debug: debug.isDebugMode()
+  // })
 
   let TCC = null
   const h5Player = {
@@ -114,7 +136,7 @@ import {
 
       let wrapDom = null
       const playerBox = player.getBoundingClientRect()
-      eachParentNode(player, (parent) => {
+      eachParentNode(player, function (parent) {
         if (parent === document || !parent.getBoundingClientRect) return
         const parentBox = parent.getBoundingClientRect()
         if (parentBox.width && parentBox.height) {
@@ -153,23 +175,17 @@ import {
 
       const player = t.playerInstance
       t.initPlaybackRate()
-      t.isFocus()
+      t.isFoucs()
       t.proxyPlayerInstance(player)
 
-      // player.addEventListener('durationchange', () => {
-      //   debug.log('当前视频长度：', player.duration)
-      // })
       // player.setAttribute('preload', 'auto')
 
       /* 增加通用全屏，网页全屏api */
       player._fullScreen_ = new FullScreen(player)
       player._fullPageScreen_ = new FullScreen(player, true)
 
-      /* 注册播放器的事件代理处理器 */
-      player._listenerProxyApplyHandler_ = t.playerEventHandler
-
       if (!player._hasCanplayEvent_) {
-        player.addEventListener('canplay', (event) => {
+        player.addEventListener('canplay', function (event) {
           t.initAutoPlay(player)
         })
         player._hasCanplayEvent_ = true
@@ -178,7 +194,7 @@ import {
       /* 播放的时候进行相关同步操作 */
       if (!player._hasPlayingInitEvent_) {
         let setPlaybackRateOnPlayingCount = 0
-        player.addEventListener('playing', (event) => {
+        player.addEventListener('playing', function (event) {
           if (setPlaybackRateOnPlayingCount === 0) {
             /* 同步之前设定的播放速度 */
             t.setPlaybackRate()
@@ -205,13 +221,22 @@ import {
       }
 
       /* 注册鼠标响应事件 */
-      /*
-      mouseObserver.on(player, 'click', (event, offset, target) => {
-        debug.log('捕捉到鼠标点击事件：', event, offset, target)
+      mouseObserver.on(player, 'click', function (event, offset, target) {
+        // debug.log('捕捉到鼠标点击事件：', event, offset, target)
       })
-      */
 
-      debug.isDebugMode() && t.mountToGlobal()
+      if (debug.isDebugMode()) {
+        t.mountToGlobal()
+        player.addEventListener('loadeddata', function () {
+          debug.log('video dom:', player)
+          debug.log('video url:', player.src)
+          debug.log('video duration:', player.duration)
+        })
+
+        player.addEventListener('durationchange', function () {
+          debug.log('video durationchange:', player.duration)
+        })
+      }
     },
 
     /**
@@ -315,13 +340,26 @@ import {
       !isInCrossOriginFrame() && window.localStorage.setItem('_h5_player_playback_rate_', curPlaybackRate)
 
       t.playbackRate = curPlaybackRate
+
+      delete player.playbackRate
       player.playbackRate = curPlaybackRate
+      try {
+        originalMethods.Object.defineProperty.call(Object, player, 'playbackRate', {
+          configurable: true,
+          get: function () {
+            return curPlaybackRate
+          },
+          set: function () {}
+        })
+      } catch (e) {
+        debug.error('解锁playbackRate失败', e)
+      }
 
       /* 本身处于1倍播放速度的时候不再提示 */
       if (!num && curPlaybackRate === 1) {
         return true
       } else {
-        !notips && t.tips(i18n.t('tipsMsg.playSpeed') + player.playbackRate)
+        !notips && t.tips(i18n.t('tipsMsg.playspeed') + player.playbackRate)
       }
     },
     /* 恢复播放速度，还原到1倍速度、或恢复到上次的倍速 */
@@ -329,14 +367,13 @@ import {
       const t = this
       player = player || t.player()
 
-      const curPlaybackRate = Number(player.playbackRate)
-      const newPlaybackRate = curPlaybackRate === 1 ? t.lastPlaybackRate : 1
-      if (curPlaybackRate !== 1) {
-        t.lastPlaybackRate = curPlaybackRate
+      const oldPlaybackRate = Number(player.playbackRate)
+      const playbackRate = oldPlaybackRate === 1 ? t.lastPlaybackRate : 1
+      if (oldPlaybackRate !== 1) {
+        t.lastPlaybackRate = oldPlaybackRate
       }
 
-      player.playbackRate = newPlaybackRate
-      t.setPlaybackRate(newPlaybackRate)
+      t.setPlaybackRate(playbackRate)
     },
     /**
      * 初始化自动播放逻辑
@@ -376,7 +413,7 @@ import {
       }
     },
     /* 设置播放进度 */
-    setCurrentTime: function (num, noTips) {
+    setCurrentTime: function (num, notips) {
       if (!num) return
       num = Number(num)
       const _num = Math.abs(Number(num.toFixed(1)))
@@ -394,14 +431,14 @@ import {
           TCC.doTask('addCurrentTime')
         } else {
           player.currentTime += _num
-          !noTips && t.tips(i18n.t('tipsMsg.forward') + _num + i18n.t('tipsMsg.seconds'))
+          !notips && t.tips(i18n.t('tipsMsg.forward') + _num + i18n.t('tipsMsg.seconds'))
         }
       } else {
         if (taskConf.subtractCurrentTime) {
           TCC.doTask('subtractCurrentTime')
         } else {
           player.currentTime -= _num
-          !noTips && t.tips(i18n.t('tipsMsg.backward') + _num + i18n.t('tipsMsg.seconds'))
+          !notips && t.tips(i18n.t('tipsMsg.backward') + _num + i18n.t('tipsMsg.seconds'))
         }
       }
     },
@@ -411,30 +448,45 @@ import {
       const t = this
       const player = t.player()
 
-      let newVol = player.volume + num
-      if (newVol > 1) newVol = 1
-      if (newVol < 0) newVol = 0
+      num = Number(num)
+      const _num = Math.abs(Number(num.toFixed(2)))
+      const curVol = player.volume
+      let newVol = curVol
+
+      if (num > 0) {
+        newVol += _num
+        if (newVol > 1) {
+          newVol = 1
+        }
+      } else {
+        newVol -= _num
+        if (newVol < 0) {
+          newVol = 0
+        }
+      }
 
       player.volume = newVol
 
       /* 条件音量的时候顺便把静音模式关闭 */
       player.muted = false
 
-      t.tips(i18n.t('tipsMsg.volume') + Math.trunc(newVol * 100) + '%')
+      t.tips(i18n.t('tipsMsg.volume') + parseInt(player.volume * 100) + '%')
     },
 
     /* 设置视频画面的缩放与位移 */
     setTransform (scale, translate) {
       const t = this
       const player = t.player()
-
-      scale = t.scale = scale ? t.scale : Number(scale).toFixed(1)
+      scale = t.scale = typeof scale === 'undefined' ? t.scale : Number(scale).toFixed(1)
       translate = t.translate = translate || t.translate
       player.style.transform = `scale(${scale}) translate(${translate.x}px, ${translate.y}px) rotate(${t.rotate}deg)`
-
-      let tipsMsg = `${i18n.t('tipsMsg.videoZoom')}${scale * 100}%`
-      if (translate.x) tipsMsg += ` ${i18n.t('tipsMsg.horizontal')}${translate.x}px`
-      if (translate.y) tipsMsg += ` ${i18n.t('tipsMsg.vertical')}${translate.y}px`
+      let tipsMsg = i18n.t('tipsMsg.videozoom') + `${scale * 100}%`
+      if (translate.x) {
+        tipsMsg += ` ${i18n.t('tipsMsg.horizontal')}${t.translate.x}px`
+      }
+      if (translate.y) {
+        tipsMsg += ` ${i18n.t('tipsMsg.vertical')}${t.translate.y}px`
+      }
       t.tips(tipsMsg)
     },
 
@@ -457,11 +509,11 @@ import {
       player._hangUp_ && player._hangUp_('play', 400)
 
       if (perFps === 1) {
-        t.tips(i18n.t('tipsMsg.frameNext'))
+        t.tips(i18n.t('tipsMsg.nextframe'))
       } else if (perFps === -1) {
-        t.tips(i18n.t('tipsMsg.framePrevious'))
+        t.tips(i18n.t('tipsMsg.previousframe'))
       } else {
-        t.tips(i18n.t('tipsMsg.frameStop') + perFps)
+        t.tips(i18n.t('tipsMsg.stopframe') + perFps)
       }
     },
 
@@ -633,11 +685,13 @@ import {
       const style = tipsDom.style
       tipsDom.innerText = str
 
-      this.on_off.forEach(clearTimeout)
+      for (var i = 0; i < 3; i++) {
+        if (this.on_off[i]) clearTimeout(this.on_off[i])
+      }
 
       function showTips () {
         style.display = 'block'
-        t.on_off[0] = setTimeout(() => {
+        t.on_off[0] = setTimeout(function () {
           style.opacity = 1
         }, 50)
         t.on_off[1] = setTimeout(function () {
@@ -653,7 +707,9 @@ import {
       if (style.display === 'block') {
         style.display = 'none'
         clearTimeout(this.on_off[3])
-        t.on_off[2] = setTimeout(showTips, 100)
+        t.on_off[2] = setTimeout(function () {
+          showTips()
+        }, 100)
       } else {
         showTips()
       }
@@ -662,7 +718,7 @@ import {
     initTips: function () {
       const t = h5Player
       const parentNode = t.getTipsContainer()
-      if (parentNode.getElementsByClassName(t.tipsClassName).length) return
+      if (parentNode.querySelector('.' + t.tipsClassName)) return
 
       // top: 50%;
       // left: 50%;
@@ -686,7 +742,7 @@ import {
       `
       const tips = document.createElement('div')
       tips.setAttribute('style', tipsStyle)
-      tips.classList.add(t.tipsClassName)
+      tips.setAttribute('class', t.tipsClassName)
       parentNode.appendChild(tips)
     },
     on_off: new Array(3),
@@ -694,46 +750,41 @@ import {
     fps: 30,
     /* 滤镜效果 */
     filter: {
-      keys: {
-        brightness: 100,
-        contrast: 100,
-        saturate: 100,
-        hue: 0,
-        blur: 0
-      },
+      key: [1, 1, 1, 0, 0],
       setup: function () {
-        const k = this.keys
-        const view = `brightness(${k.brightness}%) contrast(${k.contrast}%) saturate(${k.saturate}%) hue-rotate(${k.hue}deg) blur(${k.blur}px)`
+        var view = 'brightness({0}) contrast({1}) saturate({2}) hue-rotate({3}deg) blur({4}px)'
+        for (var i = 0; i < 5; i++) {
+          view = view.replace('{' + i + '}', String(this.key[i]))
+          this.key[i] = Number(this.key[i])
+        }
         h5Player.player().style.filter = view
       },
       reset: function () {
-        Object.assign(this.keys, {
-          brightness: 100,
-          contrast: 100,
-          saturate: 100,
-          hue: 0,
-          blur: 0
-        })
+        this.key[0] = 1
+        this.key[1] = 1
+        this.key[2] = 1
+        this.key[3] = 0
+        this.key[4] = 0
         this.setup()
       }
     },
-    _isFocus: false,
+    _isFoucs: false,
 
     /* 播放器的聚焦事件 */
-    isFocus: function () {
+    isFoucs: function () {
       const t = h5Player
       const player = t.player()
       if (!player) return
 
-      player.addEventListener('mouseenter', () => {
-        t._isFocus = true
-      })
-      player.addEventListener('mouseleave', () => {
-        t._isFocus = false
-      })
+      player.onmouseenter = function (e) {
+        h5Player._isFoucs = true
+      }
+      player.onmouseleave = function (e) {
+        h5Player._isFoucs = false
+      }
     },
     /* 播放器事件响应器 */
-    playerTrigger: function (player, event) {
+    palyerTrigger: function (player, event) {
       if (!player || !event) return
       const t = h5Player
       const keyCode = event.keyCode
@@ -876,87 +927,87 @@ import {
 
       // 按键E：亮度增加%
       if (keyCode === 69) {
-        t.filter.keys.brightness += 10
+        t.filter.key[0] += 0.1
+        t.filter.key[0] = t.filter.key[0].toFixed(2)
         t.filter.setup()
-        t.tips(i18n.t('tipsMsg.brightness') + t.filter.keys.brightness + '%')
+        t.tips(i18n.t('tipsMsg.brightness') + parseInt(t.filter.key[0] * 100) + '%')
       }
       // 按键W：亮度减少%
       if (keyCode === 87) {
-        if (t.filter.keys.brightness > 0) {
-          t.filter.keys.brightness -= 10
+        if (t.filter.key[0] > 0) {
+          t.filter.key[0] -= 0.1
+          t.filter.key[0] = t.filter.key[0].toFixed(2)
           t.filter.setup()
         }
-        t.tips(i18n.t('tipsMsg.brightness') + t.filter.keys.brightness + '%')
+        t.tips(i18n.t('tipsMsg.brightness') + parseInt(t.filter.key[0] * 100) + '%')
       }
 
       // 按键T：对比度增加%
       if (keyCode === 84) {
-        t.filter.keys.contrast += 10
+        t.filter.key[1] += 0.1
+        t.filter.key[1] = t.filter.key[1].toFixed(2)
         t.filter.setup()
-        t.tips(i18n.t('tipsMsg.contrast') + t.filter.keys.contrast + '%')
+        t.tips(i18n.t('tipsMsg.contrast') + parseInt(t.filter.key[1] * 100) + '%')
       }
       // 按键R：对比度减少%
       if (keyCode === 82) {
-        if (t.filter.keys.contrast > 0) {
-          t.filter.keys.contrast -= 10
+        if (t.filter.key[1] > 0) {
+          t.filter.key[1] -= 0.1
+          t.filter.key[1] = t.filter.key[1].toFixed(2)
           t.filter.setup()
         }
-        t.tips(i18n.t('tipsMsg.contrast') + t.filter.keys.contrast + '%')
+        t.tips(i18n.t('tipsMsg.contrast') + parseInt(t.filter.key[1] * 100) + '%')
       }
 
       // 按键U：饱和度增加%
       if (keyCode === 85) {
-        t.filter.keys.saturate += 10
+        t.filter.key[2] += 0.1
+        t.filter.key[2] = t.filter.key[2].toFixed(2)
         t.filter.setup()
-        t.tips(i18n.t('tipsMsg.saturation') + t.filter.keys.saturate + '%')
+        t.tips(i18n.t('tipsMsg.saturation') + parseInt(t.filter.key[2] * 100) + '%')
       }
       // 按键Y：饱和度减少%
       if (keyCode === 89) {
-        if (t.filter.keys.saturate > 0) {
-          t.filter.keys.saturate -= 10
+        if (t.filter.key[2] > 0) {
+          t.filter.key[2] -= 0.1
+          t.filter.key[2] = t.filter.key[2].toFixed(2)
           t.filter.setup()
         }
-        t.tips(i18n.t('tipsMsg.saturation') + t.filter.keys.saturate + '%')
+        t.tips(i18n.t('tipsMsg.saturation') + parseInt(t.filter.key[2] * 100) + '%')
       }
 
       // 按键O：色相增加 1 度
       if (keyCode === 79) {
-        t.filter.keys.hue += 1
-        if (t.filter.keys.hue === 360) {
-          t.filter.keys.hue = 0
-        }
+        t.filter.key[3] += 1
         t.filter.setup()
-        t.tips(i18n.t('tipsMsg.hue') + t.filter.keys.hue + '°')
+        t.tips(i18n.t('tipsMsg.hue') + t.filter.key[3] + '度')
       }
       // 按键I：色相减少 1 度
       if (keyCode === 73) {
-        t.filter.keys.hue -= 1
-        if (t.filter.keys.hue === -1) {
-          t.filter.keys.hue = 359
-        }
+        t.filter.key[3] -= 1
         t.filter.setup()
-        t.tips(i18n.t('tipsMsg.hue') + t.filter.keys.hue + '°')
+        t.tips(i18n.t('tipsMsg.hue') + t.filter.key[3] + '度')
       }
 
       // 按键K：模糊增加 1 px
       if (keyCode === 75) {
-        t.filter.keys.blur += 1
+        t.filter.key[4] += 1
         t.filter.setup()
-        t.tips(i18n.t('tipsMsg.blur') + t.filter.keys.blur + 'px')
+        t.tips(i18n.t('tipsMsg.blur') + t.filter.key[4] + 'PX')
       }
       // 按键J：模糊减少 1 px
       if (keyCode === 74) {
-        if (t.filter.keys.blur > 0) {
-          t.filter.keys.blur -= 1
+        if (t.filter.key[4] > 0) {
+          t.filter.key[4] -= 1
           t.filter.setup()
         }
-        t.tips(i18n.t('tipsMsg.blur') + t.filter.keys.blur + 'px')
+        t.tips(i18n.t('tipsMsg.blur') + t.filter.key[4] + 'PX')
       }
 
       // 按键Q：图像复位
       if (keyCode === 81) {
         t.filter.reset()
-        t.tips(i18n.t('tipsMsg.filterReset'))
+        t.tips(i18n.t('tipsMsg.imgattrreset'))
       }
 
       // 按键S：画面旋转 90 度
@@ -964,7 +1015,7 @@ import {
         t.rotate += 90
         if (t.rotate % 360 === 0) t.rotate = 0
         player.style.transform = `scale(${t.scale}) translate(${t.translate.x}px, ${t.translate.y}px) rotate( ${t.rotate}deg)`
-        t.tips(i18n.t('tipsMsg.rotate') + t.rotate + '°')
+        t.tips(i18n.t('tipsMsg.imgrotate') + t.rotate + '°')
       }
 
       // 按键回车，进入全屏
@@ -1020,7 +1071,12 @@ import {
         list.forEach((shortcut) => {
           const regKey = shortcut.split('+')
           if (combineKey.length === regKey.length) {
-            const allMatch = regKey.every((key) => combineKey.includes(key))
+            let allMatch = true
+            regKey.forEach((key) => {
+              if (!combineKey.includes(key)) {
+                allMatch = false
+              }
+            })
             if (allMatch) {
               hasReg = true
             }
@@ -1030,21 +1086,23 @@ import {
         return hasReg
       }
 
-      if (!confIsCorrect || !isRegister()) return false
+      if (confIsCorrect && isRegister()) {
+        // 执行自定义快捷键操作
+        const isDo = TCC.doTask('shortcuts', {
+          event,
+          player,
+          h5Player
+        })
 
-      // 执行自定义快捷键操作
-      const isDo = TCC.doTask('shortcuts', {
-        event,
-        player,
-        h5Player
-      })
+        if (isDo) {
+          event.stopPropagation()
+          event.preventDefault()
+        }
 
-      if (isDo) {
-        event.stopPropagation()
-        event.preventDefault()
+        return isDo
+      } else {
+        return false
       }
-
-      return isDo
     },
 
     /* 按键响应方法 */
@@ -1076,8 +1134,11 @@ import {
       /* 切换插件的可用状态 */
       if (event.ctrlKey && keyCode === 32) {
         t.enable = !t.enable
-        const state = t.enable ? 'On' : 'Off'
-        t.tips(i18n.t('tipsMsg.plugin' + state))
+        if (t.enable) {
+          t.tips(i18n.t('tipsMsg.onplugin'))
+        } else {
+          t.tips(i18n.t('tipsMsg.offplugin'))
+        }
       }
 
       if (!t.enable) {
@@ -1088,18 +1149,21 @@ import {
       // 按ctrl+\ 键进入聚焦或取消聚焦状态，用于视频标签被遮挡的场景
       if (event.ctrlKey && keyCode === 220) {
         t.globalMode = !t.globalMode
-        const state = t.globalMode ? 'On' : 'Off'
-        t.tips(i18n.t('tipsMsg.globalMode' + state))
+        if (t.globalMode) {
+          t.tips(i18n.t('tipsMsg.globalmode') + ' ON')
+        } else {
+          t.tips(i18n.t('tipsMsg.globalmode') + ' OFF')
+        }
       }
 
       /* 非全局模式下，不聚焦则不执行快捷键的操作 */
-      if (!t.globalMode && !t._isFocus) return
+      if (!t.globalMode && !t._isFoucs) return
 
       /* 判断是否执行了自定义快捷键操作，如果是则不再响应后面默认定义操作 */
       if (t.runCustomShortcuts(player, event) === true) return
 
       /* 响应播放器相关操作 */
-      t.playerTrigger(player, event)
+      t.palyerTrigger(player, event)
     },
 
     /**
@@ -1107,14 +1171,21 @@ import {
      * @param player -可选 对应的h5 播放器对象， 如果不传，则获取到的是整个播放进度表，传则获取当前播放器的播放进度
      */
     getPlayProgress: function (player) {
-      let progressMap = {}
-      if (!isInCrossOriginFrame()) {
-        progressMap = JSON.parse(window.localStorage.getItem('_h5_player_play_progress_'))
+      let progressMap = isInCrossOriginFrame() ? null : window.localStorage.getItem('_h5_player_play_progress_')
+      if (!progressMap) {
+        progressMap = {}
+      } else {
+        try {
+          progressMap = JSON.parse(progressMap)
+        } catch (e) {
+          progressMap = {}
+        }
       }
+
       if (!player) {
         return progressMap
       } else {
-        let keyName = location.href || player.src
+        let keyName = window.location.href || player.src
         keyName += player.duration
         if (progressMap[keyName]) {
           return progressMap[keyName].progress
@@ -1143,15 +1214,15 @@ import {
           /* 只保存最近10个视频的播放进度 */
           if (list.length > 10) {
             /* 根据更新的时间戳，取出最早添加播放进度的记录项 */
-            const timeList = []
-            list.forEach((keyName) => {
+            let timeList = []
+            list.forEach(function (keyName) {
               progressMap[keyName] && progressMap[keyName].t && timeList.push(progressMap[keyName].t)
             })
-            timeList.sort()
+            timeList = quickSort(timeList)
             const timestamp = timeList[0]
 
             /* 删除最早添加的记录项 */
-            list.forEach((keyName) => {
+            list.forEach(function (keyName) {
               if (progressMap[keyName].t === timestamp) {
                 delete progressMap[keyName]
               }
@@ -1184,94 +1255,50 @@ import {
       if (t.isAllowRestorePlayProgress()) {
         player.currentTime = curTime || player.currentTime
         if (curTime > 3) {
-          t.tips(i18n.t('tipsMsg.playbackRestored'))
+          t.tips(i18n.t('tipsMsg.playbackrestored'))
         }
       } else {
-        t.tips(i18n.t('tipsMsg.playbackRestoreOff'))
+        t.tips(i18n.t('tipsMsg.playbackrestoreoff'))
       }
     },
     /**
      * 检测h5播放器是否存在
+     * @param callback
      */
-    detectH5Player: function () {
+    detecH5Player: function () {
       const t = this
       const playerList = t.getPlayerList()
 
-      if (!playerList.length) return
+      if (playerList.length) {
+        debug.log('检测到HTML5视频！')
 
-      debug.log('检测到HTML5视频！')
+        /* 单video实例标签的情况 */
+        if (playerList.length === 1) {
+          t.playerInstance = playerList[0]
+          t.initPlayerInstance(true)
+        } else {
+          /* 多video实例标签的情况 */
+          playerList.forEach(function (player) {
+            /* 鼠标移到其上面的时候重新指定实例 */
+            if (player._hasMouseRedirectEvent_) return
+            player.addEventListener('mouseenter', function (event) {
+              t.playerInstance = event.target
+              t.initPlayerInstance(false)
+            })
+            player._hasMouseRedirectEvent_ = true
 
-      /* 单video实例标签的情况 */
-      if (playerList.length === 1) {
-        t.playerInstance = playerList[0]
-        t.initPlayerInstance(true)
-        return
-      }
+            /* 播放器开始播放的时候重新指向实例 */
+            if (player._hasPlayingRedirectEvent_) return
+            player.addEventListener('playing', function (event) {
+              t.playerInstance = event.target
+              t.initPlayerInstance(false)
 
-      /* 多video实例标签的情况 */
-      playerList.forEach((player) => {
-        /* 鼠标移到其上面的时候重新指定实例 */
-        if (!player._hasMouseRedirectEvent_) {
-          player._hasMouseRedirectEvent_ = true
-          player.addEventListener('mouseenter', (event) => {
-            t.playerInstance = event.target
-            t.initPlayerInstance(false)
+              /* 同步之前设定的播放速度 */
+              t.setPlaybackRate()
+            })
+            player._hasPlayingRedirectEvent_ = true
           })
         }
-
-        /* 播放器开始播放的时候重新指向实例 */
-        if (!player._hasPlayingRedirectEvent_) {
-          player._hasPlayingRedirectEvent_ = true
-          player.addEventListener('playing', (event) => {
-            t.playerInstance = event.target
-            t.initPlayerInstance(false)
-
-            /* 同步之前设定的播放速度 */
-            t.setPlaybackRate()
-          })
-        }
-      })
-    },
-    /* 指定取消响应某些事件的列表 */
-    _hangUpPlayerEventList_: [],
-    /**
-     * 挂起播放器的某些事件，注意：挂起时间过长容易出现较多副作用
-     * @param eventType {String|Array} -必选 要挂起的事件类型，可以是单个事件也可以是多个事件
-     * @param timeout {Number} -可选 调用挂起事件函数后，多久后失效，恢复正常事件响应，默认200ms
-     */
-    hangUpPlayerEvent (eventType, timeout) {
-      const t = h5Player
-      t._hangUpPlayerEventList_ = t._hangUpPlayerEventList_ || []
-      eventType = Array.isArray(eventType) ? eventType : [eventType]
-      timeout = timeout || 200
-
-      eventType.forEach(type => {
-        if (!t._hangUpPlayerEventList_.includes(type)) {
-          t._hangUpPlayerEventList_.push(type)
-        }
-      })
-
-      clearTimeout(t._hangUpPlayerEventTimer_)
-      t._hangUpPlayerEventTimer_ = setTimeout(() => {
-        /* Remove not hanged events */
-        t._hangUpPlayerEventList_ = t._hangUpPlayerEventList_.filter(cancelType => !eventType.includes(cancelType))
-      }, timeout)
-    },
-    /**
-     * 播放器里的所有事件代理处理器
-     * @param target
-     * @param ctx
-     * @param args
-     * @param listenerArgs
-     */
-    playerEventHandler (target, ctx, args, listenerArgs) {
-      const t = h5Player
-      const eventType = listenerArgs[0]
-
-      /* 取消对某些事件的响应 */
-      if (t._hangUpPlayerEventList_.includes(eventType) || t._hangUpPlayerEventList_.includes('all')) {
-        debug.log(`播放器[${eventType}]事件被取消`)
-        return false
       }
     },
     /* 绑定相关事件 */
@@ -1298,7 +1325,7 @@ import {
             const fakeEvent = newVal.data
             fakeEvent.stopPropagation = () => {}
             fakeEvent.preventDefault = () => {}
-            t.playerTrigger(player, fakeEvent)
+            t.palyerTrigger(player, fakeEvent)
             debug.log('模拟触发操作成功')
           }
         }, 80)
@@ -1325,7 +1352,7 @@ import {
       t._hasBindEvent_ = true
     },
     init: function (global) {
-      const t = this
+      var t = this
       if (global) {
         /* 绑定键盘事件 */
         t.bindEvent()
@@ -1347,13 +1374,13 @@ import {
         // }
 
         /* 对配置了ua伪装的域名进行伪装 */
-        const host = location.host
+        const host = window.location.host
         if (fakeConfig[host]) {
           t.setFakeUA(fakeConfig[host])
         }
       } else {
         /* 检测是否存在H5播放器 */
-        t.detectH5Player()
+        t.detecH5Player()
       }
     },
     load: false
@@ -1367,12 +1394,16 @@ import {
     h5Player.init(true)
 
     /* 检测到有视频标签就进行初始化 */
-    ready('video', h5Player.init)
+    ready('video', function () {
+      h5Player.init()
+    })
 
     /* 检测shadow dom 下面的video */
-    document.addEventListener('addShadowRoot', (e) => {
+    document.addEventListener('addShadowRoot', function (e) {
       const shadowRoot = e.detail.shadowRoot
-      ready('video', h5Player.init, shadowRoot)
+      ready('video', function (element) {
+        h5Player.init()
+      }, shadowRoot)
     })
 
     if (isInCrossOriginFrame()) {
@@ -1389,7 +1420,7 @@ import {
 
   // debugCode.init(h5Player)
 
-  // document.addEventListener('visibilitychange', () => {
+  // document.addEventListener('visibilitychange', function () {
   //   if (!document.hidden) {
   //     h5Player.initAutoPlay()
   //   }

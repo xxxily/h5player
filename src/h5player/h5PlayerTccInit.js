@@ -186,63 +186,55 @@ const taskConf = {
       callback: function (h5Player, taskConf, data) {
         const { event } = data
         const key = event.key.toLowerCase()
-        const speedItems = document.querySelectorAll('.container_inner txpdiv[data-role="txp-button-speed-list"] .txp_menuitem')
+        const keyName = 'customShortcuts_' + key
 
-        /* 利用sessionStorage下的playbackRate进行设置 */
-        if (window.sessionStorage.playbackRate && /(c|x|z|1|2|3|4)/.test(key)) {
-          const curSpeed = Number(window.sessionStorage.playbackRate)
-          const perSpeed = curSpeed - 0.1 >= 0 ? curSpeed - 0.1 : 0.1
-          const nextSpeed = curSpeed + 0.1 <= 4 ? curSpeed + 0.1 : 4
-          let targetSpeed = curSpeed
-          switch (key) {
-            case 'z' :
-              targetSpeed = 1
-              break
-            case 'c' :
-              targetSpeed = nextSpeed
-              break
-            case 'x' :
-              targetSpeed = perSpeed
-              break
-            default :
-              targetSpeed = Number(key)
-              break
+        if (!h5Player[keyName]) {
+          /* 第一次按下快捷键使用默认逻辑进行调速 */
+          h5Player[keyName] = {
+            time: Date.now(),
+            playbackRate: h5Player.playbackRate
+          }
+          return false
+        } else {
+          /* 第一次操作后的200ms内的操作都是由默认逻辑进行调速 */
+          if (Date.now() - h5Player[keyName].time < 200) {
+            return false
           }
 
-          window.sessionStorage.playbackRate = targetSpeed
-          h5Player.setCurrentTime(0.01, true)
-          h5Player.setPlaybackRate(targetSpeed, true)
-          return true
-        }
+          /* 判断是否需进行降级处理，利用sessionStorage进行调速 */
+          if (h5Player[keyName] === h5Player.playbackRate || h5Player[keyName] === true) {
+            if (window.sessionStorage.playbackRate && /(c|x|z|1|2|3|4)/.test(key)) {
+              const curSpeed = Number(window.sessionStorage.playbackRate)
+              const perSpeed = curSpeed - 0.1 >= 0 ? curSpeed - 0.1 : 0.1
+              const nextSpeed = curSpeed + 0.1 <= 4 ? curSpeed + 0.1 : 4
+              let targetSpeed = curSpeed
+              switch (key) {
+                case 'z' :
+                  targetSpeed = 1
+                  break
+                case 'c' :
+                  targetSpeed = nextSpeed
+                  break
+                case 'x' :
+                  targetSpeed = perSpeed
+                  break
+                default :
+                  targetSpeed = Number(key)
+                  break
+              }
 
-        /* 模拟点击触发 */
-        if (speedItems.length >= 3 && /(c|x|z)/.test(key)) {
-          let curIndex = 1
-          speedItems.forEach((item, index) => {
-            if (item.classList.contains('txp_current')) {
-              curIndex = index
+              window.sessionStorage.playbackRate = targetSpeed
+              h5Player.setCurrentTime(0.01, true)
+              h5Player.setPlaybackRate(targetSpeed, true)
+              return true
             }
-          })
-          const perIndex = curIndex - 1 >= 0 ? curIndex - 1 : 0
-          const nextIndex = curIndex + 1 < speedItems.length ? curIndex + 1 : speedItems.length - 1
 
-          let target = speedItems[1]
-          switch (key) {
-            case 'z' :
-              target = speedItems[1]
-              break
-            case 'c' :
-              target = speedItems[nextIndex]
-              break
-            case 'x' :
-              target = speedItems[perIndex]
-              break
+            /* 标识默认调速方案失效，需启用sessionStorage调速方案 */
+            h5Player[keyName] = true
+          } else {
+            /* 标识默认调速方案生效 */
+            h5Player[keyName] = false
           }
-
-          target.click()
-          const speedNum = Number(target.innerHTML.replace('x'))
-          h5Player.setPlaybackRate(speedNum)
-          return true
         }
       }
     },
