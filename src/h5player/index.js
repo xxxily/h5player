@@ -1295,6 +1295,7 @@ const originalMethods = {
       if (!curTime || Number.isNaN(curTime)) return
 
       if (t.isAllowRestorePlayProgress()) {
+        debug.log('playbackrestored:', curTime, 'from', player.currentTime)
         player.currentTime = curTime || player.currentTime
         if (curTime > 3) {
           t.tips(i18n.t('tipsMsg.playbackrestored'))
