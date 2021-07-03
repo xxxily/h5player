@@ -666,6 +666,13 @@ const originalMethods = {
 
       return tispContainer
     },
+    tipsI: function (...strs) {
+      const t = h5Player
+      let out = strs
+      out = out.map(s => i18n.t(s) || s)
+      out = out.join('')
+      return t.tips(out)
+    },
     tips: function (str) {
       const t = h5Player
       const player = t.player()
