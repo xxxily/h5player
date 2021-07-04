@@ -2,6 +2,9 @@ export default {
   about: 'около',
   issues: 'обратная связь',
   setting: 'установка',
+  hotkeys: 'горячие клавиши',
+  donate: 'пожертвовать',
+  disableInitAutoPlay: 'Запретить автовоспроизведение видео на этом сайте',
   tipsMsg: {
     playspeed: 'Скорость: ',
     forward: 'Вперёд: ',

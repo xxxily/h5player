@@ -95,4 +95,47 @@ function isEditableTarget (target) {
   return isEditable || isInputDom
 }
 
-export { hideDom, eachParentNode, loadCSSText, getContainer, isEditableTarget }
+/**
+ * 判断某个元素是否处于shadowDom里面
+ * 参考：https://www.coder.work/article/299700
+ * @param node
+ * @returns {boolean}
+ */
+function isInShadow (node, returnShadowRoot) {
+  for (; node; node = node.parentNode) {
+    if (node.toString() === '[object ShadowRoot]') {
+      if (returnShadowRoot) {
+        return node
+      } else {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+/**
+ * 判断某个元素是否处于可视区域，适用于被动调用情况，需要高性能，请使用IntersectionObserver
+ * 参考：https://github.com/febobo/web-interview/issues/84
+ * @param element
+ * @returns {boolean}
+ */
+function isInViewPort (element) {
+  const viewWidth = window.innerWidth || document.documentElement.clientWidth
+  const viewHeight = window.innerHeight || document.documentElement.clientHeight
+  const {
+    top,
+    right,
+    bottom,
+    left
+  } = element.getBoundingClientRect()
+
+  return (
+    top >= 0 &&
+    left >= 0 &&
+    right <= viewWidth &&
+    bottom <= viewHeight
+  )
+}
+
+export { hideDom, eachParentNode, loadCSSText, getContainer, isEditableTarget, isInShadow, isInViewPort }

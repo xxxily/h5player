@@ -10,7 +10,8 @@ const messages = {
   'zh-TW': zhTW,
   'en-US': enUS,
   en: enUS,
-  ru: ru
+  ru: ru,
+  'ru-RU': ru,
 }
 
 export default messages

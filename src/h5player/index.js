@@ -1,4 +1,5 @@
 import './comment'
+import './tips'
 import h5PlayerTccInit from './h5PlayerTccInit'
 import fakeConfig from './fakeConfig'
 import FullScreen from '../libs/FullScreen/index'
@@ -10,11 +11,12 @@ import monkeyMenu from './monkeyMenu'
 import monkeyMsg from './monkeyMsg'
 import crossTabCtl from './crossTabCtl'
 import debug from './debug'
+import hackDefineProperty from './hackDefineProperty'
+// import hackEventListener from './hackEventListener'
 import langMessage from './locale/core-lang/index'
 import {
   ready,
   hackAttachShadow,
-  hackEventListener,
   isObj,
   quickSort,
   eachParentNode,
@@ -23,7 +25,8 @@ import {
   isInIframe,
   isInCrossOriginFrame,
   isEditableTarget,
-  throttle
+  throttle,
+  isInViewPort
 } from '../libs/utils/index'
 
 import {
@@ -31,7 +34,30 @@ import {
   getPageWindow
 } from './helper'
 
-(async function () {
+window._debugMode_ = true
+
+try {
+  /* 禁止对playbackRate等属性进行锁定 */
+  hackDefineProperty()
+
+  // hackEventListener()
+
+  hackAttachShadow()
+} catch (e) {
+  console.error('h5player hack error', e)
+}
+
+/* 保存重要的原始函数，防止被外部脚本污染 */
+const originalMethods = {
+  Object: {
+    defineProperty: Object.defineProperty,
+    defineProperties: Object.defineProperties
+  },
+  setInterval: window.setInterval,
+  setTimeout: window.setTimeout
+}
+
+;(async function () {
   debug.log('h5Player init')
 
   const i18n = new I18n({
@@ -46,8 +72,15 @@ import {
   // monkeyMenu.on('i18n.t('setting')', function () {
   //   window.alert('功能开发中，敬请期待...')
   // })
-  monkeyMenu.on(i18n.t('about'), function () {
-    window.GM_openInTab('https://github.com/xxxily/h5player', {
+  monkeyMenu.on(i18n.t('hotkeys'), function () {
+    window.GM_openInTab('https://github.com/xxxily/h5player#%E5%BF%AB%E6%8D%B7%E9%94%AE%E5%88%97%E8%A1%A8', {
+      active: true,
+      insert: true,
+      setParent: true
+    })
+  })
+  monkeyMenu.on(i18n.t('donate'), function () {
+    window.GM_openInTab('https://cdn.jsdelivr.net/gh/xxxily/h5player@master/donate.png', {
       active: true,
       insert: true,
       setParent: true
@@ -61,12 +94,11 @@ import {
     })
   })
 
-  hackAttachShadow()
-  hackEventListener({
-    // proxyAll: true,
-    proxyNodeType: ['video'],
-    debug: debug.isDebugMode()
-  })
+  // hackEventListener({
+  //   // proxyAll: true,
+  //   proxyNodeType: ['video'],
+  //   debug: debug.isDebugMode()
+  // })
 
   let TCC = null
   const h5Player = {
@@ -157,17 +189,11 @@ import {
       t.isFoucs()
       t.proxyPlayerInstance(player)
 
-      // player.addEventListener('durationchange', () => {
-      //   debug.log('当前视频长度：', player.duration)
-      // })
       // player.setAttribute('preload', 'auto')
 
       /* 增加通用全屏，网页全屏api */
       player._fullScreen_ = new FullScreen(player)
       player._fullPageScreen_ = new FullScreen(player, true)
-
-      /* 注册播放器的事件代理处理器 */
-      player._listenerProxyApplyHandler_ = t.playerEventHandler
 
       if (!player._hasCanplayEvent_) {
         player.addEventListener('canplay', function (event) {
@@ -210,7 +236,18 @@ import {
         // debug.log('捕捉到鼠标点击事件：', event, offset, target)
       })
 
-      debug.isDebugMode() && t.mountToGlobal()
+      if (debug.isDebugMode()) {
+        t.mountToGlobal()
+        player.addEventListener('loadeddata', function () {
+          debug.log('video dom:', player)
+          debug.log('video url:', player.src)
+          debug.log('video duration:', player.duration)
+        })
+
+        player.addEventListener('durationchange', function () {
+          debug.log('video durationchange:', player.duration)
+        })
+      }
     },
 
     /**
@@ -314,7 +351,20 @@ import {
       !isInCrossOriginFrame() && window.localStorage.setItem('_h5_player_playback_rate_', curPlaybackRate)
 
       t.playbackRate = curPlaybackRate
+
+      delete player.playbackRate
       player.playbackRate = curPlaybackRate
+      try {
+        originalMethods.Object.defineProperty.call(Object, player, 'playbackRate', {
+          configurable: true,
+          get: function () {
+            return curPlaybackRate
+          },
+          set: function () {}
+        })
+      } catch (e) {
+        debug.error('解锁playbackRate失败', e)
+      }
 
       /* 本身处于1倍播放速度的时候不再提示 */
       if (!num && curPlaybackRate === 1) {
@@ -334,8 +384,7 @@ import {
         t.lastPlaybackRate = oldPlaybackRate
       }
 
-      player.playbackRate = playbackRate
-      t.setPlaybackRate(player.playbackRate)
+      t.setPlaybackRate(playbackRate)
     },
     /**
      * 初始化自动播放逻辑
@@ -346,7 +395,24 @@ import {
       const player = p || t.player()
 
       // 在轮询重试的时候，如果实例变了，或处于隐藏页面中则不进行自动播放操作
-      if (!player || (p && p !== t.player()) || document.hidden) return
+      if ((!p && t.hasInitAutoPlay) || !player || (p && p !== t.player()) || document.hidden) {
+        return false
+      }
+
+      /**
+       * 元素不在可视范围，不允许进行初始化自动播放逻辑
+       * 由于iframe下元素的可视范围判断不准确，所以iframe下也禁止初始化自动播放逻辑
+       * TODO 待优化
+       */
+      if (!isInViewPort(player) || isInIframe()) {
+        return false
+      }
+
+      if (window.localStorage.getItem('_disableInitAutoPlay_')) {
+        return false
+      }
+
+      t.hasInitAutoPlay = true
 
       const taskConf = TCC.getTaskConfig()
       if (player && taskConf.autoPlay && player.paused) {
@@ -363,6 +429,13 @@ import {
           setTimeout(function () {
             t.initAutoPlay(player)
           }, 200)
+        } else {
+          monkeyMenu.on(i18n.t('disableInitAutoPlay'), function () {
+            const confirm = window.confirm(i18n.t('disableInitAutoPlay'))
+            if (confirm) {
+              window.localStorage.setItem('_disableInitAutoPlay_', '1')
+            }
+          })
         }
       }
     },
@@ -583,14 +656,14 @@ import {
       // 使用getContainer获取到的父节点弊端太多，暂时弃用
       // const _tispContainer_ = player._tispContainer_  ||  getContainer(player);
 
-      let tispContainer = player._tispContainer_ || player.parentNode
+      let tispContainer = player.parentNode
+
       /* 如果父节点为无长宽的元素，则再往上查找一级 */
       const containerBox = tispContainer.getBoundingClientRect()
       if ((!containerBox.width || !containerBox.height) && tispContainer.parentNode) {
         tispContainer = tispContainer.parentNode
       }
 
-      if (!player._tispContainer_) { player._tispContainer_ = tispContainer }
       return tispContainer
     },
     tips: function (str) {
@@ -1263,53 +1336,6 @@ import {
         }
       }
     },
-    /* 指定取消响应某些事件的列表 */
-    _hangUpPlayerEventList_: [],
-    /**
-     * 挂起播放器的某些事件，注意：挂起时间过长容易出现较多副作用
-     * @param eventType {String|Array} -必选 要挂起的事件类型，可以是单个事件也可以是多个事件
-     * @param timeout {Number} -可选 调用挂起事件函数后，多久后失效，恢复正常事件响应，默认200ms
-     */
-    hangUpPlayerEvent (eventType, timeout) {
-      const t = h5Player
-      t._hangUpPlayerEventList_ = t._hangUpPlayerEventList_ || []
-      eventType = Array.isArray(eventType) ? eventType : [eventType]
-      timeout = timeout || 200
-
-      eventType.forEach(type => {
-        if (!t._hangUpPlayerEventList_.includes(type)) {
-          t._hangUpPlayerEventList_.push(type)
-        }
-      })
-
-      clearTimeout(t._hangUpPlayerEventTimer_)
-      t._hangUpPlayerEventTimer_ = setTimeout(function () {
-        const newList = []
-        t._hangUpPlayerEventList_.forEach(cancelType => {
-          if (!eventType.includes(cancelType)) {
-            newList.push(cancelType)
-          }
-        })
-        t._hangUpPlayerEventList_ = newList
-      }, timeout)
-    },
-    /**
-     * 播放器里的所有事件代理处理器
-     * @param target
-     * @param ctx
-     * @param args
-     * @param listenerArgs
-     */
-    playerEventHandler (target, ctx, args, listenerArgs) {
-      const t = h5Player
-      const eventType = listenerArgs[0]
-
-      /* 取消对某些事件的响应 */
-      if (t._hangUpPlayerEventList_.includes(eventType) || t._hangUpPlayerEventList_.includes('all')) {
-        debug.log(`播放器[${eventType}]事件被取消`)
-        return false
-      }
-    },
     /* 绑定相关事件 */
     bindEvent: function () {
       const t = this
@@ -1429,9 +1455,7 @@ import {
 
   // debugCode.init(h5Player)
 
-  // document.addEventListener('visibilitychange', function () {
-  //   if (!document.hidden) {
-  //     h5Player.initAutoPlay()
-  //   }
-  // })
+  document.addEventListener('visibilitychange', function () {
+    h5Player.initAutoPlay()
+  })
 })()

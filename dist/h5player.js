@@ -2,7 +2,6 @@
 // @name         HTML5视频播放器增强脚本
 // @name:en      HTML5 video player enhanced script
 // @name:zh      HTML5视频播放器增强脚本
-// @name:zh-CN   HTML5视频播放器增强脚本
 // @name:zh-TW   HTML5視頻播放器增強腳本
 // @name:ja      HTML5ビデオプレーヤーの拡張スクリプト
 // @name:ko      HTML5 비디오 플레이어 고급 스크립트
@@ -10,18 +9,17 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.3.1
+// @version      3.3.9
 // @description  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
 // @description:en  HTML5 video playback enhanced script, supports all H5 video playback websites, full-length shortcut key control, supports: double-speed playback / accelerated playback, video screenshots, picture-in-picture, full-page webpage, brightness, saturation, contrast, custom configuration enhancement And other functions.
 // @description:zh  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
-// @description:zh-CN  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
 // @description:zh-TW  HTML5視頻播放增強腳本，支持所有H5視頻播放網站，全程快捷鍵控制，支持：倍速播放/加速播放、視頻畫面截圖、畫中畫、網頁全屏、調節亮度、飽和度、對比度、自定義配置功能增強等功能。
 // @description:ja  HTML5ビデオ再生拡張スクリプト、すべてのH5ビデオ再生Webサイト、フルレングスのショートカットキーコントロールをサポート、サポート：倍速再生/加速再生、ビデオスクリーンショット、ピクチャーインピクチャー、フルページWebページ、明るさ、彩度、コントラスト、カスタム構成拡張 そして他の機能。
 // @description:ko  HTML5 비디오 재생 고급 스크립트, 모든 H5 비디오 재생 웹 사이트 지원, 전체 길이 바로 가기 키 제어 지원 : 2 배속 재생 / 가속 재생, 비디오 스크린 샷, PIP (picture-in-picture), 전체 페이지 웹 페이지, 밝기, 채도, 대비, 사용자 정의 구성 향상 그리고 다른 기능들.
 // @description:ru  HTML5 улучшенный сценарий воспроизведения видео, поддерживает все веб-сайты воспроизведения видео H5, полноразмерное управление с помощью сочетания клавиш, поддерживает: двухскоростное воспроизведение / ускоренное воспроизведение, скриншоты видео, картинка в картинке, полностраничную веб-страницу, яркость, насыщенность, контрастность, улучшение пользовательской конфигурации И другие функции.
 // @description:de  Verbessertes Skript für die HTML5-Videowiedergabe, unterstützt alle H5-Videowiedergabewebsites, Tastenkombination in voller Länge, unterstützt: Wiedergabe mit doppelter Geschwindigkeit / beschleunigte Wiedergabe, Video-Screenshots, Bild-in-Bild, ganzseitige Webseite, Helligkeit, Sättigung, Kontrast, benutzerdefinierte Konfigurationsverbesserung Und andere Funktionen.
 // @author       ankvps
-// @icon         https://raw.githubusercontent.com/xxxily/h5player/master/logo.png
+// @icon         https://cdn.jsdelivr.net/gh/xxxily/h5player@master/logo.png
 // @match        http://*/*
 // @match        https://*/*
 // @grant        unsafeWindow
@@ -41,6 +39,7 @@
 // @grant        GM_download
 // @grant        GM_xmlhttpRequest
 // @run-at       document-start
+// @require      https://unpkg.com/@popperjs/core@2.6.0/dist/umd/popper.js
 // @require      https://unpkg.com/vue@2.6.11/dist/vue.min.js
 // @require      https://unpkg.com/element-ui@2.13.0/lib/index.js
 // @resource     elementUiCss https://unpkg.com/element-ui@2.13.0/lib/theme-chalk/index.css
@@ -48,6 +47,335 @@
 // @license      GPL
 // ==/UserScript==
 (function (w) { if (w) { w.name = 'h5player'; } })();
+
+/* 当前用到的快捷键 */
+const hasUseKey = {
+  keyCodeList: [13, 16, 17, 18, 27, 32, 37, 38, 39, 40, 49, 50, 51, 52, 67, 68, 69, 70, 73, 74, 75, 78, 79, 80, 81, 82, 83, 84, 85, 87, 88, 89, 90, 97, 98, 99, 100, 220],
+  keyList: ['enter', 'shift', 'control', 'alt', 'escape', ' ', 'arrowleft', 'arrowright', 'arrowup', 'arrowdown', '1', '2', '3', '4', 'c', 'd', 'e', 'f', 'i', 'j', 'k', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'w', 'x', 'y', 'z', '\\', '|'],
+  keyMap: {
+    enter: 13,
+    shift: 16,
+    ctrl: 17,
+    alt: 18,
+    esc: 27,
+    space: 32,
+    '←': 37,
+    '↑': 38,
+    '→': 39,
+    '↓': 40,
+    1: 49,
+    2: 50,
+    3: 51,
+    4: 52,
+    c: 67,
+    d: 68,
+    e: 69,
+    f: 70,
+    i: 73,
+    j: 74,
+    k: 75,
+    n: 78,
+    o: 79,
+    p: 80,
+    q: 81,
+    r: 82,
+    s: 83,
+    t: 84,
+    u: 85,
+    w: 87,
+    x: 88,
+    y: 89,
+    z: 90,
+    pad1: 97,
+    pad2: 98,
+    pad3: 99,
+    pad4: 100,
+    '\\': 220
+  }
+};
+
+/**
+ * 判断当前按键是否注册为需要用的按键
+ * 用于减少对其它键位的干扰
+ */
+function isRegisterKey (event) {
+  const keyCode = event.keyCode;
+  const key = event.key.toLowerCase();
+  return hasUseKey.keyCodeList.includes(keyCode) ||
+    hasUseKey.keyList.includes(key)
+}
+
+/**
+ * 由于tampermonkey对window对象进行了封装，我们实际访问到的window并非页面真实的window
+ * 这就导致了如果我们需要将某些对象挂载到页面的window进行调试的时候就无法挂载了
+ * 所以必须使用特殊手段才能访问到页面真实的window对象，于是就有了下面这个函数
+ * @returns {Promise<void>}
+ */
+async function getPageWindow () {
+  return new Promise(function (resolve, reject) {
+    if (window._pageWindow) {
+      return resolve(window._pageWindow)
+    }
+
+    const listenEventList = ['load', 'mousemove', 'scroll', 'get-page-window-event'];
+
+    function getWin (event) {
+      window._pageWindow = this;
+      // debug.log('getPageWindow succeed', event)
+      listenEventList.forEach(eventType => {
+        window.removeEventListener(eventType, getWin, true);
+      });
+      resolve(window._pageWindow);
+    }
+
+    listenEventList.forEach(eventType => {
+      window.addEventListener(eventType, getWin, true);
+    });
+
+    /* 自行派发事件以便用最短的时候获得pageWindow对象 */
+    window.dispatchEvent(new window.Event('get-page-window-event'));
+  })
+}
+getPageWindow();
+
+function toArray (arg) {
+  arg = Array.isArray(arg) ? arg : [arg];
+  return arg
+}
+
+const Popper = window.Popper;
+class Tips {
+  constructor (opts = {}) {
+    opts.fontSize = opts.fontSize || 16;
+    opts.className = opts.className || 'tooltips_el';
+    opts.content = opts.content || 'tips msg...';
+    opts.styleRule = opts.styleRule || '';
+    opts.show = opts.show || false;
+    opts.popperOpts = opts.popperOpts || {};
+    opts.showEvents = toArray(opts.showEvents || []);
+    opts.hideEvents = toArray(opts.hideEvents || []);
+    opts.toggleEvents = toArray(opts.toggleEvents || []);
+
+    this.popperInstance = null;
+    this.reference = null;
+    this.tooltip = null;
+    this.opts = opts;
+
+    /* 当前tooltip显示还是隐藏的状态标识 */
+    this.status = false;
+
+    if (opts.reference) {
+      this.create(opts.reference);
+      if (opts.show) {
+        this.show();
+      }
+    }
+  }
+
+  _createTipsDom (opts = {}) {
+    const wrapDom = document.createElement('div');
+    wrapDom.setAttribute('class', opts.className);
+
+    const contenDom = document.createElement('div');
+    contenDom.setAttribute('class', 'tooltips-content');
+    contenDom.innerHTML = opts.content;
+    wrapDom.appendChild(contenDom);
+
+    // 过渡动画
+    // transition: all 500ms ease;
+    const styleDom = document.createElement('style');
+    styleDom.appendChild(document.createTextNode(`
+      .${opts.className} {
+        z-index: 999999;
+        font-size: ${opts.fontSize || 16}px;
+        padding: 5px 10px;
+        background: rgba(0,0,0,0.4);
+        color:white;
+        top: 0;
+        left: 0;
+        opacity: 0;
+        border-bottom-right-radius: 5px;
+        display: none;
+        -webkit-font-smoothing: subpixel-antialiased;
+        font-family: 'microsoft yahei', Verdana, Geneva, sans-serif;
+        -webkit-user-select: none;
+      }
+      .${opts.className}[data-popper-reference-hidden] { visibility: hidden; pointer-events: none; }
+      .${opts.className}[data-popper-escaped] { visibility: hidden; pointer-events: none; }
+      ${opts.styleRule || ''}
+    `));
+    wrapDom.appendChild(styleDom);
+
+    return wrapDom
+  }
+
+  /**
+   * 创建可用的tooltip对象
+   * @param reference {Element} -必选 提供给createPopper的reference对象
+   * @returns {null|boolean}
+   */
+  create (reference) {
+    const t = this;
+
+    /* 没引入Popper脚本或没提供参考对象或已创建实例 */
+    if (!Popper || !reference || t.popperInstance) {
+      return t.popperInstance || false
+    }
+
+    t.reference = reference;
+    t.tooltip = t._createTipsDom(t.opts);
+
+    const parentNode = reference.parentNode || reference;
+    parentNode.appendChild(t.tooltip);
+
+    t.popperInstance = Popper.createPopper(reference, t.tooltip, t.opts.popperOpts || {});
+    t._eventsHandler();
+
+    return t.popperInstance
+  }
+
+  /**
+   * 重建tooltip对象
+   * @param reference {Element} -可选 create函数所需参数，没提供则使用之前的reference
+   * @returns {null|boolean}
+   */
+  rebuild (reference) {
+    const t = this;
+    reference = reference || t.reference;
+    t.destroy();
+    return t.create(reference)
+  }
+
+  /**
+   * 绑定和解绑相关事件
+   * @param unbind {Boolean} 默认是绑定相关事件，如果为true则解绑相关事件
+   * @returns {boolean}
+   * @private
+   */
+  _eventsHandler (unbind) {
+    const t = this;
+    if (!t.reference) return false
+
+    const handlerName = unbind ? 'removeEventListener' : 'addEventListener';
+    const eventTypeArr = ['show', 'hide', 'toggle'];
+    eventTypeArr.forEach(eventType => {
+      const eventList = toArray(t.opts[eventType + 'Events']);
+      eventList.forEach(eventName => {
+        t.reference[handlerName](eventName, () => t[eventType]());
+      });
+    });
+  }
+
+  /**
+   * 设置tooltip的内容
+   * @param str {String} -必选 要设置的内容，可以包含HTML内容
+   */
+  setContent (str) {
+    const t = this;
+
+    if (str && t.tooltip) {
+      const contentEl = t.tooltip.querySelector('.tooltips-content');
+      if (contentEl) {
+        contentEl.innerHTML = str;
+        t.opts.content = str;
+      }
+    }
+  }
+
+  /**
+   * 设置tooltip的样式规则
+   * @param rule {String} -必选 要设置的样式规则
+   * @param replace {Boolean} -可选 使用当前样式规则替换之前的所有规则
+   */
+  setStyleRule (rule, replace) {
+    const t = this;
+
+    if (rule && t.tooltip) {
+      const styleEl = t.tooltip.querySelector('style') || document.createElement('style');
+
+      if (replace) {
+        styleEl.innerHTML = '';
+      }
+
+      styleEl.appendChild(document.createTextNode(rule));
+      t.opts.styleRule = rule;
+    }
+  }
+
+  /**
+   * 显示tooltip对象
+   * @param str {String} -可选 修改要显示的内容
+   */
+  show (str) {
+    const t = this;
+
+    if (t.reference && t.tooltip) {
+      t.setContent(str);
+      t.tooltip.style.display = 'block';
+      t.tooltip.style.opacity = 1;
+      t.status = true;
+    }
+  }
+
+  hide () {
+    const t = this;
+
+    if (t.reference && t.tooltip) {
+      t.tooltip.style.display = 'none';
+      t.tooltip.style.opacity = 0;
+      t.status = false;
+    }
+  }
+
+  toggle () {
+    if (this.status === true) {
+      this.hide();
+    } else {
+      this.show();
+    }
+  }
+
+  destroy () {
+    const t = this;
+
+    t._eventsHandler(true);
+    t.reference = null;
+
+    if (t.tooltip && t.tooltip.parentNode) {
+      t.tooltip.parentNode.removeChild(t.tooltip);
+    }
+    t.tooltip = null;
+
+    t.popperInstance && t.popperInstance.destroy();
+    t.popperInstance = null;
+  }
+}
+
+async function init () {
+  const win = await getPageWindow();
+  if (win) {
+    win.Tips = Tips;
+
+    if (location.host === 'www.baidu.com') {
+      var reference = document.querySelector('#s_kw_wrap .soutu-btn') || document.querySelector('#form .soutu-btn');
+
+      var tips = new Tips({
+        fontSize: 12,
+        reference: reference,
+        className: 'test-tooltips',
+        content: '<h1>document.querySelector(\'#s_kw_wrap .soutu-btn\')</h1>',
+        show: true,
+        popperOpts: {},
+        showEvents: ['mouseenter', 'focus'],
+        // hideEvents: ['mouseleave', 'blur'],
+        toggleEvents: ['click']
+      });
+
+      console.log(tips);
+    }
+  }
+}
+init();
 
 /*!
  * @name         utils.js
@@ -252,11 +580,11 @@ class TCC {
  * 参考：https://javascript.ruanyifeng.com/dom/mutationobserver.html
  */
 function ready (selector, fn, shadowRoot) {
-  const listeners = [];
   const win = window;
-  const doc = shadowRoot || win.document;
+  const docRoot = shadowRoot || win.document.documentElement;
+  if (!docRoot) return false
   const MutationObserver = win.MutationObserver || win.WebKitMutationObserver;
-  let observer;
+  const listeners = docRoot._MutationListeners || [];
 
   function $ready (selector, fn) {
     // 储存选择器和回调函数
@@ -264,33 +592,41 @@ function ready (selector, fn, shadowRoot) {
       selector: selector,
       fn: fn
     });
-    if (!observer) {
-      // 监听document变化
-      observer = new MutationObserver(check);
-      observer.observe(shadowRoot || doc.documentElement, {
+
+    /* 增加监听对象 */
+    if (!docRoot._MutationListeners || !docRoot._MutationObserver) {
+      docRoot._MutationListeners = listeners;
+      docRoot._MutationObserver = new MutationObserver(() => {
+        for (let i = 0; i < docRoot._MutationListeners.length; i++) {
+          const item = docRoot._MutationListeners[i];
+          check(item.selector, item.fn);
+        }
+      });
+
+      docRoot._MutationObserver.observe(docRoot, {
         childList: true,
         subtree: true
       });
     }
-    // 检查该节点是否已经在DOM中
-    check();
+
+    // 检查节点是否已经在DOM中
+    check(selector, fn);
   }
 
-  function check () {
-    for (let i = 0; i < listeners.length; i++) {
-      var listener = listeners[i];
-      var elements = doc.querySelectorAll(listener.selector);
-      for (let j = 0; j < elements.length; j++) {
-        var element = elements[j];
-        if (!element._isMutationReady_) {
-          element._isMutationReady_ = true;
-          listener.fn.call(element, element);
-        }
+  function check (selector, fn) {
+    const elements = docRoot.querySelectorAll(selector);
+    for (let i = 0; i < elements.length; i++) {
+      const element = elements[i];
+      element._MutationReadyList_ = element._MutationReadyList_ || [];
+      if (!element._MutationReadyList_.includes(fn)) {
+        element._MutationReadyList_.push(fn);
+        fn.call(element, element);
       }
     }
   }
 
-  $ready(selector, fn);
+  const selectorArr = Array.isArray(selector) ? selector : [selector];
+  selectorArr.forEach(selector => $ready(selector, fn));
 }
 
 /**
@@ -314,6 +650,9 @@ function hackAttachShadow () {
       // 存一份shadowDomList
       window._shadowDomList_.push(shadowRoot);
 
+      /* 让shadowRoot里面的元素有机会访问shadowHost */
+      shadowRoot._shadowHost = this;
+
       // 在document下面添加 addShadowRoot 自定义事件
       const shadowEvent = new window.CustomEvent('addShadowRoot', {
         shadowRoot,
@@ -331,182 +670,7 @@ function hackAttachShadow () {
     };
     window._hasHackAttachShadow_ = true;
   } catch (e) {
-    console.error('hackAttachShadow error by h5player plug-in');
-  }
-}
-
-/**
- * 事件侦听hack
- * @param config.debug {Boolean} -可选 开启调试模式，调试模式下会把所有注册的事件都挂载到 window._listenerList_ 对象下，用于调试分析
- * @param config.proxyNodeType {String|Array} -可选 对某些类型的dom标签的事件进行代理处理
- * 请不要对一些非常常见的标签进行事件代理，过多的代理会造成严重的性能消耗
- */
-function hackEventListener (config) {
-  config = config || {
-    debug: false,
-    proxyAll: false,
-    proxyNodeType: []
-  };
-
-  /* 对proxyNodeType数据进行预处理，将里面的字符变成大写 */
-  let proxyNodeType = Array.isArray(config.proxyNodeType) ? config.proxyNodeType : [config.proxyNodeType];
-  const tmpArr = [];
-  proxyNodeType.forEach(type => {
-    if (typeof type === 'string') {
-      tmpArr.push(type.toUpperCase());
-    }
-  });
-  proxyNodeType = tmpArr;
-
-  const EVENT = window.EventTarget.prototype;
-  if (EVENT._addEventListener) return
-  EVENT._addEventListener = EVENT.addEventListener;
-  EVENT._removeEventListener = EVENT.removeEventListener;
-  // 挂载到全局用于调试
-  window._listenerList_ = window._listenerList_ || {};
-
-  // hack addEventListener
-  EVENT.addEventListener = function () {
-    const t = this;
-    const arg = arguments;
-    const type = arg[0];
-    const listener = arg[1];
-
-    if (!listener) {
-      return false
-    }
-
-    /* 把sourceopen事件干掉，则好多网站视频都将播放不了 */
-    // if (/sourceopen/gi.test(type)) {
-    //   console.log('------------------------------')
-    //   console.log(type, listener)
-    //   return false
-    // }
-
-    /**
-     * 使用了Symbol之后，某些页面下会和 raven-js发生冲突，所以必须进行 try catch
-     * TODO 如何解决该问题待研究，测试页面：https://xueqiu.com/S/SZ300498
-     */
-    try {
-      /**
-       * 对监听函数进行代理
-       * 为了降低对性能的影响，此处只对特定的标签的事件进行代理
-       */
-      const listenerSymbol = Symbol.for(listener);
-      let listenerProxy = null;
-      if (config.proxyAll || proxyNodeType.includes(t.nodeName)) {
-        try {
-          listenerProxy = new Proxy(listener, {
-            apply (target, ctx, args) {
-              // const event = args[0]
-              // console.log(event.type, event, target)
-
-              /* 让外部通过 _listenerProxyApplyHandler_ 控制事件的执行 */
-              if (t._listenerProxyApplyHandler_ instanceof Function) {
-                const handlerResult = t._listenerProxyApplyHandler_(target, ctx, args, arg);
-                if (handlerResult !== undefined) {
-                  return handlerResult
-                }
-              }
-
-              return target.apply(ctx, args)
-            }
-          });
-
-          /* 挂载listenerProxy到自身，方便快速查找 */
-          listener[listenerSymbol] = listenerProxy;
-
-          /* 使用listenerProxy替代本来应该进行侦听的listener */
-          arg[1] = listenerProxy;
-        } catch (e) {
-          // console.error('listenerProxy error:', e)
-        }
-      }
-      t._addEventListener.apply(t, arg);
-      t._listeners = t._listeners || {};
-      t._listeners[type] = t._listeners[type] || [];
-      const listenerObj = {
-        target: t,
-        type,
-        listener,
-        listenerProxy,
-        options: arg[2],
-        addTime: new Date().getTime()
-      };
-      t._listeners[type].push(listenerObj);
-
-      /* 挂载到全局对象用于观测调试 */
-      if (config.debug) {
-        window._listenerList_[type] = window._listenerList_[type] || [];
-        window._listenerList_[type].push(listenerObj);
-      }
-    } catch (e) {
-      t._addEventListener.apply(t, arg);
-      // console.error(e)
-    }
-  };
-
-  // hack removeEventListener
-  EVENT.removeEventListener = function () {
-    const arg = arguments;
-    const type = arg[0];
-    const listener = arg[1];
-
-    if (!listener) {
-      return false
-    }
-
-    try {
-      /* 对arg[1]重新赋值，以便正确卸载对应的监听函数 */
-      const listenerSymbol = Symbol.for(listener);
-      arg[1] = listener[listenerSymbol] || listener;
-
-      this._removeEventListener.apply(this, arg);
-      this._listeners = this._listeners || {};
-      this._listeners[type] = this._listeners[type] || [];
-
-      const result = [];
-      this._listeners[type].forEach(listenerObj => {
-        if (listenerObj.listener !== listener) {
-          result.push(listenerObj);
-        }
-      });
-      this._listeners[type] = result;
-
-      /* 从全局列表中移除 */
-      if (config.debug) {
-        const result = [];
-        const listenerTypeList = window._listenerList_[type] || [];
-        listenerTypeList.forEach(listenerObj => {
-          if (listenerObj.listener !== listener) {
-            result.push(listenerObj);
-          }
-        });
-        window._listenerList_[type] = result;
-      }
-    } catch (e) {
-      this._removeEventListener.apply(this, arg);
-      console.error(e);
-    }
-  };
-
-  /* 对document下的事件侦听方法进行hack */
-  try {
-    if (document.addEventListener !== EVENT.addEventListener) {
-      document.addEventListener = EVENT.addEventListener;
-    }
-    if (document.removeEventListener !== EVENT.removeEventListener) {
-      document.removeEventListener = EVENT.removeEventListener;
-    }
-
-    // if (window.addEventListener !== EVENT.addEventListener) {
-    //   window.addEventListener = EVENT.addEventListener
-    // }
-    // if (window.removeEventListener !== EVENT.removeEventListener) {
-    //   window.removeEventListener = EVENT.removeEventListener
-    // }
-  } catch (e) {
-    console.error(e);
+    console.error('hackAttachShadow error by h5player plug-in', e);
   }
 }
 
@@ -553,6 +717,30 @@ function eachParentNode (dom, fn) {
 }
 
 /**
+ * 动态加载css内容
+ * @param cssText {String} -必选 样式的文本内容
+ * @param id {String} -可选 指定样式文本的id号，如果已存在对应id号则不会再次插入
+ * @param insetTo {Dom} -可选 指定插入到哪
+ * @returns {HTMLStyleElement}
+ */
+function loadCSSText (cssText, id, insetTo) {
+  if (id && document.getElementById(id)) {
+    return false
+  }
+
+  const style = document.createElement('style');
+  const head = insetTo || document.head || document.getElementsByTagName('head')[0];
+  style.appendChild(document.createTextNode(cssText));
+  head.appendChild(style);
+
+  if (id) {
+    style.setAttribute('id', id);
+  }
+
+  return style
+}
+
+/**
  * 判断当前元素是否为可编辑元素
  * @param target
  * @returns Boolean
@@ -561,6 +749,49 @@ function isEditableTarget (target) {
   const isEditable = target.getAttribute && target.getAttribute('contenteditable') === 'true';
   const isInputDom = /INPUT|TEXTAREA|SELECT/.test(target.nodeName);
   return isEditable || isInputDom
+}
+
+/**
+ * 判断某个元素是否处于shadowDom里面
+ * 参考：https://www.coder.work/article/299700
+ * @param node
+ * @returns {boolean}
+ */
+function isInShadow (node, returnShadowRoot) {
+  for (; node; node = node.parentNode) {
+    if (node.toString() === '[object ShadowRoot]') {
+      if (returnShadowRoot) {
+        return node
+      } else {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+/**
+ * 判断某个元素是否处于可视区域，适用于被动调用情况，需要高性能，请使用IntersectionObserver
+ * 参考：https://github.com/febobo/web-interview/issues/84
+ * @param element
+ * @returns {boolean}
+ */
+function isInViewPort (element) {
+  const viewWidth = window.innerWidth || document.documentElement.clientWidth;
+  const viewHeight = window.innerHeight || document.documentElement.clientHeight;
+  const {
+    top,
+    right,
+    bottom,
+    left
+  } = element.getBoundingClientRect();
+
+  return (
+    top >= 0 &&
+    left >= 0 &&
+    right <= viewWidth &&
+    bottom <= viewHeight
+  )
 }
 
 /* ua信息伪装 */
@@ -719,7 +950,7 @@ const taskConf = {
         return true
       }
     },
-    // autoPlay: '.bilibili-player-video-btn-start',
+    autoPlay: '.bilibili-player-video-btn-start',
     switchPlayStatus: '.bilibili-player-video-btn-start',
     next: '.bilibili-player-video-btn-next',
     init: function (h5Player, taskConf) {},
@@ -778,6 +1009,14 @@ const taskConf = {
       }, 200);
     }
   },
+  'ixigua.com': {
+    fullScreen: 'xg-fullscreen.xgplayer-fullscreen',
+    webFullScreen: 'xg-cssfullscreen.xgplayer-cssfullscreen'
+  },
+  'tv.sohu.com': {
+    fullScreen: 'button[data-title="网页全屏"]',
+    webFullScreen: 'button[data-title="全屏"]'
+  },
   'iqiyi.com': {
     fullScreen: '.iqp-btn-fullscreen',
     webFullScreen: '.iqp-btn-webscreen',
@@ -811,63 +1050,55 @@ const taskConf = {
       callback: function (h5Player, taskConf, data) {
         const { event } = data;
         const key = event.key.toLowerCase();
-        const speedItems = document.querySelectorAll('.container_inner txpdiv[data-role="txp-button-speed-list"] .txp_menuitem');
+        const keyName = 'customShortcuts_' + key;
 
-        /* 利用sessionStorage下的playbackRate进行设置 */
-        if (window.sessionStorage.playbackRate && /(c|x|z|1|2|3|4)/.test(key)) {
-          const curSpeed = Number(window.sessionStorage.playbackRate);
-          const perSpeed = curSpeed - 0.1 >= 0 ? curSpeed - 0.1 : 0.1;
-          const nextSpeed = curSpeed + 0.1 <= 4 ? curSpeed + 0.1 : 4;
-          let targetSpeed = curSpeed;
-          switch (key) {
-            case 'z' :
-              targetSpeed = 1;
-              break
-            case 'c' :
-              targetSpeed = nextSpeed;
-              break
-            case 'x' :
-              targetSpeed = perSpeed;
-              break
-            default :
-              targetSpeed = Number(key);
-              break
+        if (!h5Player[keyName]) {
+          /* 第一次按下快捷键使用默认逻辑进行调速 */
+          h5Player[keyName] = {
+            time: Date.now(),
+            playbackRate: h5Player.playbackRate
+          };
+          return false
+        } else {
+          /* 第一次操作后的200ms内的操作都是由默认逻辑进行调速 */
+          if (Date.now() - h5Player[keyName].time < 200) {
+            return false
           }
 
-          window.sessionStorage.playbackRate = targetSpeed;
-          h5Player.setCurrentTime(0.01, true);
-          h5Player.setPlaybackRate(targetSpeed, true);
-          return true
-        }
+          /* 判断是否需进行降级处理，利用sessionStorage进行调速 */
+          if (h5Player[keyName] === h5Player.playbackRate || h5Player[keyName] === true) {
+            if (window.sessionStorage.playbackRate && /(c|x|z|1|2|3|4)/.test(key)) {
+              const curSpeed = Number(window.sessionStorage.playbackRate);
+              const perSpeed = curSpeed - 0.1 >= 0 ? curSpeed - 0.1 : 0.1;
+              const nextSpeed = curSpeed + 0.1 <= 4 ? curSpeed + 0.1 : 4;
+              let targetSpeed = curSpeed;
+              switch (key) {
+                case 'z' :
+                  targetSpeed = 1;
+                  break
+                case 'c' :
+                  targetSpeed = nextSpeed;
+                  break
+                case 'x' :
+                  targetSpeed = perSpeed;
+                  break
+                default :
+                  targetSpeed = Number(key);
+                  break
+              }
 
-        /* 模拟点击触发 */
-        if (speedItems.length >= 3 && /(c|x|z)/.test(key)) {
-          let curIndex = 1;
-          speedItems.forEach((item, index) => {
-            if (item.classList.contains('txp_current')) {
-              curIndex = index;
+              window.sessionStorage.playbackRate = targetSpeed;
+              h5Player.setCurrentTime(0.01, true);
+              h5Player.setPlaybackRate(targetSpeed, true);
+              return true
             }
-          });
-          const perIndex = curIndex - 1 >= 0 ? curIndex - 1 : 0;
-          const nextIndex = curIndex + 1 < speedItems.length ? curIndex + 1 : speedItems.length - 1;
 
-          let target = speedItems[1];
-          switch (key) {
-            case 'z' :
-              target = speedItems[1];
-              break
-            case 'c' :
-              target = speedItems[nextIndex];
-              break
-            case 'x' :
-              target = speedItems[perIndex];
-              break
+            /* 标识默认调速方案失效，需启用sessionStorage调速方案 */
+            h5Player[keyName] = true;
+          } else {
+            /* 标识默认调速方案生效 */
+            h5Player[keyName] = false;
           }
-
-          target.click();
-          const speedNum = Number(target.innerHTML.replace('x'));
-          h5Player.setPlaybackRate(speedNum);
-          return true
         }
       }
     },
@@ -1018,12 +1249,19 @@ const fakeConfig = {
  * 元素全屏API，同时兼容网页全屏
  */
 
+hackAttachShadow();
 class FullScreen {
   constructor (dom, pageMode) {
     this.dom = dom;
+    this.shadowRoot = null;
+    this.fullStatus = false;
     // 默认全屏模式，如果传入pageMode则表示进行的是页面全屏操作
     this.pageMode = pageMode || false;
     const fullPageStyle = `
+      ._webfullscreen_box_size_ {
+				width: 100% !important;
+				height: 100% !important;
+			}
       ._webfullscreen_ {
         display: block !important;
 				position: fixed !important;
@@ -1038,18 +1276,27 @@ class FullScreen {
 				z-index: 999999 !important;
 			}
 		`;
+    /* 将样式插入到全局页面中 */
     if (!window._hasInitFullPageStyle_) {
       window.GM_addStyle(fullPageStyle);
       window._hasInitFullPageStyle_ = true;
     }
 
+    /* 将样式插入到shadowRoot中 */
+    const shadowRoot = isInShadow(dom, true);
+    if (shadowRoot) {
+      this.shadowRoot = shadowRoot;
+      loadCSSText(fullPageStyle, 'fullPageStyle', shadowRoot);
+    }
+
+    const t = this;
     window.addEventListener('keyup', (event) => {
       const key = event.key.toLowerCase();
       if (key === 'escape') {
-        if (this.isFull()) {
-          this.exit();
-        } else if (this.isFullScreen()) {
-          this.exitFullScreen();
+        if (t.isFull()) {
+          t.exit();
+        } else if (t.isFullScreen()) {
+          t.exitFullScreen();
         }
       }
     }, true);
@@ -1097,7 +1344,7 @@ class FullScreen {
   }
 
   isFull () {
-    return this.dom.classList.contains('_webfullscreen_')
+    return this.dom.classList.contains('_webfullscreen_') || this.fullStatus
   }
 
   isFullScreen () {
@@ -1120,18 +1367,42 @@ class FullScreen {
     if (t.dom === container) {
       needSetIndex = true;
     }
-    this.eachParentNode(t.dom, function (parentNode) {
-      parentNode.classList.add('_webfullscreen_');
-      if (container === parentNode || needSetIndex) {
-        needSetIndex = true;
-        parentNode.classList.add('_webfullscreen_zindex_');
+
+    function addFullscreenStyleToParentNode (node) {
+      t.eachParentNode(node, function (parentNode) {
+        parentNode.classList.add('_webfullscreen_');
+        if (container === parentNode || needSetIndex) {
+          needSetIndex = true;
+          parentNode.classList.add('_webfullscreen_zindex_');
+        }
+      });
+    }
+    addFullscreenStyleToParentNode(t.dom);
+
+    /* 判断dom自身是否需要加上webfullscreen样式 */
+    if (t.dom.parentNode) {
+      const domBox = t.dom.getBoundingClientRect();
+      const domParentBox = t.dom.parentNode.getBoundingClientRect();
+      if (domParentBox.width - domBox.width >= 5) {
+        t.dom.classList.add('_webfullscreen_');
       }
-    });
-    t.dom.classList.add('_webfullscreen_');
+
+      if (t.shadowRoot && t.shadowRoot._shadowHost) {
+        const shadowHost = t.shadowRoot._shadowHost;
+        const shadowHostBox = shadowHost.getBoundingClientRect();
+        if (shadowHostBox.width <= domBox.width) {
+          shadowHost.classList.add('_webfullscreen_');
+          addFullscreenStyleToParentNode(shadowHost);
+        }
+      }
+    }
+
     const fullScreenMode = !t.pageMode;
     if (fullScreenMode) {
       t.enterFullScreen();
     }
+
+    this.fullStatus = true;
   }
 
   exitFullScreen () {
@@ -1142,15 +1413,28 @@ class FullScreen {
 
   exit () {
     const t = this;
+
+    function removeFullscreenStyleToParentNode (node) {
+      t.eachParentNode(node, function (parentNode) {
+        parentNode.classList.remove('_webfullscreen_');
+        parentNode.classList.remove('_webfullscreen_zindex_');
+      });
+    }
+    removeFullscreenStyleToParentNode(t.dom);
+
     t.dom.classList.remove('_webfullscreen_');
-    this.eachParentNode(t.dom, function (parentNode) {
-      parentNode.classList.remove('_webfullscreen_');
-      parentNode.classList.remove('_webfullscreen_zindex_');
-    });
+
+    if (t.shadowRoot && t.shadowRoot._shadowHost) {
+      const shadowHost = t.shadowRoot._shadowHost;
+      shadowHost.classList.remove('_webfullscreen_');
+      removeFullscreenStyleToParentNode(shadowHost);
+    }
+
     const fullScreenMode = !t.pageMode;
     if (fullScreenMode || t.isFullScreen()) {
       t.exitFullScreen();
     }
+    this.fullStatus = false;
   }
 
   toggle () {
@@ -1631,96 +1915,6 @@ var Debug$1 = new Debug();
 
 var debug = Debug$1.create('h5player message:');
 
-/* 当前用到的快捷键 */
-const hasUseKey = {
-  keyCodeList: [13, 16, 17, 18, 27, 32, 37, 38, 39, 40, 49, 50, 51, 52, 67, 68, 69, 70, 73, 74, 75, 78, 79, 80, 81, 82, 83, 84, 85, 87, 88, 89, 90, 97, 98, 99, 100, 220],
-  keyList: ['enter', 'shift', 'control', 'alt', 'escape', ' ', 'arrowleft', 'arrowright', 'arrowup', 'arrowdown', '1', '2', '3', '4', 'c', 'd', 'e', 'f', 'i', 'j', 'k', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'w', 'x', 'y', 'z', '\\', '|'],
-  keyMap: {
-    enter: 13,
-    shift: 16,
-    ctrl: 17,
-    alt: 18,
-    esc: 27,
-    space: 32,
-    '←': 37,
-    '↑': 38,
-    '→': 39,
-    '↓': 40,
-    1: 49,
-    2: 50,
-    3: 51,
-    4: 52,
-    c: 67,
-    d: 68,
-    e: 69,
-    f: 70,
-    i: 73,
-    j: 74,
-    k: 75,
-    n: 78,
-    o: 79,
-    p: 80,
-    q: 81,
-    r: 82,
-    s: 83,
-    t: 84,
-    u: 85,
-    w: 87,
-    x: 88,
-    y: 89,
-    z: 90,
-    pad1: 97,
-    pad2: 98,
-    pad3: 99,
-    pad4: 100,
-    '\\': 220
-  }
-};
-
-/**
- * 判断当前按键是否注册为需要用的按键
- * 用于减少对其它键位的干扰
- */
-function isRegisterKey (event) {
-  const keyCode = event.keyCode;
-  const key = event.key.toLowerCase();
-  return hasUseKey.keyCodeList.includes(keyCode) ||
-    hasUseKey.keyList.includes(key)
-}
-
-/**
- * 由于tampermonkey对window对象进行了封装，我们实际访问到的window并非页面真实的window
- * 这就导致了如果我们需要将某些对象挂载到页面的window进行调试的时候就无法挂载了
- * 所以必须使用特殊手段才能访问到页面真实的window对象，于是就有了下面这个函数
- * @returns {Promise<void>}
- */
-async function getPageWindow () {
-  return new Promise(function (resolve, reject) {
-    if (window._pageWindow) {
-      return resolve(window._pageWindow)
-    }
-
-    const listenEventList = ['load', 'mousemove', 'scroll', 'get-page-window-event'];
-
-    function getWin (event) {
-      window._pageWindow = this;
-      // debug.log('getPageWindow succeed', event)
-      listenEventList.forEach(eventType => {
-        window.removeEventListener(eventType, getWin, true);
-      });
-      resolve(window._pageWindow);
-    }
-
-    listenEventList.forEach(eventType => {
-      window.addEventListener(eventType, getWin, true);
-    });
-
-    /* 自行派发事件以便用最短的时候获得pageWindow对象 */
-    window.dispatchEvent(new window.Event('get-page-window-event'));
-  })
-}
-getPageWindow();
-
 /*!
  * @name         crossTabCtl.js
  * @description  跨Tab控制脚本逻辑
@@ -1789,10 +1983,558 @@ const crossTabCtl = {
   }
 };
 
+/*!
+ * @name         index.js
+ * @description  hookJs JS AOP切面编程辅助库
+ * @version      0.0.1
+ * @author       Blaze
+ * @date         2020/10/22 17:40
+ * @github       https://github.com/xxxily
+ */
+
+const win = typeof window === 'undefined' ? global : window;
+const toStr = Function.prototype.call.bind(Object.prototype.toString);
+/* 特殊场景，如果把Boolean也hook了，很容易导致调用溢出，所以是需要使用原生Boolean */
+const toBoolean = Boolean.originMethod ? Boolean.originMethod : Boolean;
+const util = {
+  toStr,
+  isObj: obj => toStr(obj) === '[object Object]',
+  /* 判断是否为引用类型，用于更宽泛的场景 */
+  isRef: obj => typeof obj === 'object',
+  isReg: obj => toStr(obj) === '[object RegExp]',
+  isFn: obj => obj instanceof Function,
+  isAsyncFn: fn => toStr(fn) === '[object AsyncFunction]',
+  isPromise: obj => toStr(obj) === '[object Promise]',
+  firstUpperCase: str => str.replace(/^\S/, s => s.toUpperCase()),
+  toArr: arg => Array.from(Array.isArray(arg) ? arg : [arg]),
+
+  debug: {
+    log () {
+      let log = win.console.log;
+      /* 如果log也被hook了，则使用未被hook前的log函数 */
+      if (log.originMethod) { log = log.originMethod; }
+      if (win._debugMode_) {
+        log.apply(win.console, arguments);
+      }
+    }
+  },
+  /* 获取包含自身、继承、可枚举、不可枚举的键名 */
+  getAllKeys (obj) {
+    const tmpArr = [];
+    for (const key in obj) { tmpArr.push(key); }
+    const allKeys = Array.from(new Set(tmpArr.concat(Reflect.ownKeys(obj))));
+    return allKeys
+  }
+};
+
+class HookJs {
+  constructor (useProxy) {
+    this.useProxy = useProxy || false;
+    this.hookPropertiesKeyName = '_hookProperties' + Date.now();
+  }
+
+  hookJsPro () {
+    return new HookJs(true)
+  }
+
+  _addHook (hookMethod, fn, type, classHook) {
+    const hookKeyName = type + 'Hooks';
+    const hookMethodProperties = hookMethod[this.hookPropertiesKeyName];
+    if (!hookMethodProperties[hookKeyName]) {
+      hookMethodProperties[hookKeyName] = [];
+    }
+
+    /* 注册（储存）要被调用的hook函数，同时防止重复注册 */
+    let hasSameHook = false;
+    for (let i = 0; i < hookMethodProperties[hookKeyName].length; i++) {
+      if (fn === hookMethodProperties[hookKeyName][i]) {
+        hasSameHook = true;
+        break
+      }
+    }
+
+    if (!hasSameHook) {
+      fn.classHook = classHook || false;
+      hookMethodProperties[hookKeyName].push(fn);
+    }
+  }
+
+  _runHooks (parentObj, methodName, originMethod, hookMethod, target, ctx, args, classHook, hookPropertiesKeyName) {
+    const hookMethodProperties = hookMethod[hookPropertiesKeyName];
+    const beforeHooks = hookMethodProperties.beforeHooks || [];
+    const afterHooks = hookMethodProperties.afterHooks || [];
+    const errorHooks = hookMethodProperties.errorHooks || [];
+    const hangUpHooks = hookMethodProperties.hangUpHooks || [];
+    const replaceHooks = hookMethodProperties.replaceHooks || [];
+    const execInfo = {
+      result: null,
+      error: null,
+      args: args,
+      type: ''
+    };
+
+    function runHooks (hooks, type) {
+      let hookResult = null;
+      execInfo.type = type || '';
+      if (Array.isArray(hooks)) {
+        hooks.forEach(fn => {
+          if (util.isFn(fn) && classHook === fn.classHook) {
+            hookResult = fn(args, parentObj, methodName, originMethod, execInfo, ctx);
+          }
+        });
+      }
+      return hookResult
+    }
+
+    const runTarget = (function () {
+      if (classHook) {
+        return function () {
+          // eslint-disable-next-line new-cap
+          return new target(...args)
+        }
+      } else {
+        return function () {
+          return target.apply(ctx, args)
+        }
+      }
+    })();
+
+    const beforeHooksResult = runHooks(beforeHooks, 'before');
+    /* 支持终止后续调用的指令 */
+    if (beforeHooksResult && beforeHooksResult === 'STOP-INVOKE') {
+      return beforeHooksResult
+    }
+
+    if (hangUpHooks.length || replaceHooks.length) {
+      /**
+       * 当存在hangUpHooks或replaceHooks的时候是不会触发原来函数的
+       * 本质上来说hangUpHooks和replaceHooks是一样的，只是外部的定义描述不一致和分类不一致而已
+       */
+      runHooks(hangUpHooks, 'hangUp');
+      runHooks(replaceHooks, 'replace');
+    } else {
+      if (errorHooks.length) {
+        try {
+          execInfo.result = runTarget();
+        } catch (err) {
+          execInfo.error = err;
+          const errorHooksResult = runHooks(errorHooks, 'error');
+          /* 支持执行错误后不抛出异常的指令 */
+          if (errorHooksResult && errorHooksResult === 'SKIP-ERROR') ; else {
+            throw err
+          }
+        }
+      } else {
+        execInfo.result = runTarget();
+      }
+    }
+
+    /**
+     * 执行afterHooks，如果返回的是Promise，理论上应该进行进一步的细分处理
+     * 但添加细分处理逻辑后发现性能下降得比较厉害，且容易出现各种异常，所以决定不在hook里处理Promise情况
+     * 下面是原Promise处理逻辑，添加后会导致以下网站卡死或无法访问：
+     * wenku.baidu.com
+     * https://pubs.rsc.org/en/content/articlelanding/2021/sc/d1sc01881g#!divAbstract
+     * https://www.elsevier.com/connect/coronavirus-information-center
+     */
+    // if (execInfo.result && execInfo.result.then && util.isPromise(execInfo.result)) {
+    //   execInfo.result.then(function (data) {
+    //     execInfo.result = data
+    //     runHooks(afterHooks, 'after')
+    //     return Promise.resolve.apply(ctx, arguments)
+    //   }).catch(function (err) {
+    //     execInfo.error = err
+    //     runHooks(errorHooks, 'error')
+    //     return Promise.reject.apply(ctx, arguments)
+    //   })
+    // }
+
+    runHooks(afterHooks, 'after');
+
+    return execInfo.result
+  }
+
+  _proxyMethodcGenerator (parentObj, methodName, originMethod, classHook, context, proxyHandler) {
+    const t = this;
+    const useProxy = t.useProxy;
+    let hookMethod = null;
+
+    /* 存在缓存则使用缓存的hookMethod */
+    if (t.isHook(originMethod)) {
+      hookMethod = originMethod;
+    } else if (originMethod[t.hookPropertiesKeyName] && t.isHook(originMethod[t.hookPropertiesKeyName].hookMethod)) {
+      hookMethod = originMethod[t.hookPropertiesKeyName].hookMethod;
+    }
+
+    if (hookMethod) {
+      if (!hookMethod[t.hookPropertiesKeyName].isHook) {
+        /* 重新标注被hook状态 */
+        hookMethod[t.hookPropertiesKeyName].isHook = true;
+        util.debug.log(`[hook method] ${util.toStr(parentObj)} ${methodName}`);
+      }
+      return hookMethod
+    }
+
+    /* 使用Proxy模式进行hook可以获得更多特性，但性能也会稍差一些 */
+    if (useProxy && Proxy) {
+      /* 注意：使用Proxy代理，hookMethod和originMethod将共用同一对象 */
+      const handler = { ...proxyHandler };
+
+      /* 下面的写法确定了proxyHandler是无法覆盖construct和apply操作的 */
+      if (classHook) {
+        handler.construct = function (target, args, newTarget) {
+          context = context || this;
+          return t._runHooks(parentObj, methodName, originMethod, hookMethod, target, context, args, true, t.hookPropertiesKeyName)
+        };
+      } else {
+        handler.apply = function (target, ctx, args) {
+          ctx = context || ctx;
+          return t._runHooks(parentObj, methodName, originMethod, hookMethod, target, ctx, args, false, t.hookPropertiesKeyName)
+        };
+      }
+
+      hookMethod = new Proxy(originMethod, handler);
+    } else {
+      hookMethod = function () {
+        /**
+         * 注意此处不能通过 context = context || this
+         * 然后通过把context当ctx传递过去
+         * 这将导致ctx引用错误
+         */
+        const ctx = context || this;
+        return t._runHooks(parentObj, methodName, originMethod, hookMethod, originMethod, ctx, arguments, classHook, t.hookPropertiesKeyName)
+      };
+
+      /* 确保子对象和原型链跟originMethod保持一致 */
+      const keys = Reflect.ownKeys(originMethod);
+      keys.forEach(keyName => {
+        Object.defineProperty(hookMethod, keyName, {
+          get: function () {
+            return originMethod[keyName]
+          },
+          set: function (val) {
+            originMethod[keyName] = val;
+          }
+        });
+      });
+      hookMethod.prototype = originMethod.prototype;
+    }
+
+    const hookMethodProperties = hookMethod[t.hookPropertiesKeyName] = {};
+
+    hookMethodProperties.originMethod = originMethod;
+    hookMethodProperties.hookMethod = hookMethod;
+    hookMethodProperties.isHook = true;
+    hookMethodProperties.classHook = classHook;
+
+    util.debug.log(`[hook method] ${util.toStr(parentObj)} ${methodName}`);
+
+    return hookMethod
+  }
+
+  _getObjKeysByRule (obj, rule) {
+    let excludeRule = null;
+    let result = rule;
+
+    if (util.isObj(rule) && rule.include) {
+      excludeRule = rule.exclude;
+      rule = rule.include;
+      result = rule;
+    }
+
+    /**
+     * for in、Object.keys与Reflect.ownKeys的区别见：
+     * https://es6.ruanyifeng.com/#docs/object#%E5%B1%9E%E6%80%A7%E7%9A%84%E9%81%8D%E5%8E%86
+     */
+    if (rule === '*') {
+      result = Object.keys(obj);
+    } else if (rule === '**') {
+      result = Reflect.ownKeys(obj);
+    } else if (rule === '***') {
+      result = util.getAllKeys(obj);
+    } else if (util.isReg(rule)) {
+      result = util.getAllKeys(obj).filter(keyName => rule.test(keyName));
+    }
+
+    /* 如果存在排除规则，则需要进行排除 */
+    if (excludeRule) {
+      result = Array.isArray(result) ? result : [result];
+      if (util.isReg(excludeRule)) {
+        result = result.filter(keyName => !excludeRule.test(keyName));
+      } else if (Array.isArray(excludeRule)) {
+        result = result.filter(keyName => !excludeRule.includes(keyName));
+      } else {
+        result = result.filter(keyName => excludeRule !== keyName);
+      }
+    }
+
+    return util.toArr(result)
+  }
+
+  /**
+   * 判断某个函数是否已经被hook
+   * @param fn {Function} -必选 要判断的函数
+   * @returns {boolean}
+   */
+  isHook (fn) {
+    if (!fn || !fn[this.hookPropertiesKeyName]) {
+      return false
+    }
+    const hookMethodProperties = fn[this.hookPropertiesKeyName];
+    return util.isFn(hookMethodProperties.originMethod) && fn !== hookMethodProperties.originMethod
+  }
+
+  /**
+   * 判断对象下的某个值是否具备hook的条件
+   * 注意：具备hook条件和能否直接修改值是两回事，
+   * 在进行hook的时候还要检查descriptor.writable是否为false
+   * 如果为false则要修改成true才能hook成功
+   * @param parentObj
+   * @param keyName
+   * @returns {boolean}
+   */
+  isAllowHook (parentObj, keyName) {
+    /* 有些对象会设置getter，让读取值的时候就抛错，所以需要try catch 判断能否正常读取属性 */
+    try { if (!parentObj[keyName]) return false } catch (e) { return false }
+    const descriptor = Object.getOwnPropertyDescriptor(parentObj, keyName);
+    return !(descriptor && descriptor.configurable === false)
+  }
+
+  /**
+   * hook 核心函数
+   * @param parentObj {Object} -必选 被hook函数依赖的父对象
+   * @param hookMethods {Object|Array|RegExp|string} -必选 被hook函数的函数名或函数名的匹配规则
+   * @param fn {Function} -必选 hook之后的回调方法
+   * @param type {String} -可选 默认before，指定运行hook函数回调的时机，可选字符串：before、after、replace、error、hangUp
+   * @param classHook {Boolean} -可选 默认false，指定是否为针对new（class）操作的hook
+   * @param context {Object} -可选 指定运行被hook函数时的上下文对象
+   * @param proxyHandler {Object} -可选 仅当用Proxy进行hook时有效，默认使用的是Proxy的apply handler进行hook，如果你有特殊需求也可以配置自己的handler以实现更复杂的功能
+   * 附注：不使用Proxy进行hook，可以获得更高性能，但也意味着通用性更差些，对于要hook HTMLElement.prototype、EventTarget.prototype这些对象里面的非实例的函数往往会失败而导致被hook函数执行出错
+   * @returns {boolean}
+   */
+  hook (parentObj, hookMethods, fn, type, classHook, context, proxyHandler) {
+    classHook = toBoolean(classHook);
+    type = type || 'before';
+
+    if ((!util.isRef(parentObj) && !util.isFn(parentObj)) || !util.isFn(fn) || !hookMethods) {
+      return false
+    }
+
+    const t = this;
+
+    hookMethods = t._getObjKeysByRule(parentObj, hookMethods);
+    hookMethods.forEach(methodName => {
+      if (!t.isAllowHook(parentObj, methodName)) {
+        util.debug.log(`${util.toStr(parentObj)} [${methodName}] does not support modification`);
+        return false
+      }
+
+      const descriptor = Object.getOwnPropertyDescriptor(parentObj, methodName);
+      if (descriptor && descriptor.writable === false) {
+        Object.defineProperty(parentObj, methodName, { writable: true });
+      }
+
+      const originMethod = parentObj[methodName];
+      let hookMethod = null;
+
+      /* 非函数无法进行hook操作 */
+      if (!util.isFn(originMethod)) {
+        return false
+      }
+
+      hookMethod = t._proxyMethodcGenerator(parentObj, methodName, originMethod, classHook, context, proxyHandler);
+
+      const hookMethodProperties = hookMethod[t.hookPropertiesKeyName];
+      if (hookMethodProperties.classHook !== classHook) {
+        util.debug.log(`${util.toStr(parentObj)} [${methodName}] Cannot support functions hook and classes hook at the same time `);
+        return false
+      }
+
+      /* 使用hookMethod接管需要被hook的方法 */
+      if (parentObj[methodName] !== hookMethod) {
+        parentObj[methodName] = hookMethod;
+      }
+
+      t._addHook(hookMethod, fn, type, classHook);
+    });
+  }
+
+  /* 专门针对new操作的hook，本质上是hook函数的别名，可以少传classHook这个参数，并且明确语义 */
+  hookClass (parentObj, hookMethods, fn, type, context, proxyHandler) {
+    return this.hook(parentObj, hookMethods, fn, type, true, context, proxyHandler)
+  }
+
+  /**
+   * 取消对某个函数的hook
+   * @param parentObj {Object} -必选 要取消被hook函数依赖的父对象
+   * @param hookMethods {Object|Array|RegExp|string} -必选 要取消被hook函数的函数名或函数名的匹配规则
+   * @param type {String} -可选 默认before，指定要取消的hook类型，可选字符串：before、after、replace、error、hangUp，如果不指定该选项则取消所有类型下的所有回调
+   * @param fn {Function} -必选 取消指定的hook回调函数，如果不指定该选项则取消对应type类型下的所有回调
+   * @returns {boolean}
+   */
+  unHook (parentObj, hookMethods, type, fn) {
+    if (!util.isRef(parentObj) || !hookMethods) {
+      return false
+    }
+
+    const t = this;
+    hookMethods = t._getObjKeysByRule(parentObj, hookMethods);
+    hookMethods.forEach(methodName => {
+      if (!t.isAllowHook(parentObj, methodName)) {
+        return false
+      }
+
+      const hookMethod = parentObj[methodName];
+
+      if (!t.isHook(hookMethod)) {
+        return false
+      }
+
+      const hookMethodProperties = hookMethod[t.hookPropertiesKeyName];
+      const originMethod = hookMethodProperties.originMethod;
+
+      if (type) {
+        const hookKeyName = type + 'Hooks';
+        const hooks = hookMethodProperties[hookKeyName] || [];
+
+        if (fn) {
+          /* 删除指定类型下的指定hook函数 */
+          for (let i = 0; i < hooks.length; i++) {
+            if (fn === hooks[i]) {
+              hookMethodProperties[hookKeyName].splice(i, 1);
+              util.debug.log(`[unHook ${hookKeyName} func] ${util.toStr(parentObj)} ${methodName}`, fn);
+              break
+            }
+          }
+        } else {
+          /* 删除指定类型下的所有hook函数 */
+          if (Array.isArray(hookMethodProperties[hookKeyName])) {
+            hookMethodProperties[hookKeyName] = [];
+            util.debug.log(`[unHook all ${hookKeyName}] ${util.toStr(parentObj)} ${methodName}`);
+          }
+        }
+      } else {
+        /* 彻底还原被hook的函数 */
+        if (util.isFn(originMethod)) {
+          parentObj[methodName] = originMethod;
+          delete parentObj[methodName][t.hookPropertiesKeyName];
+
+          // Object.keys(hookMethod).forEach(keyName => {
+          //   if (/Hooks$/.test(keyName) && Array.isArray(hookMethod[keyName])) {
+          //     hookMethod[keyName] = []
+          //   }
+          // })
+          //
+          // hookMethod.isHook = false
+          // parentObj[methodName] = originMethod
+          // delete parentObj[methodName].originMethod
+          // delete parentObj[methodName].hookMethod
+          // delete parentObj[methodName].isHook
+          // delete parentObj[methodName].isClassHook
+
+          util.debug.log(`[unHook method] ${util.toStr(parentObj)} ${methodName}`);
+        }
+      }
+    });
+  }
+
+  /* 源函数运行前的hook */
+  before (obj, hookMethods, fn, classHook, context, proxyHandler) {
+    return this.hook(obj, hookMethods, fn, 'before', classHook, context, proxyHandler)
+  }
+
+  /* 源函数运行后的hook */
+  after (obj, hookMethods, fn, classHook, context, proxyHandler) {
+    return this.hook(obj, hookMethods, fn, 'after', classHook, context, proxyHandler)
+  }
+
+  /* 替换掉要hook的函数，不再运行源函数，换成运行其他逻辑 */
+  replace (obj, hookMethods, fn, classHook, context, proxyHandler) {
+    return this.hook(obj, hookMethods, fn, 'replace', classHook, context, proxyHandler)
+  }
+
+  /* 源函数运行出错时的hook */
+  error (obj, hookMethods, fn, classHook, context, proxyHandler) {
+    return this.hook(obj, hookMethods, fn, 'error', classHook, context, proxyHandler)
+  }
+
+  /* 底层实现逻辑与replace一样，都是替换掉要hook的函数，不再运行源函数，只不过是为了明确语义，将源函数挂起不再执行，原则上也不再执行其他逻辑，如果要执行其他逻辑请使用replace hook */
+  hangUp (obj, hookMethods, fn, classHook, context, proxyHandler) {
+    return this.hook(obj, hookMethods, fn, 'hangUp', classHook, context, proxyHandler)
+  }
+}
+
+var hookJs = new HookJs();
+
+/**
+ * 禁止对playbackRate进行锁定
+ * 部分播放器会阻止修改playbackRate
+ * 通过hackDefineProperty来反阻止playbackRate的修改
+ * 参考： https://greasyfork.org/zh-CN/scripts/372673
+ */
+
+function hackDefineProperCore (target, key, option) {
+  if (option && target && target instanceof Element && typeof key === 'string' && key.indexOf('on') >= 0) {
+    option.configurable = true;
+  }
+
+  if (target instanceof HTMLVideoElement) {
+    const unLockProperties = ['playbackRate', 'currentTime', 'volume', 'muted'];
+    if (unLockProperties.includes(key)) {
+      if (!option.configurable) {
+        debug.log(`禁止对${key}进行锁定`);
+        option.configurable = true;
+        key = key + '_hack';
+      }
+    }
+  }
+
+  return [target, key, option]
+}
+
+function hackDefineProperOnError (args, parentObj, methodName, originMethod, execInfo, ctx) {
+  debug.error(`${methodName} error:`, execInfo.error);
+
+  /* 忽略执行异常 */
+  return 'SKIP-ERROR'
+}
+
+function hackDefineProperty () {
+  hookJs.before(Object, 'defineProperty', function (args, parentObj, methodName, originMethod, execInfo, ctx) {
+    const option = args[2];
+    const ele = args[0];
+    const key = args[1];
+    const afterArgs = hackDefineProperCore(ele, key, option);
+    afterArgs.forEach((arg, i) => {
+      args[i] = arg;
+    });
+  });
+
+  hookJs.before(Object, 'defineProperties', function (args, parentObj, methodName, originMethod, execInfo, ctx) {
+    const properties = args[1];
+    const ele = args[0];
+    if (ele && ele instanceof Element) {
+      Object.keys(properties).forEach(key => {
+        const option = properties[key];
+        const afterArgs = hackDefineProperCore(ele, key, option);
+        args[0] = afterArgs[0];
+        delete properties[key];
+        properties[afterArgs[1]] = afterArgs[2];
+      });
+    }
+  });
+
+  hookJs.error(Object, 'defineProperty', hackDefineProperOnError);
+  hookJs.error(Object, 'defineProperties', hackDefineProperOnError);
+}
+
 var zhCN = {
   about: '关于',
   issues: '反馈',
   setting: '设置',
+  hotkeys: '快捷键',
+  donate: '赞赏',
+  disableInitAutoPlay: '禁止在此网站自动播放视频',
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '前进：',
@@ -1828,6 +2570,9 @@ var enUS = {
   about: 'about',
   issues: 'issues',
   setting: 'setting',
+  hotkeys: 'hotkeys',
+  donate: 'donate',
+  disableInitAutoPlay: 'Prohibit autoplay of videos on this site',
   tipsMsg: {
     playspeed: 'Speed: ',
     forward: 'Forward: ',
@@ -1864,6 +2609,9 @@ var ru = {
   about: 'около',
   issues: 'обратная связь',
   setting: 'установка',
+  hotkeys: 'горячие клавиши',
+  donate: 'пожертвовать',
+  disableInitAutoPlay: 'Запретить автовоспроизведение видео на этом сайте',
   tipsMsg: {
     playspeed: 'Скорость: ',
     forward: 'Вперёд: ',
@@ -1899,6 +2647,9 @@ var zhTW = {
   about: '關於',
   issues: '反饋',
   setting: '設置',
+  hotkeys: '快捷鍵',
+  donate: '讚賞',
+  disableInitAutoPlay: '禁止在此網站自動播放視頻',
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '向前：',
@@ -1940,7 +2691,30 @@ const messages = {
   ru: ru
 };
 
-(async function () {
+window._debugMode_ = true;
+
+try {
+  /* 禁止对playbackRate等属性进行锁定 */
+  hackDefineProperty();
+
+  // hackEventListener()
+
+  hackAttachShadow();
+} catch (e) {
+  console.error('h5player hack error', e);
+}
+
+/* 保存重要的原始函数，防止被外部脚本污染 */
+const originalMethods = {
+  Object: {
+    defineProperty: Object.defineProperty,
+    defineProperties: Object.defineProperties
+  },
+  setInterval: window.setInterval,
+  setTimeout: window.setTimeout
+}
+
+;(async function () {
   debug.log('h5Player init');
 
   const i18n = new I18n({
@@ -1955,8 +2729,15 @@ const messages = {
   // monkeyMenu.on('i18n.t('setting')', function () {
   //   window.alert('功能开发中，敬请期待...')
   // })
-  monkeyMenu.on(i18n.t('about'), function () {
-    window.GM_openInTab('https://github.com/xxxily/h5player', {
+  monkeyMenu.on(i18n.t('hotkeys'), function () {
+    window.GM_openInTab('https://github.com/xxxily/h5player#%E5%BF%AB%E6%8D%B7%E9%94%AE%E5%88%97%E8%A1%A8', {
+      active: true,
+      insert: true,
+      setParent: true
+    });
+  });
+  monkeyMenu.on(i18n.t('donate'), function () {
+    window.GM_openInTab('https://cdn.jsdelivr.net/gh/xxxily/h5player@master/donate.png', {
       active: true,
       insert: true,
       setParent: true
@@ -1970,12 +2751,11 @@ const messages = {
     });
   });
 
-  hackAttachShadow();
-  hackEventListener({
-    // proxyAll: true,
-    proxyNodeType: ['video'],
-    debug: debug.isDebugMode()
-  });
+  // hackEventListener({
+  //   // proxyAll: true,
+  //   proxyNodeType: ['video'],
+  //   debug: debug.isDebugMode()
+  // })
 
   let TCC = null;
   const h5Player = {
@@ -2066,17 +2846,11 @@ const messages = {
       t.isFoucs();
       t.proxyPlayerInstance(player);
 
-      // player.addEventListener('durationchange', () => {
-      //   debug.log('当前视频长度：', player.duration)
-      // })
       // player.setAttribute('preload', 'auto')
 
       /* 增加通用全屏，网页全屏api */
       player._fullScreen_ = new FullScreen(player);
       player._fullPageScreen_ = new FullScreen(player, true);
-
-      /* 注册播放器的事件代理处理器 */
-      player._listenerProxyApplyHandler_ = t.playerEventHandler;
 
       if (!player._hasCanplayEvent_) {
         player.addEventListener('canplay', function (event) {
@@ -2119,7 +2893,18 @@ const messages = {
         // debug.log('捕捉到鼠标点击事件：', event, offset, target)
       });
 
-      debug.isDebugMode() && t.mountToGlobal();
+      if (debug.isDebugMode()) {
+        t.mountToGlobal();
+        player.addEventListener('loadeddata', function () {
+          debug.log('video dom:', player);
+          debug.log('video url:', player.src);
+          debug.log('video duration:', player.duration);
+        });
+
+        player.addEventListener('durationchange', function () {
+          debug.log('video durationchange:', player.duration);
+        });
+      }
     },
 
     /**
@@ -2223,7 +3008,20 @@ const messages = {
       !isInCrossOriginFrame() && window.localStorage.setItem('_h5_player_playback_rate_', curPlaybackRate);
 
       t.playbackRate = curPlaybackRate;
+
+      delete player.playbackRate;
       player.playbackRate = curPlaybackRate;
+      try {
+        originalMethods.Object.defineProperty.call(Object, player, 'playbackRate', {
+          configurable: true,
+          get: function () {
+            return curPlaybackRate
+          },
+          set: function () {}
+        });
+      } catch (e) {
+        debug.error('解锁playbackRate失败', e);
+      }
 
       /* 本身处于1倍播放速度的时候不再提示 */
       if (!num && curPlaybackRate === 1) {
@@ -2243,8 +3041,7 @@ const messages = {
         t.lastPlaybackRate = oldPlaybackRate;
       }
 
-      player.playbackRate = playbackRate;
-      t.setPlaybackRate(player.playbackRate);
+      t.setPlaybackRate(playbackRate);
     },
     /**
      * 初始化自动播放逻辑
@@ -2255,7 +3052,24 @@ const messages = {
       const player = p || t.player();
 
       // 在轮询重试的时候，如果实例变了，或处于隐藏页面中则不进行自动播放操作
-      if (!player || (p && p !== t.player()) || document.hidden) return
+      if ((!p && t.hasInitAutoPlay) || !player || (p && p !== t.player()) || document.hidden) {
+        return false
+      }
+
+      /**
+       * 元素不在可视范围，不允许进行初始化自动播放逻辑
+       * 由于iframe下元素的可视范围判断不准确，所以iframe下也禁止初始化自动播放逻辑
+       * TODO 待优化
+       */
+      if (!isInViewPort(player) || isInIframe()) {
+        return false
+      }
+
+      if (window.localStorage.getItem('_disableInitAutoPlay_')) {
+        return false
+      }
+
+      t.hasInitAutoPlay = true;
 
       const taskConf = TCC.getTaskConfig();
       if (player && taskConf.autoPlay && player.paused) {
@@ -2272,6 +3086,13 @@ const messages = {
           setTimeout(function () {
             t.initAutoPlay(player);
           }, 200);
+        } else {
+          monkeyMenu.on(i18n.t('disableInitAutoPlay'), function () {
+            const confirm = window.confirm(i18n.t('disableInitAutoPlay'));
+            if (confirm) {
+              window.localStorage.setItem('_disableInitAutoPlay_', '1');
+            }
+          });
         }
       }
     },
@@ -2492,14 +3313,14 @@ const messages = {
       // 使用getContainer获取到的父节点弊端太多，暂时弃用
       // const _tispContainer_ = player._tispContainer_  ||  getContainer(player);
 
-      let tispContainer = player._tispContainer_ || player.parentNode;
+      let tispContainer = player.parentNode;
+
       /* 如果父节点为无长宽的元素，则再往上查找一级 */
       const containerBox = tispContainer.getBoundingClientRect();
       if ((!containerBox.width || !containerBox.height) && tispContainer.parentNode) {
         tispContainer = tispContainer.parentNode;
       }
 
-      if (!player._tispContainer_) { player._tispContainer_ = tispContainer; }
       return tispContainer
     },
     tips: function (str) {
@@ -3172,53 +3993,6 @@ const messages = {
         }
       }
     },
-    /* 指定取消响应某些事件的列表 */
-    _hangUpPlayerEventList_: [],
-    /**
-     * 挂起播放器的某些事件，注意：挂起时间过长容易出现较多副作用
-     * @param eventType {String|Array} -必选 要挂起的事件类型，可以是单个事件也可以是多个事件
-     * @param timeout {Number} -可选 调用挂起事件函数后，多久后失效，恢复正常事件响应，默认200ms
-     */
-    hangUpPlayerEvent (eventType, timeout) {
-      const t = h5Player;
-      t._hangUpPlayerEventList_ = t._hangUpPlayerEventList_ || [];
-      eventType = Array.isArray(eventType) ? eventType : [eventType];
-      timeout = timeout || 200;
-
-      eventType.forEach(type => {
-        if (!t._hangUpPlayerEventList_.includes(type)) {
-          t._hangUpPlayerEventList_.push(type);
-        }
-      });
-
-      clearTimeout(t._hangUpPlayerEventTimer_);
-      t._hangUpPlayerEventTimer_ = setTimeout(function () {
-        const newList = [];
-        t._hangUpPlayerEventList_.forEach(cancelType => {
-          if (!eventType.includes(cancelType)) {
-            newList.push(cancelType);
-          }
-        });
-        t._hangUpPlayerEventList_ = newList;
-      }, timeout);
-    },
-    /**
-     * 播放器里的所有事件代理处理器
-     * @param target
-     * @param ctx
-     * @param args
-     * @param listenerArgs
-     */
-    playerEventHandler (target, ctx, args, listenerArgs) {
-      const t = h5Player;
-      const eventType = listenerArgs[0];
-
-      /* 取消对某些事件的响应 */
-      if (t._hangUpPlayerEventList_.includes(eventType) || t._hangUpPlayerEventList_.includes('all')) {
-        debug.log(`播放器[${eventType}]事件被取消`);
-        return false
-      }
-    },
     /* 绑定相关事件 */
     bindEvent: function () {
       const t = this;
@@ -3338,9 +4112,7 @@ const messages = {
 
   // debugCode.init(h5Player)
 
-  // document.addEventListener('visibilitychange', function () {
-  //   if (!document.hidden) {
-  //     h5Player.initAutoPlay()
-  //   }
-  // })
+  document.addEventListener('visibilitychange', function () {
+    h5Player.initAutoPlay();
+  });
 })();
