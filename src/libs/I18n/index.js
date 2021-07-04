@@ -18,6 +18,7 @@ class I18n {
     /* 指定当前要是使用的语言环境，默认无需指定，会自动读取 */
     t._languages = config.languages || t._languages
     t._defaultLanguage = config.defaultLanguage || t._defaultLanguage
+    t.changeLanguage(t._locale)
   }
 
   use () {}
@@ -44,12 +45,25 @@ class I18n {
   }
 
   changeLanguage (locale) {
-    if (this._languages[locale]) {
-      this._languages = locale
-      return locale
-    } else {
-      return false
+    var fallback = this._languages[locale]
+    // alias is a string language name instead of a map
+    if (typeof fallback !== 'string') fallback = locale
+    // if found, assume a map
+    if (this._languages[fallback]) {
+      this._locale = fallback
+      console.log('Lang set:', this._locale)
+      return this._locale
     }
+    // if lang-REGION, try lang only
+    fallback = fallback.split('-')
+    fallback = fallback.length > 0 && fallback[0]
+    if (fallback && this._languages[fallback]) {
+      this._locale = fallback
+    } else {
+      this._locale = this._defaultLanguage
+    }
+    console.log('Lang set:', this._locale, 'Not available:', locale)
+    return this._locale
   }
 
   /**
@@ -59,7 +73,10 @@ class I18n {
    * @returns {*}
    */
   getValByPath (obj, path) {
-    path = path || ''
+    /* No need to check, if not a string */
+    if (typeof path !== 'string') return ''
+    if (!path) return ''
+
     const pathArr = path.split('.')
     let result = obj
 

@@ -365,6 +365,8 @@ function h5PlayerTccInit (h5Player) {
         return task(h5Player, taskConf, data)
       } catch (e) {
         console.error('TCC自定义函数任务执行失败：', h5Player, taskConf, data)
+        console.error('TCC fail:', e)
+        h5Player.tipsI('tipsMsg.configError', taskName)
         return false
       }
     } else {

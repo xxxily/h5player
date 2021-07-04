@@ -666,6 +666,13 @@ const originalMethods = {
 
       return tispContainer
     },
+    tipsI: function (...strs) {
+      const t = h5Player
+      let out = strs
+      out = out.map(s => i18n.t(s) || s)
+      out = out.join('')
+      return t.tips(out)
+    },
     tips: function (str) {
       const t = h5Player
       const player = t.player()
@@ -1288,6 +1295,7 @@ const originalMethods = {
       if (!curTime || Number.isNaN(curTime)) return
 
       if (t.isAllowRestorePlayProgress()) {
+        debug.log('playbackrestored:', curTime, 'from', player.currentTime)
         player.currentTime = curTime || player.currentTime
         if (curTime > 3) {
           t.tips(i18n.t('tipsMsg.playbackrestored'))
