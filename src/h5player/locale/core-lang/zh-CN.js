@@ -4,6 +4,7 @@ export default {
   setting: '设置',
   hotkeys: '快捷键',
   donate: '赞赏',
+  disableInitAutoPlay: '禁止在此网站自动播放视频',
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '前进：',

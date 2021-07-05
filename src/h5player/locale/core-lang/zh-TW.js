@@ -4,6 +4,7 @@ export default {
   setting: '設置',
   hotkeys: '快捷鍵',
   donate: '讚賞',
+  disableInitAutoPlay: '禁止在此網站自動播放視頻',
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '向前：',

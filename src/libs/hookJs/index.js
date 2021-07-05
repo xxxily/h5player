@@ -89,14 +89,16 @@ class HookJs {
     }
 
     function runHooks (hooks, type) {
+      let hookResult = null
       execInfo.type = type || ''
       if (Array.isArray(hooks)) {
         hooks.forEach(fn => {
           if (util.isFn(fn) && classHook === fn.classHook) {
-            fn(args, parentObj, methodName, originMethod, execInfo, ctx)
+            hookResult = fn(args, parentObj, methodName, originMethod, execInfo, ctx)
           }
         })
       }
+      return hookResult
     }
 
     const runTarget = (function () {
@@ -112,7 +114,11 @@ class HookJs {
       }
     })()
 
-    runHooks(beforeHooks, 'before')
+    const beforeHooksResult = runHooks(beforeHooks, 'before')
+    /* 支持终止后续调用的指令 */
+    if (beforeHooksResult && beforeHooksResult === 'STOP-INVOKE') {
+      return beforeHooksResult
+    }
 
     if (hangUpHooks.length || replaceHooks.length) {
       /**
@@ -127,8 +133,13 @@ class HookJs {
           execInfo.result = runTarget()
         } catch (err) {
           execInfo.error = err
-          runHooks(errorHooks, 'error')
-          throw err
+          const errorHooksResult = runHooks(errorHooks, 'error')
+          /* 支持执行错误后不抛出异常的指令 */
+          if (errorHooksResult && errorHooksResult === 'SKIP-ERROR') {
+            // console.error(`${methodName} error:`, err)
+          } else {
+            throw err
+          }
         }
       } else {
         execInfo.result = runTarget()

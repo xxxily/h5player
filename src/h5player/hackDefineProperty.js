@@ -26,6 +26,13 @@ function hackDefineProperCore (target, key, option) {
   return [target, key, option]
 }
 
+function hackDefineProperOnError (args, parentObj, methodName, originMethod, execInfo, ctx) {
+  debug.error(`${methodName} error:`, execInfo.error)
+
+  /* 忽略执行异常 */
+  return 'SKIP-ERROR'
+}
+
 function hackDefineProperty () {
   hookJs.before(Object, 'defineProperty', function (args, parentObj, methodName, originMethod, execInfo, ctx) {
     const option = args[2]
@@ -50,6 +57,9 @@ function hackDefineProperty () {
       })
     }
   })
+
+  hookJs.error(Object, 'defineProperty', hackDefineProperOnError)
+  hookJs.error(Object, 'defineProperties', hackDefineProperOnError)
 }
 
 export default hackDefineProperty
