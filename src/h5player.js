@@ -197,8 +197,8 @@ class FullScreen {
     'bilibili.com': {
       fullScreen: '[data-text="进入全屏"]',
       webFullScreen: '[data-text="网页全屏"]',
-      autoPlay: '.bilibili-player-video-btn-start',
-      switchPlayStatus: '.bilibili-player-video-btn-start'
+      autoPlay: '.squirtle-video-start, .bilibili-player-video-btn-start',
+      switchPlayStatus: '.squirtle-video-start, .bilibili-player-video-btn-start'
     },
     'live.bilibili.com': {
       fullScreen: '.bilibili-live-player-video-controller-fullscreen-btn button',

@@ -950,8 +950,8 @@ const taskConf = {
         return true
       }
     },
-    autoPlay: '.bilibili-player-video-btn-start',
-    switchPlayStatus: '.bilibili-player-video-btn-start',
+    autoPlay: '.squirtle-video-start, .bilibili-player-video-btn-start',
+    switchPlayStatus: '.squirtle-video-start, .bilibili-player-video-btn-start',
     next: '.bilibili-player-video-btn-next',
     init: function (h5Player, taskConf) {},
     shortcuts: {
