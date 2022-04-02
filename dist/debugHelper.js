@@ -1,8 +1,11 @@
 // ==UserScript==
-// @name         油猴调试助手
+// @name         h5player DebugHelper
+// @name:en      h5player DebugHelper
+// @name:zh      油猴调试助手
 // @namespace    https://github.com/xxxily/TampermonkeyDebugHelper
 // @version      0.0.1
-// @description  用于油猴脚本的本地开发调试使用
+// @description  Used for local development and debugging of TamperMonkey script
+// @description:zh  用于油猴脚本的本地开发调试使用
 // @author       xxxily
 // @match        http://*/*
 // @match        https://*/*
@@ -113,10 +116,10 @@ const _debugTools_ = {
     const t = this
     return new Promise((resolve, reject) => {
       t.get(scriptUrl + '?t=' + Date.now()).catch(err => {
-        console.log('脚本内容加载出错~')
+        console.log('脚本内容加载出错~ / Error loading script <' + scriptUrl + '>')
         resolve('')
       }).then(res => {
-        console.log('脚本内容更新成功~')
+        console.log('脚本内容更新成功~ / Script <' + scriptUrl + '> was updated successfully')
         if (saveToNamespace) {
           window.GM_setValue(saveToNamespace, res.responseText)
         }

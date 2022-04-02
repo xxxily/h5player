@@ -6,6 +6,7 @@ export default {
   donate: 'donate',
   disableInitAutoPlay: 'Prohibit autoplay of videos on this site',
   tipsMsg: {
+    configError: 'Exception for this config in function: ',
     playspeed: 'Speed: ',
     forward: 'Forward: ',
     backward: 'Backward: ',
