@@ -5,6 +5,7 @@ class Debug {
     t.log = t.createDebugMethod('log', null, msg)
     t.error = t.createDebugMethod('error', null, msg)
     t.info = t.createDebugMethod('info', null, msg)
+    t.warn = t.createDebugMethod('warn', null, msg)
   }
 
   create (msg) {
