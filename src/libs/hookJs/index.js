@@ -225,14 +225,19 @@ class HookJs {
       /* 确保子对象和原型链跟originMethod保持一致 */
       const keys = Reflect.ownKeys(originMethod)
       keys.forEach(keyName => {
-        Object.defineProperty(hookMethod, keyName, {
-          get: function () {
-            return originMethod[keyName]
-          },
-          set: function (val) {
-            originMethod[keyName] = val
-          }
-        })
+        try {
+          Object.defineProperty(hookMethod, keyName, {
+            get: function () {
+              return originMethod[keyName]
+            },
+            set: function (val) {
+              originMethod[keyName] = val
+            }
+          })
+        } catch (err) {
+          // 设置defineProperty的时候出现异常，可能导致hookMethod部分功能确实，也可能不受影响
+          util.debug.log(`[proxyMethodcGenerator] hookMethod defineProperty abnormal.  hookMethod:${methodName}, definePropertyName:${keyName}`, err)
+        }
       })
       hookMethod.prototype = originMethod.prototype
     }

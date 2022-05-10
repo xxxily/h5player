@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.3.9
+// @version      3.3.10
 // @description  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
 // @description:en  HTML5 video playback enhanced script, supports all H5 video playback websites, full-length shortcut key control, supports: double-speed playback / accelerated playback, video screenshots, picture-in-picture, full-page webpage, brightness, saturation, contrast, custom configuration enhancement And other functions.
 // @description:zh  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
@@ -1867,12 +1867,13 @@ const monkeyMsg = {
 };
 
 class Debug {
-  constructor (msg) {
+  constructor (msg, printTime = false) {
     const t = this;
     msg = msg || 'debug message:';
     t.log = t.createDebugMethod('log', null, msg);
     t.error = t.createDebugMethod('error', null, msg);
     t.info = t.createDebugMethod('info', null, msg);
+    t.warn = t.createDebugMethod('warn', null, msg);
   }
 
   create (msg) {
@@ -1885,23 +1886,32 @@ class Debug {
     const bgColorMap = {
       info: '#2274A5',
       log: '#95B46A',
+      warn: '#F5A623',
       error: '#D33F49'
     };
+
+    const printTime = this.printTime;
 
     return function () {
       if (!window._debugMode_) {
         return false
       }
 
-      const curTime = new Date();
-      const H = curTime.getHours();
-      const M = curTime.getMinutes();
-      const S = curTime.getSeconds();
       const msg = tipsMsg || 'debug message:';
 
       const arg = Array.from(arguments);
       arg.unshift(`color: white; background-color: ${color || bgColorMap[name] || '#95B46A'}`);
-      arg.unshift(`%c [${H}:${M}:${S}] ${msg} `);
+
+      if (printTime) {
+        const curTime = new Date();
+        const H = curTime.getHours();
+        const M = curTime.getMinutes();
+        const S = curTime.getSeconds();
+        arg.unshift(`%c [${H}:${M}:${S}] ${msg} `);
+      } else {
+        arg.unshift(`%c ${msg} `);
+      }
+
       window.console[name].apply(window.console, arg);
     }
   }
@@ -2208,14 +2218,19 @@ class HookJs {
       /* 确保子对象和原型链跟originMethod保持一致 */
       const keys = Reflect.ownKeys(originMethod);
       keys.forEach(keyName => {
-        Object.defineProperty(hookMethod, keyName, {
-          get: function () {
-            return originMethod[keyName]
-          },
-          set: function (val) {
-            originMethod[keyName] = val;
-          }
-        });
+        try {
+          Object.defineProperty(hookMethod, keyName, {
+            get: function () {
+              return originMethod[keyName]
+            },
+            set: function (val) {
+              originMethod[keyName] = val;
+            }
+          });
+        } catch (err) {
+          // 设置defineProperty的时候出现异常，可能导致hookMethod部分功能确实，也可能不受影响
+          util.debug.log(`[proxyMethodcGenerator] hookMethod defineProperty abnormal.  hookMethod:${methodName}, definePropertyName:${keyName}`, err);
+        }
       });
       hookMethod.prototype = originMethod.prototype;
     }
@@ -2566,41 +2581,6 @@ var zhCN = {
   }
 };
 
-var jaJP = {
-  about: 'スクリプトについて',
-  issues: 'フィードバック',
-  setting: '設定',
-  tipsMsg: {
-    playspeed: '再生速度：',
-    forward: '早送り：',
-    backward: '早戻し：',
-    seconds: '秒',
-    volume: '音量：',
-    nextframe: '次のフレーム',
-    previousframe: '前のフレーム',
-    stopframe: 'フリーズ：',
-    play: '再生',
-    pause: '一時停止',
-    arpl: '自動再開を有効にする',
-    drpl: '自動再開を無効にする',
-    brightness: '明るさ：',
-    contrast: 'コントラスト：',
-    saturation: '飽和：',
-    hue: '色相：',
-    blur: 'ぼかし：',
-    imgattrreset: '画像をリセット',
-    imgrotate: '画面の回転：',
-    onplugin: 'h5Playerプラグインを有効',
-    offplugin: 'h5Playerプラグインを無効',
-    globalmode: 'グローバルモード：',
-    playbackrestored: '再生状況を復元します',
-    playbackrestoreoff: '再生状況を復元する機能が無効になっています、SHIFT + Rを押して機能をオンにします',
-    horizontal: '水平変位：',
-    vertical: '垂直変位：',
-    videozoom: 'ビデオズーム率：'
-  }
-};
-
 var enUS = {
   about: 'about',
   issues: 'issues',
@@ -2719,8 +2699,6 @@ var zhTW = {
 const messages = {
   'zh-CN': zhCN,
   zh: zhCN,
-  ja: jaJP,
-  'ja-JP': jaJP,
   'zh-HK': zhTW,
   'zh-TW': zhTW,
   'en-US': enUS,
