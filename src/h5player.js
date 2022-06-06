@@ -738,7 +738,8 @@ class FullScreen {
     getPlayerList: function () {
       const list = []
       function findPlayer (context) {
-        context.querySelectorAll('video').forEach(function (player) {
+        // bilibili HEVC 格式使用 bwp-video 播放器
+        context.querySelectorAll('video, bwp-video').forEach(function (player) {
           list.push(player)
         })
       }
