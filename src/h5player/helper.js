@@ -96,12 +96,19 @@ getPageWindow()
 function getPageWindowSync () {
   if (document._win_) return document._win_
 
-  const head = document.head || document.querySelector('head')
-  const script = document.createElement('script')
-  script.appendChild(document.createTextNode('document._win_ = window'))
-  head.appendChild(script)
+  try {
+    // eslint-disable-next-line no-new-func
+    return Function('return window')()
+  } catch (e) {
+    console.error('getPageWindowSync error', e)
 
-  return document._win_
+    const head = document.head || document.querySelector('head')
+    const script = document.createElement('script')
+    script.appendChild(document.createTextNode('document._win_ = window'))
+    head.appendChild(script)
+
+    return document._win_
+  }
 }
 
 export {
