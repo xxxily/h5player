@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.3.10
+// @version      3.3.11
 // @description  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
 // @description:en  HTML5 video playback enhanced script, supports all H5 video playback websites, full-length shortcut key control, supports: double-speed playback / accelerated playback, video screenshots, picture-in-picture, full-page webpage, brightness, saturation, contrast, custom configuration enhancement And other functions.
 // @description:zh  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
@@ -861,6 +861,8 @@ function throttle (fn, interval = 80) {
   }
 }
 
+const $q = document.querySelector.bind(document);
+
 /**
  * 任务配置中心 Task Control Center
  * 用于配置所有无法进行通用处理的任务，如不同网站的全屏方式不一样，必须调用网站本身的全屏逻辑，才能确保字幕、弹幕等正常工作
@@ -934,17 +936,23 @@ const taskConf = {
     subtractCurrentTime: 'button.button-nfplayerBackTen'
   },
   'bilibili.com': {
-    // fullScreen: '[data-text="进入全屏"]',
-    // webFullScreen: '[data-text="网页全屏"]',
-    fullScreen: '.bilibili-player-video-btn-fullscreen',
+    fullScreen: function () {
+      const fullScreen = $q('.bpx-player-ctrl-full') || $q('.squirtle-video-fullscreen');
+      if (fullScreen) {
+        fullScreen.click();
+        return true
+      }
+    },
     webFullScreen: function () {
-      const webFullscreen = document.querySelector('.bilibili-player-video-web-fullscreen');
-      if (webFullscreen) {
+      const webFullscreenEnter = $q('.bpx-player-ctrl-web-enter') || $q('.squirtle-pagefullscreen-inactive');
+      const webFullscreenLeave = $q('.bpx-player-ctrl-web-leave') || $q('.squirtle-pagefullscreen-active');
+      if (webFullscreenEnter && webFullscreenLeave) {
+        const webFullscreen = getComputedStyle(webFullscreenLeave).display === 'none' ? webFullscreenEnter : webFullscreenLeave;
         webFullscreen.click();
 
         /* 取消弹幕框聚焦，干扰了快捷键的操作 */
         setTimeout(function () {
-          document.querySelector('.bilibili-player-video-danmaku-input').blur();
+          document.querySelector('.bpx-player-dm-input').blur();
         }, 1000 * 0.1);
 
         return true

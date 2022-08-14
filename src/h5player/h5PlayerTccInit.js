@@ -4,6 +4,7 @@ import {
   hideDom,
   eachParentNode
 } from '../libs/utils/index'
+const $q = document.querySelector.bind(document)
 
 /**
  * 任务配置中心 Task Control Center
@@ -78,17 +79,23 @@ const taskConf = {
     subtractCurrentTime: 'button.button-nfplayerBackTen'
   },
   'bilibili.com': {
-    // fullScreen: '[data-text="进入全屏"]',
-    // webFullScreen: '[data-text="网页全屏"]',
-    fullScreen: '.bilibili-player-video-btn-fullscreen',
+    fullScreen: function () {
+      const fullScreen = $q('.bpx-player-ctrl-full') || $q('.squirtle-video-fullscreen')
+      if (fullScreen) {
+        fullScreen.click()
+        return true
+      }
+    },
     webFullScreen: function () {
-      const webFullscreen = document.querySelector('.bilibili-player-video-web-fullscreen')
-      if (webFullscreen) {
+      const webFullscreenEnter = $q('.bpx-player-ctrl-web-enter') || $q('.squirtle-pagefullscreen-inactive')
+      const webFullscreenLeave = $q('.bpx-player-ctrl-web-leave') || $q('.squirtle-pagefullscreen-active')
+      if (webFullscreenEnter && webFullscreenLeave) {
+        const webFullscreen = getComputedStyle(webFullscreenLeave).display === 'none' ? webFullscreenEnter : webFullscreenLeave
         webFullscreen.click()
 
         /* 取消弹幕框聚焦，干扰了快捷键的操作 */
         setTimeout(function () {
-          document.querySelector('.bilibili-player-video-danmaku-input').blur()
+          document.querySelector('.bpx-player-dm-input').blur()
         }, 1000 * 0.1)
 
         return true
