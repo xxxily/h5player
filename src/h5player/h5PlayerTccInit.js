@@ -101,9 +101,9 @@ const taskConf = {
         return true
       }
     },
-    autoPlay: '.bilibili-player-video-btn-start',
-    switchPlayStatus: '.bilibili-player-video-btn-start',
-    next: '.bilibili-player-video-btn-next',
+    autoPlay: ['.bpx-player-ctrl-play', '.squirtle-video-start'],
+    switchPlayStatus: ['.bpx-player-ctrl-play', '.squirtle-video-start'],
+    next: ['.bpx-player-ctrl-next', '.squirtle-video-next'],
     init: function (h5Player, taskConf) {},
     shortcuts: {
       register: [
@@ -113,9 +113,9 @@ const taskConf = {
         const { event } = data
         if (event.keyCode === 27) {
           /* 退出网页全屏 */
-          const webFullscreen = document.querySelector('.bilibili-player-video-web-fullscreen')
-          if (webFullscreen.classList.contains('closed')) {
-            webFullscreen.click()
+          const webFullscreenLeave = $q('.bpx-player-ctrl-web-leave') || $q('.squirtle-pagefullscreen-active')
+          if (getComputedStyle(webFullscreenLeave).display !== 'none') {
+            webFullscreenLeave.click()
           }
         }
       }
@@ -375,14 +375,19 @@ function h5PlayerTccInit (h5Player) {
         return false
       }
     } else {
-      /* 触发选择器上的点击事件 */
-      if (wrapDom && wrapDom.querySelector(task)) {
+      const selectorList = Array.isArray(task) ? task : [task]
+      for (let i = 0; i < selectorList.length; i++) {
+        const selector = selectorList[i]
+
+        /* 触发选择器上的点击事件 */
+        if (wrapDom && wrapDom.querySelector(selector)) {
         // 在video的父元素里查找，是为了尽可能兼容多实例下的逻辑
-        wrapDom.querySelector(task).click()
-        return true
-      } else if (document.querySelector(task)) {
-        document.querySelector(task).click()
-        return true
+          wrapDom.querySelector(selector).click()
+          return true
+        } else if (document.querySelector(selector)) {
+          document.querySelector(selector).click()
+          return true
+        }
       }
     }
   })

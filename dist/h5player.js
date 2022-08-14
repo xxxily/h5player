@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.3.11
+// @version      3.3.12
 // @description  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
 // @description:en  HTML5 video playback enhanced script, supports all H5 video playback websites, full-length shortcut key control, supports: double-speed playback / accelerated playback, video screenshots, picture-in-picture, full-page webpage, brightness, saturation, contrast, custom configuration enhancement And other functions.
 // @description:zh  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
@@ -958,9 +958,9 @@ const taskConf = {
         return true
       }
     },
-    autoPlay: '.bilibili-player-video-btn-start',
-    switchPlayStatus: '.bilibili-player-video-btn-start',
-    next: '.bilibili-player-video-btn-next',
+    autoPlay: ['.bpx-player-ctrl-play', '.squirtle-video-start'],
+    switchPlayStatus: ['.bpx-player-ctrl-play', '.squirtle-video-start'],
+    next: ['.bpx-player-ctrl-next', '.squirtle-video-next'],
     init: function (h5Player, taskConf) {},
     shortcuts: {
       register: [
@@ -970,9 +970,9 @@ const taskConf = {
         const { event } = data;
         if (event.keyCode === 27) {
           /* 退出网页全屏 */
-          const webFullscreen = document.querySelector('.bilibili-player-video-web-fullscreen');
-          if (webFullscreen.classList.contains('closed')) {
-            webFullscreen.click();
+          const webFullscreenLeave = $q('.bpx-player-ctrl-web-leave') || $q('.squirtle-pagefullscreen-active');
+          if (getComputedStyle(webFullscreenLeave).display !== 'none') {
+            webFullscreenLeave.click();
           }
         }
       }
@@ -1232,14 +1232,19 @@ function h5PlayerTccInit (h5Player) {
         return false
       }
     } else {
-      /* 触发选择器上的点击事件 */
-      if (wrapDom && wrapDom.querySelector(task)) {
+      const selectorList = Array.isArray(task) ? task : [task];
+      for (let i = 0; i < selectorList.length; i++) {
+        const selector = selectorList[i];
+
+        /* 触发选择器上的点击事件 */
+        if (wrapDom && wrapDom.querySelector(selector)) {
         // 在video的父元素里查找，是为了尽可能兼容多实例下的逻辑
-        wrapDom.querySelector(task).click();
-        return true
-      } else if (document.querySelector(task)) {
-        document.querySelector(task).click();
-        return true
+          wrapDom.querySelector(selector).click();
+          return true
+        } else if (document.querySelector(selector)) {
+          document.querySelector(selector).click();
+          return true
+        }
       }
     }
   })
