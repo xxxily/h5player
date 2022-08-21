@@ -12,6 +12,7 @@
     "ui-build": "webpack-cli --inline --config bin/webpack/webpack.prod.conf.js"
   },
   "dependencies": {
+    "local-storage-proxy": "^4.0.3",
     "vue": "^2.6.11"
   },
   "devDependencies": {

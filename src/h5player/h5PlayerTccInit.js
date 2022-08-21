@@ -80,30 +80,32 @@ const taskConf = {
   },
   'bilibili.com': {
     fullScreen: function () {
-      const fullScreen = $q('.bpx-player-ctrl-full') || $q('.squirtle-video-fullscreen')
+      const fullScreen = $q('.bpx-player-ctrl-full') || $q('.squirtle-video-fullscreen') || $q('.bilibili-player-video-btn-fullscreen')
       if (fullScreen) {
         fullScreen.click()
         return true
       }
     },
     webFullScreen: function () {
+      const oldWebFullscreen = $q('.bilibili-player-video-web-fullscreen')
       const webFullscreenEnter = $q('.bpx-player-ctrl-web-enter') || $q('.squirtle-pagefullscreen-inactive')
       const webFullscreenLeave = $q('.bpx-player-ctrl-web-leave') || $q('.squirtle-pagefullscreen-active')
-      if (webFullscreenEnter && webFullscreenLeave) {
-        const webFullscreen = getComputedStyle(webFullscreenLeave).display === 'none' ? webFullscreenEnter : webFullscreenLeave
+      if (oldWebFullscreen || (webFullscreenEnter && webFullscreenLeave)) {
+        const webFullscreen = oldWebFullscreen || (getComputedStyle(webFullscreenLeave).display === 'none' ? webFullscreenEnter : webFullscreenLeave)
         webFullscreen.click()
 
         /* 取消弹幕框聚焦，干扰了快捷键的操作 */
         setTimeout(function () {
-          document.querySelector('.bpx-player-dm-input').blur()
+          const danmaku = $q('.bpx-player-dm-input') || $q('.bilibili-player-video-danmaku-input')
+          danmaku && danmaku.blur()
         }, 1000 * 0.1)
 
         return true
       }
     },
-    autoPlay: ['.bpx-player-ctrl-play', '.squirtle-video-start'],
-    switchPlayStatus: ['.bpx-player-ctrl-play', '.squirtle-video-start'],
-    next: ['.bpx-player-ctrl-next', '.squirtle-video-next'],
+    autoPlay: ['.bpx-player-ctrl-play', '.squirtle-video-start', '.bilibili-player-video-btn-start'],
+    switchPlayStatus: ['.bpx-player-ctrl-play', '.squirtle-video-start', '.bilibili-player-video-btn-start'],
+    next: ['.bpx-player-ctrl-next', '.squirtle-video-next', '.bilibili-player-video-btn-next'],
     init: function (h5Player, taskConf) {},
     shortcuts: {
       register: [
@@ -113,9 +115,14 @@ const taskConf = {
         const { event } = data
         if (event.keyCode === 27) {
           /* 退出网页全屏 */
-          const webFullscreenLeave = $q('.bpx-player-ctrl-web-leave') || $q('.squirtle-pagefullscreen-active')
-          if (getComputedStyle(webFullscreenLeave).display !== 'none') {
-            webFullscreenLeave.click()
+          const oldWebFullscreen = $q('.bilibili-player-video-web-fullscreen')
+          if (oldWebFullscreen && oldWebFullscreen.classList.contains('closed')) {
+            oldWebFullscreen.click()
+          } else {
+            const webFullscreenLeave = $q('.bpx-player-ctrl-web-leave') || $q('.squirtle-pagefullscreen-active')
+            if (getComputedStyle(webFullscreenLeave).display !== 'none') {
+              webFullscreenLeave.click()
+            }
           }
         }
       }
@@ -352,6 +359,20 @@ const taskConf = {
     fullScreen: '.vjs-fullscreen-control'
   },
   'yixi.tv': {
+    init: function (h5Player, taskConf) {
+      h5Player.player().setAttribute('crossOrigin', 'anonymous')
+    }
+  },
+  'douyin.com': {
+    fullScreen: '.xgplayer-fullscreen',
+    webFullScreen: '.xgplayer-page-full-screen',
+    init: function (h5Player, taskConf) {
+      h5Player.player().setAttribute('crossOrigin', 'anonymous')
+    }
+  },
+  'live.douyin.com': {
+    fullScreen: '.xgplayer-fullscreen',
+    webFullScreen: '.xgplayer-page-full-screen',
     init: function (h5Player, taskConf) {
       h5Player.player().setAttribute('crossOrigin', 'anonymous')
     }

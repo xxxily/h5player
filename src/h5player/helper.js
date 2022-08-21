@@ -93,12 +93,14 @@ getPageWindow()
  * 注意同步获取的方式需要将脚本写入head，部分网站由于安全策略会导致写入失败，而无法正常获取
  * @returns {*}
  */
-function getPageWindowSync () {
+function getPageWindowSync (rawFunction) {
   if (document._win_) return document._win_
 
   try {
-    // eslint-disable-next-line no-new-func
-    return Function('return window')()
+    rawFunction = rawFunction || window.__rawFunction__ || Function.prototype.constructor
+    // return rawFunction('return window')()
+    // Function('return (function(){}.constructor("return this")());')
+    return rawFunction('return (function(){}.constructor("var getPageWindowSync=1; return this")());')()
   } catch (e) {
     console.error('getPageWindowSync error', e)
 
@@ -111,9 +113,20 @@ function getPageWindowSync () {
   }
 }
 
+function openInTab (url, opts) {
+  if (window.GM_openInTab) {
+    window.GM_openInTab(url, opts || {
+      active: true,
+      insert: true,
+      setParent: true
+    })
+  }
+}
+
 export {
   hasUseKey,
   isRegisterKey,
   getPageWindow,
-  getPageWindowSync
+  getPageWindowSync,
+  openInTab
 }

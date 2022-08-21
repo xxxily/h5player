@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.3.12
+// @version      3.4.0
 // @description  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
 // @description:en  HTML5 video playback enhanced script, supports all H5 video playback websites, full-length shortcut key control, supports: double-speed playback / accelerated playback, video screenshots, picture-in-picture, full-page webpage, brightness, saturation, contrast, custom configuration enhancement And other functions.
 // @description:zh  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
@@ -137,6 +137,16 @@ async function getPageWindow () {
   })
 }
 getPageWindow();
+
+function openInTab (url, opts) {
+  if (window.GM_openInTab) {
+    window.GM_openInTab(url, opts || {
+      active: true,
+      insert: true,
+      setParent: true
+    });
+  }
+}
 
 function toArray (arg) {
   arg = Array.isArray(arg) ? arg : [arg];
@@ -937,30 +947,32 @@ const taskConf = {
   },
   'bilibili.com': {
     fullScreen: function () {
-      const fullScreen = $q('.bpx-player-ctrl-full') || $q('.squirtle-video-fullscreen');
+      const fullScreen = $q('.bpx-player-ctrl-full') || $q('.squirtle-video-fullscreen') || $q('.bilibili-player-video-btn-fullscreen');
       if (fullScreen) {
         fullScreen.click();
         return true
       }
     },
     webFullScreen: function () {
+      const oldWebFullscreen = $q('.bilibili-player-video-web-fullscreen');
       const webFullscreenEnter = $q('.bpx-player-ctrl-web-enter') || $q('.squirtle-pagefullscreen-inactive');
       const webFullscreenLeave = $q('.bpx-player-ctrl-web-leave') || $q('.squirtle-pagefullscreen-active');
-      if (webFullscreenEnter && webFullscreenLeave) {
-        const webFullscreen = getComputedStyle(webFullscreenLeave).display === 'none' ? webFullscreenEnter : webFullscreenLeave;
+      if (oldWebFullscreen || (webFullscreenEnter && webFullscreenLeave)) {
+        const webFullscreen = oldWebFullscreen || (getComputedStyle(webFullscreenLeave).display === 'none' ? webFullscreenEnter : webFullscreenLeave);
         webFullscreen.click();
 
         /* 取消弹幕框聚焦，干扰了快捷键的操作 */
         setTimeout(function () {
-          document.querySelector('.bpx-player-dm-input').blur();
+          const danmaku = $q('.bpx-player-dm-input') || $q('.bilibili-player-video-danmaku-input');
+          danmaku && danmaku.blur();
         }, 1000 * 0.1);
 
         return true
       }
     },
-    autoPlay: ['.bpx-player-ctrl-play', '.squirtle-video-start'],
-    switchPlayStatus: ['.bpx-player-ctrl-play', '.squirtle-video-start'],
-    next: ['.bpx-player-ctrl-next', '.squirtle-video-next'],
+    autoPlay: ['.bpx-player-ctrl-play', '.squirtle-video-start', '.bilibili-player-video-btn-start'],
+    switchPlayStatus: ['.bpx-player-ctrl-play', '.squirtle-video-start', '.bilibili-player-video-btn-start'],
+    next: ['.bpx-player-ctrl-next', '.squirtle-video-next', '.bilibili-player-video-btn-next'],
     init: function (h5Player, taskConf) {},
     shortcuts: {
       register: [
@@ -970,9 +982,14 @@ const taskConf = {
         const { event } = data;
         if (event.keyCode === 27) {
           /* 退出网页全屏 */
-          const webFullscreenLeave = $q('.bpx-player-ctrl-web-leave') || $q('.squirtle-pagefullscreen-active');
-          if (getComputedStyle(webFullscreenLeave).display !== 'none') {
-            webFullscreenLeave.click();
+          const oldWebFullscreen = $q('.bilibili-player-video-web-fullscreen');
+          if (oldWebFullscreen && oldWebFullscreen.classList.contains('closed')) {
+            oldWebFullscreen.click();
+          } else {
+            const webFullscreenLeave = $q('.bpx-player-ctrl-web-leave') || $q('.squirtle-pagefullscreen-active');
+            if (getComputedStyle(webFullscreenLeave).display !== 'none') {
+              webFullscreenLeave.click();
+            }
           }
         }
       }
@@ -1209,6 +1226,20 @@ const taskConf = {
     fullScreen: '.vjs-fullscreen-control'
   },
   'yixi.tv': {
+    init: function (h5Player, taskConf) {
+      h5Player.player().setAttribute('crossOrigin', 'anonymous');
+    }
+  },
+  'douyin.com': {
+    fullScreen: '.xgplayer-fullscreen',
+    webFullScreen: '.xgplayer-page-full-screen',
+    init: function (h5Player, taskConf) {
+      h5Player.player().setAttribute('crossOrigin', 'anonymous');
+    }
+  },
+  'live.douyin.com': {
+    fullScreen: '.xgplayer-fullscreen',
+    webFullScreen: '.xgplayer-page-full-screen',
     init: function (h5Player, taskConf) {
       h5Player.player().setAttribute('crossOrigin', 'anonymous');
     }
@@ -1745,6 +1776,176 @@ class I18n {
   }
 }
 
+var zhCN = {
+  about: '关于',
+  issues: '反馈',
+  setting: '设置',
+  hotkeys: '快捷键',
+  donate: '赞赏',
+  disableInitAutoPlay: '禁止在此网站自动播放视频',
+  tipsMsg: {
+    playspeed: '播放速度：',
+    forward: '前进：',
+    backward: '后退：',
+    seconds: '秒',
+    volume: '音量：',
+    nextframe: '定位：下一帧',
+    previousframe: '定位：上一帧',
+    stopframe: '定格帧画面：',
+    play: '播放',
+    pause: '暂停',
+    arpl: '允许自动恢复播放进度',
+    drpl: '禁止自动恢复播放进度',
+    brightness: '图像亮度：',
+    contrast: '图像对比度：',
+    saturation: '图像饱和度：',
+    hue: '图像色相：',
+    blur: '图像模糊度：',
+    imgattrreset: '图像属性：复位',
+    imgrotate: '画面旋转：',
+    onplugin: '启用h5Player插件',
+    offplugin: '禁用h5Player插件',
+    globalmode: '全局模式：',
+    playbackrestored: '为你恢复上次播放进度',
+    playbackrestoreoff: '恢复播放进度功能已禁用，按 SHIFT+R 可开启该功能',
+    horizontal: '水平位移：',
+    vertical: '垂直位移：',
+    videozoom: '视频缩放率：'
+  }
+};
+
+var enUS = {
+  about: 'about',
+  issues: 'issues',
+  setting: 'setting',
+  hotkeys: 'hotkeys',
+  donate: 'donate',
+  disableInitAutoPlay: 'Prohibit autoplay of videos on this site',
+  tipsMsg: {
+    playspeed: 'Speed: ',
+    forward: 'Forward: ',
+    backward: 'Backward: ',
+    seconds: 'sec',
+    volume: 'Volume: ',
+    nextframe: 'Next frame',
+    previousframe: 'Previous frame',
+    stopframe: 'Stopframe: ',
+    play: 'Play',
+    pause: 'Pause',
+    arpl: 'Allow auto resume playback progress',
+    drpl: 'Disable auto resume playback progress',
+    brightness: 'Brightness: ',
+    contrast: 'Contrast: ',
+    saturation: 'Saturation: ',
+    hue: 'HUE: ',
+    blur: 'Blur: ',
+    imgattrreset: 'Attributes: reset',
+    imgrotate: 'Picture rotation: ',
+    onplugin: 'ON h5Player plugin',
+    offplugin: 'OFF h5Player plugin',
+    globalmode: 'Global mode: ',
+    playbackrestored: 'Restored the last playback progress for you',
+    playbackrestoreoff: 'The function of restoring the playback progress is disabled. Press SHIFT+R to turn on the function',
+    horizontal: 'Horizontal displacement: ',
+    vertical: 'Vertical displacement: ',
+    videozoom: 'Video zoom: '
+  },
+  demo: 'demo-test'
+};
+
+var ru = {
+  about: 'около',
+  issues: 'обратная связь',
+  setting: 'установка',
+  hotkeys: 'горячие клавиши',
+  donate: 'пожертвовать',
+  disableInitAutoPlay: 'Запретить автовоспроизведение видео на этом сайте',
+  tipsMsg: {
+    playspeed: 'Скорость: ',
+    forward: 'Вперёд: ',
+    backward: 'Назад: ',
+    seconds: ' сек',
+    volume: 'Громкость: ',
+    nextframe: 'Следующий кадр',
+    previousframe: 'Предыдущий кадр',
+    stopframe: 'Стоп-кадр: ',
+    play: 'Запуск',
+    pause: 'Пауза',
+    arpl: 'Разрешить автоматическое возобновление прогресса воспроизведения',
+    drpl: 'Запретить автоматическое возобновление прогресса воспроизведения',
+    brightness: 'Яркость: ',
+    contrast: 'Контраст: ',
+    saturation: 'Насыщенность: ',
+    hue: 'Оттенок: ',
+    blur: 'Размытие: ',
+    imgattrreset: 'Атрибуты: сброс',
+    imgrotate: 'Поворот изображения: ',
+    onplugin: 'ВКЛ: плагин воспроизведения',
+    offplugin: 'ВЫКЛ: плагин воспроизведения',
+    globalmode: 'Глобальный режим:',
+    playbackrestored: 'Восстановлен последний прогресс воспроизведения',
+    playbackrestoreoff: 'Функция восстановления прогресса воспроизведения отключена. Нажмите SHIFT + R, чтобы включить функцию',
+    horizontal: 'Горизонтальное смещение: ',
+    vertical: 'Вертикальное смещение: ',
+    videozoom: 'Увеличить видео: '
+  }
+};
+
+var zhTW = {
+  about: '關於',
+  issues: '反饋',
+  setting: '設置',
+  hotkeys: '快捷鍵',
+  donate: '讚賞',
+  disableInitAutoPlay: '禁止在此網站自動播放視頻',
+  tipsMsg: {
+    playspeed: '播放速度：',
+    forward: '向前：',
+    backward: '向後：',
+    seconds: '秒',
+    volume: '音量：',
+    nextframe: '定位：下一幀',
+    previousframe: '定位：上一幀',
+    stopframe: '定格幀畫面：',
+    play: '播放',
+    pause: '暫停',
+    arpl: '允許自動恢復播放進度',
+    drpl: '禁止自動恢復播放進度',
+    brightness: '圖像亮度：',
+    contrast: '圖像對比度：',
+    saturation: '圖像飽和度：',
+    hue: '圖像色相：',
+    blur: '圖像模糊度：',
+    imgattrreset: '圖像屬性：復位',
+    imgrotate: '畫面旋轉：',
+    onplugin: '啟用h5Player插件',
+    offplugin: '禁用h5Player插件',
+    globalmode: '全局模式：',
+    playbackrestored: '為你恢復上次播放進度',
+    playbackrestoreoff: '恢復播放進度功能已禁用，按 SHIFT+R 可開啟該功能',
+    horizontal: '水平位移：',
+    vertical: '垂直位移：',
+    videozoom: '視頻縮放率：'
+  }
+};
+
+const messages = {
+  'zh-CN': zhCN,
+  zh: zhCN,
+  'zh-HK': zhTW,
+  'zh-TW': zhTW,
+  'en-US': enUS,
+  en: enUS,
+  ru: ru
+};
+
+const i18n = new I18n({
+  defaultLanguage: 'en',
+  /* 指定当前要是使用的语言环境，默认无需指定，会自动读取 */
+  // locale: 'zh-TW',
+  languages: messages
+});
+
 /* 用于获取全局唯一的id */
 function getId () {
   let gID = window.GM_getValue('_global_id_');
@@ -1785,16 +1986,74 @@ getTabId();
  */
 
 const monkeyMenu = {
+  menuIds: {},
   on (title, fn, accessKey) {
-    return window.GM_registerMenuCommand && window.GM_registerMenuCommand(title, fn, accessKey)
+    if (window.GM_registerMenuCommand) {
+      const menuId = window.GM_registerMenuCommand(title, fn, accessKey);
+
+      this.menuIds[menuId] = {
+        title,
+        fn,
+        accessKey
+      };
+
+      return menuId
+    }
   },
+
   off (id) {
-    return window.GM_unregisterMenuCommand && window.GM_unregisterMenuCommand(id)
+    if (window.GM_unregisterMenuCommand) {
+      delete this.menuIds[id];
+      return window.GM_unregisterMenuCommand(id)
+    }
   },
-  /* 切换类型的菜单功能 */
-  switch (title, fn, defVal) {
-    const t = this;
-    t.on(title, fn);
+
+  clear () {
+    Object.keys(this.menuIds).forEach(id => {
+      this.off(id);
+    });
+  },
+
+  /**
+   * 通过菜单配置进行批量注册，注册前会清空之前注册过的所有菜单
+   * @param {array|function} menuOpts 菜单配置，如果是函数则会调用该函数获取菜单配置，并且当菜单被点击后会重新创建菜单，实现菜单的动态更新
+   */
+  build (menuOpts) {
+    this.clear();
+
+    if (Array.isArray(menuOpts)) {
+      menuOpts.forEach(menu => {
+        if (menu.disable === true) { return }
+        this.on(menu.title, menu.fn, menu.accessKey);
+      });
+    } else if (menuOpts instanceof Function) {
+      const menuList = menuOpts();
+      if (Array.isArray(menuList)) {
+        this._menuBuilder_ = menuOpts;
+
+        menuList.forEach(menu => {
+          if (menu.disable === true) { return }
+
+          const menuFn = () => {
+            try {
+              menu.fn.apply(menu, arguments);
+            } catch (e) {
+              console.error('[monkeyMenu]', menu.title, e);
+            }
+
+            // 每次菜单点击后，重新注册菜单，这样可以确保菜单的状态是最新的
+            setTimeout(() => {
+              // console.log('[monkeyMenu rebuild]', menu.title)
+              this.build(this._menuBuilder_);
+            }, 100);
+          };
+
+          this.on(menu.title, menuFn, menu.accessKey);
+        });
+      } else {
+        console.error('monkeyMenu build error, no menuList return', menuOpts);
+      }
+    }
   }
 };
 
@@ -2556,234 +2815,228 @@ function hackDefineProperty () {
   hookJs.error(Object, 'defineProperties', hackDefineProperOnError);
 }
 
-var zhCN = {
-  about: '关于',
-  issues: '反馈',
-  setting: '设置',
-  hotkeys: '快捷键',
-  donate: '赞赏',
-  disableInitAutoPlay: '禁止在此网站自动播放视频',
-  tipsMsg: {
-    playspeed: '播放速度：',
-    forward: '前进：',
-    backward: '后退：',
-    seconds: '秒',
-    volume: '音量：',
-    nextframe: '定位：下一帧',
-    previousframe: '定位：上一帧',
-    stopframe: '定格帧画面：',
-    play: '播放',
-    pause: '暂停',
-    arpl: '允许自动恢复播放进度',
-    drpl: '禁止自动恢复播放进度',
-    brightness: '图像亮度：',
-    contrast: '图像对比度：',
-    saturation: '图像饱和度：',
-    hue: '图像色相：',
-    blur: '图像模糊度：',
-    imgattrreset: '图像属性：复位',
-    imgrotate: '画面旋转：',
-    onplugin: '启用h5Player插件',
-    offplugin: '禁用h5Player插件',
-    globalmode: '全局模式：',
-    playbackrestored: '为你恢复上次播放进度',
-    playbackrestoreoff: '恢复播放进度功能已禁用，按 SHIFT+R 可开启该功能',
-    horizontal: '水平位移：',
-    vertical: '垂直位移：',
-    videozoom: '视频缩放率：'
+class AssertionError extends Error {}
+AssertionError.prototype.name = 'AssertionError';
+
+/**
+ * Minimal assert function
+ * @param  {any} t Value to check if falsy
+ * @param  {string=} m Optional assertion error message
+ * @throws {AssertionError}
+ */
+function assert (t, m) {
+  if (!t) {
+    var err = new AssertionError(m);
+    if (Error.captureStackTrace) Error.captureStackTrace(err, assert);
+    throw err
   }
+}
+
+/* eslint-env browser */
+
+let ls;
+if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') {
+  // A simple localStorage interface so that lsp works in SSR contexts. Not for persistant storage in node.
+  const _nodeStorage = {};
+  ls = {
+    getItem (name) {
+      return _nodeStorage[name] || null
+    },
+    setItem (name, value) {
+      if (arguments.length < 2) throw new Error('Failed to execute \'setItem\' on \'Storage\': 2 arguments required, but only 1 present.')
+      _nodeStorage[name] = (value).toString();
+    },
+    removeItem (name) {
+      delete _nodeStorage[name];
+    }
+  };
+} else {
+  ls = window.localStorage;
+}
+
+var localStorageProxy = (name, opts = {}) => {
+  assert(name, 'namepace required');
+  const {
+    defaults = {},
+    lspReset = false,
+    storageEventListener = true
+  } = opts;
+
+  const state = new EventTarget();
+  try {
+    const restoredState = JSON.parse(ls.getItem(name)) || {};
+    if (restoredState.lspReset !== lspReset) {
+      ls.removeItem(name);
+      for (const [k, v] of Object.entries({
+        ...defaults
+      })) {
+        state[k] = v;
+      }
+    } else {
+      for (const [k, v] of Object.entries({
+        ...defaults,
+        ...restoredState
+      })) {
+        state[k] = v;
+      }
+    }
+  } catch (e) {
+    console.error(e);
+    ls.removeItem(name);
+  }
+
+  state.lspReset = lspReset;
+
+  if (storageEventListener && typeof window !== 'undefined' && typeof window.addEventListener !== 'undefined') {
+    window.addEventListener('storage', (ev) => {
+      // Replace state with whats stored on localStorage... it is newer.
+      for (const k of Object.keys(state)) {
+        delete state[k];
+      }
+      const restoredState = JSON.parse(ls.getItem(name)) || {};
+      for (const [k, v] of Object.entries({
+        ...defaults,
+        ...restoredState
+      })) {
+        state[k] = v;
+      }
+      opts.lspReset = restoredState.lspReset;
+      state.dispatchEvent(new Event('update'));
+    });
+  }
+
+  function boundHandler (rootRef) {
+    return {
+      get (obj, prop) {
+        if (typeof obj[prop] === 'object' && obj[prop] !== null) {
+          return new Proxy(obj[prop], boundHandler(rootRef))
+        } else if (typeof obj[prop] === 'function' && obj === rootRef && prop !== 'constructor') {
+          // this returns bound EventTarget functions
+          return obj[prop].bind(obj)
+        } else {
+          return obj[prop]
+        }
+      },
+      set (obj, prop, value) {
+        obj[prop] = value;
+        try {
+          ls.setItem(name, JSON.stringify(rootRef));
+          rootRef.dispatchEvent(new Event('update'));
+          return true
+        } catch (e) {
+          console.error(e);
+          return false
+        }
+      }
+    }
+  }
+
+  return new Proxy(state, boundHandler(state))
 };
 
-var enUS = {
-  about: 'about',
-  issues: 'issues',
-  setting: 'setting',
-  hotkeys: 'hotkeys',
-  donate: 'donate',
-  disableInitAutoPlay: 'Prohibit autoplay of videos on this site',
-  tipsMsg: {
-    playspeed: 'Speed: ',
-    forward: 'Forward: ',
-    backward: 'Backward: ',
-    seconds: 'sec',
-    volume: 'Volume: ',
-    nextframe: 'Next frame',
-    previousframe: 'Previous frame',
-    stopframe: 'Stopframe: ',
-    play: 'Play',
-    pause: 'Pause',
-    arpl: 'Allow auto resume playback progress',
-    drpl: 'Disable auto resume playback progress',
-    brightness: 'Brightness: ',
-    contrast: 'Contrast: ',
-    saturation: 'Saturation: ',
-    hue: 'HUE: ',
-    blur: 'Blur: ',
-    imgattrreset: 'Attributes: reset',
-    imgrotate: 'Picture rotation: ',
-    onplugin: 'ON h5Player plugin',
-    offplugin: 'OFF h5Player plugin',
-    globalmode: 'Global mode: ',
-    playbackrestored: 'Restored the last playback progress for you',
-    playbackrestoreoff: 'The function of restoring the playback progress is disabled. Press SHIFT+R to turn on the function',
-    horizontal: 'Horizontal displacement: ',
-    vertical: 'Vertical displacement: ',
-    videozoom: 'Video zoom: '
+const defaultConfig = {
+  autoPlay: true
+};
+
+const config = localStorageProxy('_h5playerConfig_', {
+  defaults: defaultConfig,
+  lspReset: false,
+  storageEventListener: false
+});
+
+/*!
+ * @name         menuManager.js
+ * @description  菜单管理器
+ * @version      0.0.1
+ * @author       xxxily
+ * @date         2022/08/11 10:05
+ * @github       https://github.com/xxxily
+ */
+
+function refreshPage (msg) {
+  debug.log('[config]', JSON.stringify(config, null, 2));
+
+  msg = msg || '配置已更改，马上刷新页面让配置生效？';
+  const status = confirm(msg);
+  if (status) {
+    window.location.reload();
+  }
+}
+
+let monkeyMenuList = [
+  {
+    title: '还原默认配置',
+    disable: true,
+    fn: () => {
+      localStorage.removeItem('_h5playerConfig_');
+      refreshPage();
+    }
   },
-  demo: 'demo-test'
-};
-
-var ru = {
-  about: 'около',
-  issues: 'обратная связь',
-  setting: 'установка',
-  hotkeys: 'горячие клавиши',
-  donate: 'пожертвовать',
-  disableInitAutoPlay: 'Запретить автовоспроизведение видео на этом сайте',
-  tipsMsg: {
-    playspeed: 'Скорость: ',
-    forward: 'Вперёд: ',
-    backward: 'Назад: ',
-    seconds: ' сек',
-    volume: 'Громкость: ',
-    nextframe: 'Следующий кадр',
-    previousframe: 'Предыдущий кадр',
-    stopframe: 'Стоп-кадр: ',
-    play: 'Запуск',
-    pause: 'Пауза',
-    arpl: 'Разрешить автоматическое возобновление прогресса воспроизведения',
-    drpl: 'Запретить автоматическое возобновление прогресса воспроизведения',
-    brightness: 'Яркость: ',
-    contrast: 'Контраст: ',
-    saturation: 'Насыщенность: ',
-    hue: 'Оттенок: ',
-    blur: 'Размытие: ',
-    imgattrreset: 'Атрибуты: сброс',
-    imgrotate: 'Поворот изображения: ',
-    onplugin: 'ВКЛ: плагин воспроизведения',
-    offplugin: 'ВЫКЛ: плагин воспроизведения',
-    globalmode: 'Глобальный режим:',
-    playbackrestored: 'Восстановлен последний прогресс воспроизведения',
-    playbackrestoreoff: 'Функция восстановления прогресса воспроизведения отключена. Нажмите SHIFT + R, чтобы включить функцию',
-    horizontal: 'Горизонтальное смещение: ',
-    vertical: 'Вертикальное смещение: ',
-    videozoom: 'Увеличить видео: '
+  {
+    title: i18n.t('hotkeys'),
+    fn: () => {
+      openInTab('https://github.com/xxxily/h5player#%E5%BF%AB%E6%8D%B7%E9%94%AE%E5%88%97%E8%A1%A8');
+    }
+  },
+  {
+    title: i18n.t('issues'),
+    fn: () => {
+      openInTab('https://github.com/xxxily/h5player/issues');
+    }
+  },
+  {
+    title: i18n.t('donate'),
+    fn: () => {
+      openInTab('https://cdn.jsdelivr.net/gh/xxxily/h5player@master/donate.png');
+    }
+  },
+  {
+    title: i18n.t('setting'),
+    disable: true,
+    fn: () => {
+      window.alert('功能开发中，敬请期待...');
+    }
   }
-};
+];
 
-var zhTW = {
-  about: '關於',
-  issues: '反饋',
-  setting: '設置',
-  hotkeys: '快捷鍵',
-  donate: '讚賞',
-  disableInitAutoPlay: '禁止在此網站自動播放視頻',
-  tipsMsg: {
-    playspeed: '播放速度：',
-    forward: '向前：',
-    backward: '向後：',
-    seconds: '秒',
-    volume: '音量：',
-    nextframe: '定位：下一幀',
-    previousframe: '定位：上一幀',
-    stopframe: '定格幀畫面：',
-    play: '播放',
-    pause: '暫停',
-    arpl: '允許自動恢復播放進度',
-    drpl: '禁止自動恢復播放進度',
-    brightness: '圖像亮度：',
-    contrast: '圖像對比度：',
-    saturation: '圖像飽和度：',
-    hue: '圖像色相：',
-    blur: '圖像模糊度：',
-    imgattrreset: '圖像屬性：復位',
-    imgrotate: '畫面旋轉：',
-    onplugin: '啟用h5Player插件',
-    offplugin: '禁用h5Player插件',
-    globalmode: '全局模式：',
-    playbackrestored: '為你恢復上次播放進度',
-    playbackrestoreoff: '恢復播放進度功能已禁用，按 SHIFT+R 可開啟該功能',
-    horizontal: '水平位移：',
-    vertical: '垂直位移：',
-    videozoom: '視頻縮放率：'
-  }
-};
+/* 菜单构造函数（必须是函数才能在点击后动态更新菜单状态） */
+function menuBuilder () {
+  return monkeyMenuList
+}
 
-const messages = {
-  'zh-CN': zhCN,
-  zh: zhCN,
-  'zh-HK': zhTW,
-  'zh-TW': zhTW,
-  'en-US': enUS,
-  en: enUS,
-  ru: ru
-};
+/* 注册动态菜单 */
+function menuRegister () {
+  monkeyMenu.build(menuBuilder);
+}
 
 window._debugMode_ = true;
 
-try {
-  /* 禁止对playbackRate等属性进行锁定 */
-  hackDefineProperty();
+async function h5PlayerInit () {
+  try {
+    /* 禁止对playbackRate等属性进行锁定 */
+    hackDefineProperty();
 
-  // hackEventListener()
+    // hackEventListener()
 
-  hackAttachShadow();
-} catch (e) {
-  console.error('h5player hack error', e);
-}
+    hackAttachShadow();
+  } catch (e) {
+    console.error('h5player hack error', e);
+  }
 
-/* 保存重要的原始函数，防止被外部脚本污染 */
-const originalMethods = {
-  Object: {
-    defineProperty: Object.defineProperty,
-    defineProperties: Object.defineProperties
-  },
-  setInterval: window.setInterval,
-  setTimeout: window.setTimeout
-}
+  /* 保存重要的原始函数，防止被外部脚本污染 */
+  const originalMethods = {
+    Object: {
+      defineProperty: Object.defineProperty,
+      defineProperties: Object.defineProperties
+    },
+    setInterval: window.setInterval,
+    setTimeout: window.setTimeout
+  };
 
-;(async function () {
   debug.log('h5Player init');
 
-  const i18n = new I18n({
-    defaultLanguage: 'en',
-    /* 指定当前要是使用的语言环境，默认无需指定，会自动读取 */
-    // locale: 'zh-TW',
-    languages: messages
-  });
-
   const mouseObserver = new MouseObserver();
-
-  // monkeyMenu.on('i18n.t('setting')', function () {
-  //   window.alert('功能开发中，敬请期待...')
-  // })
-  monkeyMenu.on(i18n.t('hotkeys'), function () {
-    window.GM_openInTab('https://github.com/xxxily/h5player#%E5%BF%AB%E6%8D%B7%E9%94%AE%E5%88%97%E8%A1%A8', {
-      active: true,
-      insert: true,
-      setParent: true
-    });
-  });
-  monkeyMenu.on(i18n.t('donate'), function () {
-    window.GM_openInTab('https://cdn.jsdelivr.net/gh/xxxily/h5player@master/donate.png', {
-      active: true,
-      insert: true,
-      setParent: true
-    });
-  });
-  monkeyMenu.on(i18n.t('issues'), function () {
-    window.GM_openInTab('https://github.com/xxxily/h5player/issues', {
-      active: true,
-      insert: true,
-      setParent: true
-    });
-  });
-
-  // hackEventListener({
-  //   // proxyAll: true,
-  //   proxyNodeType: ['video'],
-  //   debug: debug.isDebugMode()
-  // })
+  menuRegister();
 
   let TCC = null;
   const h5Player = {
@@ -4073,6 +4326,10 @@ const originalMethods = {
     },
     init: function (global) {
       var t = this;
+
+      /* 初始化任务配置中心 */
+      TCC = h5PlayerTccInit(t);
+
       if (global) {
         /* 绑定键盘事件 */
         t.bindEvent();
@@ -4107,7 +4364,7 @@ const originalMethods = {
   };
 
   /* 初始化任务配置中心 */
-  TCC = h5PlayerTccInit(h5Player);
+  // TCC = h5PlayerTccInit(h5Player)
 
   try {
     /* 初始化全局所需的相关方法 */
@@ -4136,11 +4393,27 @@ const originalMethods = {
     debug.error(e);
   }
 
-  // h5playerUi.init()
-
-  // debugCode.init(h5Player)
-
   document.addEventListener('visibilitychange', function () {
     h5Player.initAutoPlay();
   });
-})();
+}
+
+function init$1 (retryCount = 0) {
+  if (!window.document.documentElement) {
+    setTimeout(() => {
+      if (retryCount < 200) {
+        init$1(retryCount + 1);
+      } else {
+        console.error('[h5player message:]', 'not documentElement detected!', window);
+      }
+    }, 10);
+
+    return false
+  } else if (retryCount > 0) {
+    console.warn('[h5player message:]', 'documentElement detected!', retryCount, window);
+  }
+
+  h5PlayerInit();
+}
+
+init$1(0);

@@ -4897,6 +4897,13 @@ loader-utils@^2.0.0:
     emojis-list "^3.0.0"
     json5 "^2.1.2"
 
+local-storage-proxy@^4.0.3:
+  version "4.0.3"
+  resolved "https://registry.npmmirror.com/local-storage-proxy/-/local-storage-proxy-4.0.3.tgz#25bfc0363af559248b7b4e3f46d62d7fc292a0b2"
+  integrity sha512-07e/qClDqhyusxadyYrazEvFyQcMm2NkPCyDZstoDyAtqRZxTaCZNTnKps7lTWyTuqQfsiSXg4wfGLLdmraO4Q==
+  dependencies:
+    webassert "^3.0.1"
+
 locate-path@^2.0.0:
   version "2.0.0"
   resolved "https://registry.npmmirror.com/locate-path/download/locate-path-2.0.0.tgz#2b568b265eec944c6d9c0de9c3dbbbca0354cd8e"
@@ -8414,6 +8421,11 @@ wbuf@^1.1.0, wbuf@^1.7.3:
   integrity sha1-wdjRSTFtPqhShIiVy2oL/oh7h98=
   dependencies:
     minimalistic-assert "^1.0.0"
+
+webassert@^3.0.1:
+  version "3.0.2"
+  resolved "https://registry.npmmirror.com/webassert/-/webassert-3.0.2.tgz#ddb57f3cd8c9957bae56719644174b75cbd4f024"
+  integrity sha512-nI8BKTL9S3US7NSXKTPl6yYAAgmRSsUqTSg0C2BRnGXqZqHZGdvJxR9mBoOQ6sY4Z5ooUEzlEfL5lDipDtqTVA==
 
 webpack-bundle-analyzer@^3.6.1:
   version "3.6.1"
