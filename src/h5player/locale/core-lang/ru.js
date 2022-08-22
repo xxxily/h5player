@@ -5,6 +5,7 @@ export default {
   hotkeys: 'горячие клавиши',
   donate: 'пожертвовать',
   disableInitAutoPlay: 'Запретить автовоспроизведение видео на этом сайте',
+  enableInitAutoPlay: 'Разрешить автоматическое воспроизведение видео на этом сайте',
   tipsMsg: {
     playspeed: 'Скорость: ',
     forward: 'Вперёд: ',

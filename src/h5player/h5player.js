@@ -1,5 +1,6 @@
 import './comment'
 import './tips'
+import config from './config'
 import h5PlayerTccInit from './h5PlayerTccInit'
 import fakeConfig from './fakeConfig'
 import FullScreen from '../libs/FullScreen/index'
@@ -7,12 +8,11 @@ import videoCapturer from '../libs/videoCapturer/index'
 import MouseObserver from '../libs/MouseObserver/index'
 import i18n from './i18n'
 import { getTabId } from './getId'
-import monkeyMenu from './monkeyMenu'
 import monkeyMsg from './monkeyMsg'
 import crossTabCtl from './crossTabCtl'
 import debug from './debug'
 import hackDefineProperty from './hackDefineProperty'
-import { menuRegister } from './menuManager'
+import { menuRegister, addMenu } from './menuManager'
 import {
   ready,
   hackAttachShadow,
@@ -355,10 +355,24 @@ async function h5PlayerInit () {
     initAutoPlay: function (p) {
       const t = this
       const player = p || t.player()
+      const taskConf = TCC.getTaskConfig()
 
       // 在轮询重试的时候，如果实例变了，或处于隐藏页面中则不进行自动播放操作
       if ((!p && t.hasInitAutoPlay) || !player || (p && p !== t.player()) || document.hidden) {
         return false
+      }
+
+      /* 注册开启禁止自动播放的控制菜单 */
+      if (taskConf.autoPlay) {
+        addMenu({
+          title: () => config.autoPlay ? i18n.t('disableInitAutoPlay') : i18n.t('enableInitAutoPlay'),
+          fn: () => {
+            const confirm = window.confirm(config.autoPlay ? i18n.t('disableInitAutoPlay') : i18n.t('enableInitAutoPlay'))
+            if (confirm) {
+              config.autoPlay = !config.autoPlay
+            }
+          }
+        })
       }
 
       /**
@@ -370,13 +384,12 @@ async function h5PlayerInit () {
         return false
       }
 
-      if (window.localStorage.getItem('_disableInitAutoPlay_')) {
+      if (!taskConf.autoPlay || window.localStorage.getItem('_disableInitAutoPlay_')) {
         return false
       }
 
       t.hasInitAutoPlay = true
 
-      const taskConf = TCC.getTaskConfig()
       if (player && taskConf.autoPlay && player.paused) {
         TCC.doTask('autoPlay')
         if (player.paused) {
@@ -391,13 +404,6 @@ async function h5PlayerInit () {
           setTimeout(function () {
             t.initAutoPlay(player)
           }, 200)
-        } else {
-          monkeyMenu.on(i18n.t('disableInitAutoPlay'), function () {
-            const confirm = window.confirm(i18n.t('disableInitAutoPlay'))
-            if (confirm) {
-              window.localStorage.setItem('_disableInitAutoPlay_', '1')
-            }
-          })
         }
       }
     },
@@ -1124,6 +1130,13 @@ async function h5PlayerInit () {
       monkeyMsg.send('globalKeydownEvent', event)
 
       if (!player) {
+        if (t.hasCrossOriginVideoDetected) {
+          // debug.log('当前页面检出了跨域受限的视频，仍需阻止默认事件和事件冒泡')
+          event.stopPropagation()
+          event.preventDefault()
+          return true
+        }
+
         // debug.log('无可用的播放，不执行相关操作')
         return
       }
@@ -1296,6 +1309,13 @@ async function h5PlayerInit () {
             player._hasPlayingRedirectEvent_ = true
           })
         }
+
+        if (isInCrossOriginFrame()) {
+          /* 广播检测到H5Player的消息 */
+          monkeyMsg.send('videoDetected', {
+            src: t.playerInstance.src
+          })
+        }
       }
     },
     /* 绑定相关事件 */
@@ -1413,6 +1433,11 @@ async function h5PlayerInit () {
 
     /* 初始化跨Tab控制逻辑 */
     crossTabCtl.init()
+
+    /* 响应来自跨域受限的视频检出事件 */
+    monkeyMsg.on('videoDetected', async (name, oldVal, newVal, remote) => {
+      h5Player.hasCrossOriginVideoDetected = true
+    })
   } catch (e) {
     debug.error(e)
   }

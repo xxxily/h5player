@@ -5,6 +5,7 @@ export default {
   hotkeys: 'hotkeys',
   donate: 'donate',
   disableInitAutoPlay: 'Prohibit autoplay of videos on this site',
+  enableInitAutoPlay: 'Allow autoplay videos on this site',
   tipsMsg: {
     playspeed: 'Speed: ',
     forward: 'Forward: ',

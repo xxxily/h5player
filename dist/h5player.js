@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.4.0
+// @version      3.4.1
 // @description  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
 // @description:en  HTML5 video playback enhanced script, supports all H5 video playback websites, full-length shortcut key control, supports: double-speed playback / accelerated playback, video screenshots, picture-in-picture, full-page webpage, brightness, saturation, contrast, custom configuration enhancement And other functions.
 // @description:zh  HTML5视频播放增强脚本，支持所有H5视频播放网站，全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能。
@@ -386,6 +386,135 @@ async function init () {
   }
 }
 init();
+
+class AssertionError extends Error {}
+AssertionError.prototype.name = 'AssertionError';
+
+/**
+ * Minimal assert function
+ * @param  {any} t Value to check if falsy
+ * @param  {string=} m Optional assertion error message
+ * @throws {AssertionError}
+ */
+function assert (t, m) {
+  if (!t) {
+    var err = new AssertionError(m);
+    if (Error.captureStackTrace) Error.captureStackTrace(err, assert);
+    throw err
+  }
+}
+
+/* eslint-env browser */
+
+let ls;
+if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') {
+  // A simple localStorage interface so that lsp works in SSR contexts. Not for persistant storage in node.
+  const _nodeStorage = {};
+  ls = {
+    getItem (name) {
+      return _nodeStorage[name] || null
+    },
+    setItem (name, value) {
+      if (arguments.length < 2) throw new Error('Failed to execute \'setItem\' on \'Storage\': 2 arguments required, but only 1 present.')
+      _nodeStorage[name] = (value).toString();
+    },
+    removeItem (name) {
+      delete _nodeStorage[name];
+    }
+  };
+} else {
+  ls = window.localStorage;
+}
+
+var localStorageProxy = (name, opts = {}) => {
+  assert(name, 'namepace required');
+  const {
+    defaults = {},
+    lspReset = false,
+    storageEventListener = true
+  } = opts;
+
+  const state = new EventTarget();
+  try {
+    const restoredState = JSON.parse(ls.getItem(name)) || {};
+    if (restoredState.lspReset !== lspReset) {
+      ls.removeItem(name);
+      for (const [k, v] of Object.entries({
+        ...defaults
+      })) {
+        state[k] = v;
+      }
+    } else {
+      for (const [k, v] of Object.entries({
+        ...defaults,
+        ...restoredState
+      })) {
+        state[k] = v;
+      }
+    }
+  } catch (e) {
+    console.error(e);
+    ls.removeItem(name);
+  }
+
+  state.lspReset = lspReset;
+
+  if (storageEventListener && typeof window !== 'undefined' && typeof window.addEventListener !== 'undefined') {
+    window.addEventListener('storage', (ev) => {
+      // Replace state with whats stored on localStorage... it is newer.
+      for (const k of Object.keys(state)) {
+        delete state[k];
+      }
+      const restoredState = JSON.parse(ls.getItem(name)) || {};
+      for (const [k, v] of Object.entries({
+        ...defaults,
+        ...restoredState
+      })) {
+        state[k] = v;
+      }
+      opts.lspReset = restoredState.lspReset;
+      state.dispatchEvent(new Event('update'));
+    });
+  }
+
+  function boundHandler (rootRef) {
+    return {
+      get (obj, prop) {
+        if (typeof obj[prop] === 'object' && obj[prop] !== null) {
+          return new Proxy(obj[prop], boundHandler(rootRef))
+        } else if (typeof obj[prop] === 'function' && obj === rootRef && prop !== 'constructor') {
+          // this returns bound EventTarget functions
+          return obj[prop].bind(obj)
+        } else {
+          return obj[prop]
+        }
+      },
+      set (obj, prop, value) {
+        obj[prop] = value;
+        try {
+          ls.setItem(name, JSON.stringify(rootRef));
+          rootRef.dispatchEvent(new Event('update'));
+          return true
+        } catch (e) {
+          console.error(e);
+          return false
+        }
+      }
+    }
+  }
+
+  return new Proxy(state, boundHandler(state))
+};
+
+const defaultConfig = {
+  autoPlay: true
+};
+
+const config = localStorageProxy('_h5playerConfig_', {
+  defaults: defaultConfig,
+  lspReset: false,
+  storageEventListener: false
+});
 
 /*!
  * @name         utils.js
@@ -1783,6 +1912,7 @@ var zhCN = {
   hotkeys: '快捷键',
   donate: '赞赏',
   disableInitAutoPlay: '禁止在此网站自动播放视频',
+  enableInitAutoPlay: '允许在此网站自动播放视频',
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '前进：',
@@ -1821,6 +1951,7 @@ var enUS = {
   hotkeys: 'hotkeys',
   donate: 'donate',
   disableInitAutoPlay: 'Prohibit autoplay of videos on this site',
+  enableInitAutoPlay: 'Allow autoplay videos on this site',
   tipsMsg: {
     playspeed: 'Speed: ',
     forward: 'Forward: ',
@@ -1860,6 +1991,7 @@ var ru = {
   hotkeys: 'горячие клавиши',
   donate: 'пожертвовать',
   disableInitAutoPlay: 'Запретить автовоспроизведение видео на этом сайте',
+  enableInitAutoPlay: 'Разрешить автоматическое воспроизведение видео на этом сайте',
   tipsMsg: {
     playspeed: 'Скорость: ',
     forward: 'Вперёд: ',
@@ -1898,6 +2030,7 @@ var zhTW = {
   hotkeys: '快捷鍵',
   donate: '讚賞',
   disableInitAutoPlay: '禁止在此網站自動播放視頻',
+  enableInitAutoPlay: '允許在此網站自動播放視頻',
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '向前：',
@@ -1977,85 +2110,6 @@ function getTabId () {
 
 /* 一开始就初始化好curTabId，这样后续就不需要异步获取Tabid，部分场景下需要用到 */
 getTabId();
-
-/*!
- * @name      menuCommand.js
- * @version   0.0.1
- * @author    Blaze
- * @date      2019/9/21 14:22
- */
-
-const monkeyMenu = {
-  menuIds: {},
-  on (title, fn, accessKey) {
-    if (window.GM_registerMenuCommand) {
-      const menuId = window.GM_registerMenuCommand(title, fn, accessKey);
-
-      this.menuIds[menuId] = {
-        title,
-        fn,
-        accessKey
-      };
-
-      return menuId
-    }
-  },
-
-  off (id) {
-    if (window.GM_unregisterMenuCommand) {
-      delete this.menuIds[id];
-      return window.GM_unregisterMenuCommand(id)
-    }
-  },
-
-  clear () {
-    Object.keys(this.menuIds).forEach(id => {
-      this.off(id);
-    });
-  },
-
-  /**
-   * 通过菜单配置进行批量注册，注册前会清空之前注册过的所有菜单
-   * @param {array|function} menuOpts 菜单配置，如果是函数则会调用该函数获取菜单配置，并且当菜单被点击后会重新创建菜单，实现菜单的动态更新
-   */
-  build (menuOpts) {
-    this.clear();
-
-    if (Array.isArray(menuOpts)) {
-      menuOpts.forEach(menu => {
-        if (menu.disable === true) { return }
-        this.on(menu.title, menu.fn, menu.accessKey);
-      });
-    } else if (menuOpts instanceof Function) {
-      const menuList = menuOpts();
-      if (Array.isArray(menuList)) {
-        this._menuBuilder_ = menuOpts;
-
-        menuList.forEach(menu => {
-          if (menu.disable === true) { return }
-
-          const menuFn = () => {
-            try {
-              menu.fn.apply(menu, arguments);
-            } catch (e) {
-              console.error('[monkeyMenu]', menu.title, e);
-            }
-
-            // 每次菜单点击后，重新注册菜单，这样可以确保菜单的状态是最新的
-            setTimeout(() => {
-              // console.log('[monkeyMenu rebuild]', menu.title)
-              this.build(this._menuBuilder_);
-            }, 100);
-          };
-
-          this.on(menu.title, menuFn, menu.accessKey);
-        });
-      } else {
-        console.error('monkeyMenu build error, no menuList return', menuOpts);
-      }
-    }
-  }
-};
 
 /*!
  * @name      monkeyMsg.js
@@ -2815,134 +2869,88 @@ function hackDefineProperty () {
   hookJs.error(Object, 'defineProperties', hackDefineProperOnError);
 }
 
-class AssertionError extends Error {}
-AssertionError.prototype.name = 'AssertionError';
-
-/**
- * Minimal assert function
- * @param  {any} t Value to check if falsy
- * @param  {string=} m Optional assertion error message
- * @throws {AssertionError}
+/*!
+ * @name      menuCommand.js
+ * @version   0.0.1
+ * @author    Blaze
+ * @date      2019/9/21 14:22
  */
-function assert (t, m) {
-  if (!t) {
-    var err = new AssertionError(m);
-    if (Error.captureStackTrace) Error.captureStackTrace(err, assert);
-    throw err
-  }
-}
 
-/* eslint-env browser */
-
-let ls;
-if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') {
-  // A simple localStorage interface so that lsp works in SSR contexts. Not for persistant storage in node.
-  const _nodeStorage = {};
-  ls = {
-    getItem (name) {
-      return _nodeStorage[name] || null
-    },
-    setItem (name, value) {
-      if (arguments.length < 2) throw new Error('Failed to execute \'setItem\' on \'Storage\': 2 arguments required, but only 1 present.')
-      _nodeStorage[name] = (value).toString();
-    },
-    removeItem (name) {
-      delete _nodeStorage[name];
+const monkeyMenu = {
+  menuIds: {},
+  on (title, fn, accessKey) {
+    if (title instanceof Function) {
+      title = title();
     }
-  };
-} else {
-  ls = window.localStorage;
-}
 
-var localStorageProxy = (name, opts = {}) => {
-  assert(name, 'namepace required');
-  const {
-    defaults = {},
-    lspReset = false,
-    storageEventListener = true
-  } = opts;
+    if (window.GM_registerMenuCommand) {
+      const menuId = window.GM_registerMenuCommand(title, fn, accessKey);
 
-  const state = new EventTarget();
-  try {
-    const restoredState = JSON.parse(ls.getItem(name)) || {};
-    if (restoredState.lspReset !== lspReset) {
-      ls.removeItem(name);
-      for (const [k, v] of Object.entries({
-        ...defaults
-      })) {
-        state[k] = v;
-      }
-    } else {
-      for (const [k, v] of Object.entries({
-        ...defaults,
-        ...restoredState
-      })) {
-        state[k] = v;
-      }
+      this.menuIds[menuId] = {
+        title,
+        fn,
+        accessKey
+      };
+
+      return menuId
     }
-  } catch (e) {
-    console.error(e);
-    ls.removeItem(name);
-  }
+  },
 
-  state.lspReset = lspReset;
+  off (id) {
+    if (window.GM_unregisterMenuCommand) {
+      delete this.menuIds[id];
+      return window.GM_unregisterMenuCommand(id)
+    }
+  },
 
-  if (storageEventListener && typeof window !== 'undefined' && typeof window.addEventListener !== 'undefined') {
-    window.addEventListener('storage', (ev) => {
-      // Replace state with whats stored on localStorage... it is newer.
-      for (const k of Object.keys(state)) {
-        delete state[k];
-      }
-      const restoredState = JSON.parse(ls.getItem(name)) || {};
-      for (const [k, v] of Object.entries({
-        ...defaults,
-        ...restoredState
-      })) {
-        state[k] = v;
-      }
-      opts.lspReset = restoredState.lspReset;
-      state.dispatchEvent(new Event('update'));
+  clear () {
+    Object.keys(this.menuIds).forEach(id => {
+      this.off(id);
     });
-  }
+  },
 
-  function boundHandler (rootRef) {
-    return {
-      get (obj, prop) {
-        if (typeof obj[prop] === 'object' && obj[prop] !== null) {
-          return new Proxy(obj[prop], boundHandler(rootRef))
-        } else if (typeof obj[prop] === 'function' && obj === rootRef && prop !== 'constructor') {
-          // this returns bound EventTarget functions
-          return obj[prop].bind(obj)
-        } else {
-          return obj[prop]
-        }
-      },
-      set (obj, prop, value) {
-        obj[prop] = value;
-        try {
-          ls.setItem(name, JSON.stringify(rootRef));
-          rootRef.dispatchEvent(new Event('update'));
-          return true
-        } catch (e) {
-          console.error(e);
-          return false
-        }
+  /**
+   * 通过菜单配置进行批量注册，注册前会清空之前注册过的所有菜单
+   * @param {array|function} menuOpts 菜单配置，如果是函数则会调用该函数获取菜单配置，并且当菜单被点击后会重新创建菜单，实现菜单的动态更新
+   */
+  build (menuOpts) {
+    this.clear();
+
+    if (Array.isArray(menuOpts)) {
+      menuOpts.forEach(menu => {
+        if (menu.disable === true) { return }
+        this.on(menu.title, menu.fn, menu.accessKey);
+      });
+    } else if (menuOpts instanceof Function) {
+      const menuList = menuOpts();
+      if (Array.isArray(menuList)) {
+        this._menuBuilder_ = menuOpts;
+
+        menuList.forEach(menu => {
+          if (menu.disable === true) { return }
+
+          const menuFn = () => {
+            try {
+              menu.fn.apply(menu, arguments);
+            } catch (e) {
+              console.error('[monkeyMenu]', menu.title, e);
+            }
+
+            // 每次菜单点击后，重新注册菜单，这样可以确保菜单的状态是最新的
+            setTimeout(() => {
+              // console.log('[monkeyMenu rebuild]', menu.title)
+              this.build(this._menuBuilder_);
+            }, 100);
+          };
+
+          this.on(menu.title, menuFn, menu.accessKey);
+        });
+      } else {
+        console.error('monkeyMenu build error, no menuList return', menuOpts);
       }
     }
   }
-
-  return new Proxy(state, boundHandler(state))
 };
-
-const defaultConfig = {
-  autoPlay: true
-};
-
-const config = localStorageProxy('_h5playerConfig_', {
-  defaults: defaultConfig,
-  lspReset: false,
-  storageEventListener: false
-});
 
 /*!
  * @name         menuManager.js
@@ -3007,6 +3015,25 @@ function menuBuilder () {
 /* 注册动态菜单 */
 function menuRegister () {
   monkeyMenu.build(menuBuilder);
+}
+
+/**
+ * 增加菜单项
+ * @param {Object|Array} menuOpts 菜单的配置项目，多个配置项目用数组表示
+ */
+function addMenu (menuOpts, before) {
+  menuOpts = Array.isArray(menuOpts) ? menuOpts : [menuOpts];
+  menuOpts = menuOpts.filter(item => item.title && !item.disabled);
+
+  if (before) {
+    /* 将菜单追加到其它菜单的前面 */
+    monkeyMenuList = menuOpts.concat(monkeyMenuList);
+  } else {
+    monkeyMenuList = monkeyMenuList.concat(menuOpts);
+  }
+
+  /* 重新注册菜单 */
+  menuRegister();
 }
 
 window._debugMode_ = true;
@@ -3331,10 +3358,24 @@ async function h5PlayerInit () {
     initAutoPlay: function (p) {
       const t = this;
       const player = p || t.player();
+      const taskConf = TCC.getTaskConfig();
 
       // 在轮询重试的时候，如果实例变了，或处于隐藏页面中则不进行自动播放操作
       if ((!p && t.hasInitAutoPlay) || !player || (p && p !== t.player()) || document.hidden) {
         return false
+      }
+
+      /* 注册开启禁止自动播放的控制菜单 */
+      if (taskConf.autoPlay) {
+        addMenu({
+          title: () => config.autoPlay ? i18n.t('disableInitAutoPlay') : i18n.t('enableInitAutoPlay'),
+          fn: () => {
+            const confirm = window.confirm(config.autoPlay ? i18n.t('disableInitAutoPlay') : i18n.t('enableInitAutoPlay'));
+            if (confirm) {
+              config.autoPlay = !config.autoPlay;
+            }
+          }
+        });
       }
 
       /**
@@ -3346,13 +3387,12 @@ async function h5PlayerInit () {
         return false
       }
 
-      if (window.localStorage.getItem('_disableInitAutoPlay_')) {
+      if (!taskConf.autoPlay || window.localStorage.getItem('_disableInitAutoPlay_')) {
         return false
       }
 
       t.hasInitAutoPlay = true;
 
-      const taskConf = TCC.getTaskConfig();
       if (player && taskConf.autoPlay && player.paused) {
         TCC.doTask('autoPlay');
         if (player.paused) {
@@ -3367,13 +3407,6 @@ async function h5PlayerInit () {
           setTimeout(function () {
             t.initAutoPlay(player);
           }, 200);
-        } else {
-          monkeyMenu.on(i18n.t('disableInitAutoPlay'), function () {
-            const confirm = window.confirm(i18n.t('disableInitAutoPlay'));
-            if (confirm) {
-              window.localStorage.setItem('_disableInitAutoPlay_', '1');
-            }
-          });
         }
       }
     },
@@ -4100,6 +4133,13 @@ async function h5PlayerInit () {
       monkeyMsg.send('globalKeydownEvent', event);
 
       if (!player) {
+        if (t.hasCrossOriginVideoDetected) {
+          // debug.log('当前页面检出了跨域受限的视频，仍需阻止默认事件和事件冒泡')
+          event.stopPropagation();
+          event.preventDefault();
+          return true
+        }
+
         // debug.log('无可用的播放，不执行相关操作')
         return
       }
@@ -4272,6 +4312,13 @@ async function h5PlayerInit () {
             player._hasPlayingRedirectEvent_ = true;
           });
         }
+
+        if (isInCrossOriginFrame()) {
+          /* 广播检测到H5Player的消息 */
+          monkeyMsg.send('videoDetected', {
+            src: t.playerInstance.src
+          });
+        }
       }
     },
     /* 绑定相关事件 */
@@ -4389,6 +4436,11 @@ async function h5PlayerInit () {
 
     /* 初始化跨Tab控制逻辑 */
     crossTabCtl.init();
+
+    /* 响应来自跨域受限的视频检出事件 */
+    monkeyMsg.on('videoDetected', async (name, oldVal, newVal, remote) => {
+      h5Player.hasCrossOriginVideoDetected = true;
+    });
   } catch (e) {
     debug.error(e);
   }

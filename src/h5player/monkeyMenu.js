@@ -8,6 +8,10 @@
 const monkeyMenu = {
   menuIds: {},
   on (title, fn, accessKey) {
+    if (title instanceof Function) {
+      title = title()
+    }
+
     if (window.GM_registerMenuCommand) {
       const menuId = window.GM_registerMenuCommand(title, fn, accessKey)
 

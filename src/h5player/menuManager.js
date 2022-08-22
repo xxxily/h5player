@@ -72,10 +72,16 @@ export function menuRegister () {
  * 增加菜单项
  * @param {Object|Array} menuOpts 菜单的配置项目，多个配置项目用数组表示
  */
-export function addMenu (menuOpts) {
+export function addMenu (menuOpts, before) {
   menuOpts = Array.isArray(menuOpts) ? menuOpts : [menuOpts]
   menuOpts = menuOpts.filter(item => item.title && !item.disabled)
-  monkeyMenuList = monkeyMenuList.concat(menuOpts)
+
+  if (before) {
+    /* 将菜单追加到其它菜单的前面 */
+    monkeyMenuList = menuOpts.concat(monkeyMenuList)
+  } else {
+    monkeyMenuList = monkeyMenuList.concat(menuOpts)
+  }
 
   /* 重新注册菜单 */
   menuRegister()
