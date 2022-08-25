@@ -5,6 +5,7 @@
  * @date      2019/9/21 14:22
  */
 import { curTabId } from './getId'
+// import debug from './debug'
 
 /**
  * 将对象数据里面可存储到GM_setValue里面的值提取出来
@@ -75,11 +76,56 @@ const monkeyMsg = {
       msg.data = extractDatafromOb(data)
     }
     window.GM_setValue(name, msg)
+
+    // debug.info(`[monkeyMsg-send][${name}]`, msg)
   },
   set: (name, data) => monkeyMsg.send(name, data),
   get: (name) => window.GM_getValue(name),
-  on: (name, fn) => window.GM_addValueChangeListener(name, fn),
-  off: (listenerId) => window.GM_removeValueChangeListener(listenerId)
+  on: (name, fn) => window.GM_addValueChangeListener(name, function (name, oldVal, newVal, remote) {
+    // debug.info(`[monkeyMsg-on][${name}]`, oldVal, newVal, remote)
+
+    /* 补充消息来源是否出自同一个Tab的判断字段 */
+    newVal.originTab = newVal.tabId === curTabId
+
+    fn instanceof Function && fn.apply(null, arguments)
+  }),
+  off: (listenerId) => window.GM_removeValueChangeListener(listenerId),
+
+  /**
+   * 进行monkeyMsg的消息广播，该广播每两秒钟发送一次，其它任意页面可通接收到的广播信息来更新一些变量信息
+   * 主要用以解决通过setInterval或setTimeout因页面可视状态和性能策略导致的不运行或执行频率异常而不能正确更新变量状态的问题
+   * 见： https://developer.mozilla.org/zh-CN/docs/Web/API/Page_Visibility_API
+   * 广播也不能100%保证不受性能策略的影响，但只要有一个网页处于前台运行，则就能正常工作
+   * @param handler {Function} -必选 接收到广播信息时的回调函数
+   * @returns
+   */
+  broadcast (handler) {
+    const broadcastName = '__monkeyMsgBroadcast__'
+    monkeyMsg._monkeyMsgBroadcastHandler_ = monkeyMsg._monkeyMsgBroadcastHandler_ || []
+    handler instanceof Function && monkeyMsg._monkeyMsgBroadcastHandler_.push(handler)
+
+    if (monkeyMsg._hasMonkeyMsgBroadcast_) {
+      return broadcastName
+    }
+
+    monkeyMsg.on(broadcastName, function () {
+      monkeyMsg._monkeyMsgBroadcastHandler_.forEach(handler => {
+        handler.apply(null, arguments)
+      })
+    })
+
+    setInterval(function () {
+      /* 通过限定时间间隔来防止多个页面批量发起广播信息 */
+      const data = monkeyMsg.get(broadcastName)
+      if (data && Date.now() - data.updateTime < 1000 * 2) {
+        return false
+      }
+
+      monkeyMsg.send(broadcastName, {})
+    }, 1000 * 2)
+
+    return broadcastName
+  }
 }
 
 export default monkeyMsg

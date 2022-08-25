@@ -33,6 +33,8 @@ export default {
     playbackrestoreoff: '恢復播放進度功能已禁用，按 SHIFT+R 可開啟該功能',
     horizontal: '水平位移：',
     vertical: '垂直位移：',
+    horizontalMirror: '水平鏡像',
+    verticalMirror: '垂直鏡像',
     videozoom: '視頻縮放率：'
   }
 }

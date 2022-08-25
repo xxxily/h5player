@@ -33,6 +33,8 @@ export default {
     playbackrestoreoff: 'The function of restoring the playback progress is disabled. Press SHIFT+R to turn on the function',
     horizontal: 'Horizontal displacement: ',
     vertical: 'Vertical displacement: ',
+    horizontalMirror: 'Horizontal mirror',
+    verticalMirror: 'vertical mirror',
     videozoom: 'Video zoom: '
   },
   demo: 'demo-test'
