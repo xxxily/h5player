@@ -8,7 +8,7 @@
  */
 import i18n from './i18n'
 import monkeyMenu from './monkeyMenu'
-import config from './config'
+import { config } from './config'
 import debug from './debug'
 import { openInTab } from './helper'
 
@@ -28,6 +28,7 @@ let monkeyMenuList = [
     disable: true,
     fn: () => {
       localStorage.removeItem('_h5playerConfig_')
+      window.GM_deleteValue && window.GM_deleteValue('_h5playerGlobalConfig_')
       refreshPage()
     }
   },

@@ -74,23 +74,44 @@
 
 下面列出一些常见网站列表方便点击测试：
 
-* [https://bilibili.com](https://bilibili.com)
-* [https://v.qq.com](https://v.qq.com)
-* [https://douyin.com](https://douyin.com)
-* [https://iqiyi.com](https://www.iqiyi.com)
-* [https://youku.com](https://www.youku.com)
-* [https://youtube.com](https://www.youtube.com)
-* [https://www.ted.com](https://www.ted.com)
-* [https://www.instagram.com](https://www.instagram.com)
-* [https://twitter.com](https://twitter.com)
-* [https://www.pornhub.com](https://www.pornhub.com)
-* [https://www.douyu.com](https://www.douyu.com)
-* [https://www.huya.com](https://www.huya.com)
-* [https://weibo.com/tv](https://weibo.com/tv)
-* [https://krcom.cn](https://krcom.cn)
-* [https://tv.sohu.com](https://tv.sohu.com)
-* [网易公开课](https://open.163.com/ted)
-* [QQ音乐 - MV](https://y.qq.com/portal/mv_lib.html)
+|  网站   | URL    |
+| --- | --- |
+| B站 | [https://bilibili.com](https://bilibili.com) |
+| 腾讯视频 | [https://v.qq.com](https://v.qq.com) |
+| 抖音 | [https://douyin.com](https://douyin.com) |
+| 爱奇艺 | [https://iqiyi.com](https://www.iqiyi.com) |
+| 优酷 | [https://youku.com](https://www.youku.com) |
+| YouTube | [https://youtube.com](https://www.youtube.com) |
+| TED | [https://www.ted.com](https://www.ted.com) |
+| Instagram | [https://www.instagram.com](https://www.instagram.com) |
+| Twitter | [https://.com](https://twitter.com) |
+| Pornhub | [https://www.pornhub.com](https://www.pornhub.com) |
+| 斗鱼 | [https://www.douyu.com](https://www.douyu.com) |
+| 虎牙 | [https://www.huya.com](https://www.huya.com) |
+| 微博TV | [https://weibo.com/tv](https://weibo.com/tv) |
+| 酷燃视频 | [https://krcom.cn](https://krcom.cn) |
+| 搜狐视频 | [https://tv.sohu.com](https://tv.sohu.com) |
+| 网易公开课 | [https://open.163.com/ted](https://open.163.com/ted) |
+| QQ音乐 - MV | [https://y.qq.com/portal/mv_lib.html](https://y.qq.com/portal/mv_lib.html) |
+| 凤凰视频 | [https://v.ifeng.com/](https://v.ifeng.com) |
+| 风行网 | [https://www.fun.tv](https://www.fun.tv) |
+| PPTV聚力 | [https://www.pptv.com](https://www.pptv.com) |
+| 齐鲁网 | [https://v.iqilu.com](https://v.iqilu.com) |
+| 阳光卫视 | [https://www.isuntv.com](https://www.isuntv.com) |
+| 央视网 | [https://www.cntv.cn](https://www.cntv.cn) |
+| 芒果TV | [https://www.mgtv.com](https://www.mgtv.com) |
+| 西瓜视频 | [https://www.ixigua.com](https://www.ixigua.com) |
+| 新传宽频 | [https://v.zhibo.tv](https://v.zhibo.tv) |
+| 中国体育 | [https://video.zhibo.tv](https://video.zhibo.tv) |
+| AcFun | [https://www.acfun.cn](https://www.acfun.cn) |
+| 快手 | [https://www.kuaishou.com](https://www.kuaishou.com) |
+| MioMio弹幕网 | [https://www.miomio.tv](https://www.miomio.tv) |
+| 56网 | [https://www.56.com](https://www.56.com) |
+| VK | [https://vk.com](https://vk.com) |
+| Vine | [https://vine.co](https://vine.co) |
+| Magisto | [https://www.magisto.com](https://www.magisto.com) |
+| CBS | [https://www.cbs.com](https://www.cbs.com) |
+| FC2 Video | [https://video.fc2.com](https://video.fc2.com) |
 
 如果你常去的网站支持不好欢迎提[issues](https://github.com/xxxily/h5player/issues)
 

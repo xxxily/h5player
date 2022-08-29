@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.4.3
+// @version      3.4.4
 // @description  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学等能力
 // @description:en  Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
 // @description:zh  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学等能力
@@ -507,32 +507,129 @@ var localStorageProxy = (name, opts = {}) => {
   return new Proxy(state, boundHandler(state))
 };
 
-const defaultConfig = {
-  autoPlay: true,
+/*!
+ * @name         monkeyStorageProxy.js
+ * @description  类似local-storage-proxy的monkey-storage-proxy
+ * @version      0.0.1
+ * @author       xxxily
+ * @date         2022/08/29 17:13
+ * @github       https://github.com/xxxily
+ */
 
-  /* transform样式规则 */
-  transform: {
-    /* 放大缩小系数 */
-    scale: 1,
+var monkeyStorageProxy = (name, opts = {}) => {
+  const {
+    defaults = {},
+    lspReset = false,
+    storageEventListener = true
+  } = opts;
 
-    /* 水平位移参数 */
-    translate: {
-      x: 0,
-      y: 0
-    },
-
-    /* 旋转角度 */
-    rotate: 0,
-
-    /* 水平镜像翻转, 0 或 180 */
-    rotateY: 0,
-    /* 垂直镜像翻转, 0 或 180 */
-    rotateX: 0
+  const state = new EventTarget();
+  try {
+    const restoredState = window.GM_getValue(name) || {};
+    if (restoredState.lspReset !== lspReset) {
+      window.GM_deleteValue(name);
+      for (const [k, v] of Object.entries({
+        ...defaults
+      })) {
+        state[k] = v;
+      }
+    } else {
+      for (const [k, v] of Object.entries({
+        ...defaults,
+        ...restoredState
+      })) {
+        state[k] = v;
+      }
+    }
+  } catch (e) {
+    console.error('[monkeyStorageProxy]', e);
+    window.GM_deleteValue(name);
   }
+
+  state.lspReset = lspReset;
+
+  if (storageEventListener && typeof window !== 'undefined' && typeof window.addEventListener !== 'undefined') {
+    window.GM_addValueChangeListener(name, (name, oldVal, newVal, remote) => {
+      // Replace state with whats stored on localStorage... it is newer.
+      for (const k of Object.keys(state)) {
+        delete state[k];
+      }
+      const restoredState = window.GM_getValue(name) || {};
+      for (const [k, v] of Object.entries({
+        ...defaults,
+        ...restoredState
+      })) {
+        state[k] = v;
+      }
+      opts.lspReset = restoredState.lspReset;
+      state.dispatchEvent(new Event('update'));
+    });
+  }
+
+  function boundHandler (rootRef) {
+    return {
+      get (obj, prop) {
+        if (typeof obj[prop] === 'object' && obj[prop] !== null) {
+          return new Proxy(obj[prop], boundHandler(rootRef))
+        } else if (typeof obj[prop] === 'function' && obj === rootRef && prop !== 'constructor') {
+          // this returns bound EventTarget functions
+          return obj[prop].bind(obj)
+        } else {
+          return obj[prop]
+        }
+      },
+      set (obj, prop, value) {
+        obj[prop] = value;
+        try {
+          window.GM_setValue(name, rootRef);
+          rootRef.dispatchEvent(new Event('update'));
+          return true
+        } catch (e) {
+          console.error('[monkeyStorageProxy]', e);
+          return false
+        }
+      }
+    }
+  }
+
+  return new Proxy(state, boundHandler(state))
 };
 
 const config = localStorageProxy('_h5playerConfig_', {
-  defaults: defaultConfig,
+  defaults: {
+    autoPlay: true,
+
+    /* transform样式规则 */
+    transform: {
+      /* 放大缩小系数 */
+      scale: 1,
+
+      /* 水平位移参数 */
+      translate: {
+        x: 0,
+        y: 0
+      },
+
+      /* 旋转角度 */
+      rotate: 0,
+
+      /* 水平镜像翻转, 0 或 180 */
+      rotateY: 0,
+      /* 垂直镜像翻转, 0 或 180 */
+      rotateX: 0
+    }
+  },
+  lspReset: false,
+  storageEventListener: false
+});
+
+const globalConfig = monkeyStorageProxy('_h5playerGlobalConfig_', {
+  defaults: {
+    video: {
+      playbackRate: 1
+    },
+    hotkeys: {}
+  },
   lspReset: false,
   storageEventListener: false
 });
@@ -3126,6 +3223,7 @@ let monkeyMenuList = [
     disable: true,
     fn: () => {
       localStorage.removeItem('_h5playerConfig_');
+      window.GM_deleteValue && window.GM_deleteValue('_h5playerGlobalConfig_');
       refreshPage();
     }
   },
@@ -3432,7 +3530,9 @@ const h5Player = {
   getPlaybackRate () {
     const t = this;
     let playbackRate = t.playbackRate;
-    if (!isInCrossOriginFrame()) {
+    if (isInCrossOriginFrame()) {
+      playbackRate = globalConfig.video.playbackRate;
+    } else {
       playbackRate = window.localStorage.getItem('_h5_player_playback_rate_') || t.playbackRate;
     }
     return Number(Number(playbackRate).toFixed(1))
@@ -3468,7 +3568,11 @@ const h5Player = {
     }
 
     /* 记录播放速度的信息 */
-    !isInCrossOriginFrame() && window.localStorage.setItem('_h5_player_playback_rate_', curPlaybackRate);
+    if (isInCrossOriginFrame()) {
+      globalConfig.video.playbackRate = curPlaybackRate;
+    } else {
+      window.localStorage.setItem('_h5_player_playback_rate_', curPlaybackRate);
+    }
 
     t.playbackRate = curPlaybackRate;
 
@@ -3515,11 +3619,6 @@ const h5Player = {
     const player = p || t.player();
     const taskConf = TCC$1.getTaskConfig();
 
-    // 在轮询重试的时候，如果实例变了，或处于隐藏页面中则不进行自动播放操作
-    if ((!p && t.hasInitAutoPlay) || !player || (p && p !== t.player()) || document.hidden) {
-      return false
-    }
-
     /* 注册开启禁止自动播放的控制菜单 */
     if (taskConf.autoPlay) {
       addMenu({
@@ -3531,6 +3630,11 @@ const h5Player = {
           }
         }
       });
+    }
+
+    // 在轮询重试的时候，如果实例变了，或处于隐藏页面中则不进行自动播放操作
+    if (!config.autoPlay || (!p && t.hasInitAutoPlay) || !player || (p && p !== t.player()) || document.hidden) {
+      return false
     }
 
     /**
@@ -4667,7 +4771,7 @@ async function h5PlayerInit () {
       h5Player.init();
     });
 
-    /* 兼容B站的bwp播放器的支持 */
+    /* 兼容B站的bwp播放器 */
     ready('bwp-video', function () {
       h5Player.init();
     });
@@ -4679,7 +4783,7 @@ async function h5PlayerInit () {
         h5Player.init();
       }, shadowRoot);
 
-      /* 兼容B站的bwp播放器的支持 */
+      /* 兼容B站的bwp播放器 */
       ready('bwp-video', function (element) {
         h5Player.init();
       }, shadowRoot);
@@ -4688,7 +4792,7 @@ async function h5PlayerInit () {
     /* 初始化跨Tab控制逻辑 */
     crossTabCtl.init();
 
-    debug.log('h5Player init suc', window);
+    debug.log('h5Player init suc', window, globalConfig);
 
     if (isInCrossOriginFrame()) {
       debug.log('当前处于跨域受限的iframe中，h5Player部分功能可能无法正常开启', window.location.href);

@@ -1,6 +1,6 @@
 import './comment'
 import './tips'
-import config from './config'
+import { config, globalConfig } from './config'
 import originalMethods from './originalMethods'
 import h5PlayerTccInit from './h5PlayerTccInit'
 import { setFakeUA } from './userAgent'
@@ -280,7 +280,9 @@ const h5Player = {
   getPlaybackRate () {
     const t = this
     let playbackRate = t.playbackRate
-    if (!isInCrossOriginFrame()) {
+    if (isInCrossOriginFrame()) {
+      playbackRate = globalConfig.video.playbackRate
+    } else {
       playbackRate = window.localStorage.getItem('_h5_player_playback_rate_') || t.playbackRate
     }
     return Number(Number(playbackRate).toFixed(1))
@@ -316,7 +318,11 @@ const h5Player = {
     }
 
     /* 记录播放速度的信息 */
-    !isInCrossOriginFrame() && window.localStorage.setItem('_h5_player_playback_rate_', curPlaybackRate)
+    if (isInCrossOriginFrame()) {
+      globalConfig.video.playbackRate = curPlaybackRate
+    } else {
+      window.localStorage.setItem('_h5_player_playback_rate_', curPlaybackRate)
+    }
 
     t.playbackRate = curPlaybackRate
 
@@ -363,11 +369,6 @@ const h5Player = {
     const player = p || t.player()
     const taskConf = TCC.getTaskConfig()
 
-    // 在轮询重试的时候，如果实例变了，或处于隐藏页面中则不进行自动播放操作
-    if ((!p && t.hasInitAutoPlay) || !player || (p && p !== t.player()) || document.hidden) {
-      return false
-    }
-
     /* 注册开启禁止自动播放的控制菜单 */
     if (taskConf.autoPlay) {
       addMenu({
@@ -379,6 +380,11 @@ const h5Player = {
           }
         }
       })
+    }
+
+    // 在轮询重试的时候，如果实例变了，或处于隐藏页面中则不进行自动播放操作
+    if (!config.autoPlay || (!p && t.hasInitAutoPlay) || !player || (p && p !== t.player()) || document.hidden) {
+      return false
     }
 
     /**
@@ -1517,7 +1523,7 @@ async function h5PlayerInit () {
       h5Player.init()
     })
 
-    /* 兼容B站的bwp播放器的支持 */
+    /* 兼容B站的bwp播放器 */
     ready('bwp-video', function () {
       h5Player.init()
     })
@@ -1529,7 +1535,7 @@ async function h5PlayerInit () {
         h5Player.init()
       }, shadowRoot)
 
-      /* 兼容B站的bwp播放器的支持 */
+      /* 兼容B站的bwp播放器 */
       ready('bwp-video', function (element) {
         h5Player.init()
       }, shadowRoot)
@@ -1538,7 +1544,7 @@ async function h5PlayerInit () {
     /* 初始化跨Tab控制逻辑 */
     crossTabCtl.init()
 
-    debug.log('h5Player init suc', window)
+    debug.log('h5Player init suc', window, globalConfig)
 
     if (isInCrossOriginFrame()) {
       debug.log('当前处于跨域受限的iframe中，h5Player部分功能可能无法正常开启', window.location.href)
