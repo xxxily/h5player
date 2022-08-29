@@ -8,7 +8,6 @@ import FullScreen from '../libs/FullScreen/index'
 import videoCapturer from '../libs/videoCapturer/index'
 import MouseObserver from '../libs/MouseObserver/index'
 import i18n from './i18n'
-import { getTabId } from './getId'
 import monkeyMsg from './monkeyMsg'
 import crossTabCtl from './crossTabCtl'
 import debug from './debug'
@@ -720,6 +719,12 @@ const h5Player = {
 
     parentNode.setAttribute('style', newStyleArr.join(';'))
 
+    const newPlayerBox = player.getBoundingClientRect()
+    if (Math.abs(newPlayerBox.height - playerBox.height) > 50) {
+      parentNode.setAttribute('style', backupStyle)
+      // debug.info('应用新样式后给播放器高宽造成了严重的偏差，样式已被还原：', player, playerBox, newPlayerBox)
+    }
+
     const tipsSelector = '.' + t.tipsClassName
     let tipsDom = parentNode.querySelector(tipsSelector)
 
@@ -749,7 +754,7 @@ const h5Player = {
         // 隐藏提示框和还原样式
         style.opacity = 0
         style.display = 'none'
-        if (backupStyle && backupStyle !== 'style-backup:none') {
+        if (backupStyle) {
           parentNode.setAttribute('style', backupStyle)
         }
       }, 2000)
@@ -856,7 +861,7 @@ const h5Player = {
         videoCapturer.capture(player, true)
 
         /* 暂停画面 */
-        if (!player.paused) {
+        if (!player.paused && !document.pictureInPictureElement && document.visibilityState !== 'visible') {
           t.freezeFrame()
         }
       }
@@ -1512,10 +1517,20 @@ async function h5PlayerInit () {
       h5Player.init()
     })
 
+    /* 兼容B站的bwp播放器的支持 */
+    ready('bwp-video', function () {
+      h5Player.init()
+    })
+
     /* 检测shadow dom 下面的video */
     document.addEventListener('addShadowRoot', function (e) {
       const shadowRoot = e.detail.shadowRoot
       ready('video', function (element) {
+        h5Player.init()
+      }, shadowRoot)
+
+      /* 兼容B站的bwp播放器的支持 */
+      ready('bwp-video', function (element) {
         h5Player.init()
       }, shadowRoot)
     })
