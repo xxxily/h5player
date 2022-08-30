@@ -480,7 +480,19 @@ const h5Player = {
       }
     }
 
+    delete player.volume
     player.volume = newVol
+    try {
+      originalMethods.Object.defineProperty.call(Object, player, 'volume', {
+        configurable: true,
+        get: function () {
+          return newVol
+        },
+        set: function () {}
+      })
+    } catch (e) {
+      debug.error('解锁volume失败', e)
+    }
 
     /* 调节音量的时候顺便把静音模式关闭 */
     player.muted = false
