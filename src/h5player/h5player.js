@@ -297,6 +297,9 @@ const h5Player = {
 
     const t = this
     const player = t.player()
+
+    if (!player) return
+
     let curPlaybackRate
     if (num) {
       num = Number(num)
@@ -360,6 +363,18 @@ const h5Player = {
 
     t.setPlaybackRate(playbackRate)
   },
+
+  /* 提升播放速率 */
+  setPlaybackRateUp (num) {
+    this.player() && this.setPlaybackRate(this.player().playbackRate + num || 0.1)
+  },
+
+  /* 降低播放速率 */
+  setPlaybackRateDown (num) {
+    if (num && num > 0) { num = -num }
+    this.player() && this.setPlaybackRate(this.player().playbackRate - num || 0.1)
+  },
+
   /**
    * 初始化自动播放逻辑
    * 必须是配置了自动播放按钮选择器得的才会进行自动播放
@@ -841,6 +856,126 @@ const h5Player = {
       this.setup()
     }
   },
+
+  setFilter (item, num, isDown) {
+    if (![0, 1, 2, 3, 4].includes(item) || typeof num !== 'number') {
+      debug.error('[setFilter]', '参数有误', item, num)
+      return false
+    }
+
+    /* 如果标识为down，则自动取负数值 */
+    if (isDown === true) {
+      if (num && num > 0) { num = -num }
+    }
+
+    const nameMap = {
+      0: 'brightness',
+      1: 'contrast',
+      2: 'saturation',
+      3: 'hue',
+      4: 'blur'
+    }
+
+    const t = this
+    t.filter.key[item] += num || 0.1
+    t.filter.key[item] = t.filter.key[item].toFixed(2)
+
+    if (t.filter.key[item] < 0 && nameMap[item] !== 'hue') {
+      t.filter.key[item] = 0
+    }
+
+    t.filter.setup()
+    t.tips(i18n.t(`tipsMsg.${nameMap[item]}`) + parseInt(t.filter.key[item] * 100) + '%')
+  },
+
+  /* 设置视频的亮度 */
+  setBrightness (num) {
+    this.setFilter(0, num)
+  },
+
+  /* 提升视频的亮度 */
+  setBrightnessUp (num) {
+    this.setFilter(0, num || 0.1)
+  },
+
+  /* 降低视频的亮度 */
+  setBrightnessDown (num) {
+    this.setFilter(0, num || -0.1, true)
+  },
+
+  /* 设置视频的对比度 */
+  setContrast (num) {
+    this.setFilter(1, num)
+  },
+
+  /* 提升视频的对比度 */
+  setContrastUp (num) {
+    this.setFilter(1, num || 0.1)
+  },
+
+  /* 降低视频的对比度 */
+  setContrastDown (num) {
+    this.setFilter(1, num || -0.1, true)
+  },
+
+  /* 设置饱和度 */
+  setSaturation (num) {
+    this.setFilter(2, num)
+  },
+
+  /* 提升饱和度 */
+  setSaturationUp (num) {
+    this.setFilter(2, num || 0.1)
+  },
+
+  /* 降低饱和度 */
+  setSaturationDown (num) {
+    this.setFilter(2, num || -0.1, true)
+  },
+
+  /* 设置色相 */
+  setHue (num) {
+    this.setFilter(3, num)
+  },
+
+  /* 增加色相 */
+  setHueUp (num) {
+    this.setFilter(3, num || 1)
+  },
+
+  /* 降低色相 */
+  setHueDown (num) {
+    this.setFilter(3, num || -1, true)
+  },
+
+  /* 设置模糊度 */
+  setBlur (num) {
+    this.setFilter(4, num)
+  },
+
+  /* 增加模糊度 */
+  setBlurUp (num) {
+    this.setFilter(4, num || 1)
+  },
+
+  /* 降低模糊度 */
+  setBlurDown (num) {
+    this.setFilter(4, num || -1, true)
+  },
+
+  resetFilterAndTransform () {
+    const t = this
+    t.scale = 1
+    t.translate = { x: 0, y: 0 }
+    t.rotate = 0
+    t.rotateX = 0
+    t.rotateY = 0
+    t.setTransform()
+
+    t.filter.reset()
+    t.tips(i18n.t('tipsMsg.imgattrreset'))
+  },
+
   _isFoucs: false,
 
   /* 播放器的聚焦事件 */
@@ -979,11 +1114,11 @@ const h5Player = {
 
     // 按键X：减速播放 -0.1
     if (keyCode === 88) {
-      t.setPlaybackRate(player.playbackRate - 0.1)
+      t.setPlaybackRateDown()
     }
     // 按键C：加速播放 +0.1
     if (keyCode === 67) {
-      t.setPlaybackRate(player.playbackRate + 0.1)
+      t.setPlaybackRateUp()
     }
     // 按键Z：正常速度播放
     if (keyCode === 90) {
@@ -1010,94 +1145,52 @@ const h5Player = {
 
     // 按键E：亮度增加%
     if (keyCode === 69) {
-      t.filter.key[0] += 0.1
-      t.filter.key[0] = t.filter.key[0].toFixed(2)
-      t.filter.setup()
-      t.tips(i18n.t('tipsMsg.brightness') + parseInt(t.filter.key[0] * 100) + '%')
+      t.setBrightnessUp()
     }
     // 按键W：亮度减少%
     if (keyCode === 87) {
-      if (t.filter.key[0] > 0) {
-        t.filter.key[0] -= 0.1
-        t.filter.key[0] = t.filter.key[0].toFixed(2)
-        t.filter.setup()
-      }
-      t.tips(i18n.t('tipsMsg.brightness') + parseInt(t.filter.key[0] * 100) + '%')
+      t.setBrightnessDown()
     }
 
     // 按键T：对比度增加%
     if (keyCode === 84) {
-      t.filter.key[1] += 0.1
-      t.filter.key[1] = t.filter.key[1].toFixed(2)
-      t.filter.setup()
-      t.tips(i18n.t('tipsMsg.contrast') + parseInt(t.filter.key[1] * 100) + '%')
+      t.setContrastUp()
     }
     // 按键R：对比度减少%
     if (keyCode === 82) {
-      if (t.filter.key[1] > 0) {
-        t.filter.key[1] -= 0.1
-        t.filter.key[1] = t.filter.key[1].toFixed(2)
-        t.filter.setup()
-      }
-      t.tips(i18n.t('tipsMsg.contrast') + parseInt(t.filter.key[1] * 100) + '%')
+      t.setContrastDown()
     }
 
     // 按键U：饱和度增加%
     if (keyCode === 85) {
-      t.filter.key[2] += 0.1
-      t.filter.key[2] = t.filter.key[2].toFixed(2)
-      t.filter.setup()
-      t.tips(i18n.t('tipsMsg.saturation') + parseInt(t.filter.key[2] * 100) + '%')
+      t.setSaturationUp()
     }
     // 按键Y：饱和度减少%
     if (keyCode === 89) {
-      if (t.filter.key[2] > 0) {
-        t.filter.key[2] -= 0.1
-        t.filter.key[2] = t.filter.key[2].toFixed(2)
-        t.filter.setup()
-      }
-      t.tips(i18n.t('tipsMsg.saturation') + parseInt(t.filter.key[2] * 100) + '%')
+      t.setSaturationDown()
     }
 
     // 按键O：色相增加 1 度
     if (keyCode === 79) {
-      t.filter.key[3] += 1
-      t.filter.setup()
-      t.tips(i18n.t('tipsMsg.hue') + t.filter.key[3] + '度')
+      t.setHueUp()
     }
     // 按键I：色相减少 1 度
     if (keyCode === 73) {
-      t.filter.key[3] -= 1
-      t.filter.setup()
-      t.tips(i18n.t('tipsMsg.hue') + t.filter.key[3] + '度')
+      t.setHueDown()
     }
 
     // 按键K：模糊增加 1 px
     if (keyCode === 75) {
-      t.filter.key[4] += 1
-      t.filter.setup()
-      t.tips(i18n.t('tipsMsg.blur') + t.filter.key[4] + 'PX')
+      t.setBlurUp()
     }
     // 按键J：模糊减少 1 px
     if (keyCode === 74) {
-      if (t.filter.key[4] > 0) {
-        t.filter.key[4] -= 1
-        t.filter.setup()
-      }
-      t.tips(i18n.t('tipsMsg.blur') + t.filter.key[4] + 'PX')
+      t.setBlurDown()
     }
 
     // 按键Q：图像复位
     if (keyCode === 81) {
-      t.scale = 1
-      t.translate = { x: 0, y: 0 }
-      t.rotate = 0
-      t.rotateX = 0
-      t.rotateY = 0
-      t.setTransform()
-
-      t.filter.reset()
-      t.tips(i18n.t('tipsMsg.imgattrreset'))
+      t.resetFilterAndTransform()
     }
 
     // 按键S：画面旋转 90 度
