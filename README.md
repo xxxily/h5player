@@ -84,7 +84,8 @@
 | YouTube | [https://youtube.com](https://www.youtube.com) |
 | TED | [https://www.ted.com](https://www.ted.com) |
 | Instagram | [https://www.instagram.com](https://www.instagram.com) |
-| Twitter | [https://.com](https://twitter.com) |
+| Twitter | [https://twitter.com](https://twitter.com) |
+| Telegram web | [https://web.telegram.org](https://web.telegram.org) |
 | Pornhub | [https://www.pornhub.com](https://www.pornhub.com) |
 | 斗鱼 | [https://www.douyu.com](https://www.douyu.com) |
 | 虎牙 | [https://www.huya.com](https://www.huya.com) |

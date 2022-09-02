@@ -14,8 +14,12 @@ async function setClipboard (blob) {
         [blob.type]: blob
       })
     ]).then(() => {
-      alert('clipboard suc')
+      console.info('[setClipboard] clipboard suc')
+    }).catch((e) => {
+      console.error('[setClipboard] clipboard err', e)
     })
+  } else {
+    console.error('当前网站不支持将数据写入到剪贴板里，见：\n https://developer.mozilla.org/en-US/docs/Web/API/Clipboard')
   }
 }
 
@@ -75,7 +79,7 @@ var videoCapturer = {
 
         /* 尝试复制到剪贴板 */
         setClipboard(blob)
-      }, 'image/jpeg', 0.99)
+      }, 'image/jpg', 0.99)
     } catch (e) {
       videoCapturer.previe(canvas, title)
       console.error('视频源受CORS标识限制，无法直接下载截图，见：\n https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS')

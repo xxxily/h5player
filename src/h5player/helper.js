@@ -125,10 +125,28 @@ function openInTab (url, opts) {
   }
 }
 
+/* 确保数字为正数 */
+function numUp (num) {
+  if (typeof num === 'number' && num < 0) {
+    num = Math.abs(num)
+  }
+  return num
+}
+
+/* 确保数字为负数 */
+function numDown (num) {
+  if (typeof num === 'number' && num > 0) {
+    num = -num
+  }
+  return num
+}
+
 export {
   hasUseKey,
   isRegisterKey,
   getPageWindow,
   getPageWindowSync,
-  openInTab
+  openInTab,
+  numUp,
+  numDown
 }

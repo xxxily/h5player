@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.4.4
+// @version      3.4.5
 // @description  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学等能力
 // @description:en  Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
 // @description:zh  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学等能力
@@ -147,6 +147,22 @@ function openInTab (url, opts) {
       setParent: true
     });
   }
+}
+
+/* 确保数字为正数 */
+function numUp (num) {
+  if (typeof num === 'number' && num < 0) {
+    num = Math.abs(num);
+  }
+  return num
+}
+
+/* 确保数字为负数 */
+function numDown (num) {
+  if (typeof num === 'number' && num > 0) {
+    num = -num;
+  }
+  return num
 }
 
 function toArray (arg) {
@@ -1128,6 +1144,65 @@ function throttle (fn, interval = 80) {
   }
 }
 
+class Debug {
+  constructor (msg, printTime = false) {
+    const t = this;
+    msg = msg || 'debug message:';
+    t.log = t.createDebugMethod('log', null, msg);
+    t.error = t.createDebugMethod('error', null, msg);
+    t.info = t.createDebugMethod('info', null, msg);
+    t.warn = t.createDebugMethod('warn', null, msg);
+  }
+
+  create (msg) {
+    return new Debug(msg)
+  }
+
+  createDebugMethod (name, color, tipsMsg) {
+    name = name || 'info';
+
+    const bgColorMap = {
+      info: '#2274A5',
+      log: '#95B46A',
+      warn: '#F5A623',
+      error: '#D33F49'
+    };
+
+    const printTime = this.printTime;
+
+    return function () {
+      if (!window._debugMode_) {
+        return false
+      }
+
+      const msg = tipsMsg || 'debug message:';
+
+      const arg = Array.from(arguments);
+      arg.unshift(`color: white; background-color: ${color || bgColorMap[name] || '#95B46A'}`);
+
+      if (printTime) {
+        const curTime = new Date();
+        const H = curTime.getHours();
+        const M = curTime.getMinutes();
+        const S = curTime.getSeconds();
+        arg.unshift(`%c [${H}:${M}:${S}] ${msg} `);
+      } else {
+        arg.unshift(`%c ${msg} `);
+      }
+
+      window.console[name].apply(window.console, arg);
+    }
+  }
+
+  isDebugMode () {
+    return Boolean(window._debugMode_)
+  }
+}
+
+var Debug$1 = new Debug();
+
+var debug = Debug$1.create('h5player message:');
+
 const $q = document.querySelector.bind(document);
 
 /**
@@ -1145,15 +1220,18 @@ const taskConf = {
    * 注意：include，exclude这两个子级键名除外，这两个是用来进行url范围匹配的
    * */
   'demo.demo': {
+    // disable: true, // 在该域名下禁止插件的所有功能
     fullScreen: '.fullscreen-btn',
     exitFullScreen: '.exit-fullscreen-btn',
     webFullScreen: function () {},
     exitWebFullScreen: '.exit-fullscreen-btn',
     autoPlay: '.player-start-btn',
+    // pause: ['.player-pause', '.player-pause02'], //多种情况对应不同的选择器时，可使用数组，插件会对选择器进行遍历，知道找到可用的为止
     pause: '.player-pause',
     play: '.player-play',
     switchPlayStatus: '.player-play',
     playbackRate: function () {},
+    // playbackRate: true, // 当给某个功能设置true时，表示使用网站自身的能力控制视频，而忽略插件的能力
     currentTime: function () {},
     addCurrentTime: '.add-currenttime',
     subtractCurrentTime: '.subtract-currenttime',
@@ -1198,9 +1276,33 @@ const taskConf = {
     }
   },
   'netflix.com': {
+    // 停止在netflix下使用插件的所有功能
+    // disable: true,
     fullScreen: 'button.button-nfplayerFullscreen',
     addCurrentTime: 'button.button-nfplayerFastForward',
-    subtractCurrentTime: 'button.button-nfplayerBackTen'
+    subtractCurrentTime: 'button.button-nfplayerBackTen',
+    /**
+     * 使用netflix自身的调速，因为目前插件没法解决调速导致的服务中断问题
+     * https://github.com/xxxily/h5player/issues/234
+     * https://github.com/xxxily/h5player/issues/317
+     * https://github.com/xxxily/h5player/issues/381
+     * https://github.com/xxxily/h5player/issues/179
+     * https://github.com/xxxily/h5player/issues/147
+     */
+    playbackRate: true,
+    shortcuts: {
+      /**
+       * TODO
+       * netflix 一些用户习惯使用F键进行全屏，所以此处屏蔽掉f键的下一帧功能
+       * 后续开放自定义配置能力后，让用户自行决定是否屏蔽
+       */
+      register: [
+        'f'
+      ],
+      callback: function (h5Player, taskConf, data) {
+        return true
+      }
+    }
   },
   'bilibili.com': {
     fullScreen: function () {
@@ -1505,35 +1607,42 @@ const taskConf = {
 
 function h5PlayerTccInit (h5Player) {
   return new TCC(taskConf, function (taskName, taskConf, data) {
-    const task = taskConf[taskName];
-    const wrapDom = h5Player.getPlayerWrapDom();
+    try {
+      const task = taskConf[taskName];
+      const wrapDom = h5Player.getPlayerWrapDom();
 
-    if (taskName === 'shortcuts') {
-      if (isObj(task) && task.callback instanceof Function) {
-        return task.callback(h5Player, taskConf, data)
-      }
-    } else if (task instanceof Function) {
-      try {
-        return task(h5Player, taskConf, data)
-      } catch (e) {
-        console.error('TCC自定义函数任务执行失败：', h5Player, taskConf, data);
-        return false
-      }
-    } else {
-      const selectorList = Array.isArray(task) ? task : [task];
-      for (let i = 0; i < selectorList.length; i++) {
-        const selector = selectorList[i];
+      if (taskName === 'shortcuts') {
+        if (isObj(task) && task.callback instanceof Function) {
+          return task.callback(h5Player, taskConf, data)
+        }
+      } else if (task instanceof Function) {
+        try {
+          return task(h5Player, taskConf, data)
+        } catch (e) {
+          debug.error('任务配置中心的自定义函数执行失败：', taskName, taskConf, data, e);
+          return false
+        }
+      } else if (typeof task === 'boolean') {
+        return task
+      } else {
+        const selectorList = Array.isArray(task) ? task : [task];
+        for (let i = 0; i < selectorList.length; i++) {
+          const selector = selectorList[i];
 
-        /* 触发选择器上的点击事件 */
-        if (wrapDom && wrapDom.querySelector(selector)) {
-        // 在video的父元素里查找，是为了尽可能兼容多实例下的逻辑
-          wrapDom.querySelector(selector).click();
-          return true
-        } else if (document.querySelector(selector)) {
-          document.querySelector(selector).click();
-          return true
+          /* 触发选择器上的点击事件 */
+          if (wrapDom && wrapDom.querySelector(selector)) {
+          // 在video的父元素里查找，是为了尽可能兼容多实例下的逻辑
+            wrapDom.querySelector(selector).click();
+            return true
+          } else if (document.querySelector(selector)) {
+            document.querySelector(selector).click();
+            return true
+          }
         }
       }
+    } catch (e) {
+      debug.error('任务配置中心的自定义任务执行失败：', taskName, taskConf, data, e);
+      return false
     }
   })
 }
@@ -1782,8 +1891,12 @@ async function setClipboard (blob) {
         [blob.type]: blob
       })
     ]).then(() => {
-      alert('clipboard suc');
+      console.info('[setClipboard] clipboard suc');
+    }).catch((e) => {
+      console.error('[setClipboard] clipboard err', e);
     });
+  } else {
+    console.error('当前网站不支持将数据写入到剪贴板里，见：\n https://developer.mozilla.org/en-US/docs/Web/API/Clipboard');
   }
 }
 
@@ -1843,7 +1956,7 @@ var videoCapturer = {
 
         /* 尝试复制到剪贴板 */
         setClipboard(blob);
-      }, 'image/jpeg', 0.99);
+      }, 'image/jpg', 0.99);
     } catch (e) {
       videoCapturer.previe(canvas, title);
       console.error('视频源受CORS标识限制，无法直接下载截图，见：\n https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS');
@@ -2505,65 +2618,6 @@ const crossTabCtl = {
     t.bindCrossTabEvent();
   }
 };
-
-class Debug {
-  constructor (msg, printTime = false) {
-    const t = this;
-    msg = msg || 'debug message:';
-    t.log = t.createDebugMethod('log', null, msg);
-    t.error = t.createDebugMethod('error', null, msg);
-    t.info = t.createDebugMethod('info', null, msg);
-    t.warn = t.createDebugMethod('warn', null, msg);
-  }
-
-  create (msg) {
-    return new Debug(msg)
-  }
-
-  createDebugMethod (name, color, tipsMsg) {
-    name = name || 'info';
-
-    const bgColorMap = {
-      info: '#2274A5',
-      log: '#95B46A',
-      warn: '#F5A623',
-      error: '#D33F49'
-    };
-
-    const printTime = this.printTime;
-
-    return function () {
-      if (!window._debugMode_) {
-        return false
-      }
-
-      const msg = tipsMsg || 'debug message:';
-
-      const arg = Array.from(arguments);
-      arg.unshift(`color: white; background-color: ${color || bgColorMap[name] || '#95B46A'}`);
-
-      if (printTime) {
-        const curTime = new Date();
-        const H = curTime.getHours();
-        const M = curTime.getMinutes();
-        const S = curTime.getSeconds();
-        arg.unshift(`%c [${H}:${M}:${S}] ${msg} `);
-      } else {
-        arg.unshift(`%c ${msg} `);
-      }
-
-      window.console[name].apply(window.console, arg);
-    }
-  }
-
-  isDebugMode () {
-    return Boolean(window._debugMode_)
-  }
-}
-
-var Debug$1 = new Debug();
-
-var debug = Debug$1.create('h5player message:');
 
 /*!
  * @name         index.js
@@ -3540,13 +3594,16 @@ const h5Player = {
   /* 设置播放速度 */
   setPlaybackRate: function (num, notips) {
     const taskConf = TCC$1.getTaskConfig();
-    if (taskConf.playbackRate) {
-      TCC$1.doTask('playbackRate');
+    if (taskConf.playbackRate && TCC$1.doTask('playbackRate')) {
+      // debug.log('[TCC][playbackRate]', 'suc')
       return
     }
 
     const t = this;
     const player = t.player();
+
+    if (!player) return
+
     let curPlaybackRate;
     if (num) {
       num = Number(num);
@@ -3610,6 +3667,19 @@ const h5Player = {
 
     t.setPlaybackRate(playbackRate);
   },
+
+  /* 提升播放速率 */
+  setPlaybackRateUp (num) {
+    num = numUp(num) || 0.1;
+    this.player() && this.setPlaybackRate(this.player().playbackRate + num);
+  },
+
+  /* 降低播放速率 */
+  setPlaybackRateDown (num) {
+    num = numDown(num) || -0.1;
+    this.player() && this.setPlaybackRate(this.player().playbackRate + num);
+  },
+
   /**
    * 初始化自动播放逻辑
    * 必须是配置了自动播放按钮选择器得的才会进行自动播放
@@ -3669,6 +3739,17 @@ const h5Player = {
       }
     }
   },
+
+  /* 设置视频全屏 */
+  setFullScreen () {
+    const player = this.player();
+    const isDo = TCC$1.doTask('fullScreen');
+    if (!isDo && player && player._fullScreen_) {
+      player._fullScreen_.toggle();
+    }
+  },
+
+  /* 设置页面全屏 */
   setWebFullScreen: function () {
     const t = this;
     const player = t.player();
@@ -3677,6 +3758,7 @@ const h5Player = {
       player._fullPageScreen_.toggle();
     }
   },
+
   /* 设置播放进度 */
   setCurrentTime: function (num, notips) {
     if (!num) return
@@ -3686,27 +3768,24 @@ const h5Player = {
     const t = this;
     const player = t.player();
     const taskConf = TCC$1.getTaskConfig();
-    if (taskConf.currentTime) {
-      TCC$1.doTask('currentTime');
+    if (taskConf.currentTime && TCC$1.doTask('currentTime')) {
+      // debug.log('[TCC][currentTime]', 'suc')
       return
     }
 
     if (num > 0) {
-      if (taskConf.addCurrentTime) {
-        TCC$1.doTask('addCurrentTime');
-      } else {
+      if (taskConf.addCurrentTime && TCC$1.doTask('addCurrentTime')) ; else {
         player.currentTime += _num;
         !notips && t.tips(i18n.t('tipsMsg.forward') + _num + i18n.t('tipsMsg.seconds'));
       }
     } else {
-      if (taskConf.subtractCurrentTime) {
-        TCC$1.doTask('subtractCurrentTime');
-      } else {
+      if (taskConf.subtractCurrentTime && TCC$1.doTask('subtractCurrentTime')) ; else {
         player.currentTime -= _num;
         !notips && t.tips(i18n.t('tipsMsg.backward') + _num + i18n.t('tipsMsg.seconds'));
       }
     }
   },
+
   /* 设置声音大小 */
   setVolume: function (num) {
     if (!num) return
@@ -3750,15 +3829,26 @@ const h5Player = {
     t.tips(i18n.t('tipsMsg.volume') + parseInt(player.volume * 100) + '%');
   },
 
+  setVolumeUp (num) {
+    num = numUp(num) || 0.2;
+    this.setVolume(num);
+  },
+
+  setVolumeDown (num) {
+    num = numDown(num) || -0.2;
+    this.setVolume(num);
+  },
+
   /* 设置视频画面的缩放与位移 */
-  setTransform (scale, translate, transformStateGuard) {
+  setTransform (notTips) {
     const t = this;
     const player = t.player();
-    scale = t.scale = typeof scale === 'undefined' ? t.scale : Number(scale).toFixed(1);
-    translate = t.translate = translate || t.translate;
+    const scale = t.scale = Number(t.scale).toFixed(1);
+    const translate = t.translate;
 
     const mirror = t.rotateX === 180 ? `rotateX(${t.rotateX}deg)` : (t.rotateY === 180 ? `rotateY(${t.rotateY}deg)` : '');
     player.style.transform = `scale(${scale}) translate(${translate.x}px, ${translate.y}px) rotate(${t.rotate}deg) ${mirror}`;
+
     let tipsMsg = i18n.t('tipsMsg.videozoom') + `${scale * 100}%`;
     if (translate.x) {
       tipsMsg += ` ${i18n.t('tipsMsg.horizontal')}${t.translate.x}px`;
@@ -3766,37 +3856,107 @@ const h5Player = {
     if (translate.y) {
       tipsMsg += ` ${i18n.t('tipsMsg.vertical')}${t.translate.y}px`;
     }
-    if (transformStateGuard === true) ; else {
+
+    if (notTips === true) ; else {
       t.tips(tipsMsg);
     }
 
     /* 始终保持transform样式的正常 */
     if (!t._transformStateGuard_) {
       t._transformStateGuard_ = setInterval(() => {
-        t.setTransform(t.scale, t.translate, true);
+        t.setTransform(true);
       }, 1000);
     }
+  },
+
+  /* 视频画面旋转 90 度 */
+  setRotate () {
+    const t = this;
+    t.rotate += 90;
+    if (t.rotate % 360 === 0) t.rotate = 0;
+    t.setTransform(true);
+    t.tips(i18n.t('tipsMsg.imgrotate') + t.rotate + '°');
   },
 
   /* 设置镜像翻转 */
   setMirror (vertical = false) {
     const t = this;
-    const player = t.player();
-
     let tipsMsg = '';
-    let mirror = t.rotateY === 0 ? 'rotateY(180deg)' : 'rotateY(0deg)';
     if (vertical) {
       t.rotateX = t.rotateX === 0 ? 180 : 0;
-      mirror = `rotateX(${t.rotateX}deg)`;
       tipsMsg += ` ${i18n.t('tipsMsg.verticalMirror')} ${t.rotateX}deg`;
     } else {
       t.rotateY = t.rotateY === 0 ? 180 : 0;
-      mirror = `rotateY(${t.rotateY}deg)`;
       tipsMsg += ` ${i18n.t('tipsMsg.horizontalMirror')} ${t.rotateY}deg`;
     }
 
-    player.style.transform = `scale(${t.scale}) translate(${t.translate.x}px, ${t.translate.y}px) ${mirror}`;
+    t.setTransform(true);
     t.tips(tipsMsg);
+  },
+
+  /* 缩放视频画面 */
+  setScale (num) {
+    this.scale = num;
+    this.setTransform();
+  },
+
+  /* 视频放大 +0.1 */
+  setScaleUp () {
+    this.scale += 0.1;
+    this.setTransform();
+  },
+
+  /* 视频缩小 -0.1 */
+  setScaleDown () {
+    this.scale -= 0.1;
+    this.setTransform();
+  },
+
+  /* 设置视频画面的位移属性 */
+  setTranslate (x, y) {
+    if (typeof x === 'number') {
+      this.translate.x = x;
+    }
+
+    if (typeof y === 'number') {
+      this.translate.y = y;
+    }
+
+    this.setTransform();
+  },
+
+  /* 视频画面向右平移 */
+  setTranslateRight () {
+    this.translate.x += 10;
+    this.setTransform();
+  },
+
+  /* 视频画面向左平移 */
+  setTranslateLeft () {
+    this.translate.x -= 10;
+    this.setTransform();
+  },
+
+  /* 视频画面向上平移 */
+  setTranslateUp () {
+    this.translate.y -= 10;
+    this.setTransform();
+  },
+
+  /* 视频画面向下平移 */
+  setTranslateDown () {
+    this.translate.y += 10;
+    this.setTransform();
+  },
+
+  resetTransform (notTips) {
+    const t = this;
+    t.scale = 1;
+    t.translate = { x: 0, y: 0 };
+    t.rotate = 0;
+    t.rotateX = 0;
+    t.rotateY = 0;
+    t.setTransform(notTips);
   },
 
   /**
@@ -3881,22 +4041,18 @@ const h5Player = {
     const t = this;
     const player = t.player();
     const taskConf = TCC$1.getTaskConfig();
-    if (taskConf.switchPlayStatus) {
-      TCC$1.doTask('switchPlayStatus');
+    if (taskConf.switchPlayStatus && TCC$1.doTask('switchPlayStatus')) {
+      // debug.log('[TCC][switchPlayStatus]', 'suc')
       return
     }
 
     if (player.paused) {
-      if (taskConf.play) {
-        TCC$1.doTask('play');
-      } else {
+      if (taskConf.play && TCC$1.doTask('play')) ; else {
         player.play();
         t.tips(i18n.t('tipsMsg.play'));
       }
     } else {
-      if (taskConf.pause) {
-        TCC$1.doTask('pause');
-      } else {
+      if (taskConf.pause && TCC$1.doTask('pause')) ; else {
         player.pause();
         t.tips(i18n.t('tipsMsg.pause'));
       }
@@ -4089,6 +4245,121 @@ const h5Player = {
       this.setup();
     }
   },
+
+  setFilter (item, num, isDown) {
+    if (![0, 1, 2, 3, 4].includes(item) || typeof num !== 'number') {
+      debug.error('[setFilter]', '参数有误', item, num);
+      return false
+    }
+
+    /* 如果标识为down，则自动取负数值 */
+    if (isDown === true) {
+      if (num && num > 0) { num = -num; }
+    }
+
+    const nameMap = {
+      0: 'brightness',
+      1: 'contrast',
+      2: 'saturation',
+      3: 'hue',
+      4: 'blur'
+    };
+
+    const t = this;
+    t.filter.key[item] += num || 0.1;
+    t.filter.key[item] = t.filter.key[item].toFixed(2);
+
+    if (t.filter.key[item] < 0 && nameMap[item] !== 'hue') {
+      t.filter.key[item] = 0;
+    }
+
+    t.filter.setup();
+    t.tips(i18n.t(`tipsMsg.${nameMap[item]}`) + parseInt(t.filter.key[item] * 100) + '%');
+  },
+
+  /* 设置视频的亮度 */
+  setBrightness (num) {
+    this.setFilter(0, num);
+  },
+
+  /* 提升视频的亮度 */
+  setBrightnessUp (num) {
+    this.setFilter(0, num || 0.1);
+  },
+
+  /* 降低视频的亮度 */
+  setBrightnessDown (num) {
+    this.setFilter(0, num || -0.1, true);
+  },
+
+  /* 设置视频的对比度 */
+  setContrast (num) {
+    this.setFilter(1, num);
+  },
+
+  /* 提升视频的对比度 */
+  setContrastUp (num) {
+    this.setFilter(1, num || 0.1);
+  },
+
+  /* 降低视频的对比度 */
+  setContrastDown (num) {
+    this.setFilter(1, num || -0.1, true);
+  },
+
+  /* 设置饱和度 */
+  setSaturation (num) {
+    this.setFilter(2, num);
+  },
+
+  /* 提升饱和度 */
+  setSaturationUp (num) {
+    this.setFilter(2, num || 0.1);
+  },
+
+  /* 降低饱和度 */
+  setSaturationDown (num) {
+    this.setFilter(2, num || -0.1, true);
+  },
+
+  /* 设置色相 */
+  setHue (num) {
+    this.setFilter(3, num);
+  },
+
+  /* 增加色相 */
+  setHueUp (num) {
+    this.setFilter(3, num || 1);
+  },
+
+  /* 降低色相 */
+  setHueDown (num) {
+    this.setFilter(3, num || -1, true);
+  },
+
+  /* 设置模糊度 */
+  setBlur (num) {
+    this.setFilter(4, num);
+  },
+
+  /* 增加模糊度 */
+  setBlurUp (num) {
+    this.setFilter(4, num || 1);
+  },
+
+  /* 降低模糊度 */
+  setBlurDown (num) {
+    this.setFilter(4, num || -1, true);
+  },
+
+  resetFilterAndTransform () {
+    const t = this;
+
+    t.resetTransform(true);
+    t.filter.reset();
+    t.tips(i18n.t('tipsMsg.imgattrreset'));
+  },
+
   _isFoucs: false,
 
   /* 播放器的聚焦事件 */
@@ -4149,31 +4420,29 @@ const h5Player = {
       switch (key) {
         // shift+X：视频缩小 -0.1
         case 'x' :
-          t.scale -= 0.1;
+          t.setScaleDown();
           break
         // shift+C：视频放大 +0.1
         case 'c' :
-          t.scale += 0.1;
+          t.setScaleUp();
           break
         // shift+Z：视频恢复正常大小
         case 'z' :
-          t.scale = 1;
-          t.translate = { x: 0, y: 0 };
+          t.resetTransform();
           break
         case 'arrowright' :
-          t.translate.x += 10;
+          t.setTranslateRight();
           break
         case 'arrowleft' :
-          t.translate.x -= 10;
+          t.setTranslateLeft();
           break
         case 'arrowup' :
-          t.translate.y -= 10;
+          t.setTranslateUp();
           break
         case 'arrowdown' :
-          t.translate.y += 10;
+          t.setTranslateDown();
           break
       }
-      t.setTransform(t.scale, t.translate);
 
       // 阻止事件冒泡
       event.stopPropagation();
@@ -4192,11 +4461,11 @@ const h5Player = {
 
     // ctrl+方向键上↑：音量升高 20%
     if (event.ctrlKey && keyCode === 38) {
-      t.setVolume(0.2);
+      t.setVolumeUp(0.2);
     }
     // 方向键下↓：音量降低 20%
     if (event.ctrlKey && keyCode === 40) {
-      t.setVolume(-0.2);
+      t.setVolumeDown(-0.2);
     }
 
     // 防止其它无关组合键冲突
@@ -4213,11 +4482,11 @@ const h5Player = {
 
     // 方向键上↑：音量升高 10%
     if (keyCode === 38) {
-      t.setVolume(0.1);
+      t.setVolumeUp(0.1);
     }
     // 方向键下↓：音量降低 10%
     if (keyCode === 40) {
-      t.setVolume(-0.1);
+      t.setVolumeDown(-0.1);
     }
 
     // 空格键：暂停/播放
@@ -4227,11 +4496,11 @@ const h5Player = {
 
     // 按键X：减速播放 -0.1
     if (keyCode === 88) {
-      t.setPlaybackRate(player.playbackRate - 0.1);
+      t.setPlaybackRateDown();
     }
     // 按键C：加速播放 +0.1
     if (keyCode === 67) {
-      t.setPlaybackRate(player.playbackRate + 0.1);
+      t.setPlaybackRateUp();
     }
     // 按键Z：正常速度播放
     if (keyCode === 90) {
@@ -4245,10 +4514,6 @@ const h5Player = {
 
     // 按键F：下一帧
     if (keyCode === 70) {
-      if (window.location.hostname === 'www.netflix.com') {
-        /* netflix 的F键是全屏的意思 */
-        return
-      }
       t.freezeFrame(1);
     }
     // 按键D：上一帧
@@ -4258,102 +4523,57 @@ const h5Player = {
 
     // 按键E：亮度增加%
     if (keyCode === 69) {
-      t.filter.key[0] += 0.1;
-      t.filter.key[0] = t.filter.key[0].toFixed(2);
-      t.filter.setup();
-      t.tips(i18n.t('tipsMsg.brightness') + parseInt(t.filter.key[0] * 100) + '%');
+      t.setBrightnessUp();
     }
     // 按键W：亮度减少%
     if (keyCode === 87) {
-      if (t.filter.key[0] > 0) {
-        t.filter.key[0] -= 0.1;
-        t.filter.key[0] = t.filter.key[0].toFixed(2);
-        t.filter.setup();
-      }
-      t.tips(i18n.t('tipsMsg.brightness') + parseInt(t.filter.key[0] * 100) + '%');
+      t.setBrightnessDown();
     }
 
     // 按键T：对比度增加%
     if (keyCode === 84) {
-      t.filter.key[1] += 0.1;
-      t.filter.key[1] = t.filter.key[1].toFixed(2);
-      t.filter.setup();
-      t.tips(i18n.t('tipsMsg.contrast') + parseInt(t.filter.key[1] * 100) + '%');
+      t.setContrastUp();
     }
     // 按键R：对比度减少%
     if (keyCode === 82) {
-      if (t.filter.key[1] > 0) {
-        t.filter.key[1] -= 0.1;
-        t.filter.key[1] = t.filter.key[1].toFixed(2);
-        t.filter.setup();
-      }
-      t.tips(i18n.t('tipsMsg.contrast') + parseInt(t.filter.key[1] * 100) + '%');
+      t.setContrastDown();
     }
 
     // 按键U：饱和度增加%
     if (keyCode === 85) {
-      t.filter.key[2] += 0.1;
-      t.filter.key[2] = t.filter.key[2].toFixed(2);
-      t.filter.setup();
-      t.tips(i18n.t('tipsMsg.saturation') + parseInt(t.filter.key[2] * 100) + '%');
+      t.setSaturationUp();
     }
     // 按键Y：饱和度减少%
     if (keyCode === 89) {
-      if (t.filter.key[2] > 0) {
-        t.filter.key[2] -= 0.1;
-        t.filter.key[2] = t.filter.key[2].toFixed(2);
-        t.filter.setup();
-      }
-      t.tips(i18n.t('tipsMsg.saturation') + parseInt(t.filter.key[2] * 100) + '%');
+      t.setSaturationDown();
     }
 
     // 按键O：色相增加 1 度
     if (keyCode === 79) {
-      t.filter.key[3] += 1;
-      t.filter.setup();
-      t.tips(i18n.t('tipsMsg.hue') + t.filter.key[3] + '度');
+      t.setHueUp();
     }
     // 按键I：色相减少 1 度
     if (keyCode === 73) {
-      t.filter.key[3] -= 1;
-      t.filter.setup();
-      t.tips(i18n.t('tipsMsg.hue') + t.filter.key[3] + '度');
+      t.setHueDown();
     }
 
     // 按键K：模糊增加 1 px
     if (keyCode === 75) {
-      t.filter.key[4] += 1;
-      t.filter.setup();
-      t.tips(i18n.t('tipsMsg.blur') + t.filter.key[4] + 'PX');
+      t.setBlurUp();
     }
     // 按键J：模糊减少 1 px
     if (keyCode === 74) {
-      if (t.filter.key[4] > 0) {
-        t.filter.key[4] -= 1;
-        t.filter.setup();
-      }
-      t.tips(i18n.t('tipsMsg.blur') + t.filter.key[4] + 'PX');
+      t.setBlurDown();
     }
 
     // 按键Q：图像复位
     if (keyCode === 81) {
-      t.scale = 1;
-      t.translate = { x: 0, y: 0 };
-      t.rotate = 0;
-      t.rotateX = 0;
-      t.rotateY = 0;
-      t.setTransform();
-
-      t.filter.reset();
-      t.tips(i18n.t('tipsMsg.imgattrreset'));
+      t.resetFilterAndTransform();
     }
 
     // 按键S：画面旋转 90 度
     if (keyCode === 83) {
-      t.rotate += 90;
-      if (t.rotate % 360 === 0) t.rotate = 0;
-      player.style.transform = `scale(${t.scale}) translate(${t.translate.x}px, ${t.translate.y}px) rotate( ${t.rotate}deg)`;
-      t.tips(i18n.t('tipsMsg.imgrotate') + t.rotate + '°');
+      t.setRotate();
     }
 
     /* 水平镜像翻转 */
@@ -4363,10 +4583,7 @@ const h5Player = {
 
     // 按键回车，进入全屏
     if (keyCode === 13) {
-      const isDo = TCC$1.doTask('fullScreen');
-      if (!isDo && player._fullScreen_) {
-        player._fullScreen_.toggle();
-      }
+      t.setFullScreen();
     }
 
     if (key === 'n') {
@@ -4726,6 +4943,11 @@ const h5Player = {
   },
   init: function (global) {
     var t = this;
+
+    if (TCC$1 && TCC$1.doTask('disable') === true) {
+      debug.info(`[TCC][disable][${location.host}] 已禁止在该网站运行视频检测逻辑，您可查看任务配置中心的相关配置了解详情`);
+      return true
+    }
 
     if (!global) {
       /* 检测是否存在H5播放器 */

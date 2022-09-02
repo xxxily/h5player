@@ -4,6 +4,7 @@ import {
   hideDom,
   eachParentNode
 } from '../libs/utils/index'
+import debug from './debug'
 const $q = document.querySelector.bind(document)
 
 /**
@@ -21,15 +22,18 @@ const taskConf = {
    * 注意：include，exclude这两个子级键名除外，这两个是用来进行url范围匹配的
    * */
   'demo.demo': {
+    // disable: true, // 在该域名下禁止插件的所有功能
     fullScreen: '.fullscreen-btn',
     exitFullScreen: '.exit-fullscreen-btn',
     webFullScreen: function () {},
     exitWebFullScreen: '.exit-fullscreen-btn',
     autoPlay: '.player-start-btn',
+    // pause: ['.player-pause', '.player-pause02'], //多种情况对应不同的选择器时，可使用数组，插件会对选择器进行遍历，知道找到可用的为止
     pause: '.player-pause',
     play: '.player-play',
     switchPlayStatus: '.player-play',
     playbackRate: function () {},
+    // playbackRate: true, // 当给某个功能设置true时，表示使用网站自身的能力控制视频，而忽略插件的能力
     currentTime: function () {},
     addCurrentTime: '.add-currenttime',
     subtractCurrentTime: '.subtract-currenttime',
@@ -74,9 +78,33 @@ const taskConf = {
     }
   },
   'netflix.com': {
+    // 停止在netflix下使用插件的所有功能
+    // disable: true,
     fullScreen: 'button.button-nfplayerFullscreen',
     addCurrentTime: 'button.button-nfplayerFastForward',
-    subtractCurrentTime: 'button.button-nfplayerBackTen'
+    subtractCurrentTime: 'button.button-nfplayerBackTen',
+    /**
+     * 使用netflix自身的调速，因为目前插件没法解决调速导致的服务中断问题
+     * https://github.com/xxxily/h5player/issues/234
+     * https://github.com/xxxily/h5player/issues/317
+     * https://github.com/xxxily/h5player/issues/381
+     * https://github.com/xxxily/h5player/issues/179
+     * https://github.com/xxxily/h5player/issues/147
+     */
+    playbackRate: true,
+    shortcuts: {
+      /**
+       * TODO
+       * netflix 一些用户习惯使用F键进行全屏，所以此处屏蔽掉f键的下一帧功能
+       * 后续开放自定义配置能力后，让用户自行决定是否屏蔽
+       */
+      register: [
+        'f'
+      ],
+      callback: function (h5Player, taskConf, data) {
+        return true
+      }
+    }
   },
   'bilibili.com': {
     fullScreen: function () {
@@ -381,35 +409,42 @@ const taskConf = {
 
 function h5PlayerTccInit (h5Player) {
   return new TCC(taskConf, function (taskName, taskConf, data) {
-    const task = taskConf[taskName]
-    const wrapDom = h5Player.getPlayerWrapDom()
+    try {
+      const task = taskConf[taskName]
+      const wrapDom = h5Player.getPlayerWrapDom()
 
-    if (taskName === 'shortcuts') {
-      if (isObj(task) && task.callback instanceof Function) {
-        return task.callback(h5Player, taskConf, data)
-      }
-    } else if (task instanceof Function) {
-      try {
-        return task(h5Player, taskConf, data)
-      } catch (e) {
-        console.error('TCC自定义函数任务执行失败：', h5Player, taskConf, data)
-        return false
-      }
-    } else {
-      const selectorList = Array.isArray(task) ? task : [task]
-      for (let i = 0; i < selectorList.length; i++) {
-        const selector = selectorList[i]
+      if (taskName === 'shortcuts') {
+        if (isObj(task) && task.callback instanceof Function) {
+          return task.callback(h5Player, taskConf, data)
+        }
+      } else if (task instanceof Function) {
+        try {
+          return task(h5Player, taskConf, data)
+        } catch (e) {
+          debug.error('任务配置中心的自定义函数执行失败：', taskName, taskConf, data, e)
+          return false
+        }
+      } else if (typeof task === 'boolean') {
+        return task
+      } else {
+        const selectorList = Array.isArray(task) ? task : [task]
+        for (let i = 0; i < selectorList.length; i++) {
+          const selector = selectorList[i]
 
-        /* 触发选择器上的点击事件 */
-        if (wrapDom && wrapDom.querySelector(selector)) {
-        // 在video的父元素里查找，是为了尽可能兼容多实例下的逻辑
-          wrapDom.querySelector(selector).click()
-          return true
-        } else if (document.querySelector(selector)) {
-          document.querySelector(selector).click()
-          return true
+          /* 触发选择器上的点击事件 */
+          if (wrapDom && wrapDom.querySelector(selector)) {
+          // 在video的父元素里查找，是为了尽可能兼容多实例下的逻辑
+            wrapDom.querySelector(selector).click()
+            return true
+          } else if (document.querySelector(selector)) {
+            document.querySelector(selector).click()
+            return true
+          }
         }
       }
+    } catch (e) {
+      debug.error('任务配置中心的自定义任务执行失败：', taskName, taskConf, data, e)
+      return false
     }
   })
 }

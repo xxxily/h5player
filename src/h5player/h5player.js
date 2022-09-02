@@ -30,7 +30,9 @@ import {
 
 import {
   isRegisterKey,
-  getPageWindow
+  getPageWindow,
+  numUp,
+  numDown
 } from './helper'
 
 window._debugMode_ = true
@@ -290,8 +292,8 @@ const h5Player = {
   /* 设置播放速度 */
   setPlaybackRate: function (num, notips) {
     const taskConf = TCC.getTaskConfig()
-    if (taskConf.playbackRate) {
-      TCC.doTask('playbackRate')
+    if (taskConf.playbackRate && TCC.doTask('playbackRate')) {
+      // debug.log('[TCC][playbackRate]', 'suc')
       return
     }
 
@@ -366,13 +368,14 @@ const h5Player = {
 
   /* 提升播放速率 */
   setPlaybackRateUp (num) {
-    this.player() && this.setPlaybackRate(this.player().playbackRate + num || 0.1)
+    num = numUp(num) || 0.1
+    this.player() && this.setPlaybackRate(this.player().playbackRate + num)
   },
 
   /* 降低播放速率 */
   setPlaybackRateDown (num) {
-    if (num && num > 0) { num = -num }
-    this.player() && this.setPlaybackRate(this.player().playbackRate - num || 0.1)
+    num = numDown(num) || -0.1
+    this.player() && this.setPlaybackRate(this.player().playbackRate + num)
   },
 
   /**
@@ -434,6 +437,17 @@ const h5Player = {
       }
     }
   },
+
+  /* 设置视频全屏 */
+  setFullScreen () {
+    const player = this.player()
+    const isDo = TCC.doTask('fullScreen')
+    if (!isDo && player && player._fullScreen_) {
+      player._fullScreen_.toggle()
+    }
+  },
+
+  /* 设置页面全屏 */
   setWebFullScreen: function () {
     const t = this
     const player = t.player()
@@ -442,6 +456,7 @@ const h5Player = {
       player._fullPageScreen_.toggle()
     }
   },
+
   /* 设置播放进度 */
   setCurrentTime: function (num, notips) {
     if (!num) return
@@ -451,27 +466,28 @@ const h5Player = {
     const t = this
     const player = t.player()
     const taskConf = TCC.getTaskConfig()
-    if (taskConf.currentTime) {
-      TCC.doTask('currentTime')
+    if (taskConf.currentTime && TCC.doTask('currentTime')) {
+      // debug.log('[TCC][currentTime]', 'suc')
       return
     }
 
     if (num > 0) {
-      if (taskConf.addCurrentTime) {
-        TCC.doTask('addCurrentTime')
+      if (taskConf.addCurrentTime && TCC.doTask('addCurrentTime')) {
+        // debug.log('[TCC][addCurrentTime]', 'suc')
       } else {
         player.currentTime += _num
         !notips && t.tips(i18n.t('tipsMsg.forward') + _num + i18n.t('tipsMsg.seconds'))
       }
     } else {
-      if (taskConf.subtractCurrentTime) {
-        TCC.doTask('subtractCurrentTime')
+      if (taskConf.subtractCurrentTime && TCC.doTask('subtractCurrentTime')) {
+        // debug.log('[TCC][subtractCurrentTime]', 'suc')
       } else {
         player.currentTime -= _num
         !notips && t.tips(i18n.t('tipsMsg.backward') + _num + i18n.t('tipsMsg.seconds'))
       }
     }
   },
+
   /* 设置声音大小 */
   setVolume: function (num) {
     if (!num) return
@@ -515,15 +531,26 @@ const h5Player = {
     t.tips(i18n.t('tipsMsg.volume') + parseInt(player.volume * 100) + '%')
   },
 
+  setVolumeUp (num) {
+    num = numUp(num) || 0.2
+    this.setVolume(num)
+  },
+
+  setVolumeDown (num) {
+    num = numDown(num) || -0.2
+    this.setVolume(num)
+  },
+
   /* 设置视频画面的缩放与位移 */
-  setTransform (scale, translate, transformStateGuard) {
+  setTransform (notTips) {
     const t = this
     const player = t.player()
-    scale = t.scale = typeof scale === 'undefined' ? t.scale : Number(scale).toFixed(1)
-    translate = t.translate = translate || t.translate
+    const scale = t.scale = Number(t.scale).toFixed(1)
+    const translate = t.translate
 
     const mirror = t.rotateX === 180 ? `rotateX(${t.rotateX}deg)` : (t.rotateY === 180 ? `rotateY(${t.rotateY}deg)` : '')
     player.style.transform = `scale(${scale}) translate(${translate.x}px, ${translate.y}px) rotate(${t.rotate}deg) ${mirror}`
+
     let tipsMsg = i18n.t('tipsMsg.videozoom') + `${scale * 100}%`
     if (translate.x) {
       tipsMsg += ` ${i18n.t('tipsMsg.horizontal')}${t.translate.x}px`
@@ -531,7 +558,8 @@ const h5Player = {
     if (translate.y) {
       tipsMsg += ` ${i18n.t('tipsMsg.vertical')}${t.translate.y}px`
     }
-    if (transformStateGuard === true) {
+
+    if (notTips === true) {
       /* transform状态守护调用，不进行提示 */
     } else {
       t.tips(tipsMsg)
@@ -540,30 +568,99 @@ const h5Player = {
     /* 始终保持transform样式的正常 */
     if (!t._transformStateGuard_) {
       t._transformStateGuard_ = setInterval(() => {
-        t.setTransform(t.scale, t.translate, true)
+        t.setTransform(true)
       }, 1000)
     }
+  },
+
+  /* 视频画面旋转 90 度 */
+  setRotate () {
+    const t = this
+    t.rotate += 90
+    if (t.rotate % 360 === 0) t.rotate = 0
+    t.setTransform(true)
+    t.tips(i18n.t('tipsMsg.imgrotate') + t.rotate + '°')
   },
 
   /* 设置镜像翻转 */
   setMirror (vertical = false) {
     const t = this
-    const player = t.player()
-
     let tipsMsg = ''
-    let mirror = t.rotateY === 0 ? 'rotateY(180deg)' : 'rotateY(0deg)'
     if (vertical) {
       t.rotateX = t.rotateX === 0 ? 180 : 0
-      mirror = `rotateX(${t.rotateX}deg)`
       tipsMsg += ` ${i18n.t('tipsMsg.verticalMirror')} ${t.rotateX}deg`
     } else {
       t.rotateY = t.rotateY === 0 ? 180 : 0
-      mirror = `rotateY(${t.rotateY}deg)`
       tipsMsg += ` ${i18n.t('tipsMsg.horizontalMirror')} ${t.rotateY}deg`
     }
 
-    player.style.transform = `scale(${t.scale}) translate(${t.translate.x}px, ${t.translate.y}px) ${mirror}`
+    t.setTransform(true)
     t.tips(tipsMsg)
+  },
+
+  /* 缩放视频画面 */
+  setScale (num) {
+    this.scale = num
+    this.setTransform()
+  },
+
+  /* 视频放大 +0.1 */
+  setScaleUp () {
+    this.scale += 0.1
+    this.setTransform()
+  },
+
+  /* 视频缩小 -0.1 */
+  setScaleDown () {
+    this.scale -= 0.1
+    this.setTransform()
+  },
+
+  /* 设置视频画面的位移属性 */
+  setTranslate (x, y) {
+    if (typeof x === 'number') {
+      this.translate.x = x
+    }
+
+    if (typeof y === 'number') {
+      this.translate.y = y
+    }
+
+    this.setTransform()
+  },
+
+  /* 视频画面向右平移 */
+  setTranslateRight () {
+    this.translate.x += 10
+    this.setTransform()
+  },
+
+  /* 视频画面向左平移 */
+  setTranslateLeft () {
+    this.translate.x -= 10
+    this.setTransform()
+  },
+
+  /* 视频画面向上平移 */
+  setTranslateUp () {
+    this.translate.y -= 10
+    this.setTransform()
+  },
+
+  /* 视频画面向下平移 */
+  setTranslateDown () {
+    this.translate.y += 10
+    this.setTransform()
+  },
+
+  resetTransform (notTips) {
+    const t = this
+    t.scale = 1
+    t.translate = { x: 0, y: 0 }
+    t.rotate = 0
+    t.rotateX = 0
+    t.rotateY = 0
+    t.setTransform(notTips)
   },
 
   /**
@@ -648,21 +745,23 @@ const h5Player = {
     const t = this
     const player = t.player()
     const taskConf = TCC.getTaskConfig()
-    if (taskConf.switchPlayStatus) {
-      TCC.doTask('switchPlayStatus')
+    if (taskConf.switchPlayStatus && TCC.doTask('switchPlayStatus')) {
+      // debug.log('[TCC][switchPlayStatus]', 'suc')
       return
     }
 
     if (player.paused) {
-      if (taskConf.play) {
-        TCC.doTask('play')
+      if (taskConf.play && TCC.doTask('play')) {
+        // debug.log('[TCC][play]', 'suc')
+        // 自定义播放调用成功
       } else {
         player.play()
         t.tips(i18n.t('tipsMsg.play'))
       }
     } else {
-      if (taskConf.pause) {
-        TCC.doTask('pause')
+      if (taskConf.pause && TCC.doTask('pause')) {
+        // debug.log('[TCC][pause]', 'suc')
+        // 自定义暂停调用成功
       } else {
         player.pause()
         t.tips(i18n.t('tipsMsg.pause'))
@@ -965,13 +1064,8 @@ const h5Player = {
 
   resetFilterAndTransform () {
     const t = this
-    t.scale = 1
-    t.translate = { x: 0, y: 0 }
-    t.rotate = 0
-    t.rotateX = 0
-    t.rotateY = 0
-    t.setTransform()
 
+    t.resetTransform(true)
     t.filter.reset()
     t.tips(i18n.t('tipsMsg.imgattrreset'))
   },
@@ -1036,31 +1130,29 @@ const h5Player = {
       switch (key) {
         // shift+X：视频缩小 -0.1
         case 'x' :
-          t.scale -= 0.1
+          t.setScaleDown()
           break
         // shift+C：视频放大 +0.1
         case 'c' :
-          t.scale += 0.1
+          t.setScaleUp()
           break
         // shift+Z：视频恢复正常大小
         case 'z' :
-          t.scale = 1
-          t.translate = { x: 0, y: 0 }
+          t.resetTransform()
           break
         case 'arrowright' :
-          t.translate.x += 10
+          t.setTranslateRight()
           break
         case 'arrowleft' :
-          t.translate.x -= 10
+          t.setTranslateLeft()
           break
         case 'arrowup' :
-          t.translate.y -= 10
+          t.setTranslateUp()
           break
         case 'arrowdown' :
-          t.translate.y += 10
+          t.setTranslateDown()
           break
       }
-      t.setTransform(t.scale, t.translate)
 
       // 阻止事件冒泡
       event.stopPropagation()
@@ -1079,11 +1171,11 @@ const h5Player = {
 
     // ctrl+方向键上↑：音量升高 20%
     if (event.ctrlKey && keyCode === 38) {
-      t.setVolume(0.2)
+      t.setVolumeUp(0.2)
     }
     // 方向键下↓：音量降低 20%
     if (event.ctrlKey && keyCode === 40) {
-      t.setVolume(-0.2)
+      t.setVolumeDown(-0.2)
     }
 
     // 防止其它无关组合键冲突
@@ -1100,11 +1192,11 @@ const h5Player = {
 
     // 方向键上↑：音量升高 10%
     if (keyCode === 38) {
-      t.setVolume(0.1)
+      t.setVolumeUp(0.1)
     }
     // 方向键下↓：音量降低 10%
     if (keyCode === 40) {
-      t.setVolume(-0.1)
+      t.setVolumeDown(-0.1)
     }
 
     // 空格键：暂停/播放
@@ -1132,10 +1224,6 @@ const h5Player = {
 
     // 按键F：下一帧
     if (keyCode === 70) {
-      if (window.location.hostname === 'www.netflix.com') {
-        /* netflix 的F键是全屏的意思 */
-        return
-      }
       t.freezeFrame(1)
     }
     // 按键D：上一帧
@@ -1195,10 +1283,7 @@ const h5Player = {
 
     // 按键S：画面旋转 90 度
     if (keyCode === 83) {
-      t.rotate += 90
-      if (t.rotate % 360 === 0) t.rotate = 0
-      player.style.transform = `scale(${t.scale}) translate(${t.translate.x}px, ${t.translate.y}px) rotate( ${t.rotate}deg)`
-      t.tips(i18n.t('tipsMsg.imgrotate') + t.rotate + '°')
+      t.setRotate()
     }
 
     /* 水平镜像翻转 */
@@ -1208,10 +1293,7 @@ const h5Player = {
 
     // 按键回车，进入全屏
     if (keyCode === 13) {
-      const isDo = TCC.doTask('fullScreen')
-      if (!isDo && player._fullScreen_) {
-        player._fullScreen_.toggle()
-      }
+      t.setFullScreen()
     }
 
     if (key === 'n') {
@@ -1571,6 +1653,11 @@ const h5Player = {
   },
   init: function (global) {
     var t = this
+
+    if (TCC && TCC.doTask('disable') === true) {
+      debug.info(`[TCC][disable][${location.host}] 已禁止在该网站运行视频检测逻辑，您可查看任务配置中心的相关配置了解详情`)
+      return true
+    }
 
     if (!global) {
       /* 检测是否存在H5播放器 */
