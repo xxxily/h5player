@@ -196,8 +196,8 @@ const taskConf = {
     }
   },
   'ixigua.com': {
-    fullScreen: 'xg-fullscreen.xgplayer-fullscreen',
-    webFullScreen: 'xg-cssfullscreen.xgplayer-cssfullscreen'
+    fullScreen: ['xg-fullscreen.xgplayer-fullscreen', '.xgplayer-control-item__entry[aria-label="全屏"]', '.xgplayer-control-item__entry[aria-label="退出全屏"]'],
+    webFullScreen: ['xg-cssfullscreen.xgplayer-cssfullscreen', '.xgplayer-control-item__entry[aria-label="剧场模式"]', '.xgplayer-control-item__entry[aria-label="退出剧场模式"]']
   },
   'tv.sohu.com': {
     fullScreen: 'button[data-title="网页全屏"]',
@@ -394,6 +394,7 @@ const taskConf = {
   'douyin.com': {
     fullScreen: '.xgplayer-fullscreen',
     webFullScreen: '.xgplayer-page-full-screen',
+    next: ['.xgplayer-playswitch-next'],
     init: function (h5Player, taskConf) {
       h5Player.player().setAttribute('crossOrigin', 'anonymous')
     }
@@ -401,9 +402,33 @@ const taskConf = {
   'live.douyin.com': {
     fullScreen: '.xgplayer-fullscreen',
     webFullScreen: '.xgplayer-page-full-screen',
+    next: ['.xgplayer-playswitch-next'],
     init: function (h5Player, taskConf) {
       h5Player.player().setAttribute('crossOrigin', 'anonymous')
     }
+  },
+  'zhihu.com': {
+    fullScreen: ['button[aria-label="全屏"]', 'button[aria-label="退出全屏"]'],
+    play: function (h5Player, taskConf, data) {
+      const player = h5Player.player()
+      if (player && player.parentNode && player.parentNode.parentNode) {
+        const maskWrap = player.parentNode.parentNode.querySelector('div~div:nth-child(3)')
+        if (maskWrap) {
+          const mask = maskWrap.querySelector('div')
+          if (mask && mask.innerText === '') {
+            mask.click()
+          }
+        }
+      }
+    },
+    init: function (h5Player, taskConf) {
+      h5Player.player().setAttribute('crossOrigin', 'anonymous')
+    }
+  },
+  'weibo.com': {
+    fullScreen: ['button.wbpv-fullscreen-control'],
+    // webFullScreen: ['div[title="关闭弹层"]', 'div.wbpv-open-layer-button']
+    webFullScreen: ['div.wbpv-open-layer-button']
   }
 }
 

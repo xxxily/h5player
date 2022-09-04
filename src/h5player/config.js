@@ -34,7 +34,12 @@ const globalConfig = monkeyStorageProxy('_h5playerGlobalConfig_', {
     video: {
       playbackRate: 1
     },
-    hotkeys: {}
+    hotkeys: {},
+
+    /**
+     * TODO 控制是否开启/关闭调试模式，功能带补充
+     */
+    debug: true
   },
   lspReset: false,
   storageEventListener: false

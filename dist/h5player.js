@@ -644,7 +644,12 @@ const globalConfig = monkeyStorageProxy('_h5playerGlobalConfig_', {
     video: {
       playbackRate: 1
     },
-    hotkeys: {}
+    hotkeys: {},
+
+    /**
+     * TODO 控制是否开启/关闭调试模式，功能带补充
+     */
+    debug: true
   },
   lspReset: false,
   storageEventListener: false
@@ -1394,8 +1399,8 @@ const taskConf = {
     }
   },
   'ixigua.com': {
-    fullScreen: 'xg-fullscreen.xgplayer-fullscreen',
-    webFullScreen: 'xg-cssfullscreen.xgplayer-cssfullscreen'
+    fullScreen: ['xg-fullscreen.xgplayer-fullscreen', '.xgplayer-control-item__entry[aria-label="全屏"]', '.xgplayer-control-item__entry[aria-label="退出全屏"]'],
+    webFullScreen: ['xg-cssfullscreen.xgplayer-cssfullscreen', '.xgplayer-control-item__entry[aria-label="剧场模式"]', '.xgplayer-control-item__entry[aria-label="退出剧场模式"]']
   },
   'tv.sohu.com': {
     fullScreen: 'button[data-title="网页全屏"]',
@@ -1592,6 +1597,7 @@ const taskConf = {
   'douyin.com': {
     fullScreen: '.xgplayer-fullscreen',
     webFullScreen: '.xgplayer-page-full-screen',
+    next: ['.xgplayer-playswitch-next'],
     init: function (h5Player, taskConf) {
       h5Player.player().setAttribute('crossOrigin', 'anonymous');
     }
@@ -1599,9 +1605,33 @@ const taskConf = {
   'live.douyin.com': {
     fullScreen: '.xgplayer-fullscreen',
     webFullScreen: '.xgplayer-page-full-screen',
+    next: ['.xgplayer-playswitch-next'],
     init: function (h5Player, taskConf) {
       h5Player.player().setAttribute('crossOrigin', 'anonymous');
     }
+  },
+  'zhihu.com': {
+    fullScreen: ['button[aria-label="全屏"]', 'button[aria-label="退出全屏"]'],
+    play: function (h5Player, taskConf, data) {
+      const player = h5Player.player();
+      if (player && player.parentNode && player.parentNode.parentNode) {
+        const maskWrap = player.parentNode.parentNode.querySelector('div~div:nth-child(3)');
+        if (maskWrap) {
+          const mask = maskWrap.querySelector('div');
+          if (mask && mask.innerText === '') {
+            mask.click();
+          }
+        }
+      }
+    },
+    init: function (h5Player, taskConf) {
+      h5Player.player().setAttribute('crossOrigin', 'anonymous');
+    }
+  },
+  'weibo.com': {
+    fullScreen: ['button.wbpv-fullscreen-control'],
+    // webFullScreen: ['div[title="关闭弹层"]', 'div.wbpv-open-layer-button']
+    webFullScreen: ['div.wbpv-open-layer-button']
   }
 };
 
@@ -3337,6 +3367,81 @@ function addMenu (menuOpts, before) {
   menuRegister();
 }
 
+/**
+   * 代理视频播放器的事件注册和取消注册的函数，以对注册事件进行调试或阻断
+   * @param {*} player
+   * @returns
+   */
+function proxyHTMLMediaElementEvent () {
+  if (HTMLMediaElement.prototype._rawAddEventListener_) {
+    return false
+  }
+
+  HTMLMediaElement.prototype._rawAddEventListener_ = HTMLMediaElement.prototype.addEventListener;
+  HTMLMediaElement.prototype._rawRemoveEventListener_ = HTMLMediaElement.prototype.removeEventListener;
+
+  HTMLMediaElement.prototype.addEventListener = new Proxy(HTMLMediaElement.prototype.addEventListener, {
+    apply (target, ctx, args) {
+      const eventName = args[0];
+      const listener = args[1];
+      if (listener instanceof Function) {
+        // if (typeof eventName === 'string' && !eventName.includes('mouse') && !eventName.includes('click')) {
+        //   debug.info(`[addVideoEvent][${eventName}]`, listener)
+        // }
+
+        args[1] = new Proxy(listener, {
+          apply (target, ctx, args) {
+            if (typeof eventName === 'string' && !eventName.includes('mouse') && !eventName.includes('click')) ;
+
+            if (ctx) {
+              /* 阻止调速检测，并进行反阻止 */
+              if (ctx.playbackRate && eventName === 'ratechange') {
+                if (ctx._hasBlockRatechangeEvent_) {
+                  return true
+                }
+
+                const oldRate = ctx.playbackRate;
+                const startTime = Date.now();
+
+                const result = target.apply(ctx, args);
+
+                /**
+                 * 通过判断执行ratechange前后的速率是否被改变，
+                 * 以及是否出现了超长的执行时间（可能出现了alert弹窗）来检测是否可能存在阻止调速的行为
+                 * 其他检测手段待补充
+                 */
+                const blockRatechangeBehave1 = oldRate !== ctx.playbackRate || Date.now() - startTime > 1000;
+                const blockRatechangeBehave2 = ctx._setPlaybackRate_ && ctx._setPlaybackRate_.value !== ctx.playbackRate;
+                if (blockRatechangeBehave1 || blockRatechangeBehave2) {
+                  debug.info(`[execVideoEvent][${eventName}]检测到可能存在阻止调速的行为，已禁止${eventName}事件的执行`, listener);
+                  ctx._hasBlockRatechangeEvent_ = true;
+                  return true
+                } else {
+                  return result
+                }
+              }
+            }
+
+            /* 禁止对调速事件的监听 */
+            // if (eventName === 'ratechange') {
+            //   debug.info(`[execVideoEvent][${eventName}]禁止对调速事件的监听`, listener)
+            //   return true
+            // }
+
+            try {
+              return target.apply(ctx, args)
+            } catch (e) {
+              debug.error('[proxyPlayerEvent]', e);
+            }
+          }
+        });
+      }
+
+      return target.apply(ctx, args)
+    }
+  });
+}
+
 window._debugMode_ = true;
 
 let TCC$1 = null;
@@ -3577,6 +3682,7 @@ const h5Player = {
       };
     }
   },
+
   initPlaybackRate () {
     const t = this;
     t.playbackRate = t.getPlaybackRate();
@@ -3641,7 +3747,13 @@ const h5Player = {
         get: function () {
           return curPlaybackRate
         },
-        set: function () {}
+        set: function (val) {
+          /* 记录外部设置playbackRate的信息 */
+          player._setPlaybackRate_ = {
+            time: Date.now(),
+            value: val
+          };
+        }
       });
     } catch (e) {
       debug.error('解锁playbackRate失败', e);
@@ -4082,9 +4194,10 @@ const h5Player = {
     }
   },
   tipsClassName: 'html_player_enhance_tips',
-  getTipsContainer: function () {
+
+  getTipsContainer: function (videoEl) {
     const t = h5Player;
-    const player = t.player();
+    const player = videoEl || t.player();
     // 使用getContainer获取到的父节点弊端太多，暂时弃用
     // const _tispContainer_ = player._tispContainer_  ||  getContainer(player);
 
@@ -4109,7 +4222,7 @@ const h5Player = {
     const parentNode = t.getTipsContainer();
 
     if (parentNode === player) {
-      debug.info('无法获取tips的包裹容器异常：', player, str);
+      debug.info('获取tips的包裹容器异常：', player, str);
       return false
     }
 
@@ -4828,6 +4941,51 @@ const h5Player = {
       t.tips(i18n.t('tipsMsg.playbackrestoreoff'));
     }
   },
+
+  setPlayerInstance (el) {
+    if (el && el.getBoundingClientRect) {
+      const t = h5Player;
+
+      const elParentNode = t.getTipsContainer(el);
+      const elInfo = el.getBoundingClientRect();
+      const parentElInfo = elParentNode && elParentNode.getBoundingClientRect();
+      if (elInfo && elInfo.width > 200 && parentElInfo && parentElInfo.width > 200) {
+        t.playerInstance = el;
+        t.initPlayerInstance(false);
+      }
+    }
+  },
+
+  /**
+   * 视频元素是否出现在视口里的观察对象，用于优化多视频实例的实例切换
+   * https://developer.mozilla.org/zh-CN/docs/Web/API/Intersection_Observer_API
+   */
+  intersectionObserver: new IntersectionObserver(function (entries, observer) {
+    const t = h5Player;
+    // debug.log('[intersectionObserver]', entries)
+
+    let tmpIntersectionRatio = 0;
+    entries.forEach(entrie => {
+      entrie.target._intersectionInfo_ = entrie;
+
+      if (entrie.intersectionRatio > tmpIntersectionRatio && entrie.intersectionRatio > 0.4) {
+        tmpIntersectionRatio = entrie.intersectionRatio;
+
+        const oldPlayer = t.player();
+        if (oldPlayer && oldPlayer._intersectionInfo_ && tmpIntersectionRatio < oldPlayer._intersectionInfo_.intersectionRatio) {
+          /* 新实例的视图范围比旧的小，则不切换实例 */
+          return
+        }
+
+        /* 切换视频实例 */
+        t.setPlayerInstance(entrie.target);
+        debug.log('[intersectionObserver] 切换视频实例', entrie);
+      }
+    });
+  }, {
+    threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
+  }),
+
   /**
    * 检测h5播放器是否存在
    * @param callback
@@ -4847,23 +5005,29 @@ const h5Player = {
         /* 多video实例标签的情况 */
         playerList.forEach(function (player) {
           /* 鼠标移到其上面的时候重新指定实例 */
-          if (player._hasMouseRedirectEvent_) return
-          player.addEventListener('mouseenter', function (event) {
-            t.playerInstance = event.target;
-            t.initPlayerInstance(false);
-          });
-          player._hasMouseRedirectEvent_ = true;
+          if (!player._hasMouseRedirectEvent_) {
+            player.addEventListener('mouseenter', function (event) {
+              t.setPlayerInstance(event.target);
+            });
+            player._hasMouseRedirectEvent_ = true;
+          }
 
           /* 播放器开始播放的时候重新指向实例 */
-          if (player._hasPlayingRedirectEvent_) return
-          player.addEventListener('playing', function (event) {
-            t.playerInstance = event.target;
-            t.initPlayerInstance(false);
+          if (!player._hasPlayingRedirectEvent_) {
+            player.addEventListener('playing', function (event) {
+              t.setPlayerInstance(event.target);
 
-            /* 同步之前设定的播放速度 */
-            t.setPlaybackRate();
-          });
-          player._hasPlayingRedirectEvent_ = true;
+              /* 同步之前设定的播放速度 */
+              t.setPlaybackRate();
+            });
+            player._hasPlayingRedirectEvent_ = true;
+          }
+
+          /* 当被观察到出现在浏览器视口里时，切换视频实例 */
+          if (!player._hasIntersectionObserver_) {
+            t.intersectionObserver.observe(player);
+            player._hasIntersectionObserver_ = true;
+          }
         });
       }
 
@@ -4989,6 +5153,7 @@ async function h5PlayerInit () {
     hackAttachShadow();
 
     /* 对所有事件进行接管 */
+    proxyHTMLMediaElementEvent();
     // hackEventListener()
   } catch (e) {
     console.error('h5player hack error', e);

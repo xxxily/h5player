@@ -13,6 +13,7 @@ import crossTabCtl from './crossTabCtl'
 import debug from './debug'
 import hackDefineProperty from './hackDefineProperty'
 import { menuRegister, addMenu } from './menuManager'
+import { proxyHTMLMediaElementEvent } from './hackEventListener'
 import {
   ready,
   hackAttachShadow,
@@ -275,6 +276,7 @@ const h5Player = {
       }
     }
   },
+
   initPlaybackRate () {
     const t = this
     t.playbackRate = t.getPlaybackRate()
@@ -339,7 +341,13 @@ const h5Player = {
         get: function () {
           return curPlaybackRate
         },
-        set: function () {}
+        set: function (val) {
+          /* 记录外部设置playbackRate的信息 */
+          player._setPlaybackRate_ = {
+            time: Date.now(),
+            value: val
+          }
+        }
       })
     } catch (e) {
       debug.error('解锁playbackRate失败', e)
@@ -792,9 +800,10 @@ const h5Player = {
     }
   },
   tipsClassName: 'html_player_enhance_tips',
-  getTipsContainer: function () {
+
+  getTipsContainer: function (videoEl) {
     const t = h5Player
-    const player = t.player()
+    const player = videoEl || t.player()
     // 使用getContainer获取到的父节点弊端太多，暂时弃用
     // const _tispContainer_ = player._tispContainer_  ||  getContainer(player);
 
@@ -819,7 +828,7 @@ const h5Player = {
     const parentNode = t.getTipsContainer()
 
     if (parentNode === player) {
-      debug.info('无法获取tips的包裹容器异常：', player, str)
+      debug.info('获取tips的包裹容器异常：', player, str)
       return false
     }
 
@@ -1538,6 +1547,51 @@ const h5Player = {
       t.tips(i18n.t('tipsMsg.playbackrestoreoff'))
     }
   },
+
+  setPlayerInstance (el) {
+    if (el && el.getBoundingClientRect) {
+      const t = h5Player
+
+      const elParentNode = t.getTipsContainer(el)
+      const elInfo = el.getBoundingClientRect()
+      const parentElInfo = elParentNode && elParentNode.getBoundingClientRect()
+      if (elInfo && elInfo.width > 200 && parentElInfo && parentElInfo.width > 200) {
+        t.playerInstance = el
+        t.initPlayerInstance(false)
+      }
+    }
+  },
+
+  /**
+   * 视频元素是否出现在视口里的观察对象，用于优化多视频实例的实例切换
+   * https://developer.mozilla.org/zh-CN/docs/Web/API/Intersection_Observer_API
+   */
+  intersectionObserver: new IntersectionObserver(function (entries, observer) {
+    const t = h5Player
+    // debug.log('[intersectionObserver]', entries)
+
+    let tmpIntersectionRatio = 0
+    entries.forEach(entrie => {
+      entrie.target._intersectionInfo_ = entrie
+
+      if (entrie.intersectionRatio > tmpIntersectionRatio && entrie.intersectionRatio > 0.4) {
+        tmpIntersectionRatio = entrie.intersectionRatio
+
+        const oldPlayer = t.player()
+        if (oldPlayer && oldPlayer._intersectionInfo_ && tmpIntersectionRatio < oldPlayer._intersectionInfo_.intersectionRatio) {
+          /* 新实例的视图范围比旧的小，则不切换实例 */
+          return
+        }
+
+        /* 切换视频实例 */
+        t.setPlayerInstance(entrie.target)
+        debug.log('[intersectionObserver] 切换视频实例', entrie)
+      }
+    })
+  }, {
+    threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
+  }),
+
   /**
    * 检测h5播放器是否存在
    * @param callback
@@ -1557,23 +1611,29 @@ const h5Player = {
         /* 多video实例标签的情况 */
         playerList.forEach(function (player) {
           /* 鼠标移到其上面的时候重新指定实例 */
-          if (player._hasMouseRedirectEvent_) return
-          player.addEventListener('mouseenter', function (event) {
-            t.playerInstance = event.target
-            t.initPlayerInstance(false)
-          })
-          player._hasMouseRedirectEvent_ = true
+          if (!player._hasMouseRedirectEvent_) {
+            player.addEventListener('mouseenter', function (event) {
+              t.setPlayerInstance(event.target)
+            })
+            player._hasMouseRedirectEvent_ = true
+          }
 
           /* 播放器开始播放的时候重新指向实例 */
-          if (player._hasPlayingRedirectEvent_) return
-          player.addEventListener('playing', function (event) {
-            t.playerInstance = event.target
-            t.initPlayerInstance(false)
+          if (!player._hasPlayingRedirectEvent_) {
+            player.addEventListener('playing', function (event) {
+              t.setPlayerInstance(event.target)
 
-            /* 同步之前设定的播放速度 */
-            t.setPlaybackRate()
-          })
-          player._hasPlayingRedirectEvent_ = true
+              /* 同步之前设定的播放速度 */
+              t.setPlaybackRate()
+            })
+            player._hasPlayingRedirectEvent_ = true
+          }
+
+          /* 当被观察到出现在浏览器视口里时，切换视频实例 */
+          if (!player._hasIntersectionObserver_) {
+            t.intersectionObserver.observe(player)
+            player._hasIntersectionObserver_ = true
+          }
         })
       }
 
@@ -1699,6 +1759,7 @@ async function h5PlayerInit () {
     hackAttachShadow()
 
     /* 对所有事件进行接管 */
+    proxyHTMLMediaElementEvent()
     // hackEventListener()
   } catch (e) {
     console.error('h5player hack error', e)
