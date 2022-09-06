@@ -24,8 +24,8 @@ function refreshPage (msg) {
 
 let monkeyMenuList = [
   {
-    title: '还原默认配置',
-    disable: true,
+    title: i18n.t('restoreConfiguration'),
+    disable: false,
     fn: () => {
       localStorage.removeItem('_h5playerConfig_')
       window.GM_deleteValue && window.GM_deleteValue('_h5playerGlobalConfig_')

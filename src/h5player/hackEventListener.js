@@ -91,7 +91,7 @@ function proxyHTMLMediaElementEvent () {
             try {
               return target.apply(ctx, args)
             } catch (e) {
-              debug.error('[proxyPlayerEvent]', e)
+              debug.error(`[proxyPlayerEvent][${eventName}]`, listener, e)
             }
           }
         })

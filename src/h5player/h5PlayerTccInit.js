@@ -53,6 +53,10 @@ const taskConf = {
         console.log(event, player)
       }
     },
+    /* 阻止网站自身的调速行为，增强突破调速限制的能力 */
+    blockSetPlaybackRate: true,
+    /* 阻止网站自身的播放进度控制逻辑，增强突破进度调控限制的能力 */
+    blockSetCurrentTime: true,
     /* 当前域名下需包含的路径信息，默认整个域名下所有路径可用 必须是正则 */
     include: /^.*/,
     /* 当前域名下需排除的路径信息，默认不排除任何路径 必须是正则 */
@@ -392,6 +396,7 @@ const taskConf = {
     }
   },
   'douyin.com': {
+    blockSetPlaybackRate: true,
     fullScreen: '.xgplayer-fullscreen',
     webFullScreen: '.xgplayer-page-full-screen',
     next: ['.xgplayer-playswitch-next'],
@@ -400,6 +405,7 @@ const taskConf = {
     }
   },
   'live.douyin.com': {
+    blockSetPlaybackRate: true,
     fullScreen: '.xgplayer-fullscreen',
     webFullScreen: '.xgplayer-page-full-screen',
     next: ['.xgplayer-playswitch-next'],
@@ -437,6 +443,8 @@ function h5PlayerTccInit (h5Player) {
     try {
       const task = taskConf[taskName]
       const wrapDom = h5Player.getPlayerWrapDom()
+
+      if (!task) { return }
 
       if (taskName === 'shortcuts') {
         if (isObj(task) && task.callback instanceof Function) {
