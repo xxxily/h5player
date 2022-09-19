@@ -60,7 +60,7 @@
     "rollup-plugin-node-resolve": "^5.2.0",
     "sass": "^1.51.0",
     "sass-loader": "^12.6.0",
-    "socket.io": "^2.3.0",
+    "socket.io": "^2.4.0",
     "style-loader": "^1.1.4",
     "url-join": "^4.0.1",
     "url-loader": "^4.1.0",
