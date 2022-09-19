@@ -10,8 +10,10 @@ export default {
   restoreConfiguration: '还原默认配置',
   blockSetPlaybackRate: '禁用默认速度调节逻辑',
   blockSetCurrentTime: '禁用默认播放进度控制逻辑',
+  blockSetVolume: '禁用默认音量控制逻辑',
   unblockSetPlaybackRate: '允许默认速度调节逻辑',
   unblockSetCurrentTime: '允许默认播放进度控制逻辑',
+  unblockSetVolume: '允许默认音量控制逻辑',
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '前进：',

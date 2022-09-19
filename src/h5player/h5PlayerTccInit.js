@@ -5,7 +5,7 @@ import {
   eachParentNode
 } from '../libs/utils/index'
 import debug from './debug'
-const $q = document.querySelector.bind(document)
+const $q = function (str) { return document.querySelector(str) }
 
 /**
  * 任务配置中心 Task Control Center
@@ -53,10 +53,14 @@ const taskConf = {
         console.log(event, player)
       }
     },
+
     /* 阻止网站自身的调速行为，增强突破调速限制的能力 */
     blockSetPlaybackRate: true,
     /* 阻止网站自身的播放进度控制逻辑，增强突破进度调控限制的能力 */
     blockSetCurrentTime: true,
+    /* 阻止网站自身的音量控制逻辑，排除网站自身的调音干扰 */
+    blockSetVolume: true,
+
     /* 当前域名下需包含的路径信息，默认整个域名下所有路径可用 必须是正则 */
     include: /^.*/,
     /* 当前域名下需排除的路径信息，默认不排除任何路径 必须是正则 */

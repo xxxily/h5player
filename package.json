@@ -9,12 +9,16 @@
     "h5player:prod": "npm run rollup --mode-dev --proj-h5player",
     "server": "node bin/staticService/index.js",
     "ui-dev": "webpack-dev-server --inline --config bin/webpack/webpack.dev.conf.js",
-    "ui-build": "webpack-cli --inline --config bin/webpack/webpack.prod.conf.js"
+    "ui-build": "webpack-cli --inline --config bin/webpack/webpack.prod.conf.js",
+    "docs:dev": "vuepress dev docs",
+    "docs:build": "vuepress build docs"
   },
   "dependencies": {
     "local-storage-proxy": "^4.0.3",
-    "vue": "^2.6.11"
+    "lodash": "^4.17.21",
+    "vue": "2.7.10"
   },
+  "license": "GPL",
   "devDependencies": {
     "@babel/cli": "^7.6.0",
     "@babel/core": "^7.6.0",
@@ -63,6 +67,7 @@
     "vue-loader": "^15.9.1",
     "vue-style-loader": "^4.1.2",
     "vue-template-compiler": "^2.6.11",
+    "vuepress": "^1.9.7",
     "webpack": "^4.42.1",
     "webpack-bundle-analyzer": "^3.6.1",
     "webpack-cli": "^3.3.11",

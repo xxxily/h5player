@@ -10,8 +10,10 @@ export default {
   restoreConfiguration: 'Restore default configuration',
   blockSetPlaybackRate: 'Disable default speed regulation logic',
   blockSetCurrentTime: 'Disable default playback progress control logic',
+  blockSetVolume: 'Disable default volume control logic',
   unblockSetPlaybackRate: 'Allow default speed adjustment logic',
   unblockSetCurrentTime: 'Allow default playback progress control logic',
+  unblockSetVolume: 'Allow default volume control logic',
   tipsMsg: {
     playspeed: 'Speed: ',
     forward: 'Forward: ',

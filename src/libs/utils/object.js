@@ -102,7 +102,7 @@ function merge () {
 }
 
 /**
- * 根据文本路径获取对象里面的值
+ * 根据文本路径获取对象里面的值，如需支持数组请使用lodash的get方法
  * @param obj {Object} -必选 要操作的对象
  * @param path {String} -必选 路径信息
  * @returns {*}
@@ -121,4 +121,33 @@ function getValByPath (obj, path) {
   return result
 }
 
-export { clone, forIn, getObjKeys, mergeObj, merge, getValByPath }
+/**
+ * 根据文本路径设置对象里面的值，如需支持数组请使用lodash的set方法
+ * @param obj {Object} -必选 要操作的对象
+ * @param path {String} -必选 路径信息
+ * @param val {Any} -必选 如果不传该参，最终结果会被设置为undefined
+ * @returns {Boolean} 返回true表示设置成功，否则设置失败
+ */
+function setValByPath (obj, path, val) {
+  if (!obj || !path || typeof path !== 'string') {
+    return false
+  }
+
+  let result = obj
+  const pathArr = path.split('.')
+
+  for (let i = 0; i < pathArr.length; i++) {
+    if (!result) break
+
+    if (i === pathArr.length - 1) {
+      result[pathArr[i]] = val
+      return Number.isNaN(val) ? Number.isNaN(result[pathArr[i]]) : result[pathArr[i]] === val
+    }
+
+    result = result[pathArr[i]]
+  }
+
+  return false
+}
+
+export { clone, forIn, getObjKeys, mergeObj, merge, getValByPath, setValByPath }

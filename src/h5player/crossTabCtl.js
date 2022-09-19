@@ -15,6 +15,25 @@ import {
 } from '../libs/utils/index'
 
 const crossTabCtl = {
+  /* 在进行跨Tab控制时，排除转发的快捷键，以减少对重要快捷键的干扰 */
+  excludeShortcuts (event) {
+    if (!event || typeof event.keyCode === 'undefined') {
+      return false
+    }
+
+    const excludeKeyCode = ['c', 'v', 'f', 'd']
+
+    if (event.ctrlKey || event.metaKey) {
+      const key = event.key.toLowerCase()
+      if (excludeKeyCode.includes(key)) {
+        return true
+      } else {
+        return false
+      }
+    } else {
+      return false
+    }
+  },
   /* 意外退出的时候leavepictureinpicture事件并不会被调用，所以只能通过轮询来更新画中画信息 */
   updatePictureInPictureInfo () {
     setInterval(function () {
@@ -76,7 +95,7 @@ const crossTabCtl = {
     const t = crossTabCtl
     /* 处于可编辑元素中不执行任何快捷键 */
     if (isEditableTarget(event.target)) return
-    if (t.isNeedSendCrossTabCtlEvent() && isRegisterKey(event)) {
+    if (t.isNeedSendCrossTabCtlEvent() && isRegisterKey(event) && !t.excludeShortcuts(event)) {
       // 阻止事件冒泡和默认事件
       event.stopPropagation()
       event.preventDefault()

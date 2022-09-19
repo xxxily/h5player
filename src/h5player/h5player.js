@@ -1,6 +1,5 @@
 import './comment'
-import './tips'
-import { config, globalConfig } from './config'
+import { config, globalConfig, getConfigState } from './config'
 import originalMethods from './originalMethods'
 import h5PlayerTccInit from './h5PlayerTccInit'
 import { setFakeUA } from './userAgent'
@@ -12,7 +11,7 @@ import monkeyMsg from './monkeyMsg'
 import crossTabCtl from './crossTabCtl'
 import debug from './debug'
 import hackDefineProperty from './hackDefineProperty'
-import { menuRegister, addMenu } from './menuManager'
+import { menuRegister, addMenu, registerH5playerMenus } from './menuManager'
 import { proxyHTMLMediaElementEvent } from './hackEventListener'
 import {
   ready,
@@ -30,7 +29,6 @@ import {
 } from '../libs/utils/index'
 
 import {
-  openInTab,
   isRegisterKey,
   getPageWindow,
   numUp,
@@ -38,6 +36,10 @@ import {
 } from './helper'
 
 window._debugMode_ = true
+
+/* 定义支持哪些媒体标签 */
+// const supportMediaTags = ['video', 'bwp-video', 'audio']
+const supportMediaTags = ['video', 'bwp-video']
 
 let TCC = null
 const h5Player = {
@@ -77,8 +79,10 @@ const h5Player = {
   getPlayerList: function () {
     const list = []
     function findPlayer (context) {
-      context.querySelectorAll('video').forEach(function (player) {
-        list.push(player)
+      supportMediaTags.forEach(tagName => {
+        context.querySelectorAll(tagName).forEach(function (player) {
+          list.push(player)
+        })
       })
     }
     findPlayer(document)
@@ -89,6 +93,8 @@ const h5Player = {
         findPlayer(shadowRoot)
       })
     }
+
+    // todo 对获取到list元素进行是否为媒体DOM的校验
 
     return list
   },
@@ -143,7 +149,6 @@ const h5Player = {
     t.proxyPlayerInstance(player)
 
     t.setPlaybackRate()
-    t.setVolume(null, true)
 
     /* 增加通用全屏，网页全屏api */
     player._fullScreen_ = new FullScreen(player)
@@ -160,10 +165,11 @@ const h5Player = {
     if (!player._hasPlayingInitEvent_) {
       let setPlaybackRateOnPlayingCount = 0
       player.addEventListener('playing', function (event) {
+        t.setPlaybackRate(null, true)
+
         if (setPlaybackRateOnPlayingCount === 0) {
           /* 同步之前设定的播放速度，音量等 */
           t.setPlaybackRate()
-          t.setVolume(null, true)
 
           if (isSingle === true) {
             /* 恢复播放进度和进行进度记录 */
@@ -174,7 +180,6 @@ const h5Player = {
           }
         } else {
           t.setPlaybackRate(null, true)
-          t.setVolume(null, true)
         }
         setPlaybackRateOnPlayingCount += 1
       })
@@ -209,15 +214,12 @@ const h5Player = {
     })
 
     if (debug.isDebugMode()) {
-      t.mountToGlobal()
       player.addEventListener('loadeddata', function () {
-        debug.log('video dom:', player)
-        debug.log('video url:', player.src)
-        debug.log('video duration:', player.duration)
+        debug.log(`video url: ${player.src} video duration: ${player.duration} video dom:`, player)
       })
 
       player.addEventListener('durationchange', function () {
-        debug.log('video durationchange:', player.duration)
+        debug.log(`video durationchange: ${player.duration}`)
       })
     }
   },
@@ -279,6 +281,13 @@ const h5Player = {
         debug.log('_hangUp_', name, timeout)
         player._hangUpInfo_[name] = {
           timeout: Date.now() + timeout
+        }
+      }
+
+      /* 取消挂起 */
+      player._unHangUp_ = function (name) {
+        if (player._hangUpInfo_ && player._hangUpInfo_[name]) {
+          player._hangUpInfo_[name].timeout = Date.now() - 1
         }
       }
     }
@@ -368,23 +377,49 @@ const h5Player = {
     t.playbackRate = t.getPlaybackRate()
   },
 
+  playbackRateInfo: {
+    lockTimeout: Date.now() - 1,
+    time: Date.now(),
+    /* 未初始化播放实列前，不知道倍速是多少，所以设置为-1 */
+    value: -1
+  },
+
   getPlaybackRate () {
-    let playbackRate = config.video.playbackRate
+    // let playbackRate = config.video.playbackRate
+    let playbackRate = window.localStorage.getItem('_h5_player_playback_rate_') || this.playbackRate
     if (isInIframe()) {
       playbackRate = globalConfig.video.playbackRate
     }
     return Number(Number(playbackRate).toFixed(1))
   },
 
+  /* 锁定playbackRate，禁止调速 */
+  lockPlaybackRate: function (timeout = 200) {
+    this.playbackRateInfo.lockTimeout = Date.now() + timeout
+  },
+
+  unLockPlaybackRate: function () {
+    this.playbackRateInfo.lockTimeout = Date.now() - 1
+  },
+
+  isLockPlaybackRate: function () {
+    return Date.now() - this.playbackRateInfo.lockTimeout < 0
+  },
+
   /* 设置播放速度 */
   setPlaybackRate: function (num, notips) {
+    const t = this
+    const player = t.player()
+
+    if (t.isLockPlaybackRate()) {
+      debug.info('调速能力已被锁定')
+      return false
+    }
+
     if (TCC.doTask('playbackRate')) {
       // debug.log('[TCC][playbackRate]', 'suc')
       return
     }
-
-    const t = this
-    const player = t.player()
 
     if (!player) return
 
@@ -413,11 +448,15 @@ const h5Player = {
     if (isInIframe()) {
       globalConfig.video.playbackRate = curPlaybackRate
     } else {
-      config.video.playbackRate = curPlaybackRate
+      // config.video.playbackRate = curPlaybackRate
+      window.localStorage.setItem('_h5_player_playback_rate_', curPlaybackRate)
     }
 
     delete player.playbackRate
     player.playbackRate = curPlaybackRate
+
+    t.playbackRateInfo.time = Date.now()
+    t.playbackRateInfo.value = curPlaybackRate
     player._setPlaybackRate_ = {
       time: Date.now(),
       value: curPlaybackRate
@@ -428,23 +467,27 @@ const h5Player = {
       originalMethods.Object.defineProperty.call(Object, player, 'playbackRate', {
         configurable: true,
         get: function () {
-          return playbackRateDescriptor.get.apply(player, arguments)
+          /**
+           * 在油管，如果返回的是playbackRateDescriptor.get.apply(player, arguments)，调速会出现波动和异常
+           * 暂时不知是什么原因，所以还是先返回curPlaybackRate
+           */
+          return curPlaybackRate || playbackRateDescriptor.get.apply(player, arguments)
         },
         set: function (val) {
-          if (typeof val !== 'number' || TCC.doTask('blockSetPlaybackRate') || config.enhance.blockSetPlaybackRate) {
+          if (typeof val !== 'number') {
             return false
           }
 
-          if (player.currentTime > 2 && player._setPlaybackRate_ && player._setPlaybackRate_.value !== val && Date.now() - player._setPlaybackRate_.time > 500) {
-            /* 在符合条件的情况下，允许外部设置playbackRate */
-            // debug.info('[setPlaybackRate]', val, player.currentTime)
-            t.setPlaybackRate(val)
+          if (TCC.doTask('blockSetPlaybackRate')) {
+            debug.info('调速能力已被自定义的调速任务进行处理')
+            return false
           }
 
-          /* 记录外部设置playbackRate的信息 */
-          player._setPlaybackRate_ = {
-            time: Date.now(),
-            value: val
+          if (getConfigState('enhance.blockSetPlaybackRate') === true) {
+            debug.info('调速能力已被blockSetPlaybackRate锁定')
+            return false
+          } else {
+            t.setPlaybackRate(val)
           }
         }
       })
@@ -470,19 +513,64 @@ const h5Player = {
       t.lastPlaybackRate = oldPlaybackRate
     }
 
+    t.unLockPlaybackRate()
     t.setPlaybackRate(playbackRate)
+
+    /* 防止外部调速逻辑的干扰，所以锁定一段时间 */
+    t.lockPlaybackRate(1000)
   },
 
   /* 提升播放速率 */
   setPlaybackRateUp (num) {
     num = numUp(num) || 0.1
-    this.player() && this.setPlaybackRate(this.player().playbackRate + num)
+    if (this.player()) {
+      this.unLockPlaybackRate()
+      this.setPlaybackRate(this.player().playbackRate + num)
+
+      /* 防止外部调速逻辑的干扰，所以锁定一段时间 */
+      this.lockPlaybackRate(1000)
+    }
   },
 
   /* 降低播放速率 */
   setPlaybackRateDown (num) {
     num = numDown(num) || -0.1
-    this.player() && this.setPlaybackRate(this.player().playbackRate + num)
+    if (this.player()) {
+      this.unLockPlaybackRate()
+      this.setPlaybackRate(this.player().playbackRate + num)
+
+      /* 防止外部调速逻辑的干扰，所以锁定一段时间 */
+      this.lockPlaybackRate(1000)
+    }
+  },
+
+  /**
+   * 锁定播放进度的控制逻辑
+   * 跟锁定音量和倍速不一样，播放进度是跟视频实例有密切相关的，所以其锁定信息必须依附于播放实例
+   */
+  lockSetCurrentTime: function (timeout = 200) {
+    const player = this.player()
+    if (player) {
+      player.currentTimeInfo = player.currentTimeInfo || {}
+      player.currentTimeInfo.lockTimeout = Date.now() + timeout
+    }
+  },
+
+  unLockSetCurrentTime: function () {
+    const player = this.player()
+    if (player) {
+      player.currentTimeInfo = player.currentTimeInfo || {}
+      player.currentTimeInfo.lockTimeout = Date.now() - 1
+    }
+  },
+
+  isLockSetCurrentTime: function () {
+    const player = this.player()
+    if (player && player.currentTimeInfo && player.currentTimeInfo.lockTimeout) {
+      return Date.now() - player.currentTimeInfo.lockTimeout < 0
+    } else {
+      return false
+    }
   },
 
   /* 设置播放进度 */
@@ -493,6 +581,11 @@ const h5Player = {
 
     const t = this
     const player = t.player()
+
+    if (t.isLockSetCurrentTime()) {
+      return false
+    }
+
     if (TCC.doTask('currentTime')) {
       // debug.log('[TCC][currentTime]', 'suc')
       return
@@ -500,9 +593,9 @@ const h5Player = {
 
     delete player.currentTime
     player.currentTime = _num
-    player._setCurrentTime_ = {
-      time: Date.now()
-    }
+    player.currentTimeInfo = player.currentTimeInfo || {}
+    player.currentTimeInfo.time = Date.now()
+    player.currentTimeInfo.value = _num
 
     try {
       const currentTimeDescriptor = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'currentTime')
@@ -513,23 +606,18 @@ const h5Player = {
           return currentTimeDescriptor.get.apply(player, arguments)
         },
         set: function (val) {
-          if (typeof val !== 'number' || TCC.doTask('blockSetCurrentTime') || config.enhance.blockSetCurrentTime) {
-            return
+          if (typeof val !== 'number' || TCC.doTask('blockSetCurrentTime') || getConfigState('enhance.blockSetCurrentTime') === true) {
+            return false
           }
 
-          if (player._setCurrentTime_ && player.currentTime !== val && Date.now() - player._setCurrentTime_.time > 500) {
-            /* 在符合条件的情况下，允许外部设置currentTime */
-            // debug.log('[currentTime]', val)
-            player._setCurrentTime_ = { time: Date.now() }
-            return currentTimeDescriptor.set.apply(player, arguments)
-          } else {
-            debug.log(`[currentTime block] 检测到潜在的阻断currentTime变更的情况，已对该操作进行过滤, currentTime: ${val}`)
+          if (t.isLockSetCurrentTime()) {
+            return false
           }
 
-          /* 记录外部设置currentTime的信息 */
-          player._setCurrentTime_ = {
-            time: Date.now()
-          }
+          player.currentTimeInfo.time = Date.now()
+          player.currentTimeInfo.value = val
+
+          return currentTimeDescriptor.set.apply(player, arguments)
         }
       })
     } catch (e) {
@@ -543,8 +631,15 @@ const h5Player = {
     if (TCC.doTask('addCurrentTime')) {
       // debug.log('[TCC][addCurrentTime]', 'suc')
     } else {
-      this.player() && this.setCurrentTime(this.player().currentTime + num)
-      this.tips(i18n.t('tipsMsg.forward') + num + i18n.t('tipsMsg.seconds'))
+      if (this.player()) {
+        this.unLockSetCurrentTime()
+        this.setCurrentTime(this.player().currentTime + num)
+
+        /* 防止外部进度控制逻辑的干扰，所以锁定一段时间 */
+        this.lockSetCurrentTime(500)
+
+        this.tips(i18n.t('tipsMsg.forward') + num + i18n.t('tipsMsg.seconds'))
+      }
     }
   },
 
@@ -554,9 +649,23 @@ const h5Player = {
     if (TCC.doTask('subtractCurrentTime')) {
       // debug.log('[TCC][subtractCurrentTime]', 'suc')
     } else {
-      this.player() && this.setCurrentTime(this.player().currentTime + num)
-      this.tips(i18n.t('tipsMsg.backward') + Math.abs(num) + i18n.t('tipsMsg.seconds'))
+      if (this.player()) {
+        this.unLockSetCurrentTime()
+        this.setCurrentTime(this.player().currentTime + num)
+
+        /* 防止外部进度控制逻辑的干扰，所以锁定一段时间 */
+        this.lockSetCurrentTime(500)
+
+        this.tips(i18n.t('tipsMsg.backward') + Math.abs(num) + i18n.t('tipsMsg.seconds'))
+      }
     }
+  },
+
+  volumeInfo: {
+    lockTimeout: Date.now() - 1,
+    time: Date.now(),
+    /* 未初始化播放实列前，不知道音量是多少，所以设置为-1 */
+    value: -1
   },
 
   getVolume: function () {
@@ -567,10 +676,27 @@ const h5Player = {
     return Number(Number(volume).toFixed(2))
   },
 
+  /* 锁定音量，禁止调音 */
+  lockVolume: function (timeout = 200) {
+    this.volumeInfo.lockTimeout = Date.now() + timeout
+  },
+
+  unLockVolume: function () {
+    this.volumeInfo.lockTimeout = Date.now() - 1
+  },
+
+  isLockVolume: function () {
+    return Date.now() - this.volumeInfo.lockTimeout < 0
+  },
+
   /* 设置声音大小 */
   setVolume: function (num, notips) {
     const t = this
     const player = t.player()
+
+    if (t.isLockVolume()) {
+      return false
+    }
 
     if (!num && num !== 0) {
       num = t.getVolume()
@@ -593,10 +719,8 @@ const h5Player = {
 
     delete player.volume
     player.volume = num
-    player._setVolume_ = {
-      time: Date.now(),
-      value: num
-    }
+    t.volumeInfo.time = Date.now()
+    t.volumeInfo.value = num
 
     try {
       const volumeDescriptor = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'volume')
@@ -610,16 +734,10 @@ const h5Player = {
             return false
           }
 
-          if (player.currentTime > 2 && player._setVolume_ && player._setVolume_.value !== val && Date.now() - player._setVolume_.time > 500) {
-            /* 在符合条件的情况下，允许外部设置播放声音 */
-            // debug.info('[setVolume]', val, player.currentTime)
+          if (TCC.doTask('blockSetVolume') || getConfigState('enhance.blockSetVolume') === true) {
+            return false
+          } else {
             t.setVolume(val)
-          }
-
-          /* 记录外部设置声音的信息 */
-          player._setVolume_ = {
-            time: Date.now(),
-            value: val
           }
         }
       })
@@ -635,25 +753,37 @@ const h5Player = {
 
   setVolumeUp (num) {
     num = numUp(num) || 0.2
-    this.player() && this.setVolume(this.player().volume + num)
+    if (this.player()) {
+      this.unLockVolume()
+      this.setVolume(this.player().volume + num)
+
+      /* 防止外部调音逻辑的干扰，所以锁定一段时间 */
+      this.lockVolume(500)
+    }
   },
 
   setVolumeDown (num) {
     num = numDown(num) || -0.2
-    this.player() && this.setVolume(this.player().volume + num)
+    if (this.player()) {
+      this.unLockVolume()
+      this.setVolume(this.player().volume + num)
+
+      /* 防止外部调音逻辑的干扰，所以锁定一段时间 */
+      this.lockVolume(500)
+    }
   },
 
   /* 设置视频画面的缩放与位移 */
   setTransform (notTips) {
     const t = this
     const player = t.player()
-    const scale = t.scale = Number(t.scale).toFixed(1)
+    const scale = t.scale = Number(t.scale).toFixed(2)
     const translate = t.translate
 
     const mirror = t.rotateX === 180 ? `rotateX(${t.rotateX}deg)` : (t.rotateY === 180 ? `rotateY(${t.rotateY}deg)` : '')
     player.style.transform = `scale(${scale}) translate(${translate.x}px, ${translate.y}px) rotate(${t.rotate}deg) ${mirror}`
 
-    let tipsMsg = i18n.t('tipsMsg.videozoom') + `${scale * 100}%`
+    let tipsMsg = i18n.t('tipsMsg.videozoom') + `${(scale * 100).toFixed(0)}%`
     if (translate.x) {
       tipsMsg += ` ${i18n.t('tipsMsg.horizontal')}${t.translate.x}px`
     }
@@ -708,13 +838,13 @@ const h5Player = {
 
   /* 视频放大 +0.1 */
   setScaleUp () {
-    this.scale += 0.1
+    this.scale += 0.05
     this.setTransform()
   },
 
   /* 视频缩小 -0.1 */
   setScaleDown () {
-    this.scale -= 0.1
+    this.scale -= 0.05
     this.setTransform()
   },
 
@@ -856,6 +986,12 @@ const h5Player = {
         // debug.log('[TCC][play]', 'suc')
         // 自定义播放调用成功
       } else {
+        /* 挂起其它逻辑的暂停操作，确保播放状态生效 */
+        if (player._hangUp_ instanceof Function) {
+          player._hangUp_('pause', 400)
+          player._unHangUp_('play')
+        }
+
         player.play()
         t.tips(i18n.t('tipsMsg.play'))
       }
@@ -864,6 +1000,12 @@ const h5Player = {
         // debug.log('[TCC][pause]', 'suc')
         // 自定义暂停调用成功
       } else {
+        /* 挂起其它逻辑的播放操作，确保暂停状态生效 */
+        if (player._hangUp_ instanceof Function) {
+          player._hangUp_('play', 400)
+          player._unHangUp_('pause')
+        }
+
         player.pause()
         t.tips(i18n.t('tipsMsg.pause'))
       }
@@ -1294,11 +1436,11 @@ const h5Player = {
 
     // 方向键上↑：音量升高 10%
     if (keyCode === 38) {
-      t.setVolumeUp(0.1)
+      t.setVolumeUp(0.05)
     }
     // 方向键下↓：音量降低 10%
     if (keyCode === 40) {
-      t.setVolumeDown(-0.1)
+      t.setVolumeDown(-0.05)
     }
 
     // 空格键：暂停/播放
@@ -1623,8 +1765,9 @@ const h5Player = {
     }
     recorder(player)
   },
+
   /* 设置播放进度 */
-  setPlayProgress: function (player, time) {
+  setPlayProgress: function (player) {
     const t = h5Player
     if (!player) return
 
@@ -1685,57 +1828,6 @@ const h5Player = {
     threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
   }),
 
-  /* 注册H5player相关的菜单 */
-  registerH5playerMenus () {
-    const t = this
-    const player = t.player()
-
-    if (player && !t._hasRegisterH5playerMenus_) {
-      const menus = [
-        {
-          title: () => i18n.t('openCrossOriginFramePage'),
-          disable: !isInCrossOriginFrame(),
-          fn: () => {
-            openInTab(location.href)
-          }
-        },
-        {
-          title: () => config.enhance.blockSetPlaybackRate ? i18n.t('unblockSetPlaybackRate') : i18n.t('blockSetPlaybackRate'),
-          fn: () => {
-            const confirm = window.confirm(config.enhance.blockSetPlaybackRate ? i18n.t('unblockSetPlaybackRate') : i18n.t('blockSetPlaybackRate'))
-            if (confirm) {
-              config.enhance.blockSetPlaybackRate = !config.enhance.blockSetPlaybackRate
-            }
-          }
-        },
-        {
-          title: () => config.enhance.blockSetCurrentTime ? i18n.t('unblockSetCurrentTime') : i18n.t('blockSetCurrentTime'),
-          fn: () => {
-            const confirm = window.confirm(config.enhance.blockSetCurrentTime ? i18n.t('unblockSetCurrentTime') : i18n.t('blockSetCurrentTime'))
-            if (confirm) {
-              config.enhance.blockSetCurrentTime = !config.enhance.blockSetCurrentTime
-            }
-          }
-        }
-      ]
-
-      let titlePrefix = ''
-      if (isInIframe()) {
-        titlePrefix = `[${location.hostname}]`
-      }
-
-      /* 补充title前缀 */
-      menus.forEach(menu => {
-        const titleFn = menu.title
-        menu.title = () => titlePrefix + titleFn()
-      })
-
-      addMenu(menus)
-
-      t._hasRegisterH5playerMenus_ = true
-    }
-  },
-
   /**
    * 检测h5播放器是否存在
    * @param callback
@@ -1745,38 +1837,38 @@ const h5Player = {
     const playerList = t.getPlayerList()
 
     if (playerList.length) {
-      debug.log('检测到HTML5视频！', location.href, h5Player)
+      debug.log('检测到HTML5视频！', location.href, h5Player, playerList)
 
       /* 单video实例标签的情况 */
       if (playerList.length === 1) {
         t.playerInstance = playerList[0]
         t.initPlayerInstance(true)
-      } else {
-        /* 多video实例标签的情况 */
-        playerList.forEach(function (player) {
-          /* 鼠标移到其上面的时候重新指定实例 */
-          if (!player._hasMouseRedirectEvent_) {
-            player.addEventListener('mouseenter', function (event) {
-              t.setPlayerInstance(event.target)
-            })
-            player._hasMouseRedirectEvent_ = true
-          }
-
-          /* 播放器开始播放的时候重新指向实例 */
-          if (!player._hasPlayingRedirectEvent_) {
-            player.addEventListener('playing', function (event) {
-              t.setPlayerInstance(event.target)
-            })
-            player._hasPlayingRedirectEvent_ = true
-          }
-
-          /* 当被观察到出现在浏览器视口里时，切换视频实例 */
-          if (!player._hasIntersectionObserver_) {
-            t.intersectionObserver.observe(player)
-            player._hasIntersectionObserver_ = true
-          }
-        })
       }
+
+      /* 多video实例标签的情况 */
+      playerList.forEach(function (player) {
+        /* 鼠标移到其上面的时候重新指定实例 */
+        if (!player._hasMouseRedirectEvent_) {
+          player.addEventListener('mouseenter', function (event) {
+            t.setPlayerInstance(event.target)
+          })
+          player._hasMouseRedirectEvent_ = true
+        }
+
+        /* 播放器开始播放的时候重新指向实例 */
+        if (!player._hasPlayingRedirectEvent_) {
+          player.addEventListener('playing', function (event) {
+            t.setPlayerInstance(event.target)
+          })
+          player._hasPlayingRedirectEvent_ = true
+        }
+
+        /* 当被观察到出现在浏览器视口里时，切换视频实例 */
+        if (!player._hasIntersectionObserver_) {
+          t.intersectionObserver.observe(player)
+          player._hasIntersectionObserver_ = true
+        }
+      })
 
       if (isInCrossOriginFrame()) {
         /* 广播检测到H5Player的消息 */
@@ -1785,7 +1877,7 @@ const h5Player = {
         })
       }
 
-      t.registerH5playerMenus()
+      registerH5playerMenus(h5Player)
     }
   },
 
@@ -1890,6 +1982,10 @@ const h5Player = {
     document.addEventListener('visibilitychange', function () {
       h5Player.initAutoPlay()
     })
+
+    if (debug.isDebugMode()) {
+      t.mountToGlobal()
+    }
   }
 }
 
@@ -1915,32 +2011,30 @@ async function h5PlayerInit () {
     h5Player.init(true)
 
     /* 检测到有视频标签就进行初始化 */
-    ready('video', function () {
-      h5Player.init()
-    })
-
-    /* 兼容B站的bwp播放器 */
-    ready('bwp-video', function () {
-      h5Player.init()
+    supportMediaTags.forEach(tagName => {
+      ready(tagName, function () {
+        h5Player.init()
+      })
     })
 
     /* 检测shadow dom 下面的video */
     document.addEventListener('addShadowRoot', function (e) {
       const shadowRoot = e.detail.shadowRoot
-      ready('video', function (element) {
-        h5Player.init()
-      }, shadowRoot)
-
-      /* 兼容B站的bwp播放器 */
-      ready('bwp-video', function (element) {
-        h5Player.init()
-      }, shadowRoot)
+      supportMediaTags.forEach(tagName => {
+        ready(tagName, function (element) {
+          h5Player.init()
+        }, shadowRoot)
+      })
     })
 
     /* 初始化跨Tab控制逻辑 */
     crossTabCtl.init()
 
-    debug.log('h5Player init suc', window, globalConfig)
+    if (isInIframe()) {
+      debug.log('h5Player init suc, in iframe:', window, window.location.href)
+    } else {
+      debug.log('h5Player init suc', window, h5Player)
+    }
 
     if (isInCrossOriginFrame()) {
       debug.log('当前处于跨域受限的iframe中，h5Player部分功能可能无法正常开启', window.location.href)
