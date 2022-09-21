@@ -1,5 +1,5 @@
 import './comment'
-import { config, globalConfig, getConfigState } from './config'
+import configManager from './configManager'
 import originalMethods from './originalMethods'
 import h5PlayerTccInit from './h5PlayerTccInit'
 import { setFakeUA } from './userAgent'
@@ -19,8 +19,6 @@ import {
   isObj,
   quickSort,
   eachParentNode,
-  fakeUA,
-  userAgentMap,
   isInIframe,
   isInCrossOriginFrame,
   isEditableTarget,
@@ -43,6 +41,7 @@ const supportMediaTags = ['video', 'bwp-video']
 
 let TCC = null
 const h5Player = {
+  configManager,
   /* 提示文本的字号 */
   fontSize: 12,
   enable: true,
@@ -60,8 +59,8 @@ const h5Player = {
   /* 垂直镜像翻转, 0 或 180 */
   rotateX: 0,
 
-  playbackRate: config.video.playbackRate,
-  volume: config.video.volume,
+  playbackRate: configManager.get('media.playbackRate'),
+  volume: configManager.get('media.volume'),
   lastPlaybackRate: 1,
   /* 快进快退步长 */
   skipStep: 5,
@@ -166,6 +165,11 @@ const h5Player = {
       let setPlaybackRateOnPlayingCount = 0
       player.addEventListener('playing', function (event) {
         t.setPlaybackRate(null, true)
+
+        /* 同步播放音量 */
+        if (configManager.get('enhance.blockSetVolume') === true && event.target.muted === false) {
+          t.setVolume(configManager.getGlobalStorage('media.volume'), true)
+        }
 
         if (setPlaybackRateOnPlayingCount === 0) {
           /* 同步之前设定的播放速度，音量等 */
@@ -304,19 +308,28 @@ const h5Player = {
 
     /* 注册开启禁止自动播放的控制菜单 */
     if (taskConf.autoPlay) {
+      if (configManager.getLocalStorage('media.autoPlay') === null) {
+        configManager.setLocalStorage('media.autoPlay', true)
+      }
+
       addMenu({
-        title: () => config.video.autoPlay ? i18n.t('disableInitAutoPlay') : i18n.t('enableInitAutoPlay'),
+        title: () => configManager.getLocalStorage('media.autoPlay') ? i18n.t('disableInitAutoPlay') : i18n.t('enableInitAutoPlay'),
         fn: () => {
-          const confirm = window.confirm(config.video.autoPlay ? i18n.t('disableInitAutoPlay') : i18n.t('enableInitAutoPlay'))
+          const confirm = window.confirm(configManager.getLocalStorage('media.autoPlay') ? i18n.t('disableInitAutoPlay') : i18n.t('enableInitAutoPlay'))
           if (confirm) {
-            config.video.autoPlay = !config.video.autoPlay
+            const autoPlay = configManager.getLocalStorage('media.autoPlay')
+            if (autoPlay === null) {
+              alert(i18n.t('configFail'))
+            } else {
+              configManager.setLocalStorage('media.autoPlay', !autoPlay)
+            }
           }
         }
       })
     }
 
     // 在轮询重试的时候，如果实例变了，或处于隐藏页面中则不进行自动播放操作
-    if (!config.video.autoPlay || (!p && t.hasInitAutoPlay) || !player || (p && p !== t.player()) || document.hidden) {
+    if (!configManager.get('media.autoPlay') || (!p && t.hasInitAutoPlay) || !player || (p && p !== t.player()) || document.hidden) {
       return false
     }
 
@@ -329,7 +342,7 @@ const h5Player = {
       return false
     }
 
-    if (!taskConf.autoPlay || window.localStorage.getItem('_disableInitAutoPlay_')) {
+    if (!taskConf.autoPlay) {
       return false
     }
 
@@ -385,10 +398,12 @@ const h5Player = {
   },
 
   getPlaybackRate () {
-    // let playbackRate = config.video.playbackRate
-    let playbackRate = window.localStorage.getItem('_h5_player_playback_rate_') || this.playbackRate
+    let playbackRate = configManager.get('media.playbackRate') || this.playbackRate
     if (isInIframe()) {
-      playbackRate = globalConfig.video.playbackRate
+      const globalPlaybackRate = configManager.getGlobalStorage('media.playbackRate')
+      if (globalPlaybackRate) {
+        playbackRate = globalPlaybackRate
+      }
     }
     return Number(Number(playbackRate).toFixed(1))
   },
@@ -446,10 +461,9 @@ const h5Player = {
     /* 记录播放速度的信息 */
     t.playbackRate = curPlaybackRate
     if (isInIframe()) {
-      globalConfig.video.playbackRate = curPlaybackRate
+      configManager.setGlobalStorage('media.playbackRate', curPlaybackRate)
     } else {
-      // config.video.playbackRate = curPlaybackRate
-      window.localStorage.setItem('_h5_player_playback_rate_', curPlaybackRate)
+      configManager.set('media.playbackRate', curPlaybackRate)
     }
 
     delete player.playbackRate
@@ -483,7 +497,7 @@ const h5Player = {
             return false
           }
 
-          if (getConfigState('enhance.blockSetPlaybackRate') === true) {
+          if (configManager.get('enhance.blockSetPlaybackRate') === true) {
             debug.info('调速能力已被blockSetPlaybackRate锁定')
             return false
           } else {
@@ -606,7 +620,7 @@ const h5Player = {
           return currentTimeDescriptor.get.apply(player, arguments)
         },
         set: function (val) {
-          if (typeof val !== 'number' || TCC.doTask('blockSetCurrentTime') || getConfigState('enhance.blockSetCurrentTime') === true) {
+          if (typeof val !== 'number' || TCC.doTask('blockSetCurrentTime') || configManager.get('enhance.blockSetCurrentTime') === true) {
             return false
           }
 
@@ -669,9 +683,12 @@ const h5Player = {
   },
 
   getVolume: function () {
-    let volume = config.video.volume
-    if (isInIframe()) {
-      volume = globalConfig.video.volume
+    let volume = configManager.get('media.volume')
+    if (isInIframe() || configManager.get('enhance.blockSetVolume') === true) {
+      const globalVolume = configManager.getGlobalStorage('media.volume')
+      if (globalVolume !== null) {
+        volume = globalVolume
+      }
     }
     return Number(Number(volume).toFixed(2))
   },
@@ -711,10 +728,10 @@ const h5Player = {
 
     /* 记录播放音量信息 */
     t.volume = num
-    if (isInIframe()) {
-      globalConfig.video.volume = num
+    if (isInIframe() || configManager.get('enhance.blockSetVolume') === true) {
+      configManager.setGlobalStorage('media.volume', num)
     } else {
-      config.video.volume = num
+      configManager.setLocalStorage('media.volume', num)
     }
 
     delete player.volume
@@ -734,7 +751,7 @@ const h5Player = {
             return false
           }
 
-          if (TCC.doTask('blockSetVolume') || getConfigState('enhance.blockSetVolume') === true) {
+          if (TCC.doTask('blockSetVolume') || configManager.get('enhance.blockSetVolume') === true) {
             return false
           } else {
             t.setVolume(val)
@@ -950,26 +967,6 @@ const h5Player = {
     if (!isDo) {
       debug.log('当前网页不支持一键播放下个视频功能~')
     }
-  },
-
-  setFakeUA (ua) {
-    ua = ua || userAgentMap.iPhone.safari
-
-    /* 记录设定的ua信息 */
-    !isInCrossOriginFrame() && window.localStorage.setItem('_h5_player_user_agent_', ua)
-    fakeUA(ua)
-  },
-
-  /* ua伪装切换开关 */
-  switchFakeUA (ua) {
-    const customUA = isInCrossOriginFrame() ? null : window.localStorage.getItem('_h5_player_user_agent_')
-    if (customUA) {
-      !isInCrossOriginFrame() && window.localStorage.removeItem('_h5_player_user_agent_')
-    } else {
-      this.setFakeUA(ua)
-    }
-
-    debug.log('ua', navigator.userAgent)
   },
 
   /* 切换播放状态 */
@@ -1629,11 +1626,6 @@ const h5Player = {
     /* 处于可编辑元素中不执行任何快捷键 */
     if (isEditableTarget(event.target)) return
 
-    /* shift+f 切换UA伪装 */
-    if (event.shiftKey && keyCode === 70) {
-      t.switchFakeUA()
-    }
-
     /* 未用到的按键不进行任何事件监听 */
     if (!isRegisterKey(event)) return
 
@@ -1692,16 +1684,7 @@ const h5Player = {
    * @param player -可选 对应的h5 播放器对象， 如果不传，则获取到的是整个播放进度表，传则获取当前播放器的播放进度
    */
   getPlayProgress: function (player) {
-    let progressMap = isInCrossOriginFrame() ? null : window.localStorage.getItem('_h5_player_play_progress_')
-    if (!progressMap) {
-      progressMap = {}
-    } else {
-      try {
-        progressMap = JSON.parse(progressMap)
-      } catch (e) {
-        progressMap = {}
-      }
-    }
+    const progressMap = isInCrossOriginFrame() ? {} : configManager.get('media.progress') || {}
 
     if (!player) {
       return progressMap
@@ -1757,7 +1740,7 @@ const h5Player = {
         }
 
         /* 存储播放进度表 */
-        !isInCrossOriginFrame() && window.localStorage.setItem('_h5_player_play_progress_', JSON.stringify(progressMap))
+        !isInCrossOriginFrame() && configManager.setLocalStorage('media.progress', progressMap)
 
         /* 循环侦听 */
         recorder(player)

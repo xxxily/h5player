@@ -4,7 +4,7 @@ heroImage: /assets/img/logo.png
 heroText: HTML5视频增强脚本
 tagline: h5player for tampermonkey
 actionText: 快速开始 →
-actionLink: /handbook/
+actionLink: /home/
 features:
 - title: 兼容广泛
   details: 视频增强脚本，几乎支持所有H5视频网站，兼容广泛，所有存在video标签的网页均支持 即使嵌在 iframe、shadowdom下均可兼容

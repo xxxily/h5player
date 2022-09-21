@@ -14,6 +14,7 @@ export default {
   unblockSetPlaybackRate: 'Allow default speed adjustment logic',
   unblockSetCurrentTime: 'Allow default playback progress control logic',
   unblockSetVolume: 'Allow default volume control logic',
+  configFail: 'Configuration failed',
   tipsMsg: {
     playspeed: 'Speed: ',
     forward: 'Forward: ',

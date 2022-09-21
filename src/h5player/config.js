@@ -1,4 +1,4 @@
-// import localStorageProxy from 'local-storage-proxy'
+import localStorageProxy from 'local-storage-proxy'
 import monkeyStorageProxy from './monkeyStorageProxy'
 import fixState from './fixState'
 import {
@@ -77,14 +77,13 @@ const defGlobalConfig = {
   debug: true
 }
 
-const config = defConfig
-
+let config = defConfig
 try {
-  // config = localStorageProxy('_h5playerConfig_', {
-  //   defaults: defConfig,
-  //   lspReset: false,
-  //   storageEventListener: false
-  // })
+  config = localStorageProxy('_h5playerConfig_', {
+    defaults: defConfig,
+    lspReset: false,
+    storageEventListener: false
+  })
 } catch (e) {
   console.error('localStorageProxy error:', e)
 }
@@ -96,7 +95,7 @@ const globalConfig = monkeyStorageProxy('_h5playerGlobalConfig_', {
 })
 
 /* 修复配置项状态管理器的配置项同步异常问题 */
-// fixState(config, defConfig)
+fixState(config, defConfig)
 fixState(globalConfig, defGlobalConfig)
 
 /**

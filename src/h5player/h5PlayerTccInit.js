@@ -400,7 +400,6 @@ const taskConf = {
     }
   },
   'douyin.com': {
-    blockSetPlaybackRate: true,
     fullScreen: '.xgplayer-fullscreen',
     webFullScreen: '.xgplayer-page-full-screen',
     next: ['.xgplayer-playswitch-next'],
@@ -409,7 +408,6 @@ const taskConf = {
     }
   },
   'live.douyin.com': {
-    blockSetPlaybackRate: true,
     fullScreen: '.xgplayer-fullscreen',
     webFullScreen: '.xgplayer-page-full-screen',
     next: ['.xgplayer-playswitch-next'],

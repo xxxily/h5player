@@ -14,6 +14,7 @@ export default {
   unblockSetPlaybackRate: 'Разрешить логику регулировки скорости по умолчанию',
   unblockSetCurrentTime: 'Разрешить логику управления ходом воспроизведения по умолчанию',
   unblockSetVolume: 'Разрешить логику управления громкостью по умолчанию',
+  configFail: 'Ошибка конфигурации',
   tipsMsg: {
     playspeed: 'Скорость: ',
     forward: 'Вперёд: ',

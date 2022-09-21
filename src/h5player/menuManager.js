@@ -8,8 +8,7 @@
  */
 import i18n from './i18n'
 import monkeyMenu from './monkeyMenu'
-import { config, globalConfig, setConfigState } from './config'
-import debug from './debug'
+import configManager from './configManager'
 import { openInTab } from './helper'
 import {
   isInIframe,
@@ -17,8 +16,6 @@ import {
 } from '../libs/utils/index'
 
 function refreshPage (msg) {
-  debug.log('[config]', JSON.stringify(config, null, 2))
-
   msg = msg || '配置已更改，马上刷新页面让配置生效？'
   const status = confirm(msg)
   if (status) {
@@ -31,8 +28,7 @@ let monkeyMenuList = [
     title: i18n.t('restoreConfiguration'),
     disable: false,
     fn: () => {
-      localStorage.removeItem('_h5playerConfig_')
-      window.GM_deleteValue && window.GM_deleteValue('_h5playerGlobalConfig_')
+      configManager.clear()
       refreshPage()
     }
   },
@@ -109,30 +105,30 @@ export function registerH5playerMenus (h5player) {
         }
       },
       {
-        title: () => setConfigState('enhance.blockSetPlaybackRate') ? i18n.t('unblockSetPlaybackRate') : i18n.t('blockSetPlaybackRate'),
+        title: () => configManager.get('enhance.blockSetPlaybackRate') ? i18n.t('unblockSetPlaybackRate') : i18n.t('blockSetPlaybackRate'),
         fn: () => {
-          const confirm = window.confirm(setConfigState('enhance.blockSetPlaybackRate') ? i18n.t('unblockSetPlaybackRate') : i18n.t('blockSetPlaybackRate'))
+          const confirm = window.confirm(configManager.get('enhance.blockSetPlaybackRate') ? i18n.t('unblockSetPlaybackRate') : i18n.t('blockSetPlaybackRate'))
           if (confirm) {
             /* 倍速参数，只能全局设置 */
-            globalConfig.enhance.blockSetPlaybackRate = config.enhance.blockSetPlaybackRate = !setConfigState('enhance.blockSetPlaybackRate')
+            configManager.setGlobalStorage('enhance.blockSetPlaybackRate', !configManager.get('enhance.blockSetPlaybackRate'))
           }
         }
       },
       {
-        title: () => config.enhance.blockSetCurrentTime ? i18n.t('unblockSetCurrentTime') : i18n.t('blockSetCurrentTime'),
+        title: () => configManager.get('enhance.blockSetCurrentTime') ? i18n.t('unblockSetCurrentTime') : i18n.t('blockSetCurrentTime'),
         fn: () => {
-          const confirm = window.confirm(config.enhance.blockSetCurrentTime ? i18n.t('unblockSetCurrentTime') : i18n.t('blockSetCurrentTime'))
+          const confirm = window.confirm(configManager.get('enhance.blockSetCurrentTime') ? i18n.t('unblockSetCurrentTime') : i18n.t('blockSetCurrentTime'))
           if (confirm) {
-            config.enhance.blockSetCurrentTime = !config.enhance.blockSetCurrentTime
+            configManager.setLocalStorage('enhance.blockSetCurrentTime', !configManager.get('enhance.blockSetCurrentTime'))
           }
         }
       },
       {
-        title: () => config.enhance.blockSetVolume ? i18n.t('unblockSetVolume') : i18n.t('blockSetVolume'),
+        title: () => configManager.get('enhance.blockSetVolume') ? i18n.t('unblockSetVolume') : i18n.t('blockSetVolume'),
         fn: () => {
-          const confirm = window.confirm(config.enhance.blockSetVolume ? i18n.t('unblockSetVolume') : i18n.t('blockSetVolume'))
+          const confirm = window.confirm(configManager.get('enhance.blockSetVolume') ? i18n.t('unblockSetVolume') : i18n.t('blockSetVolume'))
           if (confirm) {
-            config.enhance.blockSetVolume = !config.enhance.blockSetVolume
+            configManager.setLocalStorage('enhance.blockSetVolume', !configManager.get('enhance.blockSetVolume'))
           }
         }
       }

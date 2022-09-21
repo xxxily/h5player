@@ -14,6 +14,7 @@ export default {
   unblockSetPlaybackRate: '允許默認速度調節邏輯',
   unblockSetCurrentTime: '允許默認播放進度控制邏輯',
   unblockSetVolume: '允許默認音量控制邏輯',
+  configFail: '配置失敗',
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '向前：',

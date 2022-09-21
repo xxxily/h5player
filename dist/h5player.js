@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.4.7
+// @version      3.5.0
 // @description  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学等能力
 // @description:en  Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
 // @description:zh  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学等能力
@@ -44,175 +44,6 @@
 // @license      GPL
 // ==/UserScript==
 (function (w) { if (w) { w.name = 'h5player'; } })();
-
-/*!
- * @name         monkeyStorageProxy.js
- * @description  类似local-storage-proxy的monkey-storage-proxy
- * @version      0.0.1
- * @author       xxxily
- * @date         2022/08/29 17:13
- * @github       https://github.com/xxxily
- */
-
-var monkeyStorageProxy = (name, opts = {}) => {
-  const {
-    defaults = {},
-    lspReset = false,
-    storageEventListener = true
-  } = opts;
-
-  const state = new EventTarget();
-  try {
-    const restoredState = window.GM_getValue(name) || {};
-    if (restoredState.lspReset !== lspReset) {
-      window.GM_deleteValue(name);
-      for (const [k, v] of Object.entries({
-        ...defaults
-      })) {
-        state[k] = v;
-      }
-    } else {
-      for (const [k, v] of Object.entries({
-        ...defaults,
-        ...restoredState
-      })) {
-        state[k] = v;
-      }
-    }
-  } catch (e) {
-    console.error('[monkeyStorageProxy]', e);
-    window.GM_deleteValue(name);
-  }
-
-  state.lspReset = lspReset;
-
-  if (storageEventListener && typeof window !== 'undefined' && typeof window.addEventListener !== 'undefined') {
-    window.GM_addValueChangeListener(name, (name, oldVal, newVal, remote) => {
-      // Replace state with whats stored on localStorage... it is newer.
-      for (const k of Object.keys(state)) {
-        delete state[k];
-      }
-      const restoredState = window.GM_getValue(name) || {};
-      for (const [k, v] of Object.entries({
-        ...defaults,
-        ...restoredState
-      })) {
-        state[k] = v;
-      }
-      opts.lspReset = restoredState.lspReset;
-      state.dispatchEvent(new Event('update'));
-    });
-  }
-
-  function boundHandler (rootRef) {
-    return {
-      get (obj, prop) {
-        if (typeof obj[prop] === 'object' && obj[prop] !== null) {
-          return new Proxy(obj[prop], boundHandler(rootRef))
-        } else if (typeof obj[prop] === 'function' && obj === rootRef && prop !== 'constructor') {
-          // this returns bound EventTarget functions
-          return obj[prop].bind(obj)
-        } else {
-          return obj[prop]
-        }
-      },
-      set (obj, prop, value) {
-        obj[prop] = value;
-        try {
-          window.GM_setValue(name, rootRef);
-          rootRef.dispatchEvent(new Event('update'));
-          return true
-        } catch (e) {
-          console.error('[monkeyStorageProxy]', e);
-          return false
-        }
-      }
-    }
-  }
-
-  return new Proxy(state, boundHandler(state))
-};
-
-function isObj (obj) {
-  return Object.prototype.toString.call(obj) === '[object Object]'
-}
-
-function isArr (arr) {
-  return Object.prototype.toString.call(arr) === '[object Array]'
-}
-
-function isEqualType (obj1, obj2) {
-  return Object.prototype.toString.call(obj1) === Object.prototype.toString.call(obj2)
-}
-
-/**
- * 由于localStorageProxy和monkeyStorageProxy只进行浅层的对象合并，
- * 所以会导致当给二级以上的对象增加配置项时，没法将深层的对象同步进去
- * fixState就是为了解决上述问题的
- * @param {*} state
- * @param {*} defaultConfig
- */
-function fixState (state, defaultConfig) {
-  function recursionConfig (state, defaultConfig) {
-    if (isObj(defaultConfig)) {
-      state = isObj(state) ? state : {};
-      Object.keys(defaultConfig).forEach(key => {
-        const value = defaultConfig[key];
-
-        if (typeof state[key] === 'undefined') {
-          /**
-           * 当出现state[key]缺失，则直接使用value进行替换
-           * 其他情况暂不处理
-           */
-          state[key] = value;
-        } else if (isObj(value) || isArr(value)) {
-          if (!isEqualType(state[key], value)) {
-            /* 当对象或数组的类型发生了变更，则以defaultConfig的类型为准，重建state[key] */
-            state[key] = value;
-          }
-
-          recursionConfig(state[key], value);
-        }
-      });
-    } else if (isArr(defaultConfig)) {
-      state = isArr(state) ? state : [];
-    } else {
-      return defaultConfig
-    }
-  }
-
-  recursionConfig(state, defaultConfig);
-
-  /* 清理State，删除已经不在defaultConfig定义范围内的值 */
-  function recursionState (state, defaultConfig) {
-    if (isObj(state)) {
-      defaultConfig = isObj(defaultConfig) ? defaultConfig : {};
-      Object.keys(state).forEach(key => {
-        const value = state[key];
-        if (typeof defaultConfig[key] === 'undefined') {
-          /**
-           * 当出现defaultConfig[key]缺失，则说明该选项已被弃用，所以删除state[key]
-           * 其他情况暂不处理
-           */
-          delete state[key];
-        } else if (isObj(value) || isArr(value)) {
-          if (!isEqualType(defaultConfig[key], value)) {
-            /* 当对象或数组的类型发生了变更，则以defaultConfig的类型为准，重建state[key] */
-            state[key] = defaultConfig[key];
-          }
-
-          recursionState(value, defaultConfig[key]);
-        }
-      });
-    } else if (isArr(state)) {
-      defaultConfig = isArr(defaultConfig) ? defaultConfig : [];
-    } else {
-      return state
-    }
-  }
-
-  recursionState(state, defaultConfig);
-}
 
 /**
  * 元素监听器
@@ -341,7 +172,7 @@ function getType (obj) {
 }
 
 const isType = (obj, typeName) => getType(obj) === typeName;
-const isObj$1 = obj => isType(obj, 'object');
+const isObj = obj => isType(obj, 'object');
 
 /*!
  * @name         object.js
@@ -588,65 +419,75 @@ function throttle (fn, interval = 80) {
   }
 }
 
-// import localStorageProxy from 'local-storage-proxy'
+/*!
+configManager parse localStorage error * @name         configManager.js
+ * @description  配置统一管理脚本
+ * @version      0.0.1
+ * @author       xxxily
+ * @date         2022/09/20 16:10
+ * @github       https://github.com/xxxily
+ */
 
-/* 针对具体域名的局部配置，不同网站可以有自己的相应配置 */
+/**
+ * 判断localStorage是否可用
+ * localStorage并不能保证100%可用，所以使用前必须进行判断，否则会导致部分网站下脚本出现异常
+ * https://stackoverflow.com/questions/30481516/iframe-in-chrome-error-failed-to-read-localstorage-from-window-access-deni
+ * https://cloud.tencent.com/developer/article/1803097 (当localStorage不能用时，window.localStorage为null，而不是文中的undefined)
+ */
+function isLocalStorageUsable () {
+  return window.localStorage && window.localStorage.getItem && window.localStorage.setItem
+}
+
+/**
+ * 判断GlobalStorage是否可用，目前使用的GlobalStorage是基于tampermonkey提供的相关api
+ * https://www.tampermonkey.net/documentation.php?ext=dhdg#GM_setValue
+ */
+function isGlobalStorageUsable () {
+  return window.GM_setValue && window.GM_getValue && window.GM_deleteValue && window.GM_listValues
+}
+
+/**
+ * 存储干净的localStorage相关方法
+ * 防止localStorage对象下的方法被改写而导致读取和写入规则不一样的问题
+ */
+const rawLocalStorage = (function getRawLocalStorage () {
+  const localStorageApis = [
+    'getItem',
+    'setItem',
+    'removeItem',
+    'clear',
+    'key'
+  ];
+
+  const rawLocalStorage = {};
+
+  localStorageApis.forEach(apiKey => {
+    if (isLocalStorageUsable()) {
+      rawLocalStorage[`_${apiKey}_`] = localStorage[apiKey];
+      rawLocalStorage[apiKey] = function () {
+        return rawLocalStorage[`_${apiKey}_`].apply(localStorage, arguments)
+      };
+    } else {
+      rawLocalStorage[apiKey] = function () {
+        console.error('localStorage unavailable');
+      };
+    }
+  });
+
+  return rawLocalStorage
+})();
+
+const configPrefix = '_h5player_';
 const defConfig = {
-  video: {
-    autoPlay: true,
+  media: {
+    autoPlay: false,
     playbackRate: 1,
-
-    /**
-     * 对音量进行统一管理容易产生误判，例如本身静音播放的广告视频或处于未激活TAB的背景视频
-     * 所以应尽量使用网站默认的初始音量设置
-     */
     volume: 1,
 
-    /* transform样式规则 */
-    transform: {
-    /* 放大缩小系数 */
-      scale: 1,
-
-      /* 水平位移参数 */
-      translate: {
-        x: 0,
-        y: 0
-      },
-
-      /* 旋转角度 */
-      rotate: 0,
-
-      /* 水平镜像翻转, 0 或 180 */
-      rotateY: 0,
-      /* 垂直镜像翻转, 0 或 180 */
-      rotateX: 0
-    }
-  },
-
-  enhance: {
-    /* 不禁用默认的调速逻辑，则在多个视频切换时，速度很容易被重置，所以该选项默认开启 */
-    blockSetPlaybackRate: true,
-
-    blockSetCurrentTime: null,
-    blockSetVolume: null
-  },
-
-  hotkeys: {},
-
-  /**
-   * TODO 控制是否开启/关闭调试模式，功能带补充
-   */
-  debug: true
-};
-
-/* 全局配置，优先级低于defConfig */
-const defGlobalConfig = {
-  video: {
-    playbackRate: 1,
-    volume: 1
+    /* 视频播放进度映射表 */
+    progress: {}
   },
   hotkeys: {},
-
   enhance: {
     /* 不禁用默认的调速逻辑，则在多个视频切换时，速度很容易被重置，所以该选项默认开启 */
     blockSetPlaybackRate: true,
@@ -654,69 +495,265 @@ const defGlobalConfig = {
     blockSetCurrentTime: false,
     blockSetVolume: false
   },
-
-  /**
-   * TODO 控制是否开启/关闭调试模式，功能带补充
-   */
   debug: true
 };
 
-const config = defConfig;
+const configManager = {
+  /**
+   * 将confPath转换称最终存储到localStorage或globalStorage里的键名
+   * @param {String} confPath -必选，配置路径信息：例如：'enhance.blockSetPlaybackRate'
+   * @returns {keyName}
+   */
+  getConfKeyName (confPath = '') {
+    return configPrefix + confPath.replaceAll('.', '_')
+  },
 
-try {
-  // config = localStorageProxy('_h5playerConfig_', {
-  //   defaults: defConfig,
-  //   lspReset: false,
-  //   storageEventListener: false
-  // })
-} catch (e) {
-  console.error('localStorageProxy error:', e);
-}
+  /**
+   * 将存储到localStorage或globalStorage里的键名转换成实际调用时候的confPath
+   * @param {String} keyName -必选 存储到localStorage或globalStorage里的键名，例如：'_h5player_enhance_blockSetPlaybackRate'
+   * @returns {confPath}
+   */
+  getConfPath (keyName = '') {
+    return keyName.replace(configPrefix, '').replaceAll('_', '.')
+  },
 
-const globalConfig = monkeyStorageProxy('_h5playerGlobalConfig_', {
-  defaults: defGlobalConfig,
-  lspReset: false,
-  storageEventListener: false
-});
+  /**
+   * 根据给定的配置路径，获取相关配置信息
+   * 获取顺序：LocalStorage > GlobalStorage > defConfig > null
+   * @param {String} confPath -必选，配置路径信息：例如：'enhance.blockSetPlaybackRate'
+   * @returns {*} 如果返回null，则表示没获取到相关配置信息
+   */
+  get (confPath) {
+    if (typeof confPath !== 'string') {
+      return null
+    }
 
-/* 修复配置项状态管理器的配置项同步异常问题 */
-// fixState(config, defConfig)
-fixState(globalConfig, defGlobalConfig);
+    /* 默认优先使用本地的localStorage配置 */
+    const localConf = configManager.getLocalStorage(confPath);
+    if (localConf !== null && localConf !== undefined) {
+      return localConf
+    }
 
-/**
- * 根据本域配置和全局配置，在localState优先的前提下，找出最终应该应用的配置结果
- * @param statePath {string} -必选 配置的路径名，例如：'enhance.blockSetVolume'
- * @returns
- */
-function getConfigState (statePath) {
-  const localState = getValByPath(config, statePath);
-  const globalState = getValByPath(globalConfig, statePath);
+    /* 如果localStorage没相关配置，则尝试使用GlobalStorage的配置 */
+    const globalConf = configManager.getGlobalStorage(confPath);
+    if (globalConf !== null && globalConf !== undefined) {
+      return globalConf
+    }
 
-  /* localState优先，如果localState没有定义，则使用globalState */
-  if (typeof localState === 'undefined' || localState === null) {
-    return globalState
-  } else {
-    return localState
+    /* 如果localStorage和GlobalStorage配置都没找到，则尝试在默认配置表里拿相关配置信息 */
+    const defConfVal = getValByPath(defConfig, confPath);
+    if (typeof defConfVal !== 'undefined' && defConfVal !== null) {
+      return defConfVal
+    }
+
+    return null
+  },
+
+  /**
+   * 将配置结果写入到localStorage或GlobalStorage
+   * 写入顺序：LocalStorage > GlobalStorage
+   * 无论是否写入成功都会将结果更新到defConfig里对应的配置项上
+   * @param {String} confPath
+   * @param {*} val
+   * @returns {Boolean}
+   */
+  set (confPath, val) {
+    if (typeof confPath !== 'string' || typeof val === 'undefined' || val === null) {
+      return false
+    }
+
+    // setValByPath(defConfig, confPath, val)
+
+    let sucStatus = false;
+
+    sucStatus = configManager.setLocalStorage(confPath, val);
+
+    if (!sucStatus) {
+      sucStatus = configManager.setGlobalStorage(confPath, val);
+    }
+
+    return sucStatus
+  },
+
+  /* 获取并列出当前所有已设定的配置项 */
+  list () {
+    const result = {
+      localConf: configManager.listLocalStorage(),
+      globalConf: configManager.listGlobalStorage(),
+      defConfig
+    };
+    return result
+  },
+
+  /* 清除已经写入到本地存储里的配置项 */
+  clear () {
+    configManager.clearLocalStorage();
+    configManager.clearGlobalStorage();
+  },
+
+  /**
+   * 根据给定的配置路径，获取LocalStorage下定义的配置信息
+   * @param {String} confPath -必选，配置路径信息
+   * @returns
+   */
+  getLocalStorage (confPath) {
+    if (typeof confPath !== 'string') {
+      return null
+    }
+
+    const key = configManager.getConfKeyName(confPath);
+
+    if (isLocalStorageUsable()) {
+      let localConf = rawLocalStorage.getItem(key);
+      if (localConf !== null && localConf !== undefined) {
+        try {
+          localConf = JSON.parse(localConf);
+        } catch (e) {
+          console.error('configManager parse localStorage error:', key, localConf);
+        }
+
+        return localConf
+      }
+    }
+
+    return null
+  },
+
+  /**
+   * 根据给定的配置路径，获取GlobalStorage下定义的配置信息
+   * @param {String} confPath -必选，配置路径信息
+   * @returns
+   */
+  getGlobalStorage (confPath) {
+    if (typeof confPath !== 'string') {
+      return null
+    }
+
+    const key = configManager.getConfKeyName(confPath);
+
+    if (isGlobalStorageUsable()) {
+      const globalConf = window.GM_getValue(key);
+      if (globalConf !== null && globalConf !== undefined) {
+        return globalConf
+      }
+    }
+
+    return null
+  },
+
+  /**
+   * 将配置结果写入到localStorage里
+   * @param {String} confPath
+   * @param {*} val
+   * @returns {Boolean}
+   */
+  setLocalStorage (confPath, val) {
+    if (typeof confPath !== 'string' || typeof val === 'undefined' || val === null) {
+      return false
+    }
+
+    setValByPath(defConfig, confPath, val);
+
+    const key = configManager.getConfKeyName(confPath);
+
+    if (isLocalStorageUsable()) {
+      try {
+        if (Object.prototype.toString.call(val) === '[object Object]' || Array.isArray(val)) {
+          val = JSON.stringify(val);
+        }
+
+        rawLocalStorage.setItem(key, val);
+
+        return true
+      } catch (e) {
+        console.error('configManager set localStorage error:', key, val, e);
+        return false
+      }
+    } else {
+      return false
+    }
+  },
+
+  /**
+   * 将配置结果写入到globalStorage里
+   * @param {String} confPath
+   * @param {*} val
+   * @returns {Boolean}
+   */
+  setGlobalStorage (confPath, val) {
+    if (typeof confPath !== 'string' || typeof val === 'undefined' || val === null) {
+      return false
+    }
+
+    setValByPath(defConfig, confPath, val);
+
+    const key = configManager.getConfKeyName(confPath);
+
+    if (isGlobalStorageUsable()) {
+      try {
+        window.GM_setValue(key, val);
+        return true
+      } catch (e) {
+        console.error('configManager set globalStorage error:', key, val, e);
+        return false
+      }
+    } else {
+      return false
+    }
+  },
+
+  listLocalStorage () {
+    if (isLocalStorageUsable()) {
+      const result = {};
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith(configPrefix)) {
+          const confPath = configManager.getConfPath(key);
+          result[confPath] = configManager.getLocalStorage(confPath);
+        }
+      });
+      return result
+    } else {
+      return {}
+    }
+  },
+
+  listGlobalStorage () {
+    if (isGlobalStorageUsable()) {
+      const result = {};
+      const globalStorage = window.GM_listValues();
+      globalStorage.forEach(key => {
+        if (key.startsWith(configPrefix)) {
+          const confPath = configManager.getConfPath(key);
+          result[confPath] = configManager.getGlobalStorage(confPath);
+        }
+      });
+      return result
+    } else {
+      return {}
+    }
+  },
+
+  clearLocalStorage () {
+    if (isLocalStorageUsable()) {
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith(configPrefix)) {
+          rawLocalStorage.removeItem(key);
+        }
+      });
+    }
+  },
+
+  clearGlobalStorage () {
+    if (isGlobalStorageUsable()) {
+      const globalStorage = window.GM_listValues();
+      globalStorage.forEach(key => {
+        if (key.startsWith(configPrefix)) {
+          window.GM_deleteValue(key);
+        }
+      });
+    }
   }
-}
-
-/**
- * 根据本域配置和全局配置，在localState优先的前提下，将值设置给localState还是globalState
- * @param statePath {String} -必选 配置的路径名，例如：'enhance.blockSetVolume'
- * @param val {Any} -必选 要设置的任意值
- * @returns {Boolean} 返回true表示设置成功
- */
-function setConfigState (statePath, val) {
-  const localState = getValByPath(config, statePath);
-  const globalState = getValByPath(globalConfig, statePath);
-
-  /* localState优先，如果localState没有定义，则说明应该设置globalState */
-  if (typeof localState === 'undefined' || localState === null) {
-    return setValByPath(globalState, statePath, val)
-  } else {
-    return setValByPath(localState, statePath, val)
-  }
-}
+};
 
 /* 保存重要的原始函数，防止被外部脚本污染 */
 const originalMethods = {
@@ -821,7 +858,7 @@ class TCC {
     const result = {};
     keys.forEach(function (key) {
       let item = t[key];
-      if (isObj$1(item)) {
+      if (isObj(item)) {
         if (isAll) {
           item = formatter(item);
           result[key] = item;
@@ -882,9 +919,9 @@ class TCC {
     const t = this;
     let isDo = false;
     if (!taskName) return isDo
-    const taskConf = isObj$1(taskName) ? taskName : t.getTaskConfig();
+    const taskConf = isObj(taskName) ? taskName : t.getTaskConfig();
 
-    if (!isObj$1(taskConf) || !taskConf[taskName]) return isDo
+    if (!isObj(taskConf) || !taskConf[taskName]) return isDo
 
     const task = taskConf[taskName];
 
@@ -1350,7 +1387,6 @@ const taskConf = {
     }
   },
   'douyin.com': {
-    blockSetPlaybackRate: true,
     fullScreen: '.xgplayer-fullscreen',
     webFullScreen: '.xgplayer-page-full-screen',
     next: ['.xgplayer-playswitch-next'],
@@ -1359,7 +1395,6 @@ const taskConf = {
     }
   },
   'live.douyin.com': {
-    blockSetPlaybackRate: true,
     fullScreen: '.xgplayer-fullscreen',
     webFullScreen: '.xgplayer-page-full-screen',
     next: ['.xgplayer-playswitch-next'],
@@ -1401,7 +1436,7 @@ function h5PlayerTccInit (h5Player) {
       if (!task) { return }
 
       if (taskName === 'shortcuts') {
-        if (isObj$1(task) && task.callback instanceof Function) {
+        if (isObj(task) && task.callback instanceof Function) {
           return task.callback(h5Player, taskConf, data)
         }
       } else if (task instanceof Function) {
@@ -1990,6 +2025,7 @@ var zhCN = {
   unblockSetPlaybackRate: '允许默认速度调节逻辑',
   unblockSetCurrentTime: '允许默认播放进度控制逻辑',
   unblockSetVolume: '允许默认音量控制逻辑',
+  configFail: '配置失败',
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '前进：',
@@ -2039,6 +2075,7 @@ var enUS = {
   unblockSetPlaybackRate: 'Allow default speed adjustment logic',
   unblockSetCurrentTime: 'Allow default playback progress control logic',
   unblockSetVolume: 'Allow default volume control logic',
+  configFail: 'Configuration failed',
   tipsMsg: {
     playspeed: 'Speed: ',
     forward: 'Forward: ',
@@ -2089,6 +2126,7 @@ var ru = {
   unblockSetPlaybackRate: 'Разрешить логику регулировки скорости по умолчанию',
   unblockSetCurrentTime: 'Разрешить логику управления ходом воспроизведения по умолчанию',
   unblockSetVolume: 'Разрешить логику управления громкостью по умолчанию',
+  configFail: 'Ошибка конфигурации',
   tipsMsg: {
     playspeed: 'Скорость: ',
     forward: 'Вперёд: ',
@@ -2138,6 +2176,7 @@ var zhTW = {
   unblockSetPlaybackRate: '允許默認速度調節邏輯',
   unblockSetCurrentTime: '允許默認播放進度控制邏輯',
   unblockSetVolume: '允許默認音量控制邏輯',
+  configFail: '配置失敗',
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '向前：',
@@ -3219,8 +3258,6 @@ const monkeyMenu = {
  */
 
 function refreshPage (msg) {
-  debug.log('[config]', JSON.stringify(config, null, 2));
-
   msg = msg || '配置已更改，马上刷新页面让配置生效？';
   const status = confirm(msg);
   if (status) {
@@ -3233,8 +3270,7 @@ let monkeyMenuList = [
     title: i18n.t('restoreConfiguration'),
     disable: false,
     fn: () => {
-      localStorage.removeItem('_h5playerConfig_');
-      window.GM_deleteValue && window.GM_deleteValue('_h5playerGlobalConfig_');
+      configManager.clear();
       refreshPage();
     }
   },
@@ -3311,30 +3347,30 @@ function registerH5playerMenus (h5player) {
         }
       },
       {
-        title: () => setConfigState('enhance.blockSetPlaybackRate') ? i18n.t('unblockSetPlaybackRate') : i18n.t('blockSetPlaybackRate'),
+        title: () => configManager.get('enhance.blockSetPlaybackRate') ? i18n.t('unblockSetPlaybackRate') : i18n.t('blockSetPlaybackRate'),
         fn: () => {
-          const confirm = window.confirm(setConfigState('enhance.blockSetPlaybackRate') ? i18n.t('unblockSetPlaybackRate') : i18n.t('blockSetPlaybackRate'));
+          const confirm = window.confirm(configManager.get('enhance.blockSetPlaybackRate') ? i18n.t('unblockSetPlaybackRate') : i18n.t('blockSetPlaybackRate'));
           if (confirm) {
             /* 倍速参数，只能全局设置 */
-            globalConfig.enhance.blockSetPlaybackRate = config.enhance.blockSetPlaybackRate = !setConfigState('enhance.blockSetPlaybackRate');
+            configManager.setGlobalStorage('enhance.blockSetPlaybackRate', !configManager.get('enhance.blockSetPlaybackRate'));
           }
         }
       },
       {
-        title: () => config.enhance.blockSetCurrentTime ? i18n.t('unblockSetCurrentTime') : i18n.t('blockSetCurrentTime'),
+        title: () => configManager.get('enhance.blockSetCurrentTime') ? i18n.t('unblockSetCurrentTime') : i18n.t('blockSetCurrentTime'),
         fn: () => {
-          const confirm = window.confirm(config.enhance.blockSetCurrentTime ? i18n.t('unblockSetCurrentTime') : i18n.t('blockSetCurrentTime'));
+          const confirm = window.confirm(configManager.get('enhance.blockSetCurrentTime') ? i18n.t('unblockSetCurrentTime') : i18n.t('blockSetCurrentTime'));
           if (confirm) {
-            config.enhance.blockSetCurrentTime = !config.enhance.blockSetCurrentTime;
+            configManager.setLocalStorage('enhance.blockSetCurrentTime', !configManager.get('enhance.blockSetCurrentTime'));
           }
         }
       },
       {
-        title: () => config.enhance.blockSetVolume ? i18n.t('unblockSetVolume') : i18n.t('blockSetVolume'),
+        title: () => configManager.get('enhance.blockSetVolume') ? i18n.t('unblockSetVolume') : i18n.t('blockSetVolume'),
         fn: () => {
-          const confirm = window.confirm(config.enhance.blockSetVolume ? i18n.t('unblockSetVolume') : i18n.t('blockSetVolume'));
+          const confirm = window.confirm(configManager.get('enhance.blockSetVolume') ? i18n.t('unblockSetVolume') : i18n.t('blockSetVolume'));
           if (confirm) {
-            config.enhance.blockSetVolume = !config.enhance.blockSetVolume;
+            configManager.setLocalStorage('enhance.blockSetVolume', !configManager.get('enhance.blockSetVolume'));
           }
         }
       }
@@ -3440,6 +3476,7 @@ const supportMediaTags = ['video', 'bwp-video'];
 
 let TCC$1 = null;
 const h5Player = {
+  configManager,
   /* 提示文本的字号 */
   fontSize: 12,
   enable: true,
@@ -3457,8 +3494,8 @@ const h5Player = {
   /* 垂直镜像翻转, 0 或 180 */
   rotateX: 0,
 
-  playbackRate: config.video.playbackRate,
-  volume: config.video.volume,
+  playbackRate: configManager.get('media.playbackRate'),
+  volume: configManager.get('media.volume'),
   lastPlaybackRate: 1,
   /* 快进快退步长 */
   skipStep: 5,
@@ -3563,6 +3600,11 @@ const h5Player = {
       let setPlaybackRateOnPlayingCount = 0;
       player.addEventListener('playing', function (event) {
         t.setPlaybackRate(null, true);
+
+        /* 同步播放音量 */
+        if (configManager.get('enhance.blockSetVolume') === true && event.target.muted === false) {
+          t.setVolume(configManager.getGlobalStorage('media.volume'), true);
+        }
 
         if (setPlaybackRateOnPlayingCount === 0) {
           /* 同步之前设定的播放速度，音量等 */
@@ -3701,19 +3743,28 @@ const h5Player = {
 
     /* 注册开启禁止自动播放的控制菜单 */
     if (taskConf.autoPlay) {
+      if (configManager.getLocalStorage('media.autoPlay') === null) {
+        configManager.setLocalStorage('media.autoPlay', true);
+      }
+
       addMenu({
-        title: () => config.video.autoPlay ? i18n.t('disableInitAutoPlay') : i18n.t('enableInitAutoPlay'),
+        title: () => configManager.getLocalStorage('media.autoPlay') ? i18n.t('disableInitAutoPlay') : i18n.t('enableInitAutoPlay'),
         fn: () => {
-          const confirm = window.confirm(config.video.autoPlay ? i18n.t('disableInitAutoPlay') : i18n.t('enableInitAutoPlay'));
+          const confirm = window.confirm(configManager.getLocalStorage('media.autoPlay') ? i18n.t('disableInitAutoPlay') : i18n.t('enableInitAutoPlay'));
           if (confirm) {
-            config.video.autoPlay = !config.video.autoPlay;
+            const autoPlay = configManager.getLocalStorage('media.autoPlay');
+            if (autoPlay === null) {
+              alert(i18n.t('configFail'));
+            } else {
+              configManager.setLocalStorage('media.autoPlay', !autoPlay);
+            }
           }
         }
       });
     }
 
     // 在轮询重试的时候，如果实例变了，或处于隐藏页面中则不进行自动播放操作
-    if (!config.video.autoPlay || (!p && t.hasInitAutoPlay) || !player || (p && p !== t.player()) || document.hidden) {
+    if (!configManager.get('media.autoPlay') || (!p && t.hasInitAutoPlay) || !player || (p && p !== t.player()) || document.hidden) {
       return false
     }
 
@@ -3726,7 +3777,7 @@ const h5Player = {
       return false
     }
 
-    if (!taskConf.autoPlay || window.localStorage.getItem('_disableInitAutoPlay_')) {
+    if (!taskConf.autoPlay) {
       return false
     }
 
@@ -3782,10 +3833,12 @@ const h5Player = {
   },
 
   getPlaybackRate () {
-    // let playbackRate = config.video.playbackRate
-    let playbackRate = window.localStorage.getItem('_h5_player_playback_rate_') || this.playbackRate;
+    let playbackRate = configManager.get('media.playbackRate') || this.playbackRate;
     if (isInIframe()) {
-      playbackRate = globalConfig.video.playbackRate;
+      const globalPlaybackRate = configManager.getGlobalStorage('media.playbackRate');
+      if (globalPlaybackRate) {
+        playbackRate = globalPlaybackRate;
+      }
     }
     return Number(Number(playbackRate).toFixed(1))
   },
@@ -3843,10 +3896,9 @@ const h5Player = {
     /* 记录播放速度的信息 */
     t.playbackRate = curPlaybackRate;
     if (isInIframe()) {
-      globalConfig.video.playbackRate = curPlaybackRate;
+      configManager.setGlobalStorage('media.playbackRate', curPlaybackRate);
     } else {
-      // config.video.playbackRate = curPlaybackRate
-      window.localStorage.setItem('_h5_player_playback_rate_', curPlaybackRate);
+      configManager.set('media.playbackRate', curPlaybackRate);
     }
 
     delete player.playbackRate;
@@ -3880,7 +3932,7 @@ const h5Player = {
             return false
           }
 
-          if (getConfigState('enhance.blockSetPlaybackRate') === true) {
+          if (configManager.get('enhance.blockSetPlaybackRate') === true) {
             debug.info('调速能力已被blockSetPlaybackRate锁定');
             return false
           } else {
@@ -4003,7 +4055,7 @@ const h5Player = {
           return currentTimeDescriptor.get.apply(player, arguments)
         },
         set: function (val) {
-          if (typeof val !== 'number' || TCC$1.doTask('blockSetCurrentTime') || getConfigState('enhance.blockSetCurrentTime') === true) {
+          if (typeof val !== 'number' || TCC$1.doTask('blockSetCurrentTime') || configManager.get('enhance.blockSetCurrentTime') === true) {
             return false
           }
 
@@ -4062,9 +4114,12 @@ const h5Player = {
   },
 
   getVolume: function () {
-    let volume = config.video.volume;
-    if (isInIframe()) {
-      volume = globalConfig.video.volume;
+    let volume = configManager.get('media.volume');
+    if (isInIframe() || configManager.get('enhance.blockSetVolume') === true) {
+      const globalVolume = configManager.getGlobalStorage('media.volume');
+      if (globalVolume !== null) {
+        volume = globalVolume;
+      }
     }
     return Number(Number(volume).toFixed(2))
   },
@@ -4104,10 +4159,10 @@ const h5Player = {
 
     /* 记录播放音量信息 */
     t.volume = num;
-    if (isInIframe()) {
-      globalConfig.video.volume = num;
+    if (isInIframe() || configManager.get('enhance.blockSetVolume') === true) {
+      configManager.setGlobalStorage('media.volume', num);
     } else {
-      config.video.volume = num;
+      configManager.setLocalStorage('media.volume', num);
     }
 
     delete player.volume;
@@ -4127,7 +4182,7 @@ const h5Player = {
             return false
           }
 
-          if (TCC$1.doTask('blockSetVolume') || getConfigState('enhance.blockSetVolume') === true) {
+          if (TCC$1.doTask('blockSetVolume') || configManager.get('enhance.blockSetVolume') === true) {
             return false
           } else {
             t.setVolume(val);
@@ -4341,26 +4396,6 @@ const h5Player = {
     if (!isDo) {
       debug.log('当前网页不支持一键播放下个视频功能~');
     }
-  },
-
-  setFakeUA (ua) {
-    ua = ua || userAgentMap.iPhone.safari;
-
-    /* 记录设定的ua信息 */
-    !isInCrossOriginFrame() && window.localStorage.setItem('_h5_player_user_agent_', ua);
-    fakeUA(ua);
-  },
-
-  /* ua伪装切换开关 */
-  switchFakeUA (ua) {
-    const customUA = isInCrossOriginFrame() ? null : window.localStorage.getItem('_h5_player_user_agent_');
-    if (customUA) {
-      !isInCrossOriginFrame() && window.localStorage.removeItem('_h5_player_user_agent_');
-    } else {
-      this.setFakeUA(ua);
-    }
-
-    debug.log('ua', navigator.userAgent);
   },
 
   /* 切换播放状态 */
@@ -4940,7 +4975,7 @@ const h5Player = {
     if (!player || !event) return
     const key = event.key.toLowerCase();
     const taskConf = TCC$1.getTaskConfig();
-    const confIsCorrect = isObj$1(taskConf.shortcuts) &&
+    const confIsCorrect = isObj(taskConf.shortcuts) &&
       Array.isArray(taskConf.shortcuts.register) &&
       taskConf.shortcuts.callback instanceof Function;
 
@@ -5014,11 +5049,6 @@ const h5Player = {
     /* 处于可编辑元素中不执行任何快捷键 */
     if (isEditableTarget(event.target)) return
 
-    /* shift+f 切换UA伪装 */
-    if (event.shiftKey && keyCode === 70) {
-      t.switchFakeUA();
-    }
-
     /* 未用到的按键不进行任何事件监听 */
     if (!isRegisterKey(event)) return
 
@@ -5077,16 +5107,7 @@ const h5Player = {
    * @param player -可选 对应的h5 播放器对象， 如果不传，则获取到的是整个播放进度表，传则获取当前播放器的播放进度
    */
   getPlayProgress: function (player) {
-    let progressMap = isInCrossOriginFrame() ? null : window.localStorage.getItem('_h5_player_play_progress_');
-    if (!progressMap) {
-      progressMap = {};
-    } else {
-      try {
-        progressMap = JSON.parse(progressMap);
-      } catch (e) {
-        progressMap = {};
-      }
-    }
+    const progressMap = isInCrossOriginFrame() ? {} : configManager.get('media.progress') || {};
 
     if (!player) {
       return progressMap
@@ -5142,7 +5163,7 @@ const h5Player = {
         };
 
         /* 存储播放进度表 */
-        !isInCrossOriginFrame() && window.localStorage.setItem('_h5_player_play_progress_', JSON.stringify(progressMap));
+        !isInCrossOriginFrame() && configManager.setLocalStorage('media.progress', progressMap);
 
         /* 循环侦听 */
         recorder(player);

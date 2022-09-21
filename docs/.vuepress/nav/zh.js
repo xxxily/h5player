@@ -1,5 +1,5 @@
 module.exports = [
-  { text: '说明文档', link: '/handbook/' },
+  { text: '文档中心', link: '/home/' },
   {
     text: '相关连接',
     ariaLabel: '相关连接',
