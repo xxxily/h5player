@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.5.0
+// @version      3.5.1
 // @description  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学等能力
 // @description:en  Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
 // @description:zh  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学等能力
@@ -184,6 +184,28 @@ const isObj = obj => isType(obj, 'object');
  */
 
 /**
+ * 对一个对象进行深度拷贝
+ * @source -必选（Object|Array）需拷贝的对象或数组
+ */
+function clone (source) {
+  var result = {};
+
+  if (typeof source !== 'object') {
+    return source
+  }
+  if (Object.prototype.toString.call(source) === '[object Array]') {
+    result = [];
+  }
+  if (Object.prototype.toString.call(source) === '[object Null]') {
+    result = null;
+  }
+  for (var key in source) {
+    result[key] = (typeof source[key] === 'object') ? clone(source[key]) : source[key];
+  }
+  return result
+}
+
+/**
  * 根据文本路径获取对象里面的值，如需支持数组请使用lodash的get方法
  * @param obj {Object} -必选 要操作的对象
  * @param path {String} -必选 路径信息
@@ -350,6 +372,42 @@ function isInViewPort (element) {
     right <= viewWidth &&
     bottom <= viewHeight
   )
+}
+
+/**
+ * 将行内样式转换成对象的形式
+ * @param {string} inlineStyle -必选，例如： position: relative; opacity: 1; visibility: hidden; transform: scale(0.1) rotate(180deg);
+ * @returns {Object}
+ */
+
+function inlineStyleToObj (inlineStyle) {
+  if (typeof inlineStyle !== 'string') {
+    return {}
+  }
+
+  const result = {};
+  const styArr = inlineStyle.split(';');
+  styArr.forEach(item => {
+    const tmpArr = item.split(':');
+    if (tmpArr.length === 2) {
+      result[tmpArr[0].trim()] = tmpArr[1].trim();
+    }
+  });
+
+  return result
+}
+
+function objToInlineStyle (obj) {
+  if (Object.prototype.toString.call(obj) !== '[object Object]') {
+    return ''
+  }
+
+  const styleArr = [];
+  Object.keys(obj).forEach(key => {
+    styleArr.push(`${key}: ${obj[key]}`);
+  });
+
+  return styleArr.join('; ')
 }
 
 /* ua信息伪装 */
@@ -3494,6 +3552,20 @@ const h5Player = {
   /* 垂直镜像翻转, 0 或 180 */
   rotateX: 0,
 
+  defaultTransform: {
+    scale: 1,
+    translate: {
+      x: 0,
+      y: 0
+    },
+    rotate: 0,
+    rotateY: 0,
+    rotateX: 0
+  },
+
+  /* 存储旧的Transform值 */
+  historyTransform: {},
+
   playbackRate: configManager.get('media.playbackRate'),
   volume: configManager.get('media.volume'),
   lastPlaybackRate: 1,
@@ -3688,7 +3760,7 @@ const h5Player = {
         player[originKey] = player[key];
         const proxy = new Proxy(player[key], {
           apply (target, ctx, args) {
-            debug.log(key + '被调用');
+            // debug.log(key + '被调用')
 
             /* 处理挂起逻辑 */
             const hangUpInfo = player._hangUpInfo_ || {};
@@ -3717,7 +3789,7 @@ const h5Player = {
        */
       player._hangUp_ = function (name, timeout) {
         timeout = Number(timeout) || 200;
-        debug.log('_hangUp_', name, timeout);
+        // debug.log('_hangUp_', name, timeout)
         player._hangUpInfo_[name] = {
           timeout: Date.now() + timeout
         };
@@ -3927,13 +3999,18 @@ const h5Player = {
             return false
           }
 
+          /* 有些网站是通过定时器不断刷playbackRate的，所以通过计时器减少不必要的信息输出 */
+          !Number.isInteger(player._blockSetPlaybackRateTips_) && (player._blockSetPlaybackRateTips_ = 0);
+
           if (TCC$1.doTask('blockSetPlaybackRate')) {
-            debug.info('调速能力已被自定义的调速任务进行处理');
+            player._blockSetPlaybackRateTips_++;
+            player._blockSetPlaybackRateTips_ < 3 && debug.info('调速能力已被自定义的调速任务进行处理');
             return false
           }
 
           if (configManager.get('enhance.blockSetPlaybackRate') === true) {
-            debug.info('调速能力已被blockSetPlaybackRate锁定');
+            player._blockSetPlaybackRateTips_++;
+            player._blockSetPlaybackRateTips_ < 3 && debug.info('调速能力已被blockSetPlaybackRate锁定');
             return false
           } else {
             t.setPlaybackRate(val);
@@ -4221,6 +4298,46 @@ const h5Player = {
     }
   },
 
+  /* 采集Transform值的历史变更记录，以便后续进行还原 */
+  collectTransformHistoryInfo () {
+    const t = this;
+    Object.keys(t.defaultTransform).forEach(key => {
+      if (key === 'translate') {
+        const translate = t.defaultTransform.translate;
+        t.historyTransform.translate = t.historyTransform.translate || {};
+        Object.keys(translate).forEach(subKey => {
+          if (Number(t.translate[subKey]) !== t.defaultTransform.translate[subKey]) {
+            t.historyTransform.translate[subKey] = t.translate[subKey];
+          }
+        });
+      } else {
+        if (Number(t[key]) !== t.defaultTransform[key]) {
+          t.historyTransform[key] = t[key];
+        }
+      }
+    });
+  },
+
+  /* 判断h5Player下的Transform值是否跟默认的Transform值一致 */
+  isSameAsDefaultTransform () {
+    let result = true;
+    const t = this;
+    Object.keys(t.defaultTransform).forEach(key => {
+      if (isObj(t.defaultTransform[key])) {
+        Object.keys(t.defaultTransform[key]).forEach(subKey => {
+          if (Number(t[key][subKey]) !== t.defaultTransform[key][subKey]) {
+            result = false;
+          }
+        });
+      } else {
+        if (Number(t[key]) !== t.defaultTransform[key]) {
+          result = false;
+        }
+      }
+    });
+    return result
+  },
+
   /* 设置视频画面的缩放与位移 */
   setTransform (notTips) {
     const t = this;
@@ -4240,6 +4357,7 @@ const h5Player = {
     }
 
     if (notTips === true) ; else {
+      t.collectTransformHistoryInfo();
       t.tips(tipsMsg);
     }
 
@@ -4333,11 +4451,26 @@ const h5Player = {
 
   resetTransform (notTips) {
     const t = this;
-    t.scale = 1;
-    t.translate = { x: 0, y: 0 };
-    t.rotate = 0;
-    t.rotateX = 0;
-    t.rotateY = 0;
+
+    if (t.isSameAsDefaultTransform() && Object.keys(t.historyTransform).length) {
+      /* 还原成历史记录中的Transform值 */
+      Object.keys(t.historyTransform).forEach(key => {
+        if (isObj(t.historyTransform[key])) {
+          Object.keys(t.historyTransform[key]).forEach(subKey => {
+            t[key][subKey] = t.historyTransform[key][subKey];
+          });
+        } else {
+          t[key] = t.historyTransform[key];
+        }
+      });
+    } else {
+      /* 还原成默认的Transform值 */
+      const defaultTransform = clone(t.defaultTransform);
+      Object.keys(defaultTransform).forEach(key => {
+        t[key] = defaultTransform[key];
+      });
+    }
+
     t.setTransform(notTips);
   },
 
@@ -4491,7 +4624,23 @@ const h5Player = {
     const defStyle = parentNode.getAttribute('style') || '';
     let backupStyle = parentNode.getAttribute('style-backup') || '';
     if (!backupStyle) {
-      parentNode.setAttribute('style-backup', defStyle || 'style-backup:none');
+      let backupSty = defStyle || 'style-backup:none';
+      const backupStyObj = inlineStyleToObj(backupSty);
+
+      /**
+       * 修复因为缓存时机获取到错误样式的问题
+       * 例如在：https://www.xuetangx.com/
+       */
+      if (backupStyObj.opacity === '0') {
+        backupStyObj.opacity = '1';
+      }
+      if (backupStyObj.visibility === 'hidden') {
+        backupStyObj.visibility = 'visible';
+      }
+
+      backupSty = objToInlineStyle(backupStyObj);
+
+      parentNode.setAttribute('style-backup', backupSty);
       backupStyle = defStyle;
     }
 
