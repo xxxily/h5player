@@ -1,4 +1,5 @@
 export default {
+  website: '脚本官网',
   about: '关于',
   issues: '反馈',
   setting: '设置',

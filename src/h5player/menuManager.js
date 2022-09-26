@@ -33,9 +33,15 @@ let monkeyMenuList = [
     }
   },
   {
+    title: i18n.t('website'),
+    fn: () => {
+      openInTab('https://h5player.anzz.top/')
+    }
+  },
+  {
     title: i18n.t('hotkeys'),
     fn: () => {
-      openInTab('https://github.com/xxxily/h5player#%E5%BF%AB%E6%8D%B7%E9%94%AE%E5%88%97%E8%A1%A8')
+      openInTab('https://h5player.anzz.top/home/Introduction.html#%E5%BF%AB%E6%8D%B7%E9%94%AE%E5%88%97%E8%A1%A8')
     }
   },
   {
@@ -46,6 +52,7 @@ let monkeyMenuList = [
   },
   {
     title: i18n.t('donate'),
+    disable: true,
     fn: () => {
       openInTab('https://cdn.jsdelivr.net/gh/xxxily/h5player@master/donate.png')
     }

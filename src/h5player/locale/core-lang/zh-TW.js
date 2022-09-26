@@ -1,4 +1,5 @@
 export default {
+  website: '腳本官網',
   about: '關於',
   issues: '反饋',
   setting: '設置',

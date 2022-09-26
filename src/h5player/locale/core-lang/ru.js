@@ -1,4 +1,5 @@
 export default {
+  website: 'официальный сайт скрипта',
   about: 'около',
   issues: 'обратная связь',
   setting: 'установка',
