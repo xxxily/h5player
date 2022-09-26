@@ -25,14 +25,6 @@ function refreshPage (msg) {
 
 let monkeyMenuList = [
   {
-    title: i18n.t('restoreConfiguration'),
-    disable: false,
-    fn: () => {
-      configManager.clear()
-      refreshPage()
-    }
-  },
-  {
     title: i18n.t('website'),
     fn: () => {
       openInTab('https://h5player.anzz.top/')
@@ -62,6 +54,14 @@ let monkeyMenuList = [
     disable: true,
     fn: () => {
       window.alert('功能开发中，敬请期待...')
+    }
+  },
+  {
+    title: i18n.t('restoreConfiguration'),
+    disable: false,
+    fn: () => {
+      configManager.clear()
+      refreshPage()
     }
   }
 ]

@@ -2068,8 +2068,9 @@ class I18n {
 }
 
 var zhCN = {
+  website: '脚本官网',
   about: '关于',
-  issues: '反馈',
+  issues: '问题反馈',
   setting: '设置',
   hotkeys: '快捷键',
   donate: '太给力了！',
@@ -2118,11 +2119,12 @@ var zhCN = {
 };
 
 var enUS = {
-  about: 'about',
-  issues: 'issues',
-  setting: 'setting',
-  hotkeys: 'hotkeys',
-  donate: 'donate',
+  website: 'Script website',
+  about: 'About',
+  issues: 'Issues',
+  setting: 'Setting',
+  hotkeys: 'Hotkeys',
+  donate: 'Donate',
   openCrossOriginFramePage: 'Open cross-domain pages alone',
   disableInitAutoPlay: 'Prohibit autoplay of videos on this site',
   enableInitAutoPlay: 'Allow autoplay videos on this site',
@@ -2169,6 +2171,7 @@ var enUS = {
 };
 
 var ru = {
+  website: 'официальный сайт скрипта',
   about: 'около',
   issues: 'обратная связь',
   setting: 'установка',
@@ -2219,6 +2222,7 @@ var ru = {
 };
 
 var zhTW = {
+  website: '腳本官網',
   about: '關於',
   issues: '反饋',
   setting: '設置',
@@ -3325,17 +3329,15 @@ function refreshPage (msg) {
 
 let monkeyMenuList = [
   {
-    title: i18n.t('restoreConfiguration'),
-    disable: false,
+    title: i18n.t('website'),
     fn: () => {
-      configManager.clear();
-      refreshPage();
+      openInTab('https://h5player.anzz.top/');
     }
   },
   {
     title: i18n.t('hotkeys'),
     fn: () => {
-      openInTab('https://github.com/xxxily/h5player#%E5%BF%AB%E6%8D%B7%E9%94%AE%E5%88%97%E8%A1%A8');
+      openInTab('https://h5player.anzz.top/home/Introduction.html#%E5%BF%AB%E6%8D%B7%E9%94%AE%E5%88%97%E8%A1%A8');
     }
   },
   {
@@ -3346,6 +3348,7 @@ let monkeyMenuList = [
   },
   {
     title: i18n.t('donate'),
+    disable: true,
     fn: () => {
       openInTab('https://cdn.jsdelivr.net/gh/xxxily/h5player@master/donate.png');
     }
@@ -3355,6 +3358,14 @@ let monkeyMenuList = [
     disable: true,
     fn: () => {
       window.alert('功能开发中，敬请期待...');
+    }
+  },
+  {
+    title: i18n.t('restoreConfiguration'),
+    disable: false,
+    fn: () => {
+      configManager.clear();
+      refreshPage();
     }
   }
 ];
@@ -4273,7 +4284,7 @@ const h5Player = {
   },
 
   /* 设置声音大小 */
-  setVolume: function (num, notips) {
+  setVolume: function (num, notips, outerCall) {
     const t = this;
     const player = t.player();
 
@@ -4320,7 +4331,7 @@ const h5Player = {
           if (TCC$1.doTask('blockSetVolume') || configManager.get('enhance.blockSetVolume') === true) {
             return false
           } else {
-            t.setVolume(val);
+            t.setVolume(val, false, true);
           }
         }
       });
@@ -4329,7 +4340,9 @@ const h5Player = {
     }
 
     /* 调节音量的时候顺便把静音模式关闭 */
-    player.muted = false;
+    if (!outerCall) {
+      player.muted = false;
+    }
 
     !notips && t.tips(i18n.t('tipsMsg.volume') + parseInt(player.volume * 100) + '%');
   },

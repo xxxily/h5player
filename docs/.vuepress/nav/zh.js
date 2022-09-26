@@ -29,7 +29,7 @@ module.exports = [
         text: '其他',
         items: [
           { text: 'GitHub.Dev', link: 'https://github.dev/xxxily/h5player', target: '_blank' },
-          { text: '赞赏码', link: 'https://cdn.jsdelivr.net/gh/xxxily/h5player@master/donate.png', target: '_blank' },
+          { text: '赞赏码', link: 'https://h5player.anzz.top/assets/img/donate.png', target: '_blank' },
         ]
       },
     ]

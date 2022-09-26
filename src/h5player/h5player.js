@@ -787,7 +787,7 @@ const h5Player = {
   },
 
   /* 设置声音大小 */
-  setVolume: function (num, notips) {
+  setVolume: function (num, notips, outerCall) {
     const t = this
     const player = t.player()
 
@@ -834,7 +834,7 @@ const h5Player = {
           if (TCC.doTask('blockSetVolume') || configManager.get('enhance.blockSetVolume') === true) {
             return false
           } else {
-            t.setVolume(val)
+            t.setVolume(val, false, true)
           }
         }
       })
@@ -843,7 +843,9 @@ const h5Player = {
     }
 
     /* 调节音量的时候顺便把静音模式关闭 */
-    player.muted = false
+    if (!outerCall) {
+      player.muted = false
+    }
 
     !notips && t.tips(i18n.t('tipsMsg.volume') + parseInt(player.volume * 100) + '%')
   },

@@ -1,7 +1,7 @@
 export default {
   website: '脚本官网',
   about: '关于',
-  issues: '反馈',
+  issues: '问题反馈',
   setting: '设置',
   hotkeys: '快捷键',
   donate: '太给力了！',
