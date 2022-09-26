@@ -131,4 +131,4 @@
 
 如果我的努力给你带来了便利，请不要吝啬你的赞赏
 
-![如果我的努力给你带来了便利，请不要吝啬你的赞赏](https://cdn.jsdelivr.net/gh/xxxily/h5player@master/donate.png "如果我的努力给你带来了便利，请不要吝啬你的赞赏")
+![如果我的努力给你带来了便利，请不要吝啬你的赞赏](https://h5player.anzz.top/assets/img/donate.png)

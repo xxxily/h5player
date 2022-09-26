@@ -1,8 +1,10 @@
 # h5player for tampermonkey
 
 网页播放器增强脚本  
-项目地址：[https://github.com/xxxily/h5player](https://github.com/xxxily/h5player)  
-脚本安装地址：[https://greasyfork.org/scripts/381682](https://greasyfork.org/scripts/381682)
+
+- 官网地址：[https://h5player.anzz.top](https://h5player.anzz.top)  
+- 项目地址：[https://github.com/xxxily/h5player](https://github.com/xxxily/h5player)  
+- 脚本安装地址：[https://greasyfork.org/scripts/381682](https://greasyfork.org/scripts/381682)
 
 ## 简介
 
@@ -10,16 +12,16 @@
 
 ## 特性
 
-* 兼容广泛，所有存在video标签的网页均支持 即使嵌在 iframe、shadowdom下均可兼容
-* 支持跨域控制，跨域受限页面下快捷键一样可以无缝衔接
-* 支持多实例（如：twitter，instagram下亦可兼容）
-* 支持播放进度记录
-* 支持播放速度记录
-* 支持视频画面缩放
-* 支持画中画功能
-* 支持跨Tab控制画中画
-* 支持视频画面截图功能
-* 支持配置式添加自定义功能
+- 兼容广泛，所有存在video标签的网页均支持 即使嵌在 iframe、shadowdom下均可兼容
+- 支持跨域控制，跨域受限页面下快捷键一样可以无缝衔接
+- 支持多实例（如：twitter，instagram下亦可兼容）
+- 支持播放进度记录
+- 支持播放速度记录
+- 支持视频画面缩放
+- 支持画中画功能
+- 支持跨Tab控制画中画
+- 支持视频画面截图功能
+- 支持配置式添加自定义功能
   
 ## 快捷键列表
 
@@ -31,15 +33,15 @@
 | ← | 后退5秒 |
 | Ctrl+→ | 快进30秒 |
 | Ctrl+← | 后退30秒 |
-| ↑ | 音量升高 10% |
-| ↓ | 音量降低 10% |
+| ↑ | 音量升高 5% |
+| ↓ | 音量降低 5% |
 | Ctrl+↑ | 音量升高 20% |
 | Ctrl+↓ | 音量降低 20% |
 | C | 加速播放 +0.1 |
 | X | 减速播放 -0.1 |
 | Z | 正常速度播放 |
-| shift+C | 放大视频画面 +0.1 |
-| shift+X | 缩小视频画面 -0.1 |
+| shift+C | 放大视频画面 +0.05 |
+| shift+X | 缩小视频画面 -0.05 |
 | shift+Z | 恢复视频画面 |
 | shift+P | 进入或退画中画功能 |
 | shift+S | 截图，截取当前画面并保存 |
@@ -48,11 +50,11 @@
 | shift+← | 画面向左移动10px |
 | shift+↑ | 画面向上移动10px |
 | shift+↓ | 画面向下移动10px |
-| Enter | 进入全屏 |
-| shift+Enter | 进入网页全屏 |
+| Enter | 进入/退出全屏 |
+| shift+Enter | 进入/退出网页全屏 |
 | N | 下一个/集视频（仅部分网站支持） |
 | D | 上一帧 (截图时进行微调以找到质量最佳的一帧) |
-| F | 下一帧 (因为快捷键冲突)|
+| F | 下一帧 (截图时进行微调以找到质量最佳的一帧) |
 | E | 亮度增加% |
 | W | 亮度减少% |
 | T | 对比度增加% |
@@ -123,10 +125,10 @@
 
 ## 更新日志
 
-* [https://github.com/xxxily/h5player/blob/master/changeLog.md](https://github.com/xxxily/h5player/blob/master/changeLog.md)
+- [https://github.com/xxxily/h5player/blob/master/changeLog.md](https://github.com/xxxily/h5player/blob/master/changeLog.md)
 
 ## 给我赞赏
 
 如果我的努力给你带来了便利，请不要吝啬你的赞赏
 
-![如果我的努力给你带来了便利，请不要吝啬你的赞赏](https://cdn.jsdelivr.net/gh/xxxily/h5player@master/donate.png "如果我的努力给你带来了便利，请不要吝啬你的赞赏")
+![如果我的努力给你带来了便利，请不要吝啬你的赞赏](./img/donate.png)
