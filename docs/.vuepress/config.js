@@ -1,7 +1,7 @@
 module.exports = {
   title: 'h5player',
   description: 'HTML5视频增强脚本',
-  base: '/h5player-docs/',
+  base: '/',
   dest: './dist/h5player-docs',
   head: [
     [

@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.5.1
+// @version      3.5.2
 // @description  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学等能力
 // @description:en  Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
 // @description:zh  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学等能力
@@ -3654,7 +3654,9 @@ const h5Player = {
     t.isFoucs();
     t.proxyPlayerInstance(player);
 
+    t.unLockPlaybackRate();
     t.setPlaybackRate();
+    t.lockPlaybackRate(1000);
 
     /* 增加通用全屏，网页全屏api */
     player._fullScreen_ = new FullScreen(player);
@@ -3671,7 +3673,9 @@ const h5Player = {
     if (!player._hasPlayingInitEvent_) {
       let setPlaybackRateOnPlayingCount = 0;
       player.addEventListener('playing', function (event) {
+        t.unLockPlaybackRate();
         t.setPlaybackRate(null, true);
+        t.lockPlaybackRate(1000);
 
         /* 同步播放音量 */
         if (configManager.get('enhance.blockSetVolume') === true && event.target.muted === false) {
@@ -3680,7 +3684,9 @@ const h5Player = {
 
         if (setPlaybackRateOnPlayingCount === 0) {
           /* 同步之前设定的播放速度，音量等 */
+          t.unLockPlaybackRate();
           t.setPlaybackRate();
+          t.lockPlaybackRate(1000);
 
           if (isSingle === true) {
             /* 恢复播放进度和进行进度记录 */
@@ -3690,7 +3696,9 @@ const h5Player = {
             }, 1000 * 3);
           }
         } else {
+          t.unLockPlaybackRate();
           t.setPlaybackRate(null, true);
+          t.lockPlaybackRate(1000);
         }
         setPlaybackRateOnPlayingCount += 1;
       });
@@ -3929,7 +3937,7 @@ const h5Player = {
   },
 
   /* 设置播放速度 */
-  setPlaybackRate: function (num, notips) {
+  setPlaybackRate: function (num, notips, duplicate) {
     const t = this;
     const player = t.player();
 
@@ -4027,7 +4035,57 @@ const h5Player = {
     } else {
       !notips && t.tips(i18n.t('tipsMsg.playspeed') + player.playbackRate);
     }
+
+    /**
+     * 重复触发最后一次倍速的设定
+     * 解决YouTube快速调速时并不生效，要停顿下来再调节一下才能生效的问题
+     */
+    if (!duplicate && configManager.get('enhance.blockSetPlaybackRate') === true) {
+      clearTimeout(t._setPlaybackRateDuplicate_);
+      clearTimeout(t._setPlaybackRateDuplicate2_);
+      const duplicatePlaybackRate = () => {
+        t.unLockPlaybackRate();
+        t.setPlaybackRate(curPlaybackRate, true, true);
+        t.lockPlaybackRate(1000);
+      };
+      t._setPlaybackRateDuplicate_ = setTimeout(duplicatePlaybackRate, 600);
+      /* 600ms时重新触发无效的话，再来个1200ms后触发，如果是1200ms才生效，则调速生效的延迟已经非常明显了 */
+      t._setPlaybackRateDuplicate2_ = setTimeout(duplicatePlaybackRate, 1200);
+    }
   },
+
+  /**
+   * 加强版的倍速调节，当短时间内设置同一个值时，会认为需更快的跳速能力
+   * 则会对调速的数值进行叠加放大，从而达到快速跳跃地进行倍速调节的目的
+   * 可用于视频广告的高速快进，片头片尾的速看等场景
+   * @param {*} num
+   */
+  setPlaybackRatePlus: function (num) {
+    num = Number(num);
+    if (!num || !Number.isInteger(num)) {
+      return false
+    }
+
+    const t = this;
+    t.playbackRatePlusInfo = t.playbackRatePlusInfo || {};
+    t.playbackRatePlusInfo[num] = t.playbackRatePlusInfo[num] || {
+      time: Date.now() - 1000,
+      value: num
+    };
+
+    if (Date.now() - t.playbackRatePlusInfo[num].time < 200) {
+      t.playbackRatePlusInfo[num].value = t.playbackRatePlusInfo[num].value + num;
+    } else {
+      t.playbackRatePlusInfo[num].value = num;
+    }
+
+    t.playbackRatePlusInfo[num].time = Date.now();
+
+    t.unLockPlaybackRate();
+    t.setPlaybackRate(t.playbackRatePlusInfo[num].value);
+    t.lockPlaybackRate(1000);
+  },
+
   /* 恢复播放速度，还原到1倍速度、或恢复到上次的倍速 */
   resetPlaybackRate: function (player) {
     const t = this;
@@ -5032,7 +5090,7 @@ const h5Player = {
 
     // 按1-4设置播放速度 49-52;97-100
     if ((keyCode >= 49 && keyCode <= 52) || (keyCode >= 97 && keyCode <= 100)) {
-      t.setPlaybackRate(event.key);
+      t.setPlaybackRatePlus(event.key);
     }
 
     // 按键F：下一帧

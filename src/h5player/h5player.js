@@ -164,7 +164,9 @@ const h5Player = {
     t.isFoucs()
     t.proxyPlayerInstance(player)
 
+    t.unLockPlaybackRate()
     t.setPlaybackRate()
+    t.lockPlaybackRate(1000)
 
     /* 增加通用全屏，网页全屏api */
     player._fullScreen_ = new FullScreen(player)
@@ -181,7 +183,9 @@ const h5Player = {
     if (!player._hasPlayingInitEvent_) {
       let setPlaybackRateOnPlayingCount = 0
       player.addEventListener('playing', function (event) {
+        t.unLockPlaybackRate()
         t.setPlaybackRate(null, true)
+        t.lockPlaybackRate(1000)
 
         /* 同步播放音量 */
         if (configManager.get('enhance.blockSetVolume') === true && event.target.muted === false) {
@@ -190,7 +194,9 @@ const h5Player = {
 
         if (setPlaybackRateOnPlayingCount === 0) {
           /* 同步之前设定的播放速度，音量等 */
+          t.unLockPlaybackRate()
           t.setPlaybackRate()
+          t.lockPlaybackRate(1000)
 
           if (isSingle === true) {
             /* 恢复播放进度和进行进度记录 */
@@ -200,7 +206,9 @@ const h5Player = {
             }, 1000 * 3)
           }
         } else {
+          t.unLockPlaybackRate()
           t.setPlaybackRate(null, true)
+          t.lockPlaybackRate(1000)
         }
         setPlaybackRateOnPlayingCount += 1
       })
@@ -439,7 +447,7 @@ const h5Player = {
   },
 
   /* 设置播放速度 */
-  setPlaybackRate: function (num, notips) {
+  setPlaybackRate: function (num, notips, duplicate) {
     const t = this
     const player = t.player()
 
@@ -537,7 +545,57 @@ const h5Player = {
     } else {
       !notips && t.tips(i18n.t('tipsMsg.playspeed') + player.playbackRate)
     }
+
+    /**
+     * 重复触发最后一次倍速的设定
+     * 解决YouTube快速调速时并不生效，要停顿下来再调节一下才能生效的问题
+     */
+    if (!duplicate && configManager.get('enhance.blockSetPlaybackRate') === true) {
+      clearTimeout(t._setPlaybackRateDuplicate_)
+      clearTimeout(t._setPlaybackRateDuplicate2_)
+      const duplicatePlaybackRate = () => {
+        t.unLockPlaybackRate()
+        t.setPlaybackRate(curPlaybackRate, true, true)
+        t.lockPlaybackRate(1000)
+      }
+      t._setPlaybackRateDuplicate_ = setTimeout(duplicatePlaybackRate, 600)
+      /* 600ms时重新触发无效的话，再来个1200ms后触发，如果是1200ms才生效，则调速生效的延迟已经非常明显了 */
+      t._setPlaybackRateDuplicate2_ = setTimeout(duplicatePlaybackRate, 1200)
+    }
   },
+
+  /**
+   * 加强版的倍速调节，当短时间内设置同一个值时，会认为需更快的跳速能力
+   * 则会对调速的数值进行叠加放大，从而达到快速跳跃地进行倍速调节的目的
+   * 可用于视频广告的高速快进，片头片尾的速看等场景
+   * @param {*} num
+   */
+  setPlaybackRatePlus: function (num) {
+    num = Number(num)
+    if (!num || !Number.isInteger(num)) {
+      return false
+    }
+
+    const t = this
+    t.playbackRatePlusInfo = t.playbackRatePlusInfo || {}
+    t.playbackRatePlusInfo[num] = t.playbackRatePlusInfo[num] || {
+      time: Date.now() - 1000,
+      value: num
+    }
+
+    if (Date.now() - t.playbackRatePlusInfo[num].time < 200) {
+      t.playbackRatePlusInfo[num].value = t.playbackRatePlusInfo[num].value + num
+    } else {
+      t.playbackRatePlusInfo[num].value = num
+    }
+
+    t.playbackRatePlusInfo[num].time = Date.now()
+
+    t.unLockPlaybackRate()
+    t.setPlaybackRate(t.playbackRatePlusInfo[num].value)
+    t.lockPlaybackRate(1000)
+  },
+
   /* 恢复播放速度，还原到1倍速度、或恢复到上次的倍速 */
   resetPlaybackRate: function (player) {
     const t = this
@@ -1554,7 +1612,7 @@ const h5Player = {
 
     // 按1-4设置播放速度 49-52;97-100
     if ((keyCode >= 49 && keyCode <= 52) || (keyCode >= 97 && keyCode <= 100)) {
-      t.setPlaybackRate(event.key)
+      t.setPlaybackRatePlus(event.key)
     }
 
     // 按键F：下一帧
