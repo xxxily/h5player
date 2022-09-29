@@ -16,6 +16,7 @@ import { proxyHTMLMediaElementEvent } from './hackEventListener'
 import {
   ready,
   hackAttachShadow,
+  mediaElementChecker,
   isObj,
   quickSort,
   eachParentNode,
@@ -583,7 +584,7 @@ const h5Player = {
       value: num
     }
 
-    if (Date.now() - t.playbackRatePlusInfo[num].time < 200) {
+    if (Date.now() - t.playbackRatePlusInfo[num].time < 300) {
       t.playbackRatePlusInfo[num].value = t.playbackRatePlusInfo[num].value + num
     } else {
       t.playbackRatePlusInfo[num].value = num
@@ -1925,12 +1926,17 @@ const h5Player = {
     if (el && el.getBoundingClientRect) {
       const t = h5Player
 
+      if (t.player() === el) {
+        return false
+      }
+
       const elParentNode = t.getTipsContainer(el)
       const elInfo = el.getBoundingClientRect()
       const parentElInfo = elParentNode && elParentNode.getBoundingClientRect()
       if (elInfo && elInfo.width > 200 && parentElInfo && parentElInfo.width > 200) {
         t.playerInstance = el
         t.initPlayerInstance(false)
+        return true
       }
     }
   },
@@ -1957,8 +1963,8 @@ const h5Player = {
         }
 
         /* 切换视频实例 */
-        t.setPlayerInstance(entrie.target)
-        debug.log('[intersectionObserver] 切换视频实例', entrie)
+        const toggleResult = t.setPlayerInstance(entrie.target)
+        toggleResult && debug.log('[intersectionObserver] 切换视频实例', entrie)
       }
     })
   }, {
@@ -2163,6 +2169,10 @@ async function h5PlayerInit () {
         }, shadowRoot)
       })
     })
+
+    // mediaElementChecker((element, mediaElementList) => {
+    //   debug.info('[mediaElementChecker]', element, mediaElementList)
+    // })
 
     /* 初始化跨Tab控制逻辑 */
     crossTabCtl.init()

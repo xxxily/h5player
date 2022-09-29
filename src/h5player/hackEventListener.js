@@ -42,17 +42,11 @@ function proxyHTMLMediaElementEvent () {
     apply (target, ctx, args) {
       const eventName = args[0]
       const listener = args[1]
-      if (listener instanceof Function) {
-        // if (typeof eventName === 'string' && !eventName.includes('mouse') && !eventName.includes('click')) {
-        //   debug.info(`[addVideoEvent][${eventName}]`, listener)
-        // }
+      if (listener instanceof Function && eventName === 'ratechange') {
+        /* 对注册了ratechange事件进行检测，如果存在异常行为，则尝试挂起事件 */
 
         args[1] = new Proxy(listener, {
           apply (target, ctx, args) {
-            if (typeof eventName === 'string' && !eventName.includes('mouse') && !eventName.includes('click')) {
-              // debug.info(`[execVideoEvent][${eventName}]`, listener)
-            }
-
             if (ctx) {
               /* 阻止调速检测，并进行反阻止 */
               if (ctx.playbackRate && eventName === 'ratechange') {
@@ -81,12 +75,6 @@ function proxyHTMLMediaElementEvent () {
                 }
               }
             }
-
-            /* 禁止对调速事件的监听 */
-            // if (eventName === 'ratechange') {
-            //   debug.info(`[execVideoEvent][${eventName}]禁止对调速事件的监听`, listener)
-            //   return true
-            // }
 
             try {
               return target.apply(ctx, args)

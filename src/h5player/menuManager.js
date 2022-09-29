@@ -44,15 +44,15 @@ let monkeyMenuList = [
   },
   {
     title: i18n.t('donate'),
-    disable: true,
     fn: () => {
-      openInTab('https://cdn.jsdelivr.net/gh/xxxily/h5player@master/donate.png')
+      openInTab('https://h5player.anzz.top/#%E8%B5%9E')
     }
   },
   {
     title: i18n.t('setting'),
     disable: true,
     fn: () => {
+      openInTab('https://h5player.anzz.top/configure/', null, true)
       window.alert('功能开发中，敬请期待...')
     }
   },

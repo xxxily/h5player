@@ -1,3 +1,8 @@
+import {
+  parseURL,
+  stringifyToUrl
+} from '../libs/utils/index'
+
 /* 当前用到的快捷键 */
 const hasUseKey = {
   keyCodeList: [13, 16, 17, 18, 27, 32, 37, 38, 39, 40, 49, 50, 51, 52, 67, 68, 69, 70, 73, 74, 75, 77, 78, 79, 80, 81, 82, 83, 84, 85, 87, 88, 89, 90, 97, 98, 99, 100, 220],
@@ -115,7 +120,15 @@ function getPageWindowSync (rawFunction) {
   }
 }
 
-function openInTab (url, opts) {
+function openInTab (url, opts, referer) {
+  if (referer) {
+    const urlObj = parseURL(url)
+    if (!urlObj.params.referer) {
+      urlObj.params.referer = encodeURIComponent(window.location.href)
+      url = stringifyToUrl(urlObj)
+    }
+  }
+
   if (window.GM_openInTab) {
     window.GM_openInTab(url, opts || {
       active: true,

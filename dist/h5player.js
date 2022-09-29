@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.5.2
+// @version      3.5.3
 // @description  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学等能力
 // @description:en  Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
 // @description:zh  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学等能力
@@ -475,6 +475,108 @@ function throttle (fn, interval = 80) {
     }, interval);
     fn.apply(this, arguments);
   }
+}
+
+/*!
+ * @name         url.js
+ * @description  用于对url进行解析的相关方法
+ * @version      0.0.1
+ * @author       Blaze
+ * @date         27/03/2019 15:52
+ * @github       https://github.com/xxxily
+ */
+
+/**
+ * 参考示例：
+ * https://segmentfault.com/a/1190000006215495
+ * 注意：该方法必须依赖浏览器的DOM对象
+ */
+
+function parseURL (url) {
+  var a = document.createElement('a');
+  a.href = url || window.location.href;
+  return {
+    source: url,
+    protocol: a.protocol.replace(':', ''),
+    host: a.hostname,
+    port: a.port,
+    origin: a.origin,
+    search: a.search,
+    query: a.search,
+    file: (a.pathname.match(/\/([^/?#]+)$/i) || ['', ''])[1],
+    hash: a.hash.replace('#', ''),
+    path: a.pathname.replace(/^([^/])/, '/$1'),
+    relative: (a.href.match(/tps?:\/\/[^/]+(.+)/) || ['', ''])[1],
+    params: (function () {
+      var ret = {};
+      var seg = [];
+      var paramArr = a.search.replace(/^\?/, '').split('&');
+
+      for (var i = 0; i < paramArr.length; i++) {
+        var item = paramArr[i];
+        if (item !== '' && item.indexOf('=')) {
+          seg.push(item);
+        }
+      }
+
+      for (var j = 0; j < seg.length; j++) {
+        var param = seg[j];
+        var idx = param.indexOf('=');
+        var key = param.substring(0, idx);
+        var val = param.substring(idx + 1);
+        if (!key) {
+          ret[val] = null;
+        } else {
+          ret[key] = val;
+        }
+      }
+      return ret
+    })()
+  }
+}
+
+/**
+ * 将params对象转换成字符串模式
+ * @param params {Object} - 必选 params对象
+ * @returns {string}
+ */
+function stringifyParams (params) {
+  var strArr = [];
+
+  if (!Object.prototype.toString.call(params) === '[object Object]') {
+    return ''
+  }
+
+  for (var key in params) {
+    if (Object.hasOwnProperty.call(params, key)) {
+      var val = params[key];
+      var valType = Object.prototype.toString.call(val);
+
+      if (val === '' || valType === '[object Undefined]') continue
+
+      if (val === null) {
+        strArr.push(key);
+      } else if (valType === '[object Array]') {
+        strArr.push(key + '=' + val.join(','));
+      } else {
+        val = (JSON.stringify(val) || '' + val).replace(/(^"|"$)/g, '');
+        strArr.push(key + '=' + val);
+      }
+    }
+  }
+  return strArr.join('&')
+}
+
+/**
+ * 将通过parseURL解析出来url对象重新还原成url地址
+ * 主要用于查询参数被动态修改后，再重组url链接
+ * @param obj {Object} -必选 parseURL解析出来url对象
+ */
+function stringifyToUrl (urlObj) {
+  var query = stringifyParams(urlObj.params) || '';
+  if (query) { query = '?' + query; }
+  var hash = urlObj.hash ? '#' + urlObj.hash : '';
+  return urlObj.origin + urlObj.path + query + hash
 }
 
 /*!
@@ -2535,7 +2637,15 @@ async function getPageWindow () {
 }
 getPageWindow();
 
-function openInTab (url, opts) {
+function openInTab (url, opts, referer) {
+  if (referer) {
+    const urlObj = parseURL(url);
+    if (!urlObj.params.referer) {
+      urlObj.params.referer = encodeURIComponent(window.location.href);
+      url = stringifyToUrl(urlObj);
+    }
+  }
+
   if (window.GM_openInTab) {
     window.GM_openInTab(url, opts || {
       active: true,
@@ -3348,15 +3458,15 @@ let monkeyMenuList = [
   },
   {
     title: i18n.t('donate'),
-    disable: true,
     fn: () => {
-      openInTab('https://cdn.jsdelivr.net/gh/xxxily/h5player@master/donate.png');
+      openInTab('https://h5player.anzz.top/#%E8%B5%9E');
     }
   },
   {
     title: i18n.t('setting'),
     disable: true,
     fn: () => {
+      openInTab('https://h5player.anzz.top/configure/', null, true);
       window.alert('功能开发中，敬请期待...');
     }
   },
@@ -3479,15 +3589,11 @@ function proxyHTMLMediaElementEvent () {
     apply (target, ctx, args) {
       const eventName = args[0];
       const listener = args[1];
-      if (listener instanceof Function) {
-        // if (typeof eventName === 'string' && !eventName.includes('mouse') && !eventName.includes('click')) {
-        //   debug.info(`[addVideoEvent][${eventName}]`, listener)
-        // }
+      if (listener instanceof Function && eventName === 'ratechange') {
+        /* 对注册了ratechange事件进行检测，如果存在异常行为，则尝试挂起事件 */
 
         args[1] = new Proxy(listener, {
           apply (target, ctx, args) {
-            if (typeof eventName === 'string' && !eventName.includes('mouse') && !eventName.includes('click')) ;
-
             if (ctx) {
               /* 阻止调速检测，并进行反阻止 */
               if (ctx.playbackRate && eventName === 'ratechange') {
@@ -3516,12 +3622,6 @@ function proxyHTMLMediaElementEvent () {
                 }
               }
             }
-
-            /* 禁止对调速事件的监听 */
-            // if (eventName === 'ratechange') {
-            //   debug.info(`[execVideoEvent][${eventName}]禁止对调速事件的监听`, listener)
-            //   return true
-            // }
 
             try {
               return target.apply(ctx, args)
@@ -4084,7 +4184,7 @@ const h5Player = {
       value: num
     };
 
-    if (Date.now() - t.playbackRatePlusInfo[num].time < 200) {
+    if (Date.now() - t.playbackRatePlusInfo[num].time < 300) {
       t.playbackRatePlusInfo[num].value = t.playbackRatePlusInfo[num].value + num;
     } else {
       t.playbackRatePlusInfo[num].value = num;
@@ -5414,12 +5514,17 @@ const h5Player = {
     if (el && el.getBoundingClientRect) {
       const t = h5Player;
 
+      if (t.player() === el) {
+        return false
+      }
+
       const elParentNode = t.getTipsContainer(el);
       const elInfo = el.getBoundingClientRect();
       const parentElInfo = elParentNode && elParentNode.getBoundingClientRect();
       if (elInfo && elInfo.width > 200 && parentElInfo && parentElInfo.width > 200) {
         t.playerInstance = el;
         t.initPlayerInstance(false);
+        return true
       }
     }
   },
@@ -5446,8 +5551,8 @@ const h5Player = {
         }
 
         /* 切换视频实例 */
-        t.setPlayerInstance(entrie.target);
-        debug.log('[intersectionObserver] 切换视频实例', entrie);
+        const toggleResult = t.setPlayerInstance(entrie.target);
+        toggleResult && debug.log('[intersectionObserver] 切换视频实例', entrie);
       }
     });
   }, {
@@ -5652,6 +5757,10 @@ async function h5PlayerInit () {
         }, shadowRoot);
       });
     });
+
+    // mediaElementChecker((element, mediaElementList) => {
+    //   debug.info('[mediaElementChecker]', element, mediaElementList)
+    // })
 
     /* 初始化跨Tab控制逻辑 */
     crossTabCtl.init();
