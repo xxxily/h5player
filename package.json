@@ -14,6 +14,8 @@
     "docs:build": "vuepress build docs"
   },
   "dependencies": {
+    "@vssue/api-github-v3": "^1.4.7",
+    "@vssue/vuepress-plugin-vssue": "^1.4.8",
     "local-storage-proxy": "^4.0.3",
     "lodash": "^4.17.21",
     "vue": "2.7.10"

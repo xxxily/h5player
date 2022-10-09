@@ -2526,6 +2526,10 @@ const monkeyMsg = {
     monkeyMsg._monkeyMsgBroadcastHandler_ = monkeyMsg._monkeyMsgBroadcastHandler_ || [];
     handler instanceof Function && monkeyMsg._monkeyMsgBroadcastHandler_.push(handler);
 
+    if (monkeyMsg._hasMonkeyMsgBroadcast_) {
+      return broadcastName
+    }
+
     monkeyMsg.on(broadcastName, function () {
       monkeyMsg._monkeyMsgBroadcastHandler_.forEach(handler => {
         handler.apply(null, arguments);
