@@ -665,7 +665,7 @@ const configManager = {
    * @returns {keyName}
    */
   getConfKeyName (confPath = '') {
-    return configPrefix + confPath.replaceAll('.', '_')
+    return configPrefix + confPath.replace(/\./g, '_')
   },
 
   /**
@@ -674,7 +674,7 @@ const configManager = {
    * @returns {confPath}
    */
   getConfPath (keyName = '') {
-    return keyName.replace(configPrefix, '').replaceAll('_', '.')
+    return keyName.replace(configPrefix, '').replace(/_/g, '.')
   },
 
   /**
