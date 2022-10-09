@@ -235,3 +235,5 @@
 当视频画面的右上角出现：`全局模式：off` 字样时，则意味你的触发焦点调整成功了：
 
 ![global_mode_off](./img/global_mode_off.jpg)  
+
+<Vssue :title="$title" />

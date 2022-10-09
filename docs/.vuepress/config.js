@@ -51,5 +51,12 @@ module.exports = {
       before: '<pre class="vue-container"><code>',
       after: '</code></pre>'
     }],
+    ['@vssue/vuepress-plugin-vssue', {
+      platform: 'github',
+      owner: 'xxxily',
+      repo: 'h5player',
+      clientId: 'b2787c5555a91423a313',
+      clientSecret: 'b1d7a9f103ea218f0ba31d5eeb1b1598d0b0c7a6'
+    }]
   ]
 }
