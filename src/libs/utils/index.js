@@ -2,7 +2,7 @@ import ready from './ready'
 import attrObserver from './attrObserver'
 import hackAttachShadow from './hackAttachShadow'
 import hackEventListener from './hackEventListener'
-import mediaElementChecker from './mediaElementChecker'
+import mediaCore from './mediaCore'
 import { getType, isType, isObj, isErr, isArr, isRegExp, isFunction, isUndefined, isNull } from './typeof'
 import { clone, forIn, getObjKeys, mergeObj, merge, getValByPath, setValByPath } from './object'
 import { quickSort } from './number'
@@ -19,7 +19,7 @@ export {
   attrObserver,
   hackAttachShadow,
   hackEventListener,
-  mediaElementChecker,
+  mediaCore,
   getType,
   isType,
   isObj,

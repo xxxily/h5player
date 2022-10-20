@@ -51,6 +51,10 @@ const monkeyMsg = {
    * @returns {Promise<void>}
    */
   send (name, data, throttleInterval = 80) {
+    if (!window.GM_getValue || !window.GM_setValue) {
+      return false
+    }
+
     /* 阻止频繁发送修改事件 */
     const oldMsg = window.GM_getValue(name)
     if (oldMsg && oldMsg.updateTime) {
@@ -80,8 +84,8 @@ const monkeyMsg = {
     // debug.info(`[monkeyMsg-send][${name}]`, msg)
   },
   set: (name, data) => monkeyMsg.send(name, data),
-  get: (name) => window.GM_getValue(name),
-  on: (name, fn) => window.GM_addValueChangeListener(name, function (name, oldVal, newVal, remote) {
+  get: (name) => window.GM_getValue && window.GM_getValue(name),
+  on: (name, fn) => window.GM_addValueChangeListener && window.GM_addValueChangeListener(name, function (name, oldVal, newVal, remote) {
     // debug.info(`[monkeyMsg-on][${name}]`, oldVal, newVal, remote)
 
     /* 补充消息来源是否出自同一个Tab的判断字段 */
@@ -89,7 +93,7 @@ const monkeyMsg = {
 
     fn instanceof Function && fn.apply(null, arguments)
   }),
-  off: (listenerId) => window.GM_removeValueChangeListener(listenerId),
+  off: (listenerId) => window.GM_removeValueChangeListener && window.GM_removeValueChangeListener(listenerId),
 
   /**
    * 进行monkeyMsg的消息广播，该广播每两秒钟发送一次，其它任意页面可通接收到的广播信息来更新一些变量信息

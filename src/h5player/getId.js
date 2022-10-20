@@ -1,10 +1,17 @@
 /* 用于获取全局唯一的id */
+let __globalId__ = 0
 function getId () {
-  let gID = window.GM_getValue('_global_id_')
-  if (!gID) gID = 0
-  gID = Number(gID) + 1
-  window.GM_setValue('_global_id_', gID)
-  return gID
+  if (window.GM_getValue && window.GM_setValue) {
+    let gID = window.GM_getValue('_global_id_')
+    if (!gID) gID = 0
+    gID = Number(gID) + 1
+    window.GM_setValue('_global_id_', gID)
+    return gID
+  } else {
+    /* 如果不处于油猴插件下，则该id为页面自己独享的id */
+    __globalId__ = Number(__globalId__) + 1
+    return __globalId__
+  }
 }
 
 let curTabId = null
@@ -15,15 +22,20 @@ let curTabId = null
  */
 function getTabId () {
   return new Promise((resolve, reject) => {
-    window.GM_getTab(function (obj) {
-      if (!obj.tabId) {
-        obj.tabId = getId()
-        window.GM_saveTab(obj)
-      }
-      /* 每次获取都更新当前Tab的id号 */
-      curTabId = obj.tabId
-      resolve(obj.tabId)
-    })
+    if (window.GM_getTab instanceof Function) {
+      window.GM_getTab(function (obj) {
+        if (!obj.tabId) {
+          obj.tabId = getId()
+          window.GM_saveTab(obj)
+        }
+        /* 每次获取都更新当前Tab的id号 */
+        curTabId = obj.tabId
+        resolve(obj.tabId)
+      })
+    } else {
+      /* 非油猴插件下，无法确定iframe是否处于同一个tab下 */
+      resolve(Date.now())
+    }
   })
 }
 

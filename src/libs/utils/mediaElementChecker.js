@@ -8,11 +8,11 @@ const mediaElementChecker = (function () {
   const mediaElementHandler = []
   const mediaElementList = []
 
-  function proxyPrototypeMethod (type, methodName) {
-    const originFunc = type && type.prototype[methodName]
+  function proxyPrototypeMethod (element, methodName) {
+    const originFunc = element && element.prototype[methodName]
     if (!originFunc) return
 
-    type.prototype[methodName] = new Proxy(originFunc, {
+    element.prototype[methodName] = new Proxy(originFunc, {
       apply (target, ctx, args) {
         const result = target.apply(ctx, args)
 

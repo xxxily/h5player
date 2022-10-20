@@ -4,7 +4,7 @@ export default {
   issues: '问题反馈',
   setting: '设置',
   hotkeys: '快捷键',
-  donate: '太给力了！',
+  donate: '请作者喝杯咖啡👍',
   openCrossOriginFramePage: '单独打开跨域的页面',
   disableInitAutoPlay: '禁止在此网站自动播放视频',
   enableInitAutoPlay: '允许在此网站自动播放视频',

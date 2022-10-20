@@ -32,7 +32,7 @@ class FullScreen {
 			}
 		`
     /* 将样式插入到全局页面中 */
-    if (!window._hasInitFullPageStyle_) {
+    if (!window._hasInitFullPageStyle_ && window.GM_addStyle) {
       window.GM_addStyle(fullPageStyle)
       window._hasInitFullPageStyle_ = true
     }

@@ -73,6 +73,18 @@ async function getPageWindow () {
       return resolve(window._pageWindow)
     }
 
+    /* 尝试通过同步的方式获取pageWindow */
+    try {
+      const pageWin = getPageWindowSync()
+      if (pageWin && pageWin.document && pageWin.XMLHttpRequest) {
+        window._pageWindow = pageWin
+        resolve(pageWin)
+        return pageWin
+      }
+    } catch (e) {}
+
+    /* 下面异步获取pagewindow的方法在最新的chrome浏览器里已失效 */
+
     const listenEventList = ['load', 'mousemove', 'scroll', 'get-page-window-event']
 
     function getWin (event) {
@@ -88,7 +100,7 @@ async function getPageWindow () {
       window.addEventListener(eventType, getWin, true)
     })
 
-    /* 自行派发事件以便用最短的时候获得pageWindow对象 */
+    /* 自行派发事件以便用最短的时间获得pageWindow对象 */
     window.dispatchEvent(new window.Event('get-page-window-event'))
   })
 }

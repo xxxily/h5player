@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.5.4
+// @version      3.5.5
 // @description  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学等能力
 // @description:en  Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
 // @description:zh  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学等能力
@@ -146,6 +146,353 @@ function hackAttachShadow () {
     console.error('hackAttachShadow error by h5player plug-in', e);
   }
 }
+
+/*!
+ * @name         original.js
+ * @description  存储部分重要的原生函数，防止被外部污染，此逻辑应尽可能前置，否则存储的将是污染后的函数
+ * @version      0.0.1
+ * @author       xxxily
+ * @date         2022/10/16 10:32
+ * @github       https://github.com/xxxily
+ */
+
+const original = {
+  // 防止defineProperty和defineProperties被AOP脚本重写
+  Object: {
+    defineProperty: Object.defineProperty,
+    defineProperties: Object.defineProperties
+  },
+
+  // 防止此类玩法：https://juejin.cn/post/6865910564817010702
+  Proxy,
+
+  Map,
+  map: {
+    clear: Map.prototype.clear,
+    set: Map.prototype.set,
+    has: Map.prototype.has,
+    get: Map.prototype.get
+  },
+
+  console: {
+    log: console.log,
+    info: console.info,
+    error: console.error,
+    warn: console.warn,
+    table: console.table
+  },
+
+  ShadowRoot,
+  HTMLMediaElement,
+  CustomEvent,
+  appendChild: Node.prototype.appendChild,
+
+  JSON: {
+    parse: JSON.parse,
+    stringify: JSON.stringify
+  }
+};
+
+/**
+ * 媒体标签检测，可以检测出viode、audio、以及其它标签名经过改造后的媒体Element
+ * @param {Function} handler -必选 检出后要执行的回调函数
+ * @returns mediaElementList
+ */
+const mediaCore = (function () {
+  let hasMediaCoreInit = false;
+  let hasProxyHTMLMediaElement = false;
+  let originDescriptors = {};
+  const originMethods = {};
+  const mediaElementList = [];
+  const mediaElementHandler = [];
+  const mediaMap = new original.Map();
+
+  const firstUpperCase = str => str.replace(/^\S/, s => s.toUpperCase());
+  function isHTMLMediaElement (el) {
+    return el instanceof original.HTMLMediaElement
+  }
+
+  /**
+   * 根据HTMLMediaElement的实例对象创建增强控制的相关API函数，从而实现锁定播放倍速，锁定暂停和播放等增强功能
+   * @param {*} mediaElement - 必选，HTMLMediaElement的具体实例，例如网页上的video标签或new Audio()等
+   * @returns mediaPlusApi
+   */
+  function createMediaPlusApi (mediaElement) {
+    if (!isHTMLMediaElement(mediaElement)) { return false }
+
+    let mediaPlusApi = original.map.get.call(mediaMap, mediaElement);
+    if (mediaPlusApi) {
+      return mediaPlusApi
+    }
+
+    /* 创建MediaPlusApi对象 */
+    mediaPlusApi = {};
+    const mediaPlusBaseApi = {
+      /**
+       * 创建锁，阻止外部逻辑操作mediaElement相关的属性或函数
+       * 这里的锁逻辑只是数据状态标注和切换，具体的锁功能需在
+       * proxyPrototypeMethod和hijackPrototypeProperty里实现
+       */
+      lock (keyName, duration) {
+        const infoKey = `__${keyName}_info__`;
+        mediaPlusApi[infoKey] = mediaPlusApi[infoKey] || {};
+        mediaPlusApi[infoKey].lock = true;
+
+        /* 解锁时间信息 */
+        duration = Number(duration);
+        if (!Number.isNaN(duration) && duration > 0) {
+          mediaPlusApi[infoKey].unLockTime = Date.now() + duration;
+        }
+      },
+      unLock (keyName) {
+        const infoKey = `__${keyName}_info__`;
+        mediaPlusApi[infoKey] = mediaPlusApi[infoKey] || {};
+        mediaPlusApi[infoKey].lock = false;
+        mediaPlusApi[infoKey].unLockTime = Date.now() - 100;
+      },
+      isLock (keyName) {
+        const info = mediaPlusApi[`__${keyName}_info__`] || {};
+
+        if (info.unLockTime) {
+          /* 延时锁根据当前时间计算是否还处于锁状态 */
+          return Date.now() < info.unLockTime
+        } else {
+          return info.lock || false
+        }
+      },
+
+      /* 注意：调用此处的get和set和apply不受锁的限制 */
+      get (keyName) {
+        if (originDescriptors[keyName] && originDescriptors[keyName].get && !originMethods[keyName]) {
+          return originDescriptors[keyName].get.apply(mediaElement)
+        }
+      },
+      set (keyName, val) {
+        if (originDescriptors[keyName] && originDescriptors[keyName].set && !originMethods[keyName] && typeof val !== 'undefined') {
+          original.console.log(`[mediaPlusApi][${keyName}] 执行原生set操作`);
+          return originDescriptors[keyName].set.apply(mediaElement, [val])
+        }
+      },
+      apply (keyName) {
+        if (originMethods[keyName] instanceof Function) {
+          const args = Array.from(arguments);
+          args.shift();
+          original.console.log(`[mediaPlusApi][${keyName}] 执行原生apply操作`);
+          return originMethods[keyName].apply(mediaElement, args)
+        }
+      }
+    };
+
+    mediaPlusApi = { ...mediaPlusApi, ...mediaPlusBaseApi };
+
+    /**
+     * 扩展api列表。实现'playbackRate', 'volume', 'currentTime', 'play', 'pause'的纯api调用效果，具体可用API如下：
+     * mediaPlusApi.lockPlaybackRate()
+     * mediaPlusApi.unLockPlaybackRate()
+     * mediaPlusApi.isLockPlaybackRate()
+     * mediaPlusApi.getPlaybackRate()
+     * mediaPlusApi.setPlaybackRate(val)
+     *
+     * mediaPlusApi.lockVolume()
+     * mediaPlusApi.unLockVolume()
+     * mediaPlusApi.isLockVolume()
+     * mediaPlusApi.getVolume()
+     * mediaPlusApi.setVolume(val)
+     *
+     * mediaPlusApi.lockCurrentTime()
+     * mediaPlusApi.unLockCurrentTime()
+     * mediaPlusApi.isLockCurrentTime()
+     * mediaPlusApi.getCurrentTime()
+     * mediaPlusApi.setCurrentTime(val)
+     *
+     * mediaPlusApi.lockPlay()
+     * mediaPlusApi.unLockPlay()
+     * mediaPlusApi.isLockPlay()
+     * mediaPlusApi.applyPlay()
+     *
+     * mediaPlusApi.lockPause()
+     * mediaPlusApi.unLockPause()
+     * mediaPlusApi.isLockPause()
+     * mediaPlusApi.applyPause()
+     */
+    const extApiKeys = ['playbackRate', 'volume', 'currentTime', 'play', 'pause'];
+    const baseApiKeys = Object.keys(mediaPlusBaseApi);
+    extApiKeys.forEach(key => {
+      baseApiKeys.forEach(baseKey => {
+        /* 当key对应的是函数时，不应该有get、set的api，而应该有apply的api */
+        if (originMethods[key] instanceof Function) {
+          if (baseKey === 'get' || baseKey === 'set') {
+            return true
+          }
+        } else if (baseKey === 'apply') {
+          return true
+        }
+
+        mediaPlusApi[`${baseKey}${firstUpperCase(key)}`] = function () {
+          return mediaPlusBaseApi[baseKey].apply(null, [key, ...arguments])
+        };
+      });
+    });
+
+    original.map.set.call(mediaMap, mediaElement, mediaPlusApi);
+
+    return mediaPlusApi
+  }
+
+  /* 检测到media对象的处理逻辑，依赖Proxy对media函数的代理 */
+  function mediaDetectHandler (ctx) {
+    if (isHTMLMediaElement(ctx) && !mediaElementList.includes(ctx)) {
+      // console.log(`[mediaDetectHandler]`, ctx)
+      mediaElementList.push(ctx);
+      createMediaPlusApi(ctx);
+
+      try {
+        mediaElementHandler.forEach(handler => {
+          (handler instanceof Function) && handler(ctx);
+        });
+      } catch (e) {}
+    }
+  }
+
+  /* 代理方法play和pause方法，确保能正确暂停和播放 */
+  function proxyPrototypeMethod (element, methodName) {
+    const originFunc = element && element.prototype[methodName];
+    if (!originFunc) return
+
+    element.prototype[methodName] = new original.Proxy(originFunc, {
+      apply (target, ctx, args) {
+        mediaDetectHandler(ctx);
+        // original.console.log(`[mediaElementMethodProxy] 执行代理后的${methodName}函数`)
+
+        /* 对播放暂停逻辑进行增强处理，例如允许通过mediaPlusApi进行锁定 */
+        if (['play', 'pause'].includes(methodName)) {
+          const mediaPlusApi = createMediaPlusApi(ctx);
+          if (mediaPlusApi && mediaPlusApi.isLock(methodName)) {
+            original.console.log(`[mediaElementMethodProxy] ${methodName}已被锁定，无法执行相关操作`);
+            return
+          }
+        }
+
+        const result = target.apply(ctx, args);
+
+        // TODO 对函数执行结果进行观察判断
+
+        return result
+      }
+    });
+
+    // 不建议对HTMLMediaElement的原型链进行扩展，这样容易让网页检测到mediaCore增强逻辑的存在
+    // if (originMethods[methodName]) {
+    //   element.prototype[`__${methodName}__`] = originMethods[methodName]
+    // }
+  }
+
+  /**
+   * 劫持 playbackRate、volume、currentTime 属性，并增加锁定的逻辑，从而实现更强的抗干扰能力
+   */
+  function hijackPrototypeProperty (element, property) {
+    if (!element || !element.prototype || !originDescriptors[property]) {
+      return false
+    }
+
+    original.Object.defineProperty.call(Object, element.prototype, property, {
+      configurable: true,
+      enumerable: true,
+      get: function () {
+        const val = originDescriptors[property].get.apply(this, arguments);
+        // original.console.log(`[mediaElementPropertyHijack][${property}][get]`, val)
+        return val
+      },
+      set: function (value) {
+        // original.console.log(`[mediaElementPropertyHijack][${property}][set]`, value)
+
+        if (property === 'src') {
+          mediaDetectHandler(this);
+        }
+
+        /* 对调速、调音和进度控制逻辑进行增强处理，例如允许通过mediaPlusApi这些功能进行锁定 */
+        if (['playbackRate', 'volume', 'currentTime'].includes(property)) {
+          const mediaPlusApi = createMediaPlusApi(this);
+          if (mediaPlusApi && mediaPlusApi.isLock(property)) {
+            original.console.log(`[mediaElementPropertyHijack] ${property}已被锁定，无法执行相关操作`);
+            return
+          }
+        }
+
+        return originDescriptors[property].set.apply(this, arguments)
+      }
+    });
+  }
+
+  function mediaPlus (mediaElement) {
+    return createMediaPlusApi(mediaElement)
+  }
+
+  function mediaProxy () {
+    if (!hasProxyHTMLMediaElement) {
+      const proxyMethods = ['play', 'pause', 'load', 'addEventListener'];
+      proxyMethods.forEach(methodName => { proxyPrototypeMethod(HTMLMediaElement, methodName); });
+
+      const hijackProperty = ['playbackRate', 'volume', 'currentTime', 'src'];
+      hijackProperty.forEach(property => { hijackPrototypeProperty(HTMLMediaElement, property); });
+
+      hasProxyHTMLMediaElement = true;
+    }
+
+    return hasProxyHTMLMediaElement
+  }
+
+  /**
+   * 媒体标签检测，可以检测出viode、audio、以及其它标签名经过改造后的媒体Element
+   * @param {Function} handler -必选 检出后要执行的回调函数
+   * @returns mediaElementList
+   */
+  function mediaChecker (handler) {
+    if (!(handler instanceof Function) || mediaElementHandler.includes(handler)) {
+      return mediaElementList
+    } else {
+      mediaElementHandler.push(handler);
+    }
+
+    if (!hasProxyHTMLMediaElement) {
+      mediaProxy();
+    }
+
+    return mediaElementList
+  }
+
+  /**
+   * 初始化mediaCore相关功能
+   */
+  function init (mediaCheckerHandler) {
+    if (hasMediaCoreInit) { return false }
+
+    originDescriptors = Object.getOwnPropertyDescriptors(HTMLMediaElement.prototype);
+
+    Object.keys(HTMLMediaElement.prototype).forEach(key => {
+      try {
+        if (HTMLMediaElement.prototype[key] instanceof Function) {
+          originMethods[key] = HTMLMediaElement.prototype[key];
+        }
+      } catch (e) {}
+    });
+
+    mediaCheckerHandler = mediaCheckerHandler instanceof Function ? mediaCheckerHandler : function () {};
+    mediaChecker(mediaCheckerHandler);
+
+    hasMediaCoreInit = true;
+    return true
+  }
+
+  return {
+    init,
+    mediaPlus,
+    mediaChecker,
+    originDescriptors,
+    originMethods,
+    mediaElementList
+  }
+})();
 
 /*!
  * @name         utils.js
@@ -644,6 +991,10 @@ const defConfig = {
     playbackRate: 1,
     volume: 1,
 
+    /* 是否允许存储播放进度 */
+    allowRestorePlayProgress: {
+
+    },
     /* 视频播放进度映射表 */
     progress: {}
   },
@@ -1694,7 +2045,7 @@ class FullScreen {
 			}
 		`;
     /* 将样式插入到全局页面中 */
-    if (!window._hasInitFullPageStyle_) {
+    if (!window._hasInitFullPageStyle_ && window.GM_addStyle) {
       window.GM_addStyle(fullPageStyle);
       window._hasInitFullPageStyle_ = true;
     }
@@ -2175,7 +2526,7 @@ var zhCN = {
   issues: '问题反馈',
   setting: '设置',
   hotkeys: '快捷键',
-  donate: '太给力了！',
+  donate: '请作者喝杯咖啡👍',
   openCrossOriginFramePage: '单独打开跨域的页面',
   disableInitAutoPlay: '禁止在此网站自动播放视频',
   enableInitAutoPlay: '允许在此网站自动播放视频',
@@ -2392,12 +2743,19 @@ const i18n = new I18n({
 });
 
 /* 用于获取全局唯一的id */
+let __globalId__ = 0;
 function getId () {
-  let gID = window.GM_getValue('_global_id_');
-  if (!gID) gID = 0;
-  gID = Number(gID) + 1;
-  window.GM_setValue('_global_id_', gID);
-  return gID
+  if (window.GM_getValue && window.GM_setValue) {
+    let gID = window.GM_getValue('_global_id_');
+    if (!gID) gID = 0;
+    gID = Number(gID) + 1;
+    window.GM_setValue('_global_id_', gID);
+    return gID
+  } else {
+    /* 如果不处于油猴插件下，则该id为页面自己独享的id */
+    __globalId__ = Number(__globalId__) + 1;
+    return __globalId__
+  }
 }
 
 let curTabId = null;
@@ -2408,15 +2766,20 @@ let curTabId = null;
  */
 function getTabId () {
   return new Promise((resolve, reject) => {
-    window.GM_getTab(function (obj) {
-      if (!obj.tabId) {
-        obj.tabId = getId();
-        window.GM_saveTab(obj);
-      }
-      /* 每次获取都更新当前Tab的id号 */
-      curTabId = obj.tabId;
-      resolve(obj.tabId);
-    });
+    if (window.GM_getTab instanceof Function) {
+      window.GM_getTab(function (obj) {
+        if (!obj.tabId) {
+          obj.tabId = getId();
+          window.GM_saveTab(obj);
+        }
+        /* 每次获取都更新当前Tab的id号 */
+        curTabId = obj.tabId;
+        resolve(obj.tabId);
+      });
+    } else {
+      /* 非油猴插件下，无法确定iframe是否处于同一个tab下 */
+      resolve(Date.now());
+    }
   })
 }
 
@@ -2473,6 +2836,10 @@ const monkeyMsg = {
    * @returns {Promise<void>}
    */
   send (name, data, throttleInterval = 80) {
+    if (!window.GM_getValue || !window.GM_setValue) {
+      return false
+    }
+
     /* 阻止频繁发送修改事件 */
     const oldMsg = window.GM_getValue(name);
     if (oldMsg && oldMsg.updateTime) {
@@ -2502,8 +2869,8 @@ const monkeyMsg = {
     // debug.info(`[monkeyMsg-send][${name}]`, msg)
   },
   set: (name, data) => monkeyMsg.send(name, data),
-  get: (name) => window.GM_getValue(name),
-  on: (name, fn) => window.GM_addValueChangeListener(name, function (name, oldVal, newVal, remote) {
+  get: (name) => window.GM_getValue && window.GM_getValue(name),
+  on: (name, fn) => window.GM_addValueChangeListener && window.GM_addValueChangeListener(name, function (name, oldVal, newVal, remote) {
     // debug.info(`[monkeyMsg-on][${name}]`, oldVal, newVal, remote)
 
     /* 补充消息来源是否出自同一个Tab的判断字段 */
@@ -2511,7 +2878,7 @@ const monkeyMsg = {
 
     fn instanceof Function && fn.apply(null, arguments);
   }),
-  off: (listenerId) => window.GM_removeValueChangeListener(listenerId),
+  off: (listenerId) => window.GM_removeValueChangeListener && window.GM_removeValueChangeListener(listenerId),
 
   /**
    * 进行monkeyMsg的消息广播，该广播每两秒钟发送一次，其它任意页面可通接收到的广播信息来更新一些变量信息
@@ -2620,6 +2987,18 @@ async function getPageWindow () {
       return resolve(window._pageWindow)
     }
 
+    /* 尝试通过同步的方式获取pageWindow */
+    try {
+      const pageWin = getPageWindowSync();
+      if (pageWin && pageWin.document && pageWin.XMLHttpRequest) {
+        window._pageWindow = pageWin;
+        resolve(pageWin);
+        return pageWin
+      }
+    } catch (e) {}
+
+    /* 下面异步获取pagewindow的方法在最新的chrome浏览器里已失效 */
+
     const listenEventList = ['load', 'mousemove', 'scroll', 'get-page-window-event'];
 
     function getWin (event) {
@@ -2635,11 +3014,37 @@ async function getPageWindow () {
       window.addEventListener(eventType, getWin, true);
     });
 
-    /* 自行派发事件以便用最短的时候获得pageWindow对象 */
+    /* 自行派发事件以便用最短的时间获得pageWindow对象 */
     window.dispatchEvent(new window.Event('get-page-window-event'));
   })
 }
 getPageWindow();
+
+/**
+ * 通过同步的方式获取pageWindow
+ * 注意同步获取的方式需要将脚本写入head，部分网站由于安全策略会导致写入失败，而无法正常获取
+ * @returns {*}
+ */
+function getPageWindowSync (rawFunction) {
+  if (window.unsafeWindow) return window.unsafeWindow
+  if (document._win_) return document._win_
+
+  try {
+    rawFunction = rawFunction || window.__rawFunction__ || Function.prototype.constructor;
+    // return rawFunction('return window')()
+    // Function('return (function(){}.constructor("return this")());')
+    return rawFunction('return (function(){}.constructor("var getPageWindowSync=1; return this")());')()
+  } catch (e) {
+    console.error('getPageWindowSync error', e);
+
+    const head = document.head || document.querySelector('head');
+    const script = document.createElement('script');
+    script.appendChild(document.createTextNode('document._win_ = window'));
+    head.appendChild(script);
+
+    return document._win_
+  }
+}
 
 function openInTab (url, opts, referer) {
   if (referer) {
@@ -3371,7 +3776,13 @@ const monkeyMenu = {
   off (id) {
     if (window.GM_unregisterMenuCommand) {
       delete this.menuIds[id];
-      return window.GM_unregisterMenuCommand(id)
+
+      /**
+       * 批量移除已注册的按钮时，在某些性能较差的机子上会留下数字title的菜单残留
+       * 应该属于插件自身导致的BUG，暂时无法解决
+       * 所以此处暂时不进行菜单移除，tampermonkey会自动对同名菜单进行合并
+       */
+      // return window.GM_unregisterMenuCommand(id)
     }
   },
 
@@ -3562,13 +3973,15 @@ function registerH5playerMenus (h5player) {
     let titlePrefix = '';
     if (isInIframe()) {
       titlePrefix = `[${location.hostname}]`;
-    }
 
-    /* 补充title前缀 */
-    menus.forEach(menu => {
-      const titleFn = menu.title;
-      menu.title = () => titlePrefix + titleFn();
-    });
+      /* 补充title前缀 */
+      menus.forEach(menu => {
+        const titleFn = menu.title;
+        if (titleFn instanceof Function) {
+          menu.title = () => titlePrefix + titleFn();
+        }
+      });
+    }
 
     addMenu(menus);
 
@@ -3649,6 +4062,8 @@ const supportMediaTags = ['video', 'bwp-video'];
 
 let TCC$1 = null;
 const h5Player = {
+  mediaCore,
+  mediaPlusApi: null,
   configManager,
   /* 提示文本的字号 */
   fontSize: 12,
@@ -3765,6 +4180,9 @@ const h5Player = {
     if (!t.playerInstance) return
 
     const player = t.playerInstance;
+
+    t.mediaPlusApi = mediaCore.mediaPlus(player);
+
     t.initPlaybackRate();
     t.isFoucs();
     t.proxyPlayerInstance(player);
@@ -4040,14 +4458,28 @@ const h5Player = {
 
   /* 锁定playbackRate，禁止调速 */
   lockPlaybackRate: function (timeout = 200) {
+    if (this.mediaPlusApi) {
+      this.mediaPlusApi.lockPlaybackRate(timeout);
+      return true
+    }
+
     this.playbackRateInfo.lockTimeout = Date.now() + timeout;
   },
 
   unLockPlaybackRate: function () {
+    if (this.mediaPlusApi) {
+      this.mediaPlusApi.unLockPlaybackRate();
+      return true
+    }
+
     this.playbackRateInfo.lockTimeout = Date.now() - 1;
   },
 
   isLockPlaybackRate: function () {
+    if (this.mediaPlusApi) {
+      return this.mediaPlusApi.isLockPlaybackRate()
+    }
+
     return Date.now() - this.playbackRateInfo.lockTimeout < 0
   },
 
@@ -4094,6 +4526,17 @@ const h5Player = {
       configManager.setGlobalStorage('media.playbackRate', curPlaybackRate);
     } else {
       configManager.set('media.playbackRate', curPlaybackRate);
+    }
+
+    const mediaPlusApi = mediaCore.mediaPlus(player);
+    if (mediaPlusApi) {
+      mediaPlusApi.setPlaybackRate(curPlaybackRate);
+
+      if (!(!num && curPlaybackRate === 1) && !notips) {
+        t.tips(i18n.t('tipsMsg.playspeed') + player.playbackRate);
+      }
+
+      return true
     }
 
     delete player.playbackRate;
@@ -4248,6 +4691,11 @@ const h5Player = {
    * 跟锁定音量和倍速不一样，播放进度是跟视频实例有密切相关的，所以其锁定信息必须依附于播放实例
    */
   lockSetCurrentTime: function (timeout = 200) {
+    if (this.mediaPlusApi) {
+      this.mediaPlusApi.lockCurrentTime(timeout);
+      return true
+    }
+
     const player = this.player();
     if (player) {
       player.currentTimeInfo = player.currentTimeInfo || {};
@@ -4256,6 +4704,11 @@ const h5Player = {
   },
 
   unLockSetCurrentTime: function () {
+    if (this.mediaPlusApi) {
+      this.mediaPlusApi.unLockCurrentTime();
+      return true
+    }
+
     const player = this.player();
     if (player) {
       player.currentTimeInfo = player.currentTimeInfo || {};
@@ -4264,6 +4717,10 @@ const h5Player = {
   },
 
   isLockSetCurrentTime: function () {
+    if (this.mediaPlusApi) {
+      return this.mediaPlusApi.isLockCurrentTime()
+    }
+
     const player = this.player();
     if (player && player.currentTimeInfo && player.currentTimeInfo.lockTimeout) {
       return Date.now() - player.currentTimeInfo.lockTimeout < 0
@@ -4274,7 +4731,7 @@ const h5Player = {
 
   /* 设置播放进度 */
   setCurrentTime: function (num) {
-    if (!num) return
+    if (!num && num !== 0) return
     num = Number(num);
     const _num = Math.abs(Number(num.toFixed(1)));
 
@@ -4288,6 +4745,11 @@ const h5Player = {
     if (TCC$1.doTask('currentTime')) {
       // debug.log('[TCC][currentTime]', 'suc')
       return
+    }
+
+    if (this.mediaPlusApi) {
+      this.mediaPlusApi.setCurrentTime(_num);
+      return true
     }
 
     delete player.currentTime;
@@ -4345,8 +4807,13 @@ const h5Player = {
 
     if (TCC$1.doTask('subtractCurrentTime')) ; else {
       if (this.player()) {
+        let currentTime = this.player().currentTime + num;
+        if (currentTime < 1) {
+          currentTime = 0;
+        }
+
         this.unLockSetCurrentTime();
-        this.setCurrentTime(this.player().currentTime + num);
+        this.setCurrentTime(currentTime);
 
         /* 防止外部进度控制逻辑的干扰，所以锁定一段时间 */
         this.lockSetCurrentTime(500);
@@ -4376,14 +4843,28 @@ const h5Player = {
 
   /* 锁定音量，禁止调音 */
   lockVolume: function (timeout = 200) {
+    if (this.mediaPlusApi) {
+      this.mediaPlusApi.lockVolume(timeout);
+      return true
+    }
+
     this.volumeInfo.lockTimeout = Date.now() + timeout;
   },
 
   unLockVolume: function () {
+    if (this.mediaPlusApi) {
+      this.mediaPlusApi.unLockVolume();
+      return true
+    }
+
     this.volumeInfo.lockTimeout = Date.now() - 1;
   },
 
   isLockVolume: function () {
+    if (this.mediaPlusApi) {
+      return this.mediaPlusApi.isLockVolume()
+    }
+
     return Date.now() - this.volumeInfo.lockTimeout < 0
   },
 
@@ -4415,32 +4896,36 @@ const h5Player = {
       configManager.setLocalStorage('media.volume', num);
     }
 
-    delete player.volume;
-    player.volume = num;
-    t.volumeInfo.time = Date.now();
-    t.volumeInfo.value = num;
+    if (this.mediaPlusApi) {
+      this.mediaPlusApi.setVolume(num);
+    } else {
+      delete player.volume;
+      player.volume = num;
+      t.volumeInfo.time = Date.now();
+      t.volumeInfo.value = num;
 
-    try {
-      const volumeDescriptor = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'volume');
-      originalMethods.Object.defineProperty.call(Object, player, 'volume', {
-        configurable: true,
-        get: function () {
-          return volumeDescriptor.get.apply(player, arguments)
-        },
-        set: function (val) {
-          if (typeof val !== 'number' || val < 0) {
-            return false
-          }
+      try {
+        const volumeDescriptor = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'volume');
+        originalMethods.Object.defineProperty.call(Object, player, 'volume', {
+          configurable: true,
+          get: function () {
+            return volumeDescriptor.get.apply(player, arguments)
+          },
+          set: function (val) {
+            if (typeof val !== 'number' || val < 0) {
+              return false
+            }
 
-          if (TCC$1.doTask('blockSetVolume') || configManager.get('enhance.blockSetVolume') === true) {
-            return false
-          } else {
-            t.setVolume(val, false, true);
+            if (TCC$1.doTask('blockSetVolume') || configManager.get('enhance.blockSetVolume') === true) {
+              return false
+            } else {
+              t.setVolume(val, false, true);
+            }
           }
-        }
-      });
-    } catch (e) {
-      debug.error('解锁volume失败', e);
+        });
+      } catch (e) {
+        debug.error('解锁volume失败', e);
+      }
     }
 
     /* 调节音量的时候顺便把静音模式关闭 */
@@ -4717,42 +5202,66 @@ const h5Player = {
 
     if (player.paused) {
       if (TCC$1.doTask('play')) ; else {
-        /* 挂起其它逻辑的暂停操作，确保播放状态生效 */
-        if (player._hangUp_ instanceof Function) {
-          player._hangUp_('pause', 400);
-          player._unHangUp_('play');
+        if (t.mediaPlusApi) {
+          t.mediaPlusApi.lockPause(400);
+          t.mediaPlusApi.applyPlay();
+        } else {
+          /* 挂起其它逻辑的暂停操作，确保播放状态生效 */
+          if (player._hangUp_ instanceof Function) {
+            player._hangUp_('pause', 400);
+            player._unHangUp_('play');
+          }
+
+          player.play();
         }
 
-        player.play();
         t.tips(i18n.t('tipsMsg.play'));
       }
     } else {
       if (TCC$1.doTask('pause')) ; else {
-        /* 挂起其它逻辑的播放操作，确保暂停状态生效 */
-        if (player._hangUp_ instanceof Function) {
-          player._hangUp_('play', 400);
-          player._unHangUp_('pause');
+        if (t.mediaPlusApi) {
+          t.mediaPlusApi.lockPlay(400);
+          t.mediaPlusApi.applyPause();
+        } else {
+          /* 挂起其它逻辑的播放操作，确保暂停状态生效 */
+          if (player._hangUp_ instanceof Function) {
+            player._hangUp_('play', 400);
+            player._unHangUp_('pause');
+          }
+
+          player.pause();
         }
 
-        player.pause();
         t.tips(i18n.t('tipsMsg.pause'));
       }
     }
   },
 
   isAllowRestorePlayProgress: function () {
-    const keyName = '_allowRestorePlayProgress_' + window.location.host;
-    const allowRestorePlayProgressVal = window.GM_getValue(keyName);
-    return !allowRestorePlayProgressVal || allowRestorePlayProgressVal === 'true'
+    /**
+     * 当视频处于跨域的iframe里时，很可能一个地址对应多个视频，很容易造成进度记录异常
+     * 待提供更好的防止错误记录视频播放进度精细化逻辑
+     */
+    if (isInCrossOriginFrame()) {
+      return false
+    }
+
+    const allowRestoreVal = configManager.get(`media.allowRestorePlayProgress.${window.location.host}`);
+    return allowRestoreVal === null || allowRestoreVal
   },
   /* 切换自动恢复播放进度的状态 */
   switchRestorePlayProgressStatus: function () {
     const t = h5Player;
     let isAllowRestorePlayProgress = t.isAllowRestorePlayProgress();
-    /* 进行值反转 */
-    isAllowRestorePlayProgress = !isAllowRestorePlayProgress;
-    const keyName = '_allowRestorePlayProgress_' + window.location.host;
-    window.GM_setValue(keyName, String(isAllowRestorePlayProgress));
+
+    if (isInCrossOriginFrame()) {
+      isAllowRestorePlayProgress = false;
+    } else {
+      /* 进行值反转 */
+      isAllowRestorePlayProgress = !isAllowRestorePlayProgress;
+    }
+
+    configManager.set(`media.allowRestorePlayProgress.${window.location.host}`, isAllowRestorePlayProgress);
 
     /* 操作提示 */
     if (isAllowRestorePlayProgress) {
@@ -5431,7 +5940,7 @@ const h5Player = {
    * @param player -可选 对应的h5 播放器对象， 如果不传，则获取到的是整个播放进度表，传则获取当前播放器的播放进度
    */
   getPlayProgress: function (player) {
-    const progressMap = isInCrossOriginFrame() ? {} : configManager.get('media.progress') || {};
+    const progressMap = configManager.get('media.progress') || {};
 
     if (!player) {
       return progressMap
@@ -5487,7 +5996,7 @@ const h5Player = {
         };
 
         /* 存储播放进度表 */
-        !isInCrossOriginFrame() && configManager.setLocalStorage('media.progress', progressMap);
+        configManager.setLocalStorage('media.progress', progressMap);
 
         /* 循环侦听 */
         recorder(player);
@@ -5726,6 +6235,10 @@ const h5Player = {
 
 async function h5PlayerInit () {
   try {
+    mediaCore.init(function (mediaElement) {
+      debug.log('[mediaCore][mediaChecker]', mediaElement);
+    });
+
     /* 禁止对playbackRate等属性进行锁定 */
     hackDefineProperty();
 
@@ -5761,10 +6274,6 @@ async function h5PlayerInit () {
         }, shadowRoot);
       });
     });
-
-    // mediaElementChecker((element, mediaElementList) => {
-    //   debug.info('[mediaElementChecker]', element, mediaElementList)
-    // })
 
     /* 初始化跨Tab控制逻辑 */
     crossTabCtl.init();

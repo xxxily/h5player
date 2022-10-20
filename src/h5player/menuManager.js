@@ -144,13 +144,15 @@ export function registerH5playerMenus (h5player) {
     let titlePrefix = ''
     if (isInIframe()) {
       titlePrefix = `[${location.hostname}]`
-    }
 
-    /* 补充title前缀 */
-    menus.forEach(menu => {
-      const titleFn = menu.title
-      menu.title = () => titlePrefix + titleFn()
-    })
+      /* 补充title前缀 */
+      menus.forEach(menu => {
+        const titleFn = menu.title
+        if (titleFn instanceof Function) {
+          menu.title = () => titlePrefix + titleFn()
+        }
+      })
+    }
 
     addMenu(menus)
 

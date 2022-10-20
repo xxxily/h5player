@@ -79,6 +79,10 @@ const defConfig = {
     playbackRate: 1,
     volume: 1,
 
+    /* 是否允许存储播放进度 */
+    allowRestorePlayProgress: {
+
+    },
     /* 视频播放进度映射表 */
     progress: {}
   },

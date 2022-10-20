@@ -28,7 +28,13 @@ const monkeyMenu = {
   off (id) {
     if (window.GM_unregisterMenuCommand) {
       delete this.menuIds[id]
-      return window.GM_unregisterMenuCommand(id)
+
+      /**
+       * 批量移除已注册的按钮时，在某些性能较差的机子上会留下数字title的菜单残留
+       * 应该属于插件自身导致的BUG，暂时无法解决
+       * 所以此处暂时不进行菜单移除，tampermonkey会自动对同名菜单进行合并
+       */
+      // return window.GM_unregisterMenuCommand(id)
     }
   },
 
