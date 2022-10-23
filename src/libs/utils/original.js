@@ -36,7 +36,7 @@ const original = {
   ShadowRoot,
   HTMLMediaElement,
   CustomEvent,
-  appendChild: Node.prototype.appendChild,
+  // appendChild: Node.prototype.appendChild,
 
   JSON: {
     parse: JSON.parse,

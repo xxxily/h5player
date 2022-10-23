@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.5.5
+// @version      3.6.0
 // @description  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学等能力
 // @description:en  Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
 // @description:zh  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学等能力
@@ -185,7 +185,7 @@ const original = {
   ShadowRoot,
   HTMLMediaElement,
   CustomEvent,
-  appendChild: Node.prototype.appendChild,
+  // appendChild: Node.prototype.appendChild,
 
   JSON: {
     parse: JSON.parse,
@@ -269,7 +269,7 @@ const mediaCore = (function () {
       },
       set (keyName, val) {
         if (originDescriptors[keyName] && originDescriptors[keyName].set && !originMethods[keyName] && typeof val !== 'undefined') {
-          original.console.log(`[mediaPlusApi][${keyName}] 执行原生set操作`);
+          // original.console.log(`[mediaPlusApi][${keyName}] 执行原生set操作`)
           return originDescriptors[keyName].set.apply(mediaElement, [val])
         }
       },
@@ -277,7 +277,7 @@ const mediaCore = (function () {
         if (originMethods[keyName] instanceof Function) {
           const args = Array.from(arguments);
           args.shift();
-          original.console.log(`[mediaPlusApi][${keyName}] 执行原生apply操作`);
+          // original.console.log(`[mediaPlusApi][${keyName}] 执行原生apply操作`)
           return originMethods[keyName].apply(mediaElement, args)
         }
       }
@@ -368,7 +368,7 @@ const mediaCore = (function () {
         if (['play', 'pause'].includes(methodName)) {
           const mediaPlusApi = createMediaPlusApi(ctx);
           if (mediaPlusApi && mediaPlusApi.isLock(methodName)) {
-            original.console.log(`[mediaElementMethodProxy] ${methodName}已被锁定，无法执行相关操作`);
+            // original.console.log(`[mediaElementMethodProxy] ${methodName}已被锁定，无法执行相关操作`)
             return
           }
         }
@@ -414,7 +414,7 @@ const mediaCore = (function () {
         if (['playbackRate', 'volume', 'currentTime'].includes(property)) {
           const mediaPlusApi = createMediaPlusApi(this);
           if (mediaPlusApi && mediaPlusApi.isLock(property)) {
-            original.console.log(`[mediaElementPropertyHijack] ${property}已被锁定，无法执行相关操作`);
+            // original.console.log(`[mediaElementPropertyHijack] ${property}已被锁定，无法执行相关操作`)
             return
           }
         }
@@ -4108,19 +4108,42 @@ const h5Player = {
   /* 获取当前播放器的实例 */
   player: function () {
     const t = this;
-    return t.playerInstance || t.getPlayerList()[0]
+    let playerInstance = t.playerInstance;
+
+    if (!playerInstance) {
+      const mediaList = t.getPlayerList();
+      if (mediaList.length) {
+        playerInstance = mediaList[mediaList.length - 1];
+        t.playerInstance = playerInstance;
+        t.initPlayerInstance(mediaList.length === 1);
+      }
+    }
+
+    if (playerInstance && !t.mediaPlusApi) {
+      t.mediaPlusApi = mediaCore.mediaPlus(playerInstance);
+    }
+
+    return playerInstance
+  },
+
+  isAudioInstance () {
+    return this.player() instanceof HTMLAudioElement
   },
 
   /* 每个网页可能存在的多个video播放器 */
   getPlayerList: function () {
-    const list = [];
+    const list = mediaCore.mediaElementList || [];
+
     function findPlayer (context) {
       supportMediaTags.forEach(tagName => {
         context.querySelectorAll(tagName).forEach(function (player) {
-          list.push(player);
+          if (player instanceof HTMLMediaElement && !list.includes(player)) {
+            list.push(player);
+          }
         });
       });
     }
+
     findPlayer(document);
 
     // 被封装在 shadow dom 里面的video
@@ -4129,8 +4152,6 @@ const h5Player = {
         findPlayer(shadowRoot);
       });
     }
-
-    // todo 对获取到list元素进行是否为媒体DOM的校验
 
     return list
   },
@@ -4221,6 +4242,7 @@ const h5Player = {
           t.setPlaybackRate();
           t.lockPlaybackRate(1000);
 
+          /* TODO 恢复播放进度的逻辑待优化，不应该通过isSingle来简单 */
           if (isSingle === true) {
             /* 恢复播放进度和进行进度记录 */
             t.setPlayProgress(player);
@@ -4459,6 +4481,11 @@ const h5Player = {
   /* 锁定playbackRate，禁止调速 */
   lockPlaybackRate: function (timeout = 200) {
     if (this.mediaPlusApi) {
+      if (configManager.get('enhance.blockSetPlaybackRate') === true) {
+        // 如果配置了要锁死外部对playbackRate的操作，则直接给一个超大的值
+        timeout = 1000 * 60 * 60 * 24 * 365;
+      }
+
       this.mediaPlusApi.lockPlaybackRate(timeout);
       return true
     }
@@ -4528,13 +4555,21 @@ const h5Player = {
       configManager.set('media.playbackRate', curPlaybackRate);
     }
 
-    const mediaPlusApi = mediaCore.mediaPlus(player);
-    if (mediaPlusApi) {
-      mediaPlusApi.setPlaybackRate(curPlaybackRate);
+    if (t.mediaPlusApi) {
+      t.mediaPlusApi.setPlaybackRate(curPlaybackRate);
 
       if (!(!num && curPlaybackRate === 1) && !notips) {
         t.tips(i18n.t('tipsMsg.playspeed') + player.playbackRate);
       }
+
+      /* 将播放倍速同步到全部媒体元素 */
+      const mediaList = t.getPlayerList();
+      mediaList.forEach(media => {
+        if (media !== player) {
+          const mediaPlusApi = mediaCore.mediaPlus(media);
+          mediaPlusApi && mediaPlusApi.setPlaybackRate(curPlaybackRate);
+        }
+      });
 
       return true
     }
@@ -4690,8 +4725,13 @@ const h5Player = {
    * 锁定播放进度的控制逻辑
    * 跟锁定音量和倍速不一样，播放进度是跟视频实例有密切相关的，所以其锁定信息必须依附于播放实例
    */
-  lockSetCurrentTime: function (timeout = 200) {
+  lockCurrentTime: function (timeout = 200) {
     if (this.mediaPlusApi) {
+      if (configManager.get('enhance.blockSetCurrentTime') === true) {
+        // 如果配置了要锁死外部对currentTime的操作，则直接给一个超大的值
+        timeout = 1000 * 60 * 60 * 24 * 365;
+      }
+
       this.mediaPlusApi.lockCurrentTime(timeout);
       return true
     }
@@ -4703,7 +4743,7 @@ const h5Player = {
     }
   },
 
-  unLockSetCurrentTime: function () {
+  unLockCurrentTime: function () {
     if (this.mediaPlusApi) {
       this.mediaPlusApi.unLockCurrentTime();
       return true
@@ -4716,7 +4756,7 @@ const h5Player = {
     }
   },
 
-  isLockSetCurrentTime: function () {
+  isLockCurrentTime: function () {
     if (this.mediaPlusApi) {
       return this.mediaPlusApi.isLockCurrentTime()
     }
@@ -4738,7 +4778,7 @@ const h5Player = {
     const t = this;
     const player = t.player();
 
-    if (t.isLockSetCurrentTime()) {
+    if (t.isLockCurrentTime()) {
       return false
     }
 
@@ -4771,7 +4811,7 @@ const h5Player = {
             return false
           }
 
-          if (t.isLockSetCurrentTime()) {
+          if (t.isLockCurrentTime()) {
             return false
           }
 
@@ -4791,11 +4831,11 @@ const h5Player = {
 
     if (TCC$1.doTask('addCurrentTime')) ; else {
       if (this.player()) {
-        this.unLockSetCurrentTime();
+        this.unLockCurrentTime();
         this.setCurrentTime(this.player().currentTime + num);
 
         /* 防止外部进度控制逻辑的干扰，所以锁定一段时间 */
-        this.lockSetCurrentTime(500);
+        this.lockCurrentTime(500);
 
         this.tips(i18n.t('tipsMsg.forward') + num + i18n.t('tipsMsg.seconds'));
       }
@@ -4812,11 +4852,11 @@ const h5Player = {
           currentTime = 0;
         }
 
-        this.unLockSetCurrentTime();
+        this.unLockCurrentTime();
         this.setCurrentTime(currentTime);
 
         /* 防止外部进度控制逻辑的干扰，所以锁定一段时间 */
-        this.lockSetCurrentTime(500);
+        this.lockCurrentTime(500);
 
         this.tips(i18n.t('tipsMsg.backward') + Math.abs(num) + i18n.t('tipsMsg.seconds'));
       }
@@ -4844,6 +4884,11 @@ const h5Player = {
   /* 锁定音量，禁止调音 */
   lockVolume: function (timeout = 200) {
     if (this.mediaPlusApi) {
+      if (configManager.get('enhance.blockSetVolume') === true) {
+        // 如果配置了要锁死外部对voluem的操作，则直接给一个超大的值
+        timeout = 1000 * 60 * 60 * 24 * 365;
+      }
+
       this.mediaPlusApi.lockVolume(timeout);
       return true
     }
@@ -4896,8 +4941,17 @@ const h5Player = {
       configManager.setLocalStorage('media.volume', num);
     }
 
-    if (this.mediaPlusApi) {
-      this.mediaPlusApi.setVolume(num);
+    if (t.mediaPlusApi) {
+      t.mediaPlusApi.setVolume(num);
+
+      /* 将播放音量同步到全部媒体元素 */
+      const mediaList = t.getPlayerList();
+      mediaList.forEach(media => {
+        if (media !== player) {
+          const mediaPlusApi = mediaCore.mediaPlus(media);
+          mediaPlusApi && mediaPlusApi.setVolume(num);
+        }
+      });
     } else {
       delete player.volume;
       player.volume = num;
@@ -5297,64 +5351,78 @@ const h5Player = {
       return true
     }
 
-    const parentNode = t.getTipsContainer();
+    const isAudio = t.isAudioInstance();
+    const parentNode = isAudio ? document.body : t.getTipsContainer();
 
     if (parentNode === player) {
       debug.info('获取tips的包裹容器异常：', player, str);
       return false
     }
 
-    // 修复部分提示按钮位置异常问题
-    const defStyle = parentNode.getAttribute('style') || '';
-    let backupStyle = parentNode.getAttribute('style-backup') || '';
-    if (!backupStyle) {
-      let backupSty = defStyle || 'style-backup:none';
-      const backupStyObj = inlineStyleToObj(backupSty);
+    let backupStyle = '';
+    if (!isAudio) {
+      // 修复部分提示按钮位置异常问题
+      const defStyle = parentNode.getAttribute('style') || '';
 
-      /**
+      backupStyle = parentNode.getAttribute('style-backup') || '';
+      if (!backupStyle) {
+        let backupSty = defStyle || 'style-backup:none';
+        const backupStyObj = inlineStyleToObj(backupSty);
+
+        /**
        * 修复因为缓存时机获取到错误样式的问题
        * 例如在：https://www.xuetangx.com/
        */
-      if (backupStyObj.opacity === '0') {
-        backupStyObj.opacity = '1';
+        if (backupStyObj.opacity === '0') {
+          backupStyObj.opacity = '1';
+        }
+        if (backupStyObj.visibility === 'hidden') {
+          backupStyObj.visibility = 'visible';
+        }
+
+        backupSty = objToInlineStyle(backupStyObj);
+
+        parentNode.setAttribute('style-backup', backupSty);
+        backupStyle = defStyle;
       }
-      if (backupStyObj.visibility === 'hidden') {
-        backupStyObj.visibility = 'visible';
+
+      const newStyleArr = backupStyle.split(';');
+
+      const oldPosition = parentNode.getAttribute('def-position') || window.getComputedStyle(parentNode).position;
+      if (parentNode.getAttribute('def-position') === null) {
+        parentNode.setAttribute('def-position', oldPosition || '');
+      }
+      if (['static', 'inherit', 'initial', 'unset', ''].includes(oldPosition)) {
+        newStyleArr.push('position: relative');
       }
 
-      backupSty = objToInlineStyle(backupStyObj);
+      const playerBox = player.getBoundingClientRect();
+      const parentNodeBox = parentNode.getBoundingClientRect();
+      /* 不存在高宽时，给包裹节点一个最小高宽，才能保证提示能正常显示 */
+      if (!parentNodeBox.width || !parentNodeBox.height) {
+        newStyleArr.push('min-width:' + playerBox.width + 'px');
+        newStyleArr.push('min-height:' + playerBox.height + 'px');
+      }
 
-      parentNode.setAttribute('style-backup', backupSty);
-      backupStyle = defStyle;
-    }
+      parentNode.setAttribute('style', newStyleArr.join(';'));
 
-    const newStyleArr = backupStyle.split(';');
-
-    const oldPosition = parentNode.getAttribute('def-position') || window.getComputedStyle(parentNode).position;
-    if (parentNode.getAttribute('def-position') === null) {
-      parentNode.setAttribute('def-position', oldPosition || '');
-    }
-    if (['static', 'inherit', 'initial', 'unset', ''].includes(oldPosition)) {
-      newStyleArr.push('position: relative');
-    }
-
-    const playerBox = player.getBoundingClientRect();
-    const parentNodeBox = parentNode.getBoundingClientRect();
-    /* 不存在高宽时，给包裹节点一个最小高宽，才能保证提示能正常显示 */
-    if (!parentNodeBox.width || !parentNodeBox.height) {
-      newStyleArr.push('min-width:' + playerBox.width + 'px');
-      newStyleArr.push('min-height:' + playerBox.height + 'px');
-    }
-
-    parentNode.setAttribute('style', newStyleArr.join(';'));
-
-    const newPlayerBox = player.getBoundingClientRect();
-    if (Math.abs(newPlayerBox.height - playerBox.height) > 50) {
-      parentNode.setAttribute('style', backupStyle);
+      const newPlayerBox = player.getBoundingClientRect();
+      if (Math.abs(newPlayerBox.height - playerBox.height) > 50) {
+        parentNode.setAttribute('style', backupStyle);
       // debug.info('应用新样式后给播放器高宽造成了严重的偏差，样式已被还原：', player, playerBox, newPlayerBox)
+      }
     }
 
     const tipsSelector = '.' + t.tipsClassName;
+
+    /* 当出现多个tips元素时，将这些tips元素全部移除 */
+    const tipsList = document.querySelectorAll(tipsSelector);
+    if (tipsList.length > 1) {
+      tipsList.forEach(tipsItem => {
+        tipsItem.remove();
+      });
+    }
+
     let tipsDom = parentNode.querySelector(tipsSelector);
 
     /* 提示dom未初始化的，则进行初始化 */
@@ -5399,16 +5467,18 @@ const h5Player = {
       showTips();
     }
   },
+
   /* 设置提示DOM的样式 */
   initTips: function () {
     const t = h5Player;
-    const parentNode = t.getTipsContainer();
+    const isAudio = t.isAudioInstance();
+    const parentNode = isAudio ? document.body : t.getTipsContainer();
     if (parentNode.querySelector('.' + t.tipsClassName)) return
 
     // top: 50%;
     // left: 50%;
     // transform: translate(-50%,-50%);
-    const tipsStyle = `
+    let tipsStyle = `
       position: absolute;
       z-index: 999999;
       font-size: ${t.fontSize || 16}px;
@@ -5425,6 +5495,27 @@ const h5Player = {
       font-family: 'microsoft yahei', Verdana, Geneva, sans-serif;
       -webkit-user-select: none;
     `;
+
+    if (isAudio) {
+      tipsStyle = `
+        position: fixed;
+        z-index: 999999;
+        font-size: ${t.fontSize || 16}px;
+        padding: 5px 10px;
+        background: rgba(0,0,0,0.4);
+        color:white;
+        bottom: 0;
+        right: 0;
+        transition: all 500ms ease;
+        opacity: 0;
+        border-top-left-radius: 5px;
+        display: none;
+        -webkit-font-smoothing: subpixel-antialiased;
+        font-family: 'microsoft yahei', Verdana, Geneva, sans-serif;
+        -webkit-user-select: none;
+      `;
+    }
+
     const tips = document.createElement('div');
     tips.setAttribute('style', tipsStyle);
     tips.setAttribute('class', t.tipsClassName);
@@ -6024,20 +6115,34 @@ const h5Player = {
   },
 
   setPlayerInstance (el) {
-    if (el && el.getBoundingClientRect) {
-      const t = h5Player;
+    if (!el && !el.getBoundingClientRect) {
+      return false
+    }
 
-      if (t.player() === el) {
-        return false
-      }
+    const t = h5Player;
 
+    if (t.player() === el) {
+      return false
+    }
+
+    if (!t.playerInstance && el instanceof HTMLMediaElement) {
+      t.playerInstance = el;
+      t.initPlayerInstance(false);
+      return true
+    }
+
+    if (el instanceof HTMLVideoElement) {
       const elParentNode = t.getTipsContainer(el);
       const elInfo = el.getBoundingClientRect();
       const parentElInfo = elParentNode && elParentNode.getBoundingClientRect();
       if (elInfo && elInfo.width > 200 && parentElInfo && parentElInfo.width > 200) {
         t.playerInstance = el;
         t.initPlayerInstance(false);
-        return true
+      }
+    } else if (el instanceof HTMLAudioElement) {
+      if (t.playerInstance instanceof HTMLAudioElement || (t.playerInstance instanceof HTMLVideoElement && !t.playerInstance.isConnected)) {
+        t.playerInstance = el;
+        t.initPlayerInstance(false);
       }
     }
   },
@@ -6081,7 +6186,7 @@ const h5Player = {
     const playerList = t.getPlayerList();
 
     if (playerList.length) {
-      debug.log('检测到HTML5视频！', location.href, h5Player, playerList);
+      // debug.log('检测到HTML5视频！', location.href, h5Player, playerList)
 
       /* 单video实例标签的情况 */
       if (playerList.length === 1) {
@@ -6102,7 +6207,14 @@ const h5Player = {
         /* 播放器开始播放的时候重新指向实例 */
         if (!player._hasPlayingRedirectEvent_) {
           player.addEventListener('playing', function (event) {
-            t.setPlayerInstance(event.target);
+            const media = event.target;
+
+            /* 对于超短的音视频可能是某些操作反馈的特效，可忽略对其进行播放实例切换 */
+            if (media.duration && media.duration < 8) {
+              return false
+            }
+
+            t.setPlayerInstance(media);
           });
           player._hasPlayingRedirectEvent_ = true;
         }
@@ -6236,7 +6348,8 @@ const h5Player = {
 async function h5PlayerInit () {
   try {
     mediaCore.init(function (mediaElement) {
-      debug.log('[mediaCore][mediaChecker]', mediaElement);
+      // debug.log('[mediaCore][mediaChecker]', mediaElement)
+      h5Player.init();
     });
 
     /* 禁止对playbackRate等属性进行锁定 */

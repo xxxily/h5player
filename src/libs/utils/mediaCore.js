@@ -76,7 +76,7 @@ const mediaCore = (function () {
       },
       set (keyName, val) {
         if (originDescriptors[keyName] && originDescriptors[keyName].set && !originMethods[keyName] && typeof val !== 'undefined') {
-          original.console.log(`[mediaPlusApi][${keyName}] 执行原生set操作`)
+          // original.console.log(`[mediaPlusApi][${keyName}] 执行原生set操作`)
           return originDescriptors[keyName].set.apply(mediaElement, [val])
         }
       },
@@ -84,7 +84,7 @@ const mediaCore = (function () {
         if (originMethods[keyName] instanceof Function) {
           const args = Array.from(arguments)
           args.shift()
-          original.console.log(`[mediaPlusApi][${keyName}] 执行原生apply操作`)
+          // original.console.log(`[mediaPlusApi][${keyName}] 执行原生apply操作`)
           return originMethods[keyName].apply(mediaElement, args)
         }
       }
@@ -175,7 +175,7 @@ const mediaCore = (function () {
         if (['play', 'pause'].includes(methodName)) {
           const mediaPlusApi = createMediaPlusApi(ctx)
           if (mediaPlusApi && mediaPlusApi.isLock(methodName)) {
-            original.console.log(`[mediaElementMethodProxy] ${methodName}已被锁定，无法执行相关操作`)
+            // original.console.log(`[mediaElementMethodProxy] ${methodName}已被锁定，无法执行相关操作`)
             return
           }
         }
@@ -221,7 +221,7 @@ const mediaCore = (function () {
         if (['playbackRate', 'volume', 'currentTime'].includes(property)) {
           const mediaPlusApi = createMediaPlusApi(this)
           if (mediaPlusApi && mediaPlusApi.isLock(property)) {
-            original.console.log(`[mediaElementPropertyHijack] ${property}已被锁定，无法执行相关操作`)
+            // original.console.log(`[mediaElementPropertyHijack] ${property}已被锁定，无法执行相关操作`)
             return
           }
         }
