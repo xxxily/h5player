@@ -32,7 +32,7 @@ module.exports = {
     nextLinks: true,
     prevLinks: true,
 
-    smoothScroll: false
+    smoothScroll: true
   },
   /* 显示代码的行号 */
   markdown: {

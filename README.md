@@ -123,7 +123,7 @@
 | 懒人听书 | [https://www.lrts.me/](https://www.lrts.me/) |
 | 蜻蜓FM | [https://www.qtfm.cn/](https://www.qtfm.cn/) |
 | 酷狗听书 | [https://www.kugou.com/ts/](https://www.kugou.com/ts/) |
-| 百度网盘音频文件 | [https://pan.baidu.com//](https://pan.baidu.com/) |
+| 百度网盘音频文件 | [https://pan.baidu.com/](https://pan.baidu.com/) |
 | 阿里云盘音频文件 | [https://aliyundrive.com/](https://aliyundrive.com/) |
 | 其他网盘音频文件 | ...... |
 

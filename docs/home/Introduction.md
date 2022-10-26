@@ -21,6 +21,7 @@
 - 支持画中画功能
 - 支持跨Tab控制画中画
 - 支持视频画面截图功能
+- 支持对音频实例的控制
 - 支持配置式添加自定义功能
   
 ## 快捷键列表
@@ -76,7 +77,7 @@
 
 下面列出一些常见网站列表方便点击测试：
 
-|  网站   | URL    |
+|  视频网站   | URL    |
 | --- | --- |
 | B站 | [https://bilibili.com](https://bilibili.com) |
 | 腾讯视频 | [https://v.qq.com](https://v.qq.com) |
@@ -115,6 +116,16 @@
 | Magisto | [https://www.magisto.com](https://www.magisto.com) |
 | CBS | [https://www.cbs.com](https://www.cbs.com) |
 | FC2 Video | [https://video.fc2.com](https://video.fc2.com) |
+
+|  音频网站   | URL    |
+| --- | --- |
+| 喜马拉雅 | [https://www.ximalaya.com/](https://www.ximalaya.com/) |
+| 懒人听书 | [https://www.lrts.me/](https://www.lrts.me/) |
+| 蜻蜓FM | [https://www.qtfm.cn/](https://www.qtfm.cn/) |
+| 酷狗听书 | [https://www.kugou.com/ts/](https://www.kugou.com/ts/) |
+| 百度网盘音频文件 | [https://pan.baidu.com/](https://pan.baidu.com/) |
+| 阿里云盘音频文件 | [https://aliyundrive.com/](https://aliyundrive.com/) |
+| 其他网盘音频文件 | ...... |
 
 如果你常去的网站支持不好欢迎提[issues](https://github.com/xxxily/h5player/issues)
 
