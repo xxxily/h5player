@@ -118,6 +118,7 @@ export function registerH5playerMenus (h5player) {
           if (confirm) {
             /* 倍速参数，只能全局设置 */
             configManager.setGlobalStorage('enhance.blockSetPlaybackRate', !configManager.get('enhance.blockSetPlaybackRate'))
+            window.location.reload()
           }
         }
       },
@@ -127,6 +128,7 @@ export function registerH5playerMenus (h5player) {
           const confirm = window.confirm(configManager.get('enhance.blockSetCurrentTime') ? i18n.t('unblockSetCurrentTime') : i18n.t('blockSetCurrentTime'))
           if (confirm) {
             configManager.setLocalStorage('enhance.blockSetCurrentTime', !configManager.get('enhance.blockSetCurrentTime'))
+            window.location.reload()
           }
         }
       },
@@ -136,6 +138,17 @@ export function registerH5playerMenus (h5player) {
           const confirm = window.confirm(configManager.get('enhance.blockSetVolume') ? i18n.t('unblockSetVolume') : i18n.t('blockSetVolume'))
           if (confirm) {
             configManager.setLocalStorage('enhance.blockSetVolume', !configManager.get('enhance.blockSetVolume'))
+            window.location.reload()
+          }
+        }
+      },
+      {
+        title: () => configManager.get('enhance.allowExperimentFeatures') ? i18n.t('notAllowExperimentFeatures') : i18n.t('allowExperimentFeatures'),
+        fn: () => {
+          const confirm = window.confirm(configManager.get('enhance.allowExperimentFeatures') ? i18n.t('notAllowExperimentFeatures') : i18n.t('experimentFeaturesWarning'))
+          if (confirm) {
+            configManager.setLocalStorage('enhance.allowExperimentFeatures', !configManager.get('enhance.allowExperimentFeatures'))
+            window.location.reload()
           }
         }
       }

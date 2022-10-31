@@ -23,6 +23,13 @@
 - 支持视频画面截图功能
 - 支持对音频实例的控制
 - 支持配置式添加自定义功能
+
+## 交流群（新）
+
+<br />
+<img src="https://h5player.anzz.top/assets/img/WeChat.2a726e0c.jpg" width=280 />
+<br />
+<p>微信交流、反馈、新功能内测群</p>
   
 ## 快捷键列表
 

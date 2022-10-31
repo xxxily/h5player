@@ -494,6 +494,173 @@ const mediaCore = (function () {
   }
 })();
 
+const mediaSource = (function () {
+  let hasMediaSourceInit = false;
+  const originMethods = {};
+  const originURLMethods = {};
+  const mediaSourceMap = new original.Map();
+  const objectURLMap = new original.Map();
+
+  function proxyMediaSourceMethod () {
+    if (!originMethods.addSourceBuffer || !originMethods.endOfStream) {
+      return false
+    }
+
+    // TODO 该代理并不会在上层调用里生效，原因待研究
+    originURLMethods.createObjectURL = originURLMethods.createObjectURL || URL.prototype.constructor.createObjectURL;
+    URL.prototype.constructor.createObjectURL = new original.Proxy(originURLMethods.createObjectURL, {
+      apply (target, ctx, args) {
+        const objectURL = target.apply(ctx, args);
+
+        original.map.set.call(objectURLMap, args[0], objectURL);
+
+        return objectURL
+      }
+    });
+
+    MediaSource.prototype.addSourceBuffer = new original.Proxy(originMethods.addSourceBuffer, {
+      apply (target, ctx, args) {
+        if (!original.map.has.call(mediaSourceMap, ctx)) {
+          original.map.set.call(mediaSourceMap, ctx, {
+            mediaSource: ctx,
+            createTime: Date.now(),
+            sourceBuffer: [],
+            endOfStream: false
+          });
+        }
+
+        console.log('[addSourceBuffer]', ctx, args);
+
+        const mediaSourceInfo = original.map.get.call(mediaSourceMap, ctx);
+        const mimeCodecs = args[0] || '';
+        const sourceBuffer = target.apply(ctx, args);
+
+        const sourceBufferItem = {
+          mimeCodecs,
+          originAppendBuffer: sourceBuffer.appendBuffer,
+          bufferData: [],
+          mediaInfo: {}
+        };
+
+        try {
+          // mimeCodecs字符串示例：'video/mp4; codecs="avc1.42E01E, mp4a.40.2"'
+          const mediaInfo = sourceBufferItem.mediaInfo;
+          const tmpArr = sourceBufferItem.mimeCodecs.split(';');
+
+          mediaInfo.type = tmpArr[0].split('/')[0];
+          mediaInfo.format = tmpArr[0].split('/')[1];
+          mediaInfo.codecs = tmpArr[1].trim().replace('codecs=', '').replace(/["']/g, '');
+        } catch (e) {
+          console.error('[addSourceBuffer][mediaInfo] 媒体信息解析出错', sourceBufferItem, e);
+        }
+
+        mediaSourceInfo.sourceBuffer.push(sourceBufferItem);
+
+        /* 代理sourceBuffer.appendBuffer函数，并将buffer存一份到mediaSourceInfo里 */
+        sourceBuffer.appendBuffer = new original.Proxy(sourceBufferItem.originAppendBuffer, {
+          apply (bufTarget, bufCtx, bufArgs) {
+            const buffer = bufArgs[0];
+            sourceBufferItem.bufferData.push(buffer);
+
+            /* 确保mediaUrl的存在和对应 */
+            if (original.map.get.call(objectURLMap, ctx)) {
+              mediaSourceInfo.mediaUrl = original.map.get.call(objectURLMap, ctx);
+            }
+
+            return bufTarget.apply(bufCtx, bufArgs)
+          }
+        });
+
+        return sourceBuffer
+      }
+    });
+
+    MediaSource.prototype.endOfStream = new original.Proxy(originMethods.endOfStream, {
+      apply (target, ctx, args) {
+        /* 标识当前媒体流已加载完成 */
+        const mediaSourceInfo = original.map.get.call(mediaSourceMap, ctx);
+        if (mediaSourceInfo) {
+          mediaSourceInfo.endOfStream = true;
+        }
+
+        return target.apply(ctx, args)
+      }
+    });
+  }
+
+  /**
+   * 下载媒体资源，下载代码参考：https://juejin.cn/post/6873267073674379277
+   */
+  function downloadMediaSource () {
+    mediaSourceMap.forEach(mediaSourceInfo => {
+      if (mediaSourceInfo.hasDownload) {
+        return true
+      }
+
+      if (!mediaSourceInfo.endOfStream) {
+        console.log('[downloadMediaSource] 媒体数据还没加载完成，暂时不能下载', mediaSourceInfo);
+        return false
+      }
+
+      mediaSourceInfo.hasDownload = true;
+      mediaSourceInfo.sourceBuffer.forEach(sourceBufferItem => {
+        if (!sourceBufferItem.mimeCodecs || sourceBufferItem.mimeCodecs.toString().indexOf(';') === -1) {
+          console.error('[downloadMediaSource][mimeCodecs][error] mimeCodecs不存在或信息异常，无法下载', sourceBufferItem);
+          return false
+        }
+
+        try {
+          const mediaTitle = `${document.title || Date.now()}_${sourceBufferItem.mediaInfo.type}.${sourceBufferItem.mediaInfo.format}`;
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(new Blob(sourceBufferItem.bufferData));
+          a.download = mediaTitle;
+          a.click();
+          URL.revokeObjectURL(a.href);
+        } catch (e) {
+          mediaSourceInfo.hasDownload = false;
+          console.error('[downloadMediaSource][error]', e);
+        }
+      });
+    });
+  }
+
+  function hasInit () {
+    return hasMediaSourceInit
+  }
+
+  function init () {
+    if (hasMediaSourceInit) {
+      return false
+    }
+
+    if (!window.MediaSource) {
+      return false
+    }
+
+    Object.keys(MediaSource.prototype).forEach(key => {
+      try {
+        if (MediaSource.prototype[key] instanceof Function) {
+          originMethods[key] = MediaSource.prototype[key];
+        }
+      } catch (e) {}
+    });
+
+    proxyMediaSourceMethod();
+
+    hasMediaSourceInit = true;
+  }
+
+  return {
+    init,
+    hasInit,
+    originMethods,
+    originURLMethods,
+    mediaSourceMap,
+    objectURLMap,
+    downloadMediaSource
+  }
+})();
+
 /*!
  * @name         utils.js
  * @description  数据类型相关的方法
@@ -1004,7 +1171,8 @@ const defConfig = {
     blockSetPlaybackRate: true,
 
     blockSetCurrentTime: false,
-    blockSetVolume: false
+    blockSetVolume: false,
+    allowExperimentFeatures: false
   },
   debug: true
 };
@@ -2537,6 +2705,9 @@ var zhCN = {
   unblockSetPlaybackRate: '允许默认速度调节逻辑',
   unblockSetCurrentTime: '允许默认播放进度控制逻辑',
   unblockSetVolume: '允许默认音量控制逻辑',
+  allowExperimentFeatures: '开启实验性功能',
+  notAllowExperimentFeatures: '禁用实验性功能',
+  experimentFeaturesWarning: '实验性功能容易造成一些不确定的问题，请谨慎开启',
   configFail: '配置失败',
   tipsMsg: {
     playspeed: '播放速度：',
@@ -2588,6 +2759,9 @@ var enUS = {
   unblockSetPlaybackRate: 'Allow default speed adjustment logic',
   unblockSetCurrentTime: 'Allow default playback progress control logic',
   unblockSetVolume: 'Allow default volume control logic',
+  allowExperimentFeatures: 'Turn on experimental features',
+  notAllowExperimentFeatures: 'Disable experimental features',
+  experimentFeaturesWarning: 'Experimental features are likely to cause some uncertain problems, please turn on with caution',
   configFail: 'Configuration failed',
   tipsMsg: {
     playspeed: 'Speed: ',
@@ -2640,6 +2814,9 @@ var ru = {
   unblockSetPlaybackRate: 'Разрешить логику регулировки скорости по умолчанию',
   unblockSetCurrentTime: 'Разрешить логику управления ходом воспроизведения по умолчанию',
   unblockSetVolume: 'Разрешить логику управления громкостью по умолчанию',
+  allowExperimentFeatures: 'Включить экспериментальные функции',
+  notAllowExperimentFeatures: 'Отключить экспериментальные функции',
+  experimentFeaturesWarning: 'Экспериментальные функции могут вызвать определенные проблемы, включайте их с осторожностью.',
   configFail: 'Ошибка конфигурации',
   tipsMsg: {
     playspeed: 'Скорость: ',
@@ -2691,6 +2868,9 @@ var zhTW = {
   unblockSetPlaybackRate: '允許默認速度調節邏輯',
   unblockSetCurrentTime: '允許默認播放進度控制邏輯',
   unblockSetVolume: '允許默認音量控制邏輯',
+  allowExperimentFeatures: '開啟實驗性功能',
+  notAllowExperimentFeatures: '禁用實驗性功能',
+  experimentFeaturesWarning: '實驗性功能容易造成一些不確定的問題，請謹慎開啟',
   configFail: '配置失敗',
   tipsMsg: {
     playspeed: '播放速度：',
@@ -3947,6 +4127,7 @@ function registerH5playerMenus (h5player) {
           if (confirm) {
             /* 倍速参数，只能全局设置 */
             configManager.setGlobalStorage('enhance.blockSetPlaybackRate', !configManager.get('enhance.blockSetPlaybackRate'));
+            window.location.reload();
           }
         }
       },
@@ -3956,6 +4137,7 @@ function registerH5playerMenus (h5player) {
           const confirm = window.confirm(configManager.get('enhance.blockSetCurrentTime') ? i18n.t('unblockSetCurrentTime') : i18n.t('blockSetCurrentTime'));
           if (confirm) {
             configManager.setLocalStorage('enhance.blockSetCurrentTime', !configManager.get('enhance.blockSetCurrentTime'));
+            window.location.reload();
           }
         }
       },
@@ -3965,6 +4147,17 @@ function registerH5playerMenus (h5player) {
           const confirm = window.confirm(configManager.get('enhance.blockSetVolume') ? i18n.t('unblockSetVolume') : i18n.t('blockSetVolume'));
           if (confirm) {
             configManager.setLocalStorage('enhance.blockSetVolume', !configManager.get('enhance.blockSetVolume'));
+            window.location.reload();
+          }
+        }
+      },
+      {
+        title: () => configManager.get('enhance.allowExperimentFeatures') ? i18n.t('notAllowExperimentFeatures') : i18n.t('allowExperimentFeatures'),
+        fn: () => {
+          const confirm = window.confirm(configManager.get('enhance.allowExperimentFeatures') ? i18n.t('notAllowExperimentFeatures') : i18n.t('experimentFeaturesWarning'));
+          if (confirm) {
+            configManager.setLocalStorage('enhance.allowExperimentFeatures', !configManager.get('enhance.allowExperimentFeatures'));
+            window.location.reload();
           }
         }
       }
@@ -4054,6 +4247,25 @@ function proxyHTMLMediaElementEvent () {
   });
 }
 
+function mediaDownload (mediaEl) {
+  if (mediaEl && mediaEl.src && !mediaEl.src.startsWith('blob:')) {
+    const mediaInfo = {
+      type: mediaEl instanceof HTMLVideoElement ? 'video' : 'audio',
+      format: mediaEl instanceof HTMLVideoElement ? 'mp4' : 'mp3'
+    };
+    const mediaTitle = `${document.title || Date.now()}_${mediaInfo.type}.${mediaInfo.format}`;
+    const downloadEl = document.createElement('a');
+
+    downloadEl.href = mediaEl.src;
+    downloadEl.target = '_blank';
+    downloadEl.download = mediaTitle;
+    downloadEl.click();
+  } else if (mediaSource.hasInit()) {
+    /* 下载通过MediaSource管理的媒体文件 */
+    mediaSource.downloadMediaSource();
+  }
+}
+
 window._debugMode_ = true;
 
 /* 定义支持哪些媒体标签 */
@@ -4064,6 +4276,7 @@ let TCC$1 = null;
 const h5Player = {
   mediaCore,
   mediaPlusApi: null,
+  mediaSource,
   configManager,
   /* 提示文本的字号 */
   fontSize: 12,
@@ -4224,7 +4437,7 @@ const h5Player = {
     }
 
     /* 播放的时候进行相关同步操作 */
-    if (!player._hasPlayingInitEvent_) {
+    if (!player._hasPlayerInitEvent_) {
       let setPlaybackRateOnPlayingCount = 0;
       player.addEventListener('playing', function (event) {
         t.unLockPlaybackRate();
@@ -4236,20 +4449,15 @@ const h5Player = {
           t.setVolume(configManager.getGlobalStorage('media.volume'), true);
         }
 
+        /* 恢复播放进度和进行播放进度记录 */
+        t.setPlayProgress(player);
+        t.playProgressRecorder(player);
+
         if (setPlaybackRateOnPlayingCount === 0) {
           /* 同步之前设定的播放速度，音量等 */
           t.unLockPlaybackRate();
           t.setPlaybackRate();
           t.lockPlaybackRate(1000);
-
-          /* TODO 恢复播放进度的逻辑待优化，不应该通过isSingle来简单 */
-          if (isSingle === true) {
-            /* 恢复播放进度和进行进度记录 */
-            t.setPlayProgress(player);
-            setTimeout(function () {
-              t.playProgressRecorder(player);
-            }, 1000 * 3);
-          }
         } else {
           t.unLockPlaybackRate();
           t.setPlaybackRate(null, true);
@@ -4257,7 +4465,8 @@ const h5Player = {
         }
         setPlaybackRateOnPlayingCount += 1;
       });
-      player._hasPlayingInitEvent_ = true;
+
+      player._hasPlayerInitEvent_ = true;
     }
 
     /* 进行自定义初始化操作 */
@@ -5292,14 +5501,6 @@ const h5Player = {
   },
 
   isAllowRestorePlayProgress: function () {
-    /**
-     * 当视频处于跨域的iframe里时，很可能一个地址对应多个视频，很容易造成进度记录异常
-     * 待提供更好的防止错误记录视频播放进度精细化逻辑
-     */
-    if (isInCrossOriginFrame()) {
-      return false
-    }
-
     const allowRestoreVal = configManager.get(`media.allowRestorePlayProgress.${window.location.host}`);
     return allowRestoreVal === null || allowRestoreVal
   },
@@ -5710,6 +5911,13 @@ const h5Player = {
         t.setMirror(true);
       }
 
+      if (key === 'd') {
+        if (configManager.get('enhance.allowExperimentFeatures')) {
+          debug.warn('[experimentFeatures][mediaDownload]');
+          mediaDownload(t.player());
+        }
+      }
+
       // 视频画面缩放相关事件
       const allowKeys = ['x', 'c', 'z', 'arrowright', 'arrowleft', 'arrowup', 'arrowdown'];
       if (!allowKeys.includes(key)) return
@@ -6036,10 +6244,14 @@ const h5Player = {
     if (!player) {
       return progressMap
     } else {
-      let keyName = window.location.href || player.src;
-      keyName += player.duration;
+      const keyName = window.location.href + player.duration;
       if (progressMap[keyName]) {
-        return progressMap[keyName].progress
+        /* 对于直播的视频流，会出现记录的duration和当前视频duration不一致的情况，这时候通过返回currentTime来忽略恢复播放进度 */
+        if (Number.isNaN(Number(player.duration)) || Number(progressMap[keyName].duration) !== Number(player.duration)) {
+          return player.currentTime
+        } else {
+          return progressMap[keyName].progress
+        }
       } else {
         return player.currentTime
       }
@@ -6051,16 +6263,26 @@ const h5Player = {
     clearTimeout(player._playProgressTimer_);
     function recorder (player) {
       player._playProgressTimer_ = setTimeout(function () {
-        if (!t.isAllowRestorePlayProgress()) {
+        /* 时长小于两分钟的视频不记录播放进度 */
+        const isToShort = !player.duration || Number.isNaN(Number(player.duration)) || player.duration < 120;
+
+        if (!t.isAllowRestorePlayProgress() || isToShort || player.currentTime < 10 || player.paused) {
           recorder(player);
           return true
         }
 
         const progressMap = t.getPlayProgress() || {};
         const list = Object.keys(progressMap);
+        const keyName = window.location.href + player.duration;
 
-        let keyName = window.location.href || player.src;
-        keyName += player.duration;
+        /**
+         * 对首次记录到progressMap的值进行标记
+         * 用于防止手动切换播放进度时，执行到错误的恢复逻辑
+         */
+        if (!progressMap[keyName]) {
+          t._firstProgressRecord_ = keyName;
+          t._hasRestorePlayProgress_ = keyName;
+        }
 
         /* 只保存最近10个视频的播放进度 */
         if (list.length > 10) {
@@ -6083,6 +6305,7 @@ const h5Player = {
         /* 记录当前播放进度 */
         progressMap[keyName] = {
           progress: player.currentTime,
+          duration: player.duration,
           t: new Date().getTime()
         };
 
@@ -6099,16 +6322,33 @@ const h5Player = {
   /* 设置播放进度 */
   setPlayProgress: function (player) {
     const t = h5Player;
-    if (!player) return
+    if (!player || !player.duration || Number.isNaN(player.duration)) return
 
     const curTime = Number(t.getPlayProgress(player));
-    if (!curTime || Number.isNaN(curTime)) return
+
+    /* 要恢复进度的时间过小或大于player.duration都不符合规范，不进行进度恢复操作 */
+    if (!curTime || Number.isNaN(curTime) || curTime < 3 || curTime >= player.duration) return
+
+    /* 忽略恢复进度时间与当前播放进度时间相差不大的情况 */
+    if (Math.abs(curTime - player.currentTime) < 2) {
+      return false
+    }
+
+    const progressKey = window.location.href + player.duration;
+    t._hasRestorePlayProgress_ = t._hasRestorePlayProgress_ || '';
+
+    if (t._hasRestorePlayProgress_ === progressKey || t._firstProgressRecord_ === progressKey) {
+      if (t._hasRestorePlayProgress_ === progressKey) {
+        t._firstProgressRecord_ = '';
+      }
+      return false
+    }
 
     if (t.isAllowRestorePlayProgress()) {
-      player.currentTime = curTime || player.currentTime;
-      if (curTime > 3) {
-        t.tips(i18n.t('tipsMsg.playbackrestored'));
-      }
+      // 比curTime少1.5s可以让用户知道是前面的画面，从而有个衔接上了的感觉
+      player.currentTime = curTime - 1.5;
+      t._hasRestorePlayProgress_ = progressKey;
+      t.tips(i18n.t('tipsMsg.playbackrestored'));
     } else {
       t.tips(i18n.t('tipsMsg.playbackrestoreoff'));
     }
@@ -6351,6 +6591,12 @@ async function h5PlayerInit () {
       // debug.log('[mediaCore][mediaChecker]', mediaElement)
       h5Player.init();
     });
+
+    if (configManager.get('enhance.allowExperimentFeatures')) {
+      mediaSource.init();
+      debug.warn(`[experimentFeatures][warning] ${i18n.t('experimentFeaturesWarning')}`);
+      debug.warn('[experimentFeatures][mediaSource][activated]');
+    }
 
     /* 禁止对playbackRate等属性进行锁定 */
     hackDefineProperty();

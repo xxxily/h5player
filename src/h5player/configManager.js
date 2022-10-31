@@ -92,7 +92,8 @@ const defConfig = {
     blockSetPlaybackRate: true,
 
     blockSetCurrentTime: false,
-    blockSetVolume: false
+    blockSetVolume: false,
+    allowExperimentFeatures: false
   },
   debug: true
 }

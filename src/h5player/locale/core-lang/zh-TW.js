@@ -15,6 +15,9 @@ export default {
   unblockSetPlaybackRate: '允許默認速度調節邏輯',
   unblockSetCurrentTime: '允許默認播放進度控制邏輯',
   unblockSetVolume: '允許默認音量控制邏輯',
+  allowExperimentFeatures: '開啟實驗性功能',
+  notAllowExperimentFeatures: '禁用實驗性功能',
+  experimentFeaturesWarning: '實驗性功能容易造成一些不確定的問題，請謹慎開啟',
   configFail: '配置失敗',
   tipsMsg: {
     playspeed: '播放速度：',

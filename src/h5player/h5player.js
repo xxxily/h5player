@@ -17,6 +17,7 @@ import {
   ready,
   hackAttachShadow,
   mediaCore,
+  mediaSource,
   isObj,
   quickSort,
   eachParentNode,
@@ -29,6 +30,7 @@ import {
   objToInlineStyle,
   clone
 } from '../libs/utils/index'
+import mediaDownload from './mediaDownload'
 
 import {
   isRegisterKey,
@@ -47,6 +49,7 @@ let TCC = null
 const h5Player = {
   mediaCore,
   mediaPlusApi: null,
+  mediaSource,
   configManager,
   /* 提示文本的字号 */
   fontSize: 12,
@@ -207,7 +210,7 @@ const h5Player = {
     }
 
     /* 播放的时候进行相关同步操作 */
-    if (!player._hasPlayingInitEvent_) {
+    if (!player._hasPlayerInitEvent_) {
       let setPlaybackRateOnPlayingCount = 0
       player.addEventListener('playing', function (event) {
         t.unLockPlaybackRate()
@@ -219,20 +222,15 @@ const h5Player = {
           t.setVolume(configManager.getGlobalStorage('media.volume'), true)
         }
 
+        /* 恢复播放进度和进行播放进度记录 */
+        t.setPlayProgress(player)
+        t.playProgressRecorder(player)
+
         if (setPlaybackRateOnPlayingCount === 0) {
           /* 同步之前设定的播放速度，音量等 */
           t.unLockPlaybackRate()
           t.setPlaybackRate()
           t.lockPlaybackRate(1000)
-
-          /* TODO 恢复播放进度的逻辑待优化，不应该通过isSingle来简单 */
-          if (isSingle === true) {
-            /* 恢复播放进度和进行进度记录 */
-            t.setPlayProgress(player)
-            setTimeout(function () {
-              t.playProgressRecorder(player)
-            }, 1000 * 3)
-          }
         } else {
           t.unLockPlaybackRate()
           t.setPlaybackRate(null, true)
@@ -240,7 +238,8 @@ const h5Player = {
         }
         setPlaybackRateOnPlayingCount += 1
       })
-      player._hasPlayingInitEvent_ = true
+
+      player._hasPlayerInitEvent_ = true
     }
 
     /* 进行自定义初始化操作 */
@@ -1287,14 +1286,6 @@ const h5Player = {
   },
 
   isAllowRestorePlayProgress: function () {
-    /**
-     * 当视频处于跨域的iframe里时，很可能一个地址对应多个视频，很容易造成进度记录异常
-     * 待提供更好的防止错误记录视频播放进度精细化逻辑
-     */
-    if (isInCrossOriginFrame()) {
-      return false
-    }
-
     const allowRestoreVal = configManager.get(`media.allowRestorePlayProgress.${window.location.host}`)
     return allowRestoreVal === null || allowRestoreVal
   },
@@ -1705,6 +1696,13 @@ const h5Player = {
         t.setMirror(true)
       }
 
+      if (key === 'd') {
+        if (configManager.get('enhance.allowExperimentFeatures')) {
+          debug.warn('[experimentFeatures][mediaDownload]')
+          mediaDownload(t.player())
+        }
+      }
+
       // 视频画面缩放相关事件
       const allowKeys = ['x', 'c', 'z', 'arrowright', 'arrowleft', 'arrowup', 'arrowdown']
       if (!allowKeys.includes(key)) return
@@ -2031,10 +2029,14 @@ const h5Player = {
     if (!player) {
       return progressMap
     } else {
-      let keyName = window.location.href || player.src
-      keyName += player.duration
+      const keyName = window.location.href + player.duration
       if (progressMap[keyName]) {
-        return progressMap[keyName].progress
+        /* 对于直播的视频流，会出现记录的duration和当前视频duration不一致的情况，这时候通过返回currentTime来忽略恢复播放进度 */
+        if (Number.isNaN(Number(player.duration)) || Number(progressMap[keyName].duration) !== Number(player.duration)) {
+          return player.currentTime
+        } else {
+          return progressMap[keyName].progress
+        }
       } else {
         return player.currentTime
       }
@@ -2046,16 +2048,26 @@ const h5Player = {
     clearTimeout(player._playProgressTimer_)
     function recorder (player) {
       player._playProgressTimer_ = setTimeout(function () {
-        if (!t.isAllowRestorePlayProgress()) {
+        /* 时长小于两分钟的视频不记录播放进度 */
+        const isToShort = !player.duration || Number.isNaN(Number(player.duration)) || player.duration < 120
+
+        if (!t.isAllowRestorePlayProgress() || isToShort || player.currentTime < 10 || player.paused) {
           recorder(player)
           return true
         }
 
         const progressMap = t.getPlayProgress() || {}
         const list = Object.keys(progressMap)
+        const keyName = window.location.href + player.duration
 
-        let keyName = window.location.href || player.src
-        keyName += player.duration
+        /**
+         * 对首次记录到progressMap的值进行标记
+         * 用于防止手动切换播放进度时，执行到错误的恢复逻辑
+         */
+        if (!progressMap[keyName]) {
+          t._firstProgressRecord_ = keyName
+          t._hasRestorePlayProgress_ = keyName
+        }
 
         /* 只保存最近10个视频的播放进度 */
         if (list.length > 10) {
@@ -2078,6 +2090,7 @@ const h5Player = {
         /* 记录当前播放进度 */
         progressMap[keyName] = {
           progress: player.currentTime,
+          duration: player.duration,
           t: new Date().getTime()
         }
 
@@ -2094,16 +2107,33 @@ const h5Player = {
   /* 设置播放进度 */
   setPlayProgress: function (player) {
     const t = h5Player
-    if (!player) return
+    if (!player || !player.duration || Number.isNaN(player.duration)) return
 
     const curTime = Number(t.getPlayProgress(player))
-    if (!curTime || Number.isNaN(curTime)) return
+
+    /* 要恢复进度的时间过小或大于player.duration都不符合规范，不进行进度恢复操作 */
+    if (!curTime || Number.isNaN(curTime) || curTime < 3 || curTime >= player.duration) return
+
+    /* 忽略恢复进度时间与当前播放进度时间相差不大的情况 */
+    if (Math.abs(curTime - player.currentTime) < 2) {
+      return false
+    }
+
+    const progressKey = window.location.href + player.duration
+    t._hasRestorePlayProgress_ = t._hasRestorePlayProgress_ || ''
+
+    if (t._hasRestorePlayProgress_ === progressKey || t._firstProgressRecord_ === progressKey) {
+      if (t._hasRestorePlayProgress_ === progressKey) {
+        t._firstProgressRecord_ = ''
+      }
+      return false
+    }
 
     if (t.isAllowRestorePlayProgress()) {
-      player.currentTime = curTime || player.currentTime
-      if (curTime > 3) {
-        t.tips(i18n.t('tipsMsg.playbackrestored'))
-      }
+      // 比curTime少1.5s可以让用户知道是前面的画面，从而有个衔接上了的感觉
+      player.currentTime = curTime - 1.5
+      t._hasRestorePlayProgress_ = progressKey
+      t.tips(i18n.t('tipsMsg.playbackrestored'))
     } else {
       t.tips(i18n.t('tipsMsg.playbackrestoreoff'))
     }
@@ -2346,6 +2376,12 @@ async function h5PlayerInit () {
       // debug.log('[mediaCore][mediaChecker]', mediaElement)
       h5Player.init()
     })
+
+    if (configManager.get('enhance.allowExperimentFeatures')) {
+      mediaSource.init()
+      debug.warn(`[experimentFeatures][warning] ${i18n.t('experimentFeaturesWarning')}`)
+      debug.warn('[experimentFeatures][mediaSource][activated]')
+    }
 
     /* 禁止对playbackRate等属性进行锁定 */
     hackDefineProperty()

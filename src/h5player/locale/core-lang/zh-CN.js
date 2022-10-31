@@ -15,6 +15,9 @@ export default {
   unblockSetPlaybackRate: '允许默认速度调节逻辑',
   unblockSetCurrentTime: '允许默认播放进度控制逻辑',
   unblockSetVolume: '允许默认音量控制逻辑',
+  allowExperimentFeatures: '开启实验性功能',
+  notAllowExperimentFeatures: '禁用实验性功能',
+  experimentFeaturesWarning: '实验性功能容易造成一些不确定的问题，请谨慎开启',
   configFail: '配置失败',
   tipsMsg: {
     playspeed: '播放速度：',

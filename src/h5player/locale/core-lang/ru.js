@@ -15,6 +15,9 @@ export default {
   unblockSetPlaybackRate: 'Разрешить логику регулировки скорости по умолчанию',
   unblockSetCurrentTime: 'Разрешить логику управления ходом воспроизведения по умолчанию',
   unblockSetVolume: 'Разрешить логику управления громкостью по умолчанию',
+  allowExperimentFeatures: 'Включить экспериментальные функции',
+  notAllowExperimentFeatures: 'Отключить экспериментальные функции',
+  experimentFeaturesWarning: 'Экспериментальные функции могут вызвать определенные проблемы, включайте их с осторожностью.',
   configFail: 'Ошибка конфигурации',
   tipsMsg: {
     playspeed: 'Скорость: ',

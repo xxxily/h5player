@@ -15,6 +15,9 @@ export default {
   unblockSetPlaybackRate: 'Allow default speed adjustment logic',
   unblockSetCurrentTime: 'Allow default playback progress control logic',
   unblockSetVolume: 'Allow default volume control logic',
+  allowExperimentFeatures: 'Turn on experimental features',
+  notAllowExperimentFeatures: 'Disable experimental features',
+  experimentFeaturesWarning: 'Experimental features are likely to cause some uncertain problems, please turn on with caution',
   configFail: 'Configuration failed',
   tipsMsg: {
     playspeed: 'Speed: ',
