@@ -149,10 +149,16 @@
 
 如果我的努力给你带来了便利，请不要吝啬你的赞赏
 
-![如果我的努力给你带来了便利，请不要吝啬你的赞赏](https://h5player.anzz.top/assets/img/donate.png)
+<p align="center">
+  <a href="https://h5player.anzz.top" target="_blank">
+  <img src="https://h5player.anzz.top/assets/img/donate.png" width=320 alt="如果我的努力给你带来了便利，请不要吝啬你的赞赏" />
+  </a>
+</p>
+
+<br />
 
 <p align="center">
-  <a href="https://trackgit.com">
+  <a href="https://trackgit.com" target="_blank">
   <img src="https://us-central1-trackgit-analytics.cloudfunctions.net/token/ping/l92cniondymy2ux36t8l" alt="trackgit-views" />
   </a>
 </p>
