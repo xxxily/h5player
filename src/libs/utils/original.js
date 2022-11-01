@@ -41,7 +41,11 @@ const original = {
   JSON: {
     parse: JSON.parse,
     stringify: JSON.stringify
-  }
+  },
+
+  alert,
+  confirm,
+  prompt
 }
 
 export default original

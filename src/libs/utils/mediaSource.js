@@ -12,7 +12,7 @@ const mediaSource = (function () {
       return false
     }
 
-    // TODO 该代理并不会在上层调用里生效，原因待研究
+    // TODO 该代理在上层调用生效可能存在延迟，原因待研究
     originURLMethods.createObjectURL = originURLMethods.createObjectURL || URL.prototype.constructor.createObjectURL
     URL.prototype.constructor.createObjectURL = new original.Proxy(originURLMethods.createObjectURL, {
       apply (target, ctx, args) {
@@ -104,19 +104,28 @@ const mediaSource = (function () {
       }
 
       if (!mediaSourceInfo.endOfStream) {
-        console.log('[downloadMediaSource] 媒体数据还没加载完成，暂时不能下载', mediaSourceInfo)
+        const msg = '[downloadMediaSource] 媒体数据还没加载完成，暂时不能下载'
+        console.log(msg, mediaSourceInfo)
+        original.alert(msg)
         return false
       }
 
       mediaSourceInfo.hasDownload = true
       mediaSourceInfo.sourceBuffer.forEach(sourceBufferItem => {
         if (!sourceBufferItem.mimeCodecs || sourceBufferItem.mimeCodecs.toString().indexOf(';') === -1) {
-          console.error('[downloadMediaSource][mimeCodecs][error] mimeCodecs不存在或信息异常，无法下载', sourceBufferItem)
+          const msg = '[downloadMediaSource][mimeCodecs][error] mimeCodecs不存在或信息异常，无法下载'
+          console.error(msg, sourceBufferItem)
+          original.alert(msg)
           return false
         }
 
         try {
-          const mediaTitle = `${document.title || Date.now()}_${sourceBufferItem.mediaInfo.type}.${sourceBufferItem.mediaInfo.format}`
+          let mediaTitle = `${document.title || Date.now()}_${sourceBufferItem.mediaInfo.type}.${sourceBufferItem.mediaInfo.format}`
+          mediaTitle = original.prompt('请确认文件标题：', mediaTitle) || mediaTitle
+          if (!mediaTitle.endsWith(sourceBufferItem.mediaInfo.format)) {
+            mediaTitle = mediaTitle + '.' + sourceBufferItem.mediaInfo.format
+          }
+
           const a = document.createElement('a')
           a.href = URL.createObjectURL(new Blob(sourceBufferItem.bufferData))
           a.download = mediaTitle
@@ -124,7 +133,9 @@ const mediaSource = (function () {
           URL.revokeObjectURL(a.href)
         } catch (e) {
           mediaSourceInfo.hasDownload = false
-          console.error('[downloadMediaSource][error]', e)
+          const msg = '[downloadMediaSource][error]'
+          console.error(msg, e)
+          original.alert(msg)
         }
       })
     })
