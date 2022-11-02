@@ -19,6 +19,12 @@ function mediaDownload (mediaEl, title, downloadType) {
     }
     let mediaTitle = `${title || mediaEl.title || document.title || Date.now()}_${mediaInfo.type}.${mediaInfo.format}`
 
+    /**
+     * 当视频包含source标签时，媒体标签的真实地址将会是currentSrc
+     * https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/currentSrc
+     */
+    const mediaUrl = mediaEl.src || mediaEl.currentSrc
+
     /* 小于10分钟的视频，尝试通过fetch下载 */
     if (downloadType === 'blob' || mediaEl.duration < 60 * 10) {
       if (mediaEl.downloading) {
@@ -46,8 +52,14 @@ function mediaDownload (mediaEl, title, downloadType) {
         mediaTitle = mediaTitle + '.' + mediaInfo.format
       }
 
+      let fetchUrl = mediaUrl
+      if (mediaUrl.startsWith('http://') && location.href.startsWith('https://')) {
+        /* 在https里fetch http资源会导致 block:mixed-content 错误，所以尝试将地址统一成https开头 */
+        fetchUrl = mediaUrl.replace('http://', 'https://')
+      }
+
       mediaEl.downloading = Date.now()
-      fetch(mediaEl.src || mediaEl.currentSrc).then(res => {
+      fetch(fetchUrl).then(res => {
         res.blob().then(blob => {
           const blobUrl = window.URL.createObjectURL(blob)
           download(blobUrl, mediaTitle)
@@ -56,15 +68,16 @@ function mediaDownload (mediaEl, title, downloadType) {
           delete mediaEl.downloading
           window.URL.revokeObjectURL(blobUrl)
         })
+      }).catch(err => {
+        original.console.error('直接下载操作失败:', err)
+
+        /* 下载兜底 */
+        download(mediaUrl, mediaTitle)
       })
 
       return true
     } else {
-      /**
-       * 西瓜视频播放器会通过currentSrc来指定视频地址，所以需要兼容currentSrc
-       * https://v2.h5player.bytedance.com
-       */
-      download(mediaEl.src || mediaEl.currentSrc, mediaTitle)
+      download(mediaUrl, mediaTitle)
     }
   } else if (mediaSource.hasInit()) {
     /* 下载通过MediaSource管理的媒体文件 */
