@@ -29,9 +29,13 @@
 ## 交流群（新）
 
 <br />
-<img src="https://h5player.anzz.top/assets/img/WeChat.2a726e0c.jpg" width=280 />
+<img src="https://h5player.anzz.top/assets/img/WeChat.jpg" width=280 />
 <br />
-<p>微信交流、反馈、新功能内测群</p>
+<p>
+进入微信交流、反馈、新功能内测群的方式：
+<br />
+添加微信注明：[来自h5player] 即会拉你入群
+</p>
   
 ## 快捷键列表
 
