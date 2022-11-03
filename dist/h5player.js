@@ -9,11 +9,11 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.6.0
-// @description  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学等能力
+// @version      3.6.1
+// @description  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
 // @description:en  Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
-// @description:zh  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学等能力
-// @description:zh-TW  視頻增強腳本，支持所有H5視頻網站，例如：B站、抖音、騰訊視頻、優酷、愛奇藝、西瓜視頻、油管（YouTube）、微博視頻、知乎視頻、搜狐視頻、網易公開課、百度網盤、阿里雲盤、ted、instagram、twitter等。全程快捷鍵控制，支持：倍速播放/加速播放、視頻畫面截圖、畫中畫、網頁全屏、調節亮度、飽和度、對比度、自定義配置功能增強等功能，為你提供愉悅的在線視頻播放體驗。還有視頻廣告快進、在線教程/教育視頻倍速快學等能力
+// @description:zh  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
+// @description:zh-TW  視頻增強腳本，支持所有H5視頻網站，例如：B站、抖音、騰訊視頻、優酷、愛奇藝、西瓜視頻、油管（YouTube）、微博視頻、知乎視頻、搜狐視頻、網易公開課、百度網盤、阿里雲盤、ted、instagram、twitter等。全程快捷鍵控制，支持：倍速播放/加速播放、視頻畫面截圖、畫中畫、網頁全屏、調節亮度、飽和度、對比度、自定義配置功能增強等功能，為你提供愉悅的在線視頻播放體驗。還有視頻廣告快進、在線教程/教育視頻倍速快學、視頻文件下載等能力
 // @description:ja  ビデオ拡張スクリプトは、Bilibili、Douyin、Tencent Video、Youku、iQiyi、Xigua Video、YouTube、Weibo Video、Zhihu Video、Sohu Video、NetEase Open Course、Baidu ネットワーク ディスク、Alibaba クラウド ディスクなど、すべての H5 ビデオ Web サイトをサポートします。テッド、インスタグラム、ツイッターなど 完全なショートカット キー コントロール、サポート: 倍速再生/加速再生、ビデオ スクリーンショット、ピクチャー イン ピクチャー、フルスクリーン Web ページ、明るさ、彩度、コントラストの調整、カスタム構成の強化、その他の機能により、快適なオンラインを提供します。ビデオ再生体験。 ビデオ広告、オンライン チュートリアル/教育ビデオなどを早送りする機能もあります。
 // @description:ko  비디오 향상 스크립트는 Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu 네트워크 디스크, Alibaba 클라우드 디스크와 같은 모든 H5 비디오 웹사이트를 지원합니다. 테드, 인스타그램, 트위터 등 전체 바로 1가기 키 제어, 지원: 배속 재생/가속 재생, 비디오 스크린샷, PIP(Picture-in-Picture), 전체 화면 웹 페이지, 밝기, 채도, 대비, 사용자 정의 구성 향상 및 기타 기능 조정, 쾌적한 온라인 환경 제공 비디오 재생 경험. 비디오 광고, 온라인 자습서/교육 비디오 등을 빨리 감기하는 기능도 있습니다.
 // @description:ru  Сценарий улучшения видео поддерживает все видео-сайты H5, такие как: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, сетевой диск Baidu, облачный диск Alibaba, Тед, инстаграм, твиттер и т.д. Полное управление клавишами быстрого доступа, поддержка: воспроизведение с удвоенной скоростью/ускоренное воспроизведение, скриншоты видео, картинка в картинке, полноэкранные веб-страницы
@@ -533,7 +533,7 @@ const mediaSource = (function () {
           });
         }
 
-        console.log('[addSourceBuffer]', ctx, args);
+        original.console.log('[addSourceBuffer]', ctx, args);
 
         const mediaSourceInfo = original.map.get.call(mediaSourceMap, ctx);
         const mimeCodecs = args[0] || '';
@@ -555,7 +555,7 @@ const mediaSource = (function () {
           mediaInfo.format = tmpArr[0].split('/')[1];
           mediaInfo.codecs = tmpArr[1].trim().replace('codecs=', '').replace(/["']/g, '');
         } catch (e) {
-          console.error('[addSourceBuffer][mediaInfo] 媒体信息解析出错', sourceBufferItem, e);
+          original.console.error('[addSourceBuffer][mediaInfo] 媒体信息解析出错', sourceBufferItem, e);
         }
 
         mediaSourceInfo.sourceBuffer.push(sourceBufferItem);
@@ -598,28 +598,38 @@ const mediaSource = (function () {
   function downloadMediaSource () {
     mediaSourceMap.forEach(mediaSourceInfo => {
       if (mediaSourceInfo.hasDownload) {
-        return true
+        const confirm = original.confirm('该媒体文件已经下载过了，确定需要再次下载？');
+        if (!confirm) {
+          return false
+        }
       }
 
-      if (!mediaSourceInfo.endOfStream) {
-        const msg = '[downloadMediaSource] 媒体数据还没加载完成，暂时不能下载';
-        console.log(msg, mediaSourceInfo);
-        original.alert(msg);
-        return false
+      if (!mediaSourceInfo.hasDownload && !mediaSourceInfo.endOfStream) {
+        const confirm = original.confirm('媒体数据还没完全就绪，确定要执行下载操作？');
+        if (!confirm) {
+          return false
+        }
+
+        original.console.log('[downloadMediaSource] 媒体数据还没完全就绪', mediaSourceInfo);
       }
 
       mediaSourceInfo.hasDownload = true;
       mediaSourceInfo.sourceBuffer.forEach(sourceBufferItem => {
         if (!sourceBufferItem.mimeCodecs || sourceBufferItem.mimeCodecs.toString().indexOf(';') === -1) {
           const msg = '[downloadMediaSource][mimeCodecs][error] mimeCodecs不存在或信息异常，无法下载';
-          console.error(msg, sourceBufferItem);
+          original.console.error(msg, sourceBufferItem);
           original.alert(msg);
           return false
         }
 
         try {
-          let mediaTitle = `${document.title || Date.now()}_${sourceBufferItem.mediaInfo.type}.${sourceBufferItem.mediaInfo.format}`;
-          mediaTitle = original.prompt('请确认文件标题：', mediaTitle) || mediaTitle;
+          let mediaTitle = sourceBufferItem.mediaInfo.title || `${document.title || Date.now()}_${sourceBufferItem.mediaInfo.type}.${sourceBufferItem.mediaInfo.format}`;
+
+          if (!sourceBufferItem.mediaInfo.title) {
+            mediaTitle = original.prompt('请确认文件标题：', mediaTitle) || mediaTitle;
+            sourceBufferItem.mediaInfo.title = mediaTitle;
+          }
+
           if (!mediaTitle.endsWith(sourceBufferItem.mediaInfo.format)) {
             mediaTitle = mediaTitle + '.' + sourceBufferItem.mediaInfo.format;
           }
@@ -632,7 +642,7 @@ const mediaSource = (function () {
         } catch (e) {
           mediaSourceInfo.hasDownload = false;
           const msg = '[downloadMediaSource][error]';
-          console.error(msg, e);
+          original.console.error(msg, e);
           original.alert(msg);
         }
       });
@@ -4137,6 +4147,7 @@ function registerH5playerMenus (h5player) {
       },
       {
         title: () => configManager.get('enhance.blockSetPlaybackRate') ? i18n.t('unblockSetPlaybackRate') : i18n.t('blockSetPlaybackRate'),
+        type: 'global',
         fn: () => {
           const confirm = window.confirm(configManager.get('enhance.blockSetPlaybackRate') ? i18n.t('unblockSetPlaybackRate') : i18n.t('blockSetPlaybackRate'));
           if (confirm) {
@@ -4148,6 +4159,7 @@ function registerH5playerMenus (h5player) {
       },
       {
         title: () => configManager.get('enhance.blockSetCurrentTime') ? i18n.t('unblockSetCurrentTime') : i18n.t('blockSetCurrentTime'),
+        type: 'local',
         fn: () => {
           const confirm = window.confirm(configManager.get('enhance.blockSetCurrentTime') ? i18n.t('unblockSetCurrentTime') : i18n.t('blockSetCurrentTime'));
           if (confirm) {
@@ -4158,6 +4170,7 @@ function registerH5playerMenus (h5player) {
       },
       {
         title: () => configManager.get('enhance.blockSetVolume') ? i18n.t('unblockSetVolume') : i18n.t('blockSetVolume'),
+        type: 'local',
         fn: () => {
           const confirm = window.confirm(configManager.get('enhance.blockSetVolume') ? i18n.t('unblockSetVolume') : i18n.t('blockSetVolume'));
           if (confirm) {
@@ -4168,10 +4181,11 @@ function registerH5playerMenus (h5player) {
       },
       {
         title: () => configManager.get('enhance.allowExperimentFeatures') ? i18n.t('notAllowExperimentFeatures') : i18n.t('allowExperimentFeatures'),
+        type: 'global',
         fn: () => {
           const confirm = window.confirm(configManager.get('enhance.allowExperimentFeatures') ? i18n.t('notAllowExperimentFeatures') : i18n.t('experimentFeaturesWarning'));
           if (confirm) {
-            configManager.setLocalStorage('enhance.allowExperimentFeatures', !configManager.get('enhance.allowExperimentFeatures'));
+            configManager.setGlobalStorage('enhance.allowExperimentFeatures', !configManager.get('enhance.allowExperimentFeatures'));
             window.location.reload();
           }
         }
@@ -4185,7 +4199,7 @@ function registerH5playerMenus (h5player) {
       /* 补充title前缀 */
       menus.forEach(menu => {
         const titleFn = menu.title;
-        if (titleFn instanceof Function) {
+        if (titleFn instanceof Function && menu.type === 'local') {
           menu.title = () => titlePrefix + titleFn();
         }
       });
@@ -4279,13 +4293,13 @@ function mediaDownload (mediaEl, title, downloadType) {
     let mediaTitle = `${title || mediaEl.title || document.title || Date.now()}_${mediaInfo.type}.${mediaInfo.format}`;
 
     /**
-     * 当视频包含source标签时，媒体标签的真实地址将会是currentSrc
+     * 当媒体包含source标签时，媒体标签的真实地址将会是currentSrc
      * https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/currentSrc
      */
     const mediaUrl = mediaEl.src || mediaEl.currentSrc;
 
-    /* 小于10分钟的视频，尝试通过fetch下载 */
-    if (downloadType === 'blob' || mediaEl.duration < 60 * 10) {
+    /* 小于5分钟的媒体文件，尝试通过fetch下载 */
+    if (downloadType === 'blob' || mediaEl.duration < 60 * 5) {
       if (mediaEl.downloading) {
         /* 距上次点下载小于1s的情况直接不响应任何操作 */
         if (Date.now() - mediaEl.downloading < 1000 * 1) {
@@ -4299,7 +4313,7 @@ function mediaDownload (mediaEl, title, downloadType) {
       }
 
       if (mediaEl.hasDownload) {
-        const confirm = original.confirm('该视频已经下载过了，确定需要再次下载？');
+        const confirm = original.confirm('该媒体文件已经下载过了，确定需要再次下载？');
         if (!confirm) {
           return false
         }
@@ -4328,13 +4342,11 @@ function mediaDownload (mediaEl, title, downloadType) {
           window.URL.revokeObjectURL(blobUrl);
         });
       }).catch(err => {
-        original.console.error('直接下载操作失败:', err);
+        original.console.error('fetch下载操作失败:', err);
 
         /* 下载兜底 */
         download(mediaUrl, mediaTitle);
       });
-
-      return true
     } else {
       download(mediaUrl, mediaTitle);
     }
@@ -4529,15 +4541,19 @@ const h5Player = {
           t.setVolume(configManager.getGlobalStorage('media.volume'), true);
         }
 
-        /* 恢复播放进度和进行播放进度记录 */
+        /* 恢复播放进度 */
         t.setPlayProgress(player);
-        t.playProgressRecorder(player);
 
         if (setPlaybackRateOnPlayingCount === 0) {
           /* 同步之前设定的播放速度，音量等 */
           t.unLockPlaybackRate();
           t.setPlaybackRate();
           t.lockPlaybackRate(1000);
+
+          /* 启动播放进度记录 */
+          setTimeout(() => {
+            t.playProgressRecorder(player);
+          }, 2000);
         } else {
           t.unLockPlaybackRate();
           t.setPlaybackRate(null, true);
@@ -6345,8 +6361,9 @@ const h5Player = {
       player._playProgressTimer_ = setTimeout(function () {
         /* 时长小于两分钟的视频不记录播放进度 */
         const isToShort = !player.duration || Number.isNaN(Number(player.duration)) || player.duration < 120;
+        const isLeave = document.visibilityState !== 'visible' && player.paused;
 
-        if (!t.isAllowRestorePlayProgress() || isToShort || player.currentTime < 10 || player.paused) {
+        if (!t.isAllowRestorePlayProgress() || isToShort || isLeave) {
           recorder(player);
           return true
         }
@@ -6407,7 +6424,7 @@ const h5Player = {
     const curTime = Number(t.getPlayProgress(player));
 
     /* 要恢复进度的时间过小或大于player.duration都不符合规范，不进行进度恢复操作 */
-    if (!curTime || Number.isNaN(curTime) || curTime < 3 || curTime >= player.duration) return
+    if (!curTime || Number.isNaN(curTime) || curTime < 10 || curTime >= player.duration) return
 
     /* 忽略恢复进度时间与当前播放进度时间相差不大的情况 */
     if (Math.abs(curTime - player.currentTime) < 2) {

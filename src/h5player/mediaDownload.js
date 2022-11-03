@@ -20,13 +20,13 @@ function mediaDownload (mediaEl, title, downloadType) {
     let mediaTitle = `${title || mediaEl.title || document.title || Date.now()}_${mediaInfo.type}.${mediaInfo.format}`
 
     /**
-     * 当视频包含source标签时，媒体标签的真实地址将会是currentSrc
+     * 当媒体包含source标签时，媒体标签的真实地址将会是currentSrc
      * https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/currentSrc
      */
     const mediaUrl = mediaEl.src || mediaEl.currentSrc
 
-    /* 小于10分钟的视频，尝试通过fetch下载 */
-    if (downloadType === 'blob' || mediaEl.duration < 60 * 10) {
+    /* 小于5分钟的媒体文件，尝试通过fetch下载 */
+    if (downloadType === 'blob' || mediaEl.duration < 60 * 5) {
       if (mediaEl.downloading) {
         /* 距上次点下载小于1s的情况直接不响应任何操作 */
         if (Date.now() - mediaEl.downloading < 1000 * 1) {
@@ -40,7 +40,7 @@ function mediaDownload (mediaEl, title, downloadType) {
       }
 
       if (mediaEl.hasDownload) {
-        const confirm = original.confirm('该视频已经下载过了，确定需要再次下载？')
+        const confirm = original.confirm('该媒体文件已经下载过了，确定需要再次下载？')
         if (!confirm) {
           return false
         }
@@ -69,13 +69,11 @@ function mediaDownload (mediaEl, title, downloadType) {
           window.URL.revokeObjectURL(blobUrl)
         })
       }).catch(err => {
-        original.console.error('直接下载操作失败:', err)
+        original.console.error('fetch下载操作失败:', err)
 
         /* 下载兜底 */
         download(mediaUrl, mediaTitle)
       })
-
-      return true
     } else {
       download(mediaUrl, mediaTitle)
     }

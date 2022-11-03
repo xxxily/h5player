@@ -35,7 +35,7 @@ const mediaSource = (function () {
           })
         }
 
-        console.log('[addSourceBuffer]', ctx, args)
+        original.console.log('[addSourceBuffer]', ctx, args)
 
         const mediaSourceInfo = original.map.get.call(mediaSourceMap, ctx)
         const mimeCodecs = args[0] || ''
@@ -57,7 +57,7 @@ const mediaSource = (function () {
           mediaInfo.format = tmpArr[0].split('/')[1]
           mediaInfo.codecs = tmpArr[1].trim().replace('codecs=', '').replace(/["']/g, '')
         } catch (e) {
-          console.error('[addSourceBuffer][mediaInfo] 媒体信息解析出错', sourceBufferItem, e)
+          original.console.error('[addSourceBuffer][mediaInfo] 媒体信息解析出错', sourceBufferItem, e)
         }
 
         mediaSourceInfo.sourceBuffer.push(sourceBufferItem)
@@ -100,28 +100,38 @@ const mediaSource = (function () {
   function downloadMediaSource () {
     mediaSourceMap.forEach(mediaSourceInfo => {
       if (mediaSourceInfo.hasDownload) {
-        return true
+        const confirm = original.confirm('该媒体文件已经下载过了，确定需要再次下载？')
+        if (!confirm) {
+          return false
+        }
       }
 
-      if (!mediaSourceInfo.endOfStream) {
-        const msg = '[downloadMediaSource] 媒体数据还没加载完成，暂时不能下载'
-        console.log(msg, mediaSourceInfo)
-        original.alert(msg)
-        return false
+      if (!mediaSourceInfo.hasDownload && !mediaSourceInfo.endOfStream) {
+        const confirm = original.confirm('媒体数据还没完全就绪，确定要执行下载操作？')
+        if (!confirm) {
+          return false
+        }
+
+        original.console.log('[downloadMediaSource] 媒体数据还没完全就绪', mediaSourceInfo)
       }
 
       mediaSourceInfo.hasDownload = true
       mediaSourceInfo.sourceBuffer.forEach(sourceBufferItem => {
         if (!sourceBufferItem.mimeCodecs || sourceBufferItem.mimeCodecs.toString().indexOf(';') === -1) {
           const msg = '[downloadMediaSource][mimeCodecs][error] mimeCodecs不存在或信息异常，无法下载'
-          console.error(msg, sourceBufferItem)
+          original.console.error(msg, sourceBufferItem)
           original.alert(msg)
           return false
         }
 
         try {
-          let mediaTitle = `${document.title || Date.now()}_${sourceBufferItem.mediaInfo.type}.${sourceBufferItem.mediaInfo.format}`
-          mediaTitle = original.prompt('请确认文件标题：', mediaTitle) || mediaTitle
+          let mediaTitle = sourceBufferItem.mediaInfo.title || `${document.title || Date.now()}_${sourceBufferItem.mediaInfo.type}.${sourceBufferItem.mediaInfo.format}`
+
+          if (!sourceBufferItem.mediaInfo.title) {
+            mediaTitle = original.prompt('请确认文件标题：', mediaTitle) || mediaTitle
+            sourceBufferItem.mediaInfo.title = mediaTitle
+          }
+
           if (!mediaTitle.endsWith(sourceBufferItem.mediaInfo.format)) {
             mediaTitle = mediaTitle + '.' + sourceBufferItem.mediaInfo.format
           }
@@ -134,7 +144,7 @@ const mediaSource = (function () {
         } catch (e) {
           mediaSourceInfo.hasDownload = false
           const msg = '[downloadMediaSource][error]'
-          console.error(msg, e)
+          original.console.error(msg, e)
           original.alert(msg)
         }
       })

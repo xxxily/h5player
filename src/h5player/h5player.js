@@ -222,15 +222,19 @@ const h5Player = {
           t.setVolume(configManager.getGlobalStorage('media.volume'), true)
         }
 
-        /* 恢复播放进度和进行播放进度记录 */
+        /* 恢复播放进度 */
         t.setPlayProgress(player)
-        t.playProgressRecorder(player)
 
         if (setPlaybackRateOnPlayingCount === 0) {
           /* 同步之前设定的播放速度，音量等 */
           t.unLockPlaybackRate()
           t.setPlaybackRate()
           t.lockPlaybackRate(1000)
+
+          /* 启动播放进度记录 */
+          setTimeout(() => {
+            t.playProgressRecorder(player)
+          }, 2000)
         } else {
           t.unLockPlaybackRate()
           t.setPlaybackRate(null, true)
@@ -2050,8 +2054,9 @@ const h5Player = {
       player._playProgressTimer_ = setTimeout(function () {
         /* 时长小于两分钟的视频不记录播放进度 */
         const isToShort = !player.duration || Number.isNaN(Number(player.duration)) || player.duration < 120
+        const isLeave = document.visibilityState !== 'visible' && player.paused
 
-        if (!t.isAllowRestorePlayProgress() || isToShort || player.currentTime < 10 || player.paused) {
+        if (!t.isAllowRestorePlayProgress() || isToShort || isLeave) {
           recorder(player)
           return true
         }
@@ -2112,7 +2117,7 @@ const h5Player = {
     const curTime = Number(t.getPlayProgress(player))
 
     /* 要恢复进度的时间过小或大于player.duration都不符合规范，不进行进度恢复操作 */
-    if (!curTime || Number.isNaN(curTime) || curTime < 3 || curTime >= player.duration) return
+    if (!curTime || Number.isNaN(curTime) || curTime < 10 || curTime >= player.duration) return
 
     /* 忽略恢复进度时间与当前播放进度时间相差不大的情况 */
     if (Math.abs(curTime - player.currentTime) < 2) {

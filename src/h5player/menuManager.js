@@ -113,6 +113,7 @@ export function registerH5playerMenus (h5player) {
       },
       {
         title: () => configManager.get('enhance.blockSetPlaybackRate') ? i18n.t('unblockSetPlaybackRate') : i18n.t('blockSetPlaybackRate'),
+        type: 'global',
         fn: () => {
           const confirm = window.confirm(configManager.get('enhance.blockSetPlaybackRate') ? i18n.t('unblockSetPlaybackRate') : i18n.t('blockSetPlaybackRate'))
           if (confirm) {
@@ -124,6 +125,7 @@ export function registerH5playerMenus (h5player) {
       },
       {
         title: () => configManager.get('enhance.blockSetCurrentTime') ? i18n.t('unblockSetCurrentTime') : i18n.t('blockSetCurrentTime'),
+        type: 'local',
         fn: () => {
           const confirm = window.confirm(configManager.get('enhance.blockSetCurrentTime') ? i18n.t('unblockSetCurrentTime') : i18n.t('blockSetCurrentTime'))
           if (confirm) {
@@ -134,6 +136,7 @@ export function registerH5playerMenus (h5player) {
       },
       {
         title: () => configManager.get('enhance.blockSetVolume') ? i18n.t('unblockSetVolume') : i18n.t('blockSetVolume'),
+        type: 'local',
         fn: () => {
           const confirm = window.confirm(configManager.get('enhance.blockSetVolume') ? i18n.t('unblockSetVolume') : i18n.t('blockSetVolume'))
           if (confirm) {
@@ -144,10 +147,11 @@ export function registerH5playerMenus (h5player) {
       },
       {
         title: () => configManager.get('enhance.allowExperimentFeatures') ? i18n.t('notAllowExperimentFeatures') : i18n.t('allowExperimentFeatures'),
+        type: 'global',
         fn: () => {
           const confirm = window.confirm(configManager.get('enhance.allowExperimentFeatures') ? i18n.t('notAllowExperimentFeatures') : i18n.t('experimentFeaturesWarning'))
           if (confirm) {
-            configManager.setLocalStorage('enhance.allowExperimentFeatures', !configManager.get('enhance.allowExperimentFeatures'))
+            configManager.setGlobalStorage('enhance.allowExperimentFeatures', !configManager.get('enhance.allowExperimentFeatures'))
             window.location.reload()
           }
         }
@@ -161,7 +165,7 @@ export function registerH5playerMenus (h5player) {
       /* 补充title前缀 */
       menus.forEach(menu => {
         const titleFn = menu.title
-        if (titleFn instanceof Function) {
+        if (titleFn instanceof Function && menu.type === 'local') {
           menu.title = () => titlePrefix + titleFn()
         }
       })
