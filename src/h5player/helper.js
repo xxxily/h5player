@@ -166,6 +166,18 @@ function numDown (num) {
   return num
 }
 
+function isMediaElement (element) {
+  return element && (element instanceof HTMLMediaElement || element.HTMLMediaElement || element.HTMLVideoElement || element.HTMLAudioElement)
+}
+
+function isVideoElement (element) {
+  return element && (element instanceof HTMLVideoElement || element.HTMLVideoElement)
+}
+
+function isAudioElement (element) {
+  return element && (element instanceof HTMLAudioElement || element.HTMLAudioElement)
+}
+
 export {
   hasUseKey,
   isRegisterKey,
@@ -173,5 +185,8 @@ export {
   getPageWindowSync,
   openInTab,
   numUp,
-  numDown
+  numDown,
+  isMediaElement,
+  isVideoElement,
+  isAudioElement
 }

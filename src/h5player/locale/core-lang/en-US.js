@@ -19,6 +19,8 @@ export default {
   notAllowExperimentFeatures: 'Disable experimental features',
   experimentFeaturesWarning: 'Experimental features are likely to cause some uncertain problems, please turn on with caution',
   configFail: 'Configuration failed',
+  globalSetting: 'Global Settings',
+  localSetting: 'for this site only',
   tipsMsg: {
     playspeed: 'Speed: ',
     forward: 'Forward: ',

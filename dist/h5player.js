@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.6.1
+// @version      3.6.2
 // @description  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
 // @description:en  Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
 // @description:zh  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
@@ -2734,6 +2734,8 @@ var zhCN = {
   notAllowExperimentFeatures: '禁用实验性功能',
   experimentFeaturesWarning: '实验性功能容易造成一些不确定的问题，请谨慎开启',
   configFail: '配置失败',
+  globalSetting: '全局设置',
+  localSetting: '仅用于此网站',
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '前进：',
@@ -2788,6 +2790,8 @@ var enUS = {
   notAllowExperimentFeatures: 'Disable experimental features',
   experimentFeaturesWarning: 'Experimental features are likely to cause some uncertain problems, please turn on with caution',
   configFail: 'Configuration failed',
+  globalSetting: 'Global Settings',
+  localSetting: 'for this site only',
   tipsMsg: {
     playspeed: 'Speed: ',
     forward: 'Forward: ',
@@ -2843,6 +2847,8 @@ var ru = {
   notAllowExperimentFeatures: 'Отключить экспериментальные функции',
   experimentFeaturesWarning: 'Экспериментальные функции могут вызвать определенные проблемы, включайте их с осторожностью.',
   configFail: 'Ошибка конфигурации',
+  globalSetting: 'Глобальные настройки',
+  localSetting: 'только для этого сайта',
   tipsMsg: {
     playspeed: 'Скорость: ',
     forward: 'Вперёд: ',
@@ -2897,6 +2903,8 @@ var zhTW = {
   notAllowExperimentFeatures: '禁用實驗性功能',
   experimentFeaturesWarning: '實驗性功能容易造成一些不確定的問題，請謹慎開啟',
   configFail: '配置失敗',
+  globalSetting: '全局設置',
+  localSetting: '僅用於此網站',
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '向前：',
@@ -3283,6 +3291,18 @@ function numDown (num) {
     num = -num;
   }
   return num
+}
+
+function isMediaElement (element) {
+  return element && (element instanceof HTMLMediaElement || element.HTMLMediaElement || element.HTMLVideoElement || element.HTMLAudioElement)
+}
+
+function isVideoElement (element) {
+  return element && (element instanceof HTMLVideoElement || element.HTMLVideoElement)
+}
+
+function isAudioElement (element) {
+  return element && (element instanceof HTMLAudioElement || element.HTMLAudioElement)
 }
 
 /*!
@@ -4146,7 +4166,29 @@ function registerH5playerMenus (h5player) {
         }
       },
       {
-        title: () => configManager.get('enhance.blockSetPlaybackRate') ? i18n.t('unblockSetPlaybackRate') : i18n.t('blockSetPlaybackRate'),
+        title: () => `${configManager.get('enhance.blockSetCurrentTime') ? i18n.t('unblockSetCurrentTime') : i18n.t('blockSetCurrentTime')} 「${i18n.t('localSetting')}」`,
+        type: 'local',
+        fn: () => {
+          const confirm = window.confirm(configManager.get('enhance.blockSetCurrentTime') ? i18n.t('unblockSetCurrentTime') : i18n.t('blockSetCurrentTime'));
+          if (confirm) {
+            configManager.setLocalStorage('enhance.blockSetCurrentTime', !configManager.get('enhance.blockSetCurrentTime'));
+            window.location.reload();
+          }
+        }
+      },
+      {
+        title: () => `${configManager.get('enhance.blockSetVolume') ? i18n.t('unblockSetVolume') : i18n.t('blockSetVolume')} 「${i18n.t('localSetting')}」`,
+        type: 'local',
+        fn: () => {
+          const confirm = window.confirm(configManager.get('enhance.blockSetVolume') ? i18n.t('unblockSetVolume') : i18n.t('blockSetVolume'));
+          if (confirm) {
+            configManager.setLocalStorage('enhance.blockSetVolume', !configManager.get('enhance.blockSetVolume'));
+            window.location.reload();
+          }
+        }
+      },
+      {
+        title: () => `${configManager.get('enhance.blockSetPlaybackRate') ? i18n.t('unblockSetPlaybackRate') : i18n.t('blockSetPlaybackRate')} 「${i18n.t('globalSetting')}」`,
         type: 'global',
         fn: () => {
           const confirm = window.confirm(configManager.get('enhance.blockSetPlaybackRate') ? i18n.t('unblockSetPlaybackRate') : i18n.t('blockSetPlaybackRate'));
@@ -4158,29 +4200,7 @@ function registerH5playerMenus (h5player) {
         }
       },
       {
-        title: () => configManager.get('enhance.blockSetCurrentTime') ? i18n.t('unblockSetCurrentTime') : i18n.t('blockSetCurrentTime'),
-        type: 'local',
-        fn: () => {
-          const confirm = window.confirm(configManager.get('enhance.blockSetCurrentTime') ? i18n.t('unblockSetCurrentTime') : i18n.t('blockSetCurrentTime'));
-          if (confirm) {
-            configManager.setLocalStorage('enhance.blockSetCurrentTime', !configManager.get('enhance.blockSetCurrentTime'));
-            window.location.reload();
-          }
-        }
-      },
-      {
-        title: () => configManager.get('enhance.blockSetVolume') ? i18n.t('unblockSetVolume') : i18n.t('blockSetVolume'),
-        type: 'local',
-        fn: () => {
-          const confirm = window.confirm(configManager.get('enhance.blockSetVolume') ? i18n.t('unblockSetVolume') : i18n.t('blockSetVolume'));
-          if (confirm) {
-            configManager.setLocalStorage('enhance.blockSetVolume', !configManager.get('enhance.blockSetVolume'));
-            window.location.reload();
-          }
-        }
-      },
-      {
-        title: () => configManager.get('enhance.allowExperimentFeatures') ? i18n.t('notAllowExperimentFeatures') : i18n.t('allowExperimentFeatures'),
+        title: () => `${configManager.get('enhance.allowExperimentFeatures') ? i18n.t('notAllowExperimentFeatures') : i18n.t('allowExperimentFeatures')} 「${i18n.t('globalSetting')}」`,
         type: 'global',
         fn: () => {
           const confirm = window.confirm(configManager.get('enhance.allowExperimentFeatures') ? i18n.t('notAllowExperimentFeatures') : i18n.t('experimentFeaturesWarning'));
@@ -4432,7 +4452,7 @@ const h5Player = {
   },
 
   isAudioInstance () {
-    return this.player() instanceof HTMLAudioElement
+    return isAudioElement(this.player())
   },
 
   /* 每个网页可能存在的多个video播放器 */
@@ -4442,7 +4462,12 @@ const h5Player = {
     function findPlayer (context) {
       supportMediaTags.forEach(tagName => {
         context.querySelectorAll(tagName).forEach(function (player) {
-          if (player instanceof HTMLMediaElement && !list.includes(player)) {
+          if (player.tagName.toLowerCase() === 'bwp-video') {
+            /* 将B站的BWP-VIDEO标识为HTMLVideoElement */
+            player.HTMLVideoElement = true;
+          }
+
+          if (isMediaElement(player) && !list.includes(player)) {
             list.push(player);
           }
         });
@@ -6462,13 +6487,13 @@ const h5Player = {
       return false
     }
 
-    if (!t.playerInstance && el instanceof HTMLMediaElement) {
+    if (!t.playerInstance && isMediaElement(el)) {
       t.playerInstance = el;
       t.initPlayerInstance(false);
       return true
     }
 
-    if (el instanceof HTMLVideoElement) {
+    if (isVideoElement(el)) {
       const elParentNode = t.getTipsContainer(el);
       const elInfo = el.getBoundingClientRect();
       const parentElInfo = elParentNode && elParentNode.getBoundingClientRect();
@@ -6476,8 +6501,8 @@ const h5Player = {
         t.playerInstance = el;
         t.initPlayerInstance(false);
       }
-    } else if (el instanceof HTMLAudioElement) {
-      if (t.playerInstance instanceof HTMLAudioElement || (t.playerInstance instanceof HTMLVideoElement && !t.playerInstance.isConnected)) {
+    } else if (isAudioElement(el)) {
+      if (isAudioElement(t.playerInstance) || (isVideoElement(t.playerInstance) && !t.playerInstance.isConnected)) {
         t.playerInstance = el;
         t.initPlayerInstance(false);
       }

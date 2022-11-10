@@ -19,6 +19,8 @@ export default {
   notAllowExperimentFeatures: 'Отключить экспериментальные функции',
   experimentFeaturesWarning: 'Экспериментальные функции могут вызвать определенные проблемы, включайте их с осторожностью.',
   configFail: 'Ошибка конфигурации',
+  globalSetting: 'Глобальные настройки',
+  localSetting: 'только для этого сайта',
   tipsMsg: {
     playspeed: 'Скорость: ',
     forward: 'Вперёд: ',

@@ -19,6 +19,8 @@ export default {
   notAllowExperimentFeatures: '禁用實驗性功能',
   experimentFeaturesWarning: '實驗性功能容易造成一些不確定的問題，請謹慎開啟',
   configFail: '配置失敗',
+  globalSetting: '全局設置',
+  localSetting: '僅用於此網站',
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '向前：',

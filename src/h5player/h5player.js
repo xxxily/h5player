@@ -36,7 +36,10 @@ import {
   isRegisterKey,
   getPageWindow,
   numUp,
-  numDown
+  numDown,
+  isMediaElement,
+  isVideoElement,
+  isAudioElement
 } from './helper'
 
 window._debugMode_ = true
@@ -113,7 +116,7 @@ const h5Player = {
   },
 
   isAudioInstance () {
-    return this.player() instanceof HTMLAudioElement
+    return isAudioElement(this.player())
   },
 
   /* 每个网页可能存在的多个video播放器 */
@@ -123,7 +126,12 @@ const h5Player = {
     function findPlayer (context) {
       supportMediaTags.forEach(tagName => {
         context.querySelectorAll(tagName).forEach(function (player) {
-          if (player instanceof HTMLMediaElement && !list.includes(player)) {
+          if (player.tagName.toLowerCase() === 'bwp-video') {
+            /* 将B站的BWP-VIDEO标识为HTMLVideoElement */
+            player.HTMLVideoElement = true
+          }
+
+          if (isMediaElement(player) && !list.includes(player)) {
             list.push(player)
           }
         })
@@ -2155,13 +2163,13 @@ const h5Player = {
       return false
     }
 
-    if (!t.playerInstance && el instanceof HTMLMediaElement) {
+    if (!t.playerInstance && isMediaElement(el)) {
       t.playerInstance = el
       t.initPlayerInstance(false)
       return true
     }
 
-    if (el instanceof HTMLVideoElement) {
+    if (isVideoElement(el)) {
       const elParentNode = t.getTipsContainer(el)
       const elInfo = el.getBoundingClientRect()
       const parentElInfo = elParentNode && elParentNode.getBoundingClientRect()
@@ -2169,8 +2177,8 @@ const h5Player = {
         t.playerInstance = el
         t.initPlayerInstance(false)
       }
-    } else if (el instanceof HTMLAudioElement) {
-      if (t.playerInstance instanceof HTMLAudioElement || (t.playerInstance instanceof HTMLVideoElement && !t.playerInstance.isConnected)) {
+    } else if (isAudioElement(el)) {
+      if (isAudioElement(t.playerInstance) || (isVideoElement(t.playerInstance) && !t.playerInstance.isConnected)) {
         t.playerInstance = el
         t.initPlayerInstance(false)
       }
