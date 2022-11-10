@@ -428,11 +428,4 @@ class BroadcastMessage {
   }
 }
 
-const broadcastMessage = new BroadcastMessage({
-  inTrustedDomainPages: true,
-  allowLocalBroadcast: true,
-  emitOriginalMessage: true,
-  debug: true
-})
-
 // export default BroadcastMessage
