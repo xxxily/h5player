@@ -52,6 +52,11 @@ function parseURL (url) {
 
 class BroadcastMessage {
   constructor (opts = {}) {
+    /**
+     * 指定消息发送的目标域，规则跟postMessage的targetOrigin一样
+     * 但不同的是支持定义数组形式的targetOrigin，从而实现批量跨域数据发送
+     * 当然如果是"*"的话就是给任意运行了本插件的页面发送数据
+     */
     this.targetOrigin = opts.targetOrigin || location.origin
 
     /**
@@ -252,7 +257,11 @@ class BroadcastMessage {
       }
 
       /* 将接受到的事件数据通过postMessage传递回给上层的window */
-      window.parent.postMessage(message, message.origin)
+      const targetOriginList = Array.isArray(message.targetOrigin) ? message.targetOrigin : [message.targetOrigin]
+      targetOriginList.forEach(targetOrigin => {
+        // TODO 检查当前的BroadcastMessage被哪个父页面嵌套，当父页面的地址和targetOrigin不匹配时，不向上传递数据
+        window.parent.postMessage(message, targetOrigin)
+      })
     })
 
     this.__BroadcastChannelInstance__ = BroadcastChannelInstance
@@ -299,7 +308,11 @@ class BroadcastMessage {
       }
 
       /* 将接受到的事件数据通过postMessage传递回给上层的window */
-      window.parent.postMessage(message, message.origin)
+      const targetOriginList = Array.isArray(message.targetOrigin) ? message.targetOrigin : [message.targetOrigin]
+      targetOriginList.forEach(targetOrigin => {
+        // TODO 检查当前的BroadcastMessage被哪个父页面嵌套，当父页面的地址和targetOrigin不匹配时，不向上传递数据
+        window.parent.postMessage(message, targetOrigin)
+      })
     })
 
     this.__hasRegisterStorageListener__ = true
@@ -310,6 +323,7 @@ class BroadcastMessage {
       data: message,
       type: 'BroadcastMessage',
       origin: location.origin || top.location.origin,
+      targetOrigin: this.targetOrigin,
       referrer: location.href || top.location.href,
       timeStamp: window.performance ? performance.now() : Date.now(),
       allowLocalBroadcast: this.allowLocalBroadcast,
