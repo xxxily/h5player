@@ -63,7 +63,7 @@ class BroadcastMessage {
      * 指定数据中转传输使用的传输类型，可选值：BroadcastChannel、localStorage
      * 不指定的话，优先使用BroadcastChannel，在不兼容BroadcastChannel的浏览器下使用localStorage
      */
-    this.transportType = opts.targetOrigin || 'BroadcastChannel'
+    this.transportType = opts.transportType || 'BroadcastChannel'
 
     /**
      * 标识当前脚本是否处于可信域的页面上运行
