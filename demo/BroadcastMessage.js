@@ -60,6 +60,12 @@ class BroadcastMessage {
     this.targetOrigin = opts.targetOrigin || location.origin
 
     /**
+     * 指定数据中转传输使用的传输类型，可选值：BroadcastChannel、localStorage
+     * 不指定的话，优先使用BroadcastChannel，在不兼容BroadcastChannel的浏览器下使用localStorage
+     */
+    this.transportType = opts.targetOrigin || 'BroadcastChannel'
+
+    /**
      * 标识当前脚本是否处于可信域的页面上运行
      * 如果是，当前页面作为可信域的中介页嵌入到具体运行环境中
      */
@@ -209,8 +215,10 @@ class BroadcastMessage {
 
       const iframeWindow = messageIframe().contentWindow
 
+      const broadcastChannelUsable = iframeWindow.BroadcastChannel && iframeWindow.BroadcastChannel.prototype.postMessage
+
       /* 优先使用BroadcastChannel进行消息传递 */
-      if (iframeWindow.BroadcastChannel && iframeWindow.BroadcastChannel.prototype.postMessage) {
+      if (broadcastChannelUsable && message.transportType !== 'localStorage') {
         const bcInstance = iframeWindow.__BroadcastChannelInstance__ || new iframeWindow.BroadcastChannel('__BroadcastChannelMessage__')
         iframeWindow.__BroadcastChannelInstance__ = iframeWindow.__BroadcastChannelInstance__ || bcInstance
         bcInstance.postMessage(message)
@@ -326,6 +334,7 @@ class BroadcastMessage {
       targetOrigin: this.targetOrigin,
       referrer: location.href || top.location.href,
       timeStamp: window.performance ? performance.now() : Date.now(),
+      transportType: this.transportType,
       allowLocalBroadcast: this.allowLocalBroadcast,
       channelId: this.channelId,
       instanceId: this.instanceId,
@@ -443,5 +452,3 @@ class BroadcastMessage {
     }
   }
 }
-
-// export default BroadcastMessage
