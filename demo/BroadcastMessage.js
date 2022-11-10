@@ -95,7 +95,7 @@ class BroadcastMessage {
     /* 如果标识了脚本处于可信域中运行，且已经被嵌入到iframe中，则注册相关监听器 */
     if (this.inTrustedDomainPages && window !== top.window) {
       this.__registerPostMessageListener__()
-      this.__registerBroadcastMessageListener__()
+      this.__registerStorageMessageListener__()
       this.__registerBroadcastChannelListener__()
     }
   }
@@ -123,7 +123,7 @@ class BroadcastMessage {
     /**
      * 当存在trustedDomainPages时，trustedDomainPages应该引入该脚本，且执行初始化逻辑，否则将是无效的trustedDomainPages
      * 如果创建的是空白iframe，则需要将
-     * __registerPostMessageListener__、__registerBroadcastMessageListener__、__registerBroadcastChannelListener__
+     * __registerPostMessageListener__、__registerStorageMessageListener__、__registerBroadcastChannelListener__
      * 的代码逻辑注入到iframe里
      */
     if (!this.inTrustedDomainPages && !this.trustedDomainPages && this.messageWindow.document && this.messageWindow.document.write) {
@@ -138,13 +138,13 @@ class BroadcastMessage {
       document.write(`
         <script>
         function ${this.__registerPostMessageListener__};
-        function ${this.__registerBroadcastMessageListener__};
+        function ${this.__registerStorageMessageListener__};
         function ${this.__registerBroadcastChannelListener__};
         function init () {
           if (window.__hasInit__) { return false; }
           window.__broadcastMessageChannelId__ = "${this.channelId}";
           __registerPostMessageListener__();
-          __registerBroadcastMessageListener__();
+          __registerStorageMessageListener__();
           __registerBroadcastChannelListener__();
           window.__hasInit__ = true ;
         }
@@ -198,7 +198,9 @@ class BroadcastMessage {
       const message = messageEvent.data
       message.windowId = window.__windowId__
 
-      message.debug && console.log(`[transportMessage][iframe][${location.origin}]`, messageEvent)
+      // message.debug && console.log(`[transportMessage][iframe][${location.origin}]`, messageEvent)
+      // 消息被消费了就会导致后面的逻辑没法执行，所以不能打印messageEvent
+      message.debug && console.log(`[transportMessage][iframe][${location.origin}]`)
 
       const iframeWindow = messageIframe().contentWindow
 
@@ -250,13 +252,13 @@ class BroadcastMessage {
       }
 
       /* 将接受到的事件数据通过postMessage传递回给上层的window */
-      window.parent.postMessage(message)
+      window.parent.postMessage(message, message.origin)
     })
 
     this.__BroadcastChannelInstance__ = BroadcastChannelInstance
   }
 
-  __registerBroadcastMessageListener__ () {
+  __registerStorageMessageListener__ () {
     if (this.__hasRegisterStorageListener__) { return false }
 
     window.addEventListener('storage', (event) => {
@@ -297,7 +299,7 @@ class BroadcastMessage {
       }
 
       /* 将接受到的事件数据通过postMessage传递回给上层的window */
-      window.parent.postMessage(message)
+      window.parent.postMessage(message, message.origin)
     })
 
     this.__hasRegisterStorageListener__ = true
