@@ -1,3 +1,12 @@
+/*!
+ * @name         BroadcastMessage.js
+ * @description  基于postMessage+BroadcastChannel+localStorage+互信域名的前端页面数据通信解决方案
+ * @version      0.0.1
+ * @author       xxxily
+ * @date         2022/11/07 09:26
+ * @github       https://github.com/xxxily
+ */
+
 function parseURL (url) {
   var a = document.createElement('a')
   a.href = url || window.location.href
@@ -44,6 +53,13 @@ function parseURL (url) {
 class BroadcastMessage {
   constructor (opts = {}) {
     this.targetOrigin = opts.targetOrigin || location.origin
+
+    /**
+     * 标识当前脚本是否处于可信域的页面上运行
+     * 如果是，当前页面作为可信域的中介页嵌入到具体运行环境中
+     */
+    this.inTrustedDomainPages = opts.inTrustedDomainPages || false
+
     // this.trustedDomainPages = 'https://h5player.anzz.top/demo/postMessage.html'
     this.trustedDomainPages = opts.trustedDomainPages || ''
 
