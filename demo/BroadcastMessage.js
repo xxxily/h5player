@@ -50,6 +50,50 @@ function parseURL (url) {
   }
 }
 
+/**
+ * 将params对象转换成字符串模式
+ * @param params {Object} - 必选 params对象
+ * @returns {string}
+ */
+function stringifyParams (params) {
+  var strArr = []
+
+  if (!Object.prototype.toString.call(params) === '[object Object]') {
+    return ''
+  }
+
+  for (var key in params) {
+    if (Object.hasOwnProperty.call(params, key)) {
+      var val = params[key]
+      var valType = Object.prototype.toString.call(val)
+
+      if (val === '' || valType === '[object Undefined]') continue
+
+      if (val === null) {
+        strArr.push(key)
+      } else if (valType === '[object Array]') {
+        strArr.push(key + '=' + val.join(','))
+      } else {
+        val = (JSON.stringify(val) || '' + val).replace(/(^"|"$)/g, '')
+        strArr.push(key + '=' + val)
+      }
+    }
+  }
+  return strArr.join('&')
+}
+
+/**
+ * 将通过parseURL解析出来url对象重新还原成url地址
+ * 主要用于查询参数被动态修改后，再重组url链接
+ * @param obj {Object} -必选 parseURL解析出来url对象
+ */
+function stringifyToUrl (urlObj) {
+  var query = stringifyParams(urlObj.params) || ''
+  if (query) { query = '?' + query }
+  var hash = urlObj.hash ? '#' + urlObj.hash : ''
+  return urlObj.origin + urlObj.path + query + hash
+}
+
 class BroadcastMessage {
   constructor (opts = {}) {
     /**
@@ -75,7 +119,7 @@ class BroadcastMessage {
     this.trustedDomainPages = opts.trustedDomainPages || ''
 
     /**
-     * 允许既是消息的发送页，也可以是消息的接页，从而做到同源同页收发消息
+     * 允许既是消息的发送页，也可以是消息的接收页，从而做到同源同页收发消息
      * postMessage、BroadcastChannel和storage事件都是必须一个页面发送，另一个页面接收
      */
     this.allowLocalBroadcast = opts.allowLocalBroadcast || false
@@ -86,7 +130,7 @@ class BroadcastMessage {
      * 实例id，当onMessage的handler被重复调用时，很可能是同名的channelId的多个实例导致的
      * 所以加上实例id方便问题排查
      */
-    this.instanceId = this.channelId + '_' + window.performance ? performance.now() : Date.now()
+    this.instanceId = this.channelId + '_' + (window.performance ? performance.now() : Date.now())
 
     this.debug = opts.debug || false
     this.emitOriginalMessage = opts.emitOriginalMessage || false
@@ -98,7 +142,12 @@ class BroadcastMessage {
   init () {
     /* 给trustedDomainPages的URL补充相关参数 */
     if (this.trustedDomainPages) {
-      // TODO
+      const urlInfo = parseURL(this.trustedDomainPages)
+      urlInfo.params.channelId = this.channelId
+      urlInfo.params.instanceId = this.instanceId
+      urlInfo.params.targetOrigin = this.targetOrigin
+
+      this.trustedDomainPages = stringifyToUrl(urlInfo)
     }
 
     this.__registerMessageWindow__()
@@ -108,6 +157,7 @@ class BroadcastMessage {
       this.__registerPostMessageListener__()
       this.__registerStorageMessageListener__()
       this.__registerBroadcastChannelListener__()
+      this.__sendMessageToParentWindow__('initReady')
     }
   }
 
@@ -119,6 +169,28 @@ class BroadcastMessage {
     }
   }
 
+  /**
+   * 给messageWindow的父页面发送消息，用来传递某些状态，例如告诉父页面：messageWindow初始化完成了，可以开始进行数据通信
+   * @param {String} msg
+   * @returns
+   */
+  __sendMessageToParentWindow__ (msg) {
+    if (window.parent === window || !msg) {
+      return false
+    }
+
+    const channelId = window.__broadcastMessageChannelId__ || this.channelId
+    const instanceId = window.__broadcastMessageInstanceId__ || this.instanceId
+    const targetOrigin = window.__broadcastMessageTargetOrigin__ || '*'
+
+    window.parent.postMessage({
+      data: msg,
+      channelId,
+      instanceId,
+      type: 'Internal-BroadcastMessage'
+    }, targetOrigin)
+  }
+
   __registerMessageWindow__ () {
     if (this.messageWindow !== window) {
       return false
@@ -128,6 +200,7 @@ class BroadcastMessage {
     iframe.style.display = 'none'
     iframe.style.visibility = 'hidden'
     iframe.src = this.trustedDomainPages
+    iframe.className = 'broadcast-message-iframe'
     document.body.appendChild(iframe)
     this.messageWindow = iframe.contentWindow
 
@@ -141,7 +214,7 @@ class BroadcastMessage {
       const document = this.messageWindow.document
       if (!document.body) {
         const body = document.createElement('body')
-        body.innerHTML = '<h1>storage-message-page</h1>'
+        body.innerHTML = '<h1>Broadcast-Message-page</h1>'
         document.documentElement.appendChild(body)
       }
 
@@ -151,12 +224,15 @@ class BroadcastMessage {
         function ${this.__registerPostMessageListener__};
         function ${this.__registerStorageMessageListener__};
         function ${this.__registerBroadcastChannelListener__};
+        function ${this.__sendMessageToParentWindow__};
         function init () {
           if (window.__hasInit__) { return false; }
           window.__broadcastMessageChannelId__ = "${this.channelId}";
+          window.__broadcastMessageInstanceId__ = "${this.instanceId}";
           __registerPostMessageListener__();
           __registerStorageMessageListener__();
           __registerBroadcastChannelListener__();
+          __sendMessageToParentWindow__('initReady');
           window.__hasInit__ = true ;
         }
 
@@ -170,7 +246,8 @@ class BroadcastMessage {
   }
 
   __registerPostMessageListener__ () {
-    if (this.__hasRegisterPostMessageListener__) { return false }
+    const self = this
+    if (self.__hasRegisterPostMessageListener__) { return false }
 
     /* 一定要处于iframe才会注册PostMessageListener */
     if (window.top === window) {
@@ -181,7 +258,19 @@ class BroadcastMessage {
     window.__windowId__ = String((Date.now() - Math.random() * 100000).toFixed(2))
 
     if (!window.__broadcastMessageChannelId__) {
-      // TODO 对于使用trustedDomainPages，则需要通过url参数来获取ChannelId
+      /* 对于使用trustedDomainPages的情况，通过url参数来传递ChannelId和instanceId */
+      try {
+        const urlInfo = parseURL(location.href)
+        if (urlInfo.params.channelId && urlInfo.params.instanceId) {
+          window.__broadcastMessageChannelId__ = urlInfo.params.channelId
+          window.__broadcastMessageInstanceId__ = urlInfo.params.instanceId
+          window.__broadcastMessageTargetOrigin__ = urlInfo.params.targetOrigin
+        } else {
+          throw new Error('URL缺失相关参数')
+        }
+      } catch (e) {
+        console.error(`[registerPostMessageListener][${location.origin}] 获取broadcastMessageChannelId失败`, e)
+      }
     }
 
     /* 消息中转传输的iframe */
@@ -204,13 +293,13 @@ class BroadcastMessage {
      * 通过当前页的子iframe来执行消息传送逻辑，这样当前页面的window对象才会接收到到storage事件或BroadcastChannel消息
      * 如果直接执行消息传送逻辑，则还需要创建个子iframe来接受storage事件或BroadcastChannel的消息，会导致导致需要更多层级的数据传递
      */
-    function transportMessage (messageEvent) {
+    function transportMessage (event) {
       /* 给将要中转传输的数据补充相关信息字段 */
-      const message = messageEvent.data
+      const message = event.data
       message.windowId = window.__windowId__
 
       // message.debug && console.log(`[transportMessage][iframe][${location.origin}]`, messageEvent)
-      // 消息被消费了就会导致后面的逻辑没法执行，所以不能打印messageEvent
+      // 消息被消费了就会导致后面的逻辑没法执行，所以不能打印event
       message.debug && console.log(`[transportMessage][iframe][${location.origin}]`)
 
       const iframeWindow = messageIframe().contentWindow
@@ -229,9 +318,35 @@ class BroadcastMessage {
 
     messageIframe()
 
-    /* 注册postMessage的侦听事件，并将接收到的数据交给消息中转传输逻辑传送出去 */
+    /* 处理从window.parent传过来的内部消息 */
+    function internalBroadcastMessageHandler (event) {
+      const message = event.data
+
+      if (!message) { return false }
+
+      if (message.data === 'readyTest') {
+        window.__broadcastMessageReadyInfo__ = message
+
+        const sendMessageToParentWindow = self.__sendMessageToParentWindow__ || window.__sendMessageToParentWindow__
+        if (sendMessageToParentWindow instanceof Function) {
+          /* 发送握手成功消息 */
+          sendMessageToParentWindow('ready')
+        }
+      }
+    }
+
+    /* 注册postMessage的侦听事件，并将接收到的数据交给消息中转传输逻辑传送出去或进行内部处理 */
     window.addEventListener('message', (event) => {
-      transportMessage(event)
+      const message = event.data
+      if (!message || !message.type) {
+        return false
+      }
+
+      if (message.type === 'BroadcastMessage') {
+        transportMessage(event)
+      } else if (message.type === 'Internal-BroadcastMessage') {
+        internalBroadcastMessageHandler(event)
+      }
     }, true)
     this.__hasRegisterPostMessageListener__ = true
   }
@@ -318,7 +433,8 @@ class BroadcastMessage {
       /* 将接受到的事件数据通过postMessage传递回给上层的window */
       const targetOriginList = Array.isArray(message.targetOrigin) ? message.targetOrigin : [message.targetOrigin]
       targetOriginList.forEach(targetOrigin => {
-        // TODO 检查当前的BroadcastMessage被哪个父页面嵌套，当父页面的地址和targetOrigin不匹配时，不向上传递数据
+        // TODO 1、检查当前的BroadcastMessage被哪个父页面嵌套，当父页面的地址和targetOrigin不匹配时，不向上传递数据
+        // TODO 2、通过storage进行高频消息传递时，会出现数据严重丢包的情况，需建立握手机制避免该问题
         window.parent.postMessage(message, targetOrigin)
       })
     })
@@ -326,10 +442,10 @@ class BroadcastMessage {
     this.__hasRegisterStorageListener__ = true
   }
 
-  postMessage (message) {
+  postMessage (message, messageType) {
     const data = {
       data: message,
-      type: 'BroadcastMessage',
+      type: messageType || 'BroadcastMessage',
       origin: location.origin || top.location.origin,
       targetOrigin: this.targetOrigin,
       referrer: location.href || top.location.href,
@@ -342,7 +458,7 @@ class BroadcastMessage {
     }
 
     if (!this.messageWindow || !this.messageWindow.postMessage) {
-      this.debug && console.error('[messageWindow error] 无法发送message', this.messageWindow)
+      this.debug && console.error('[messageWindow error] 无法发送message', data, this.messageWindow)
       return false
     }
 
@@ -430,6 +546,51 @@ class BroadcastMessage {
     this.__messageListener__ = tempStorageListener
   }
 
+  postMessageToInternal (message) {
+    this.postMessage(message, 'Internal-BroadcastMessage')
+  }
+
+  /**
+   * 侦听来自messageWindow的内部通信信息，主要用于脚本内部逻辑的状态传递和数据同步等，一般来说业务层无需监听内部消息
+   */
+  onInternalMessage (handler) {
+    this.__internalMessageListener__ = this.__internalMessageListener__ || []
+    if (handler instanceof Function && !this.__internalMessageListener__.includes(handler)) {
+      this.__internalMessageListener__.push(handler)
+    }
+
+    if (this.__hasInternalMessageListener__) { return false }
+    this.__hasInternalMessageListener__ = true
+
+    window.addEventListener('message', (event) => {
+      const message = event.data
+      const isInternalMessage = message && message.type === 'Internal-BroadcastMessage' && message.channelId === this.channelId && message.instanceId === this.instanceId
+
+      /* 排除其它postMessage逻辑发送过来的无关数据 */
+      if (!isInternalMessage) {
+        return false
+      }
+
+      this.__internalMessageListener__.forEach(handler => {
+        handler instanceof Function && handler(event)
+      })
+    }, true)
+  }
+
+  offInternalMessage (handler) {
+    this.__internalMessageListener__ = this.__internalMessageListener__ || []
+
+    const tempStorageListener = []
+
+    this.__internalMessageListener__.forEach(item => {
+      if (item !== handler) {
+        tempStorageListener.push(item)
+      }
+    })
+
+    this.__internalMessageListener__ = tempStorageListener
+  }
+
   addEventListener (type, listener) {
     if (type !== 'message') { return false }
 
@@ -442,6 +603,54 @@ class BroadcastMessage {
     this.offMessage(listener)
   }
 
+  ready (handler) {
+    if (this._isReady_) {
+      if (handler instanceof Function) {
+        handler(true)
+      }
+
+      return true
+    }
+
+    if (!this.__readyHandler__) {
+      this.__readyHandler__ = []
+
+      const readyHandler = event => {
+        const message = event.data
+
+        if (message.data === 'initReady') {
+          /**
+           * 发送握手消息，测试是否真的ready
+           * 这也是给messageWindow初始化成功后发的第一条信息，可以帮助messageWindow完善初始化信息
+           */
+          this.postMessageToInternal('readyTest')
+        } else if (message.data === 'ready') {
+          this._isReady_ = true
+
+          this.__readyHandler__.forEach(handler => {
+            if (handler instanceof Function) {
+              handler(true)
+            }
+          })
+
+          /* 解绑readyHandler */
+          delete this.__readyHandler__
+          this.offInternalMessage(readyHandler)
+        }
+      }
+
+      this.onInternalMessage(readyHandler)
+    }
+
+    if (handler instanceof Function) {
+      this.__readyHandler__.push(handler)
+    } else {
+      return new Promise((resolve, reject) => {
+        this.__readyHandler__.push(resolve)
+      })
+    }
+  }
+
   close () {
     if (this.__BroadcastChannelInstance__ && this.__BroadcastChannelInstance__.close) {
       this.__BroadcastChannelInstance__.close()
@@ -450,5 +659,8 @@ class BroadcastMessage {
     if (this.messageWindow) {
       document.body.removeChild(this.messageWindow)
     }
+
+    this.__messageListener__ = []
+    this.__readyHandler__ = []
   }
 }
