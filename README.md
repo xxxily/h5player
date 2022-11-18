@@ -35,7 +35,14 @@
 进入微信交流、反馈、新功能内测群的方式：
 <br />
 添加微信注明：[来自h5player] 即会拉你入群
+<br />
+<a href="https://h5player.anzz.top/home/Introduction.html" target="_blank">官网不定期更新入群二维码，可直接扫码入群</p>
 </p>
+
+## 使用文档
+
+- [功能手册](https://h5player.anzz.top/home/feature.html)
+- [常见问题Q&A](https://h5player.anzz.top/home/q&a.html)
   
 ## 快捷键列表
 
@@ -146,7 +153,7 @@
 ## 其他说明
 
 1、该脚本是利用业余时间进行开发维护的，有问题欢迎反馈，但不接受任何差评
-2、如果发现脚本完全不可用，一般都不是脚本本身的问题，建议先删除后再次安装即可
+2、如果发现脚本完全不可用，一般都不是脚本本身的问题，建议重装一下插件试试
 
 ## 更新日志
 

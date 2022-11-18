@@ -50,12 +50,16 @@ const mediaCore = (function () {
         if (!Number.isNaN(duration) && duration > 0) {
           mediaPlusApi[infoKey].unLockTime = Date.now() + duration
         }
+
+        // original.console.log(`[mediaPlusApi][lock][${keyName}] ${duration}`)
       },
       unLock (keyName) {
         const infoKey = `__${keyName}_info__`
         mediaPlusApi[infoKey] = mediaPlusApi[infoKey] || {}
         mediaPlusApi[infoKey].lock = false
         mediaPlusApi[infoKey].unLockTime = Date.now() - 100
+
+        // original.console.log(`[mediaPlusApi][unLock][${keyName}]`)
       },
       isLock (keyName) {
         const info = mediaPlusApi[`__${keyName}_info__`] || {}
@@ -208,6 +212,14 @@ const mediaCore = (function () {
       get: function () {
         const val = originDescriptors[property].get.apply(this, arguments)
         // original.console.log(`[mediaElementPropertyHijack][${property}][get]`, val)
+
+        const mediaPlusApi = createMediaPlusApi(this)
+        if (mediaPlusApi && mediaPlusApi.isLock(property)) {
+          if (property === 'playbackRate') {
+            return +!+[]
+          }
+        }
+
         return val
       },
       set: function (value) {

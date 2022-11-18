@@ -230,6 +230,11 @@ const h5Player = {
           t.setVolume(configManager.getGlobalStorage('media.volume'), true)
         }
 
+        /* 禁止默认的进度控制 */
+        if (configManager.get('enhance.blockSetCurrentTime') === true) {
+          t.lockCurrentTime()
+        }
+
         /* 恢复播放进度 */
         t.setPlayProgress(player)
 
