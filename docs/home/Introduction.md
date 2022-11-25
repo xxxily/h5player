@@ -26,12 +26,15 @@
 - 支持直播视频流提取
 - 支持配置式添加自定义功能
 
-## 交流群（新）
+## 交流群
 
 <br />
-<img src="./img/WeChat.jpg" width=280 />
+<img src="/assets/img/WeChat.jpg?t=2022.11.21" width=280 />
 <br />
-<p>微信交流、反馈、新功能内测群</p>
+<p>添加微信注明：[h5player] 即会拉你入群</p>
+<p>
+  TG群组：<a href="https://t.me/h5player" target="_blank">https://t.me/h5player</a>
+</p>
   
 ## 快捷键列表
 

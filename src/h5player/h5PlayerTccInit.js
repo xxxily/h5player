@@ -2,6 +2,7 @@ import TCC from '../libs/TCC/index'
 import {
   isObj,
   hideDom,
+  mergeObj,
   eachParentNode
 } from '../libs/utils/index'
 import debug from './debug'
@@ -484,4 +485,8 @@ function h5PlayerTccInit (h5Player) {
   })
 }
 
-export default h5PlayerTccInit
+function mergeTaskConf (config) {
+  return mergeObj(taskConf, config)
+}
+
+export { h5PlayerTccInit, mergeTaskConf }

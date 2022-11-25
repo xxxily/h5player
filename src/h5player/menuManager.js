@@ -38,6 +38,7 @@ let monkeyMenuList = [
   },
   {
     title: i18n.t('issues'),
+    disable: !configManager.get('enhance.unfoldMenu'),
     fn: () => {
       openInTab('https://github.com/xxxily/h5player/issues')
     }
@@ -46,6 +47,16 @@ let monkeyMenuList = [
     title: i18n.t('donate'),
     fn: () => {
       openInTab('https://h5player.anzz.top/#%E8%B5%9E')
+    }
+  },
+  {
+    title: `${configManager.get('enhance.unfoldMenu') ? i18n.t('foldMenu') : i18n.t('unfoldMenu')} 「${i18n.t('globalSetting')}」`,
+    fn: () => {
+      const confirm = window.confirm(configManager.get('enhance.unfoldMenu') ? i18n.t('foldMenu') : i18n.t('unfoldMenu'))
+      if (confirm) {
+        configManager.setGlobalStorage('enhance.unfoldMenu', !configManager.get('enhance.unfoldMenu'))
+        window.location.reload()
+      }
     }
   },
   {
@@ -58,7 +69,7 @@ let monkeyMenuList = [
   },
   {
     title: i18n.t('restoreConfiguration'),
-    disable: false,
+    disable: !configManager.get('enhance.unfoldMenu'),
     fn: () => {
       configManager.clear()
       refreshPage()
@@ -101,12 +112,13 @@ export function addMenu (menuOpts, before) {
 export function registerH5playerMenus (h5player) {
   const t = h5player
   const player = t.player()
+  const foldMenu = !configManager.get('enhance.unfoldMenu')
 
   if (player && !t._hasRegisterH5playerMenus_) {
     const menus = [
       {
         title: () => i18n.t('openCrossOriginFramePage'),
-        disable: !isInCrossOriginFrame(),
+        disable: foldMenu || !isInCrossOriginFrame(),
         fn: () => {
           openInTab(location.href)
         }
@@ -114,6 +126,7 @@ export function registerH5playerMenus (h5player) {
       {
         title: () => `${configManager.get('enhance.blockSetCurrentTime') ? i18n.t('unblockSetCurrentTime') : i18n.t('blockSetCurrentTime')} 「${i18n.t('localSetting')}」`,
         type: 'local',
+        disable: foldMenu,
         fn: () => {
           const confirm = window.confirm(configManager.get('enhance.blockSetCurrentTime') ? i18n.t('unblockSetCurrentTime') : i18n.t('blockSetCurrentTime'))
           if (confirm) {
@@ -125,6 +138,7 @@ export function registerH5playerMenus (h5player) {
       {
         title: () => `${configManager.get('enhance.blockSetVolume') ? i18n.t('unblockSetVolume') : i18n.t('blockSetVolume')} 「${i18n.t('localSetting')}」`,
         type: 'local',
+        disable: foldMenu,
         fn: () => {
           const confirm = window.confirm(configManager.get('enhance.blockSetVolume') ? i18n.t('unblockSetVolume') : i18n.t('blockSetVolume'))
           if (confirm) {
@@ -136,6 +150,7 @@ export function registerH5playerMenus (h5player) {
       {
         title: () => `${configManager.get('enhance.blockSetPlaybackRate') ? i18n.t('unblockSetPlaybackRate') : i18n.t('blockSetPlaybackRate')} 「${i18n.t('globalSetting')}」`,
         type: 'global',
+        disable: foldMenu,
         fn: () => {
           const confirm = window.confirm(configManager.get('enhance.blockSetPlaybackRate') ? i18n.t('unblockSetPlaybackRate') : i18n.t('blockSetPlaybackRate'))
           if (confirm) {
@@ -148,10 +163,34 @@ export function registerH5playerMenus (h5player) {
       {
         title: () => `${configManager.get('enhance.allowExperimentFeatures') ? i18n.t('notAllowExperimentFeatures') : i18n.t('allowExperimentFeatures')} 「${i18n.t('globalSetting')}」`,
         type: 'global',
+        disable: foldMenu,
         fn: () => {
           const confirm = window.confirm(configManager.get('enhance.allowExperimentFeatures') ? i18n.t('notAllowExperimentFeatures') : i18n.t('experimentFeaturesWarning'))
           if (confirm) {
             configManager.setGlobalStorage('enhance.allowExperimentFeatures', !configManager.get('enhance.allowExperimentFeatures'))
+            window.location.reload()
+          }
+        }
+      },
+      {
+        title: () => `${configManager.get('enhance.allowExternalCustomConfiguration') ? i18n.t('notAllowExternalCustomConfiguration') : i18n.t('allowExternalCustomConfiguration')} 「${i18n.t('globalSetting')}」`,
+        type: 'global',
+        disable: foldMenu,
+        fn: () => {
+          const confirm = window.confirm(configManager.get('enhance.allowExternalCustomConfiguration') ? i18n.t('notAllowExternalCustomConfiguration') : i18n.t('allowExternalCustomConfiguration'))
+          if (confirm) {
+            configManager.setGlobalStorage('enhance.allowExternalCustomConfiguration', !configManager.getGlobalStorage('enhance.allowExternalCustomConfiguration'))
+            window.location.reload()
+          }
+        }
+      },
+      {
+        title: () => `${configManager.getGlobalStorage('debug') ? i18n.t('closeDebugMode') : i18n.t('openDebugMode')} 「${i18n.t('globalSetting')}」`,
+        disable: foldMenu,
+        fn: () => {
+          const confirm = window.confirm(configManager.getGlobalStorage('debug') ? i18n.t('closeDebugMode') : i18n.t('openDebugMode'))
+          if (confirm) {
+            configManager.setGlobalStorage('debug', !configManager.getGlobalStorage('debug'))
             window.location.reload()
           }
         }

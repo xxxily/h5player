@@ -20,7 +20,8 @@ configManager parse localStorage error * @name         configManager.js
 
 import {
   getValByPath,
-  setValByPath
+  setValByPath,
+  mergeObj
 } from '../libs/utils/index'
 
 /**
@@ -90,7 +91,9 @@ const defConfig = {
     {
       desc: '网页全屏',
       key: 'shift+enter',
-      command: 'setWebFullScreen'
+      command: 'setWebFullScreen',
+      /* 如需禁用快捷键，将disabled设为true */
+      disabled: false
     },
     {
       desc: '全屏',
@@ -356,16 +359,10 @@ const defConfig = {
     },
     {
       desc: '执行JS脚本',
-      key: '',
-      command: 'runScript',
-      args: 'alert("test")',
-      when: ''
-    },
-    {
-      desc: '模拟点击',
-      key: '',
-      command: 'emitClick',
-      args: '#test a.emit-click-test',
+      key: 'ctrl+j ctrl+s',
+      command: () => {
+        alert('自定义JS脚本')
+      },
       when: ''
     }
   ],
@@ -375,9 +372,11 @@ const defConfig = {
 
     blockSetCurrentTime: false,
     blockSetVolume: false,
-    allowExperimentFeatures: false
+    allowExperimentFeatures: false,
+    allowExternalCustomConfiguration: false,
+    unfoldMenu: false
   },
-  debug: true
+  debug: false
 }
 
 const configManager = {
@@ -634,7 +633,9 @@ const configManager = {
         }
       })
     }
-  }
+  },
+
+  mergeDefConf (conf) { return mergeObj(defConfig, conf) }
 }
 
 export default configManager

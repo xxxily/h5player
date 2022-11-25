@@ -34,9 +34,9 @@
 <p>
 进入微信交流、反馈、新功能内测群的方式：
 <br />
-添加微信注明：[来自h5player] 即会拉你入群
+添加微信注明：[h5player] 即会拉你入群
 <br />
-<a href="https://h5player.anzz.top/home/Introduction.html" target="_blank">官网不定期更新入群二维码，可直接扫码入群</p>
+TG群组：<a href="https://t.me/h5player" target="_blank">https://t.me/h5player</a>
 </p>
 
 ## 使用文档

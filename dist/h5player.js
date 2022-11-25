@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.6.3
+// @version      3.7.0
 // @description  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
 // @description:en  Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
 // @description:zh  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
@@ -35,12 +35,8 @@
 // @grant        GM_saveTab
 // @grant        GM_getTabs
 // @grant        GM_openInTab
-// @grant        GM_download
-// @grant        GM_xmlhttpRequest
 // @grant        GM_setClipboard
 // @run-at       document-start
-// @require      https://unpkg.com/@popperjs/core@2.6.0/dist/umd/popper.js
-// @connect      127.0.0.1
 // @license      GPL
 // ==/UserScript==
 (function (w) { if (w) { w.name = 'h5player'; } })();
@@ -756,6 +752,55 @@ function clone (source) {
   return result
 }
 
+/* 遍历对象，但不包含其原型链上的属性 */
+function forIn (obj, fn) {
+  fn = fn || function () {};
+  for (var key in obj) {
+    if (Object.hasOwnProperty.call(obj, key)) {
+      fn(key, obj[key]);
+    }
+  }
+}
+
+/**
+ * 深度合并两个可枚举的对象
+ * @param objA {object} -必选 对象A
+ * @param objB {object} -必选 对象B
+ * @param concatArr {boolean} -可选 合并数组，默认遇到数组的时候，直接以另外一个数组替换当前数组，将此设置true则，遇到数组的时候一律合并，而不是直接替换
+ * @returns {*|void}
+ */
+function mergeObj (objA, objB, concatArr) {
+  function isObj (obj) {
+    return Object.prototype.toString.call(obj) === '[object Object]'
+  }
+  function isArr (arr) {
+    return Object.prototype.toString.call(arr) === '[object Array]'
+  }
+  if (!isObj(objA) || !isObj(objB)) return objA
+  function deepMerge (objA, objB) {
+    forIn(objB, function (key) {
+      const subItemA = objA[key];
+      const subItemB = objB[key];
+      if (typeof subItemA === 'undefined') {
+        objA[key] = subItemB;
+      } else {
+        if (isObj(subItemA) && isObj(subItemB)) {
+          /* 进行深层合并 */
+          objA[key] = deepMerge(subItemA, subItemB);
+        } else {
+          if (concatArr && isArr(subItemA) && isArr(subItemB)) {
+            objA[key] = subItemA.concat(subItemB);
+          } else {
+            objA[key] = subItemB;
+          }
+        }
+      }
+    });
+    return objA
+  }
+  return deepMerge(objA, objB)
+}
+
 /**
  * 根据文本路径获取对象里面的值，如需支持数组请使用lodash的get方法
  * @param obj {Object} -必选 要操作的对象
@@ -1206,7 +1251,9 @@ const defConfig = {
     {
       desc: '网页全屏',
       key: 'shift+enter',
-      command: 'setWebFullScreen'
+      command: 'setWebFullScreen',
+      /* 如需禁用快捷键，将disabled设为true */
+      disabled: false
     },
     {
       desc: '全屏',
@@ -1472,16 +1519,10 @@ const defConfig = {
     },
     {
       desc: '执行JS脚本',
-      key: '',
-      command: 'runScript',
-      args: 'alert("test")',
-      when: ''
-    },
-    {
-      desc: '模拟点击',
-      key: '',
-      command: 'emitClick',
-      args: '#test a.emit-click-test',
+      key: 'ctrl+j ctrl+s',
+      command: () => {
+        alert('自定义JS脚本');
+      },
       when: ''
     }
   ],
@@ -1491,9 +1532,11 @@ const defConfig = {
 
     blockSetCurrentTime: false,
     blockSetVolume: false,
-    allowExperimentFeatures: false
+    allowExperimentFeatures: false,
+    allowExternalCustomConfiguration: false,
+    unfoldMenu: false
   },
-  debug: true
+  debug: false
 };
 
 const configManager = {
@@ -1750,7 +1793,9 @@ const configManager = {
         }
       });
     }
-  }
+  },
+
+  mergeDefConf (conf) { return mergeObj(defConfig, conf) }
 };
 
 /* 保存重要的原始函数，防止被外部脚本污染 */
@@ -1766,7 +1811,7 @@ const originalMethods = {
 /**
  * 任务配置中心 Task Control Center
  * 用于配置所有无法进行通用处理的任务，如不同网站的全屏方式不一样，必须调用网站本身的全屏逻辑，才能确保字幕、弹幕等正常工作
- * */
+ **/
 
 class TCC {
   constructor (taskConf, doTaskFunc) {
@@ -1818,6 +1863,8 @@ class TCC {
     // 通过doTaskFunc回调定义配置该如何执行任务
     this.doTaskFunc = doTaskFunc instanceof Function ? doTaskFunc : function () {};
   }
+
+  setTaskConf (taskConf) { this.conf = taskConf; }
 
   /**
    * 获取域名 , 目前实现方式不好，需改造，对地区性域名（如com.cn）、三级及以上域名支持不好
@@ -2469,6 +2516,10 @@ function h5PlayerTccInit (h5Player) {
   })
 }
 
+function mergeTaskConf (config) {
+  return mergeObj(taskConf, config)
+}
+
 /* ua伪装配置 */
 const fakeConfig = {
   // 'tv.cctv.com': userAgentMap.iPhone.chrome,
@@ -3017,7 +3068,7 @@ var zhCN = {
   openCrossOriginFramePage: '单独打开跨域的页面',
   disableInitAutoPlay: '禁止在此网站自动播放视频',
   enableInitAutoPlay: '允许在此网站自动播放视频',
-  restoreConfiguration: '还原默认配置',
+  restoreConfiguration: '还原全局的默认配置',
   blockSetPlaybackRate: '禁用默认速度调节逻辑',
   blockSetCurrentTime: '禁用默认播放进度控制逻辑',
   blockSetVolume: '禁用默认音量控制逻辑',
@@ -3027,9 +3078,15 @@ var zhCN = {
   allowExperimentFeatures: '开启实验性功能',
   notAllowExperimentFeatures: '禁用实验性功能',
   experimentFeaturesWarning: '实验性功能容易造成一些不确定的问题，请谨慎开启',
+  allowExternalCustomConfiguration: '开启外部自定义能力',
+  notAllowExternalCustomConfiguration: '关闭外部自定义能力',
   configFail: '配置失败',
   globalSetting: '全局设置',
   localSetting: '仅用于此网站',
+  openDebugMode: '开启调试模式',
+  closeDebugMode: '关闭调试模式',
+  unfoldMenu: '展开菜单',
+  foldMenu: '折叠菜单',
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '前进：',
@@ -4386,6 +4443,7 @@ let monkeyMenuList = [
   },
   {
     title: i18n.t('issues'),
+    disable: !configManager.get('enhance.unfoldMenu'),
     fn: () => {
       openInTab('https://github.com/xxxily/h5player/issues');
     }
@@ -4394,6 +4452,16 @@ let monkeyMenuList = [
     title: i18n.t('donate'),
     fn: () => {
       openInTab('https://h5player.anzz.top/#%E8%B5%9E');
+    }
+  },
+  {
+    title: `${configManager.get('enhance.unfoldMenu') ? i18n.t('foldMenu') : i18n.t('unfoldMenu')} 「${i18n.t('globalSetting')}」`,
+    fn: () => {
+      const confirm = window.confirm(configManager.get('enhance.unfoldMenu') ? i18n.t('foldMenu') : i18n.t('unfoldMenu'));
+      if (confirm) {
+        configManager.setGlobalStorage('enhance.unfoldMenu', !configManager.get('enhance.unfoldMenu'));
+        window.location.reload();
+      }
     }
   },
   {
@@ -4406,7 +4474,7 @@ let monkeyMenuList = [
   },
   {
     title: i18n.t('restoreConfiguration'),
-    disable: false,
+    disable: !configManager.get('enhance.unfoldMenu'),
     fn: () => {
       configManager.clear();
       refreshPage();
@@ -4449,12 +4517,13 @@ function addMenu (menuOpts, before) {
 function registerH5playerMenus (h5player) {
   const t = h5player;
   const player = t.player();
+  const foldMenu = !configManager.get('enhance.unfoldMenu');
 
   if (player && !t._hasRegisterH5playerMenus_) {
     const menus = [
       {
         title: () => i18n.t('openCrossOriginFramePage'),
-        disable: !isInCrossOriginFrame(),
+        disable: foldMenu || !isInCrossOriginFrame(),
         fn: () => {
           openInTab(location.href);
         }
@@ -4462,6 +4531,7 @@ function registerH5playerMenus (h5player) {
       {
         title: () => `${configManager.get('enhance.blockSetCurrentTime') ? i18n.t('unblockSetCurrentTime') : i18n.t('blockSetCurrentTime')} 「${i18n.t('localSetting')}」`,
         type: 'local',
+        disable: foldMenu,
         fn: () => {
           const confirm = window.confirm(configManager.get('enhance.blockSetCurrentTime') ? i18n.t('unblockSetCurrentTime') : i18n.t('blockSetCurrentTime'));
           if (confirm) {
@@ -4473,6 +4543,7 @@ function registerH5playerMenus (h5player) {
       {
         title: () => `${configManager.get('enhance.blockSetVolume') ? i18n.t('unblockSetVolume') : i18n.t('blockSetVolume')} 「${i18n.t('localSetting')}」`,
         type: 'local',
+        disable: foldMenu,
         fn: () => {
           const confirm = window.confirm(configManager.get('enhance.blockSetVolume') ? i18n.t('unblockSetVolume') : i18n.t('blockSetVolume'));
           if (confirm) {
@@ -4484,6 +4555,7 @@ function registerH5playerMenus (h5player) {
       {
         title: () => `${configManager.get('enhance.blockSetPlaybackRate') ? i18n.t('unblockSetPlaybackRate') : i18n.t('blockSetPlaybackRate')} 「${i18n.t('globalSetting')}」`,
         type: 'global',
+        disable: foldMenu,
         fn: () => {
           const confirm = window.confirm(configManager.get('enhance.blockSetPlaybackRate') ? i18n.t('unblockSetPlaybackRate') : i18n.t('blockSetPlaybackRate'));
           if (confirm) {
@@ -4496,10 +4568,34 @@ function registerH5playerMenus (h5player) {
       {
         title: () => `${configManager.get('enhance.allowExperimentFeatures') ? i18n.t('notAllowExperimentFeatures') : i18n.t('allowExperimentFeatures')} 「${i18n.t('globalSetting')}」`,
         type: 'global',
+        disable: foldMenu,
         fn: () => {
           const confirm = window.confirm(configManager.get('enhance.allowExperimentFeatures') ? i18n.t('notAllowExperimentFeatures') : i18n.t('experimentFeaturesWarning'));
           if (confirm) {
             configManager.setGlobalStorage('enhance.allowExperimentFeatures', !configManager.get('enhance.allowExperimentFeatures'));
+            window.location.reload();
+          }
+        }
+      },
+      {
+        title: () => `${configManager.get('enhance.allowExternalCustomConfiguration') ? i18n.t('notAllowExternalCustomConfiguration') : i18n.t('allowExternalCustomConfiguration')} 「${i18n.t('globalSetting')}」`,
+        type: 'global',
+        disable: foldMenu,
+        fn: () => {
+          const confirm = window.confirm(configManager.get('enhance.allowExternalCustomConfiguration') ? i18n.t('notAllowExternalCustomConfiguration') : i18n.t('allowExternalCustomConfiguration'));
+          if (confirm) {
+            configManager.setGlobalStorage('enhance.allowExternalCustomConfiguration', !configManager.getGlobalStorage('enhance.allowExternalCustomConfiguration'));
+            window.location.reload();
+          }
+        }
+      },
+      {
+        title: () => `${configManager.getGlobalStorage('debug') ? i18n.t('closeDebugMode') : i18n.t('openDebugMode')} 「${i18n.t('globalSetting')}」`,
+        disable: foldMenu,
+        fn: () => {
+          const confirm = window.confirm(configManager.getGlobalStorage('debug') ? i18n.t('closeDebugMode') : i18n.t('openDebugMode'));
+          if (confirm) {
+            configManager.setGlobalStorage('debug', !configManager.getGlobalStorage('debug'));
             window.location.reload();
           }
         }
@@ -4590,6 +4686,371 @@ function proxyHTMLMediaElementEvent () {
   });
 }
 
+/*!
+ * @name         hotkeysRunner.js
+ * @description  热键运行器，实现类似vscode的热键配置方式
+ * @version      0.0.1
+ * @author       xxxily
+ * @date         2022/11/23 18:22
+ * @github       https://github.com/xxxily
+ */
+
+const Map$1 = window.Map;
+const WeakMap = window.WeakMap;
+function isObj$1 (obj) { return Object.prototype.toString.call(obj) === '[object Object]' }
+
+function getValByPath$1 (obj, path) {
+  path = path || '';
+  const pathArr = path.split('.');
+  let result = obj;
+
+  /* 递归提取结果值 */
+  for (let i = 0; i < pathArr.length; i++) {
+    if (!result) break
+    result = result[pathArr[i]];
+  }
+
+  return result
+}
+
+function toArrArgs (args) {
+  return Array.isArray(args) ? args : (typeof args === 'undefined' ? [] : [args])
+}
+
+function isModifierKey (key) {
+  return [
+    'ctrl', 'controlleft', 'controlright',
+    'shift', 'shiftleft', 'shiftright',
+    'alt', 'altleft', 'altright',
+    'meta', 'metaleft', 'metaright',
+    'capsLock'].includes(key.toLowerCase())
+}
+
+const keyAlias = {
+  ControlLeft: 'ctrl',
+  ControlRight: 'ctrl',
+  ShiftLeft: 'shift',
+  ShiftRight: 'shift',
+  AltLeft: 'alt',
+  AltRight: 'alt',
+  MetaLeft: 'meta',
+  MetaRight: 'meta'
+};
+
+const combinationKeysMonitor = (function () {
+  const combinationKeysState = new Map$1();
+
+  const hasInit = new WeakMap();
+
+  function init (win = window) {
+    if (!win || win !== win.self || !win.addEventListener || hasInit.get(win)) {
+      return false
+    }
+
+    const timers = {};
+
+    function activeCombinationKeysState (event) {
+      isModifierKey(event.code) && combinationKeysState.set(event.code, true);
+    }
+
+    function inactivateCombinationKeysState (event) {
+      if (!(event instanceof KeyboardEvent)) {
+        combinationKeysState.forEach((val, key) => {
+          combinationKeysState.set(key, false);
+        });
+        return true
+      }
+
+      /**
+       * combinationKeysState状态必须保留一段时间，否则当外部定义的是keyup事件时候，由于这个先注册也先执行，
+       * 马上更改combinationKeysState状态，会导致后面定义的事件拿到的是未激活组合键的状态
+       */
+      if (isModifierKey(event.code)) {
+        clearTimeout(timers[event.code]);
+        timers[event.code] = setTimeout(() => { combinationKeysState.set(event.code, false); }, 50);
+      }
+    }
+
+    win.addEventListener('keydown', activeCombinationKeysState, true);
+    win.addEventListener('keypress', activeCombinationKeysState, true);
+    win.addEventListener('keyup', inactivateCombinationKeysState, true);
+    win.addEventListener('blur', inactivateCombinationKeysState, true);
+
+    hasInit.set(win, true);
+  }
+
+  function getCombinationKeys () {
+    const result = new Map$1();
+    combinationKeysState.forEach((val, key) => {
+      if (val === true) {
+        result.set(key, val);
+      }
+    });
+    return result
+  }
+
+  return {
+    combinationKeysState,
+    getCombinationKeys,
+    init
+  }
+})();
+
+class HotkeysRunner {
+  constructor (hotkeys) {
+    /* Mac和window使用的修饰符是不一样的 */
+    this.MOD = typeof navigator === 'object' && /Mac|iPod|iPhone|iPad/.test(navigator.platform) ? 'Meta' : 'Control';
+
+    this.prevPress = null;
+    this._prevTimer_ = null;
+
+    this.setHotkeys(hotkeys);
+    combinationKeysMonitor.init(window);
+  }
+
+  /* 设置其它window对象的组合键监控逻辑 */
+  setCombinationKeysMonitor (win) { combinationKeysMonitor.init(win); }
+
+  /* 数据预处理 */
+  hotkeysPreprocess (hotkeys) {
+    if (!Array.isArray(hotkeys)) {
+      return false
+    }
+
+    hotkeys.forEach((config) => {
+      if (!isObj$1(config) || !config.key || typeof config.key !== 'string') {
+        return false
+      }
+
+      const keyName = config.key.trim().toLowerCase();
+      const mod = this.MOD.toLowerCase();
+
+      /* 增加格式化后的hotkeys数组 */
+      config.keyBindings = keyName.split(' ').map(press => {
+        const keys = press.split(/\b\+/);
+        const mods = [];
+        let key = '';
+
+        keys.forEach((k) => {
+          k = k === '$mod' ? mod : k;
+
+          if (isModifierKey(k)) {
+            mods.push(k);
+          } else {
+            key = k;
+          }
+        });
+
+        return [mods, key]
+      });
+    });
+
+    return hotkeys
+  }
+
+  setHotkeys (hotkeys) {
+    this.hotkeys = this.hotkeysPreprocess(hotkeys) || [];
+  }
+
+  /**
+   * 判断当前提供的键盘事件和预期的热键配置是否匹配
+   * @param {KeyboardEvent} event
+   * @param {Array} press 例如：[['alt', 'shift'], 's']
+   * @param {Object} prevCombinationKeys
+   * @returns
+   */
+  isMatch (event, press) {
+    if (!event || !Array.isArray(press)) { return false }
+
+    const combinationKeys = event.combinationKeys || combinationKeysMonitor.getCombinationKeys();
+    const mods = press[0];
+    const key = press[1];
+
+    /* 修饰符个数不匹配 */
+    if (mods.length !== combinationKeys.size) {
+      return false
+    }
+
+    /* 当前按下的键位和预期的键位不匹配 */
+    if (key && event.key.toLowerCase() !== key && event.code.toLowerCase() !== key) {
+      return false
+    }
+
+    /* 当前按下的修饰符和预期的修饰符不匹配 */
+    let result = true;
+    const modsKey = new Map$1();
+    combinationKeys.forEach((val, key) => {
+      /* 补充各种可能情况的标识 */
+      modsKey.set(key, val);
+      modsKey.set(key.toLowerCase(), val);
+      keyAlias[key] && modsKey.set(keyAlias[key], val);
+    });
+
+    mods.forEach((key) => {
+      if (!modsKey.has(key)) {
+        result = false;
+      }
+    });
+
+    return result
+  }
+
+  isMatchPrevPress (press) { return this.isMatch(this.prevPress, press) }
+
+  run (opts = {}) {
+    if (!(opts.event instanceof KeyboardEvent)) { return false }
+
+    const event = opts.event;
+    const target = opts.target || null;
+    const conditionHandler = opts.conditionHandler || opts.whenHandler;
+
+    let matchResult = null;
+
+    this.hotkeys.forEach(hotkeyConf => {
+      if (hotkeyConf.disabled || !hotkeyConf.keyBindings) {
+        return false
+      }
+
+      let press = hotkeyConf.keyBindings[0];
+
+      /* 如果存在上一轮的操作快捷键记录，且之前的快捷键与第一个keyBindings定义的快捷键匹配，则去匹配第二个keyBindings */
+      if (this.prevPress && hotkeyConf.keyBindings.length > 1 && this.isMatchPrevPress(press)) {
+        press = hotkeyConf.keyBindings[1];
+      }
+
+      const isMatch = this.isMatch(event, press);
+      if (!isMatch) { return false }
+
+      matchResult = hotkeyConf;
+
+      /* 是否阻止事件冒泡和阻止默认事件 */
+      const stopPropagation = opts.stopPropagation || hotkeyConf.stopPropagation;
+      const preventDefault = opts.preventDefault || hotkeyConf.preventDefault;
+      stopPropagation && event.stopPropagation();
+      preventDefault && event.preventDefault();
+
+      /* 记录上一次操作的快捷键，且一段时间后清空该操作的记录 */
+      if (press === hotkeyConf.keyBindings[0]) {
+        /* 将prevPress变成一个具有event相关字段的对象 */
+        this.prevPress = {
+          combinationKeys: combinationKeysMonitor.getCombinationKeys(),
+          code: event.code,
+          key: event.key,
+          keyCode: event.keyCode,
+          altKey: event.altKey,
+          shiftKey: event.shiftKey,
+          ctrlKey: event.ctrlKey,
+          metaKey: event.metaKey
+        };
+
+        clearTimeout(this._prevTimer_);
+        this._prevTimer_ = setTimeout(() => { this.prevPress = null; }, 1000);
+      }
+
+      if (press === hotkeyConf.keyBindings[0] && hotkeyConf.keyBindings.length > 1) {
+        return true
+      } else {
+        this.prevPress = null;
+      }
+
+      /* 执行hotkeyConf.command对应的函数或命令 */
+      const args = toArrArgs(hotkeyConf.args);
+      let commandFunc = hotkeyConf.command;
+      if (target && typeof hotkeyConf.command === 'string') {
+        commandFunc = getValByPath$1(target, hotkeyConf.command);
+      }
+
+      if (!(commandFunc instanceof Function) && target) {
+        throw new Error(`[hotkeysRunner] 未找到command: ${hotkeyConf.command} 对应的函数`)
+      }
+
+      if (hotkeyConf.when && conditionHandler instanceof Function) {
+        const isMatchCondition = conditionHandler.apply(target, toArrArgs(hotkeyConf.when));
+        if (isMatchCondition === true) {
+          commandFunc.apply(target, args);
+        }
+      } else {
+        commandFunc.apply(target, args);
+      }
+    });
+
+    return matchResult
+  }
+
+  binding (opts = {}) {
+    if (!isObj$1(opts) || !Array.isArray(opts.hotkeys)) {
+      throw new Error('[hotkeysRunner] 提供给binding的参数不正确')
+    }
+
+    opts.el = opts.el || window;
+    opts.type = opts.type || 'keydown';
+    opts.debug && (this.debug = true);
+
+    this.setHotkeys(opts.hotkeys);
+
+    if (typeof opts.el === 'string') {
+      opts.el = document.querySelector(opts.el);
+    }
+
+    opts.el.addEventListener(opts.type, (event) => {
+      opts.event = event;
+      this.run(opts);
+    }, true);
+  }
+}
+
+/* eslint-disable camelcase */
+
+/**
+ * @license Copyright 2017 - Chris West - MIT Licensed
+ * Prototype to easily set the volume (actual and perceived), loudness,
+ * decibels, and gain value.
+ * https://cwestblog.com/2017/08/22/web-audio-api-controlling-audio-video-loudness/
+ */
+function MediaElementAmplifier (mediaElem) {
+  this._context = new (window.AudioContext || window.webkitAudioContext)();
+  this._source = this._context.createMediaElementSource(this._element = mediaElem);
+  this._source.connect(this._gain = this._context.createGain());
+  this._gain.connect(this._context.destination);
+}
+[
+  'getContext',
+  'getSource',
+  'getGain',
+  'getElement',
+  [
+    'getVolume',
+    function (opt_getPerceived) {
+      return (opt_getPerceived ? this.getLoudness() : 1) * this._element.volume
+    }
+  ],
+  [
+    'setVolume',
+    function (value, opt_setPerceived) {
+      var volume = value / (opt_setPerceived ? this.getLoudness() : 1);
+      if (volume > 1) {
+        this.setLoudness(this.getLoudness() * volume);
+        volume = 1;
+      }
+      this._element.volume = volume;
+    }
+  ],
+  ['getGainValue', function () { return this._gain.gain.value }],
+  ['setGainValue', function (value) { this._gain.gain.value = value; }],
+  ['getDecibels', function () { return 20 * Math.log10(this.getGainValue()) }],
+  ['setDecibels', function (value) { this.setGainValue(Math.pow(10, value / 20)); }],
+  ['getLoudness', function () { return Math.pow(2, this.getDecibels() / 10) }],
+  ['setLoudness', function (value) { this.setDecibels(10 * Math.log2(value)); }]
+].forEach(function (name, fn) {
+  if (typeof name === 'string') {
+    fn = function () { return this[name.replace('get', '').toLowerCase()] };
+  } else {
+    fn = name[1];
+    name = name[0];
+  }
+  MediaElementAmplifier.prototype[name] = fn;
+});
+
 function download (url, title) {
   const downloadEl = document.createElement('a');
   downloadEl.href = url;
@@ -4671,8 +5132,6 @@ function mediaDownload (mediaEl, title, downloadType) {
     original.alert('当前媒体文件无法下载，下载功能待优化完善');
   }
 }
-
-window._debugMode_ = true;
 
 /* 定义支持哪些媒体标签 */
 // const supportMediaTags = ['video', 'bwp-video', 'audio']
@@ -4840,6 +5299,9 @@ const h5Player = {
     player._fullScreen_ = new FullScreen(player);
     player._fullPageScreen_ = new FullScreen(player, true);
 
+    /* 注册热键运行器 */
+    t.registerHotkeysRunner();
+
     if (!player._hasCanplayEvent_) {
       player.addEventListener('canplay', function (event) {
         t.initAutoPlay(player);
@@ -4924,6 +5386,17 @@ const h5Player = {
       player.addEventListener('durationchange', function () {
         debug.log(`video durationchange: ${player.duration}`);
       });
+    }
+  },
+
+  registerHotkeysRunner () {
+    if (!this.hotkeysRunner) {
+      this.hotkeysRunner = new HotkeysRunner(configManager.get('hotkeys'));
+
+      if (isInIframe() && !isInCrossOriginFrame()) {
+        /* 让顶层页面也可以监听组合键的触发 */
+        this.hotkeysRunner.setCombinationKeysMonitor(window.top);
+      }
     }
   },
 
@@ -5313,13 +5786,14 @@ const h5Player = {
     const t = this;
     player = player || t.player();
 
+    t.unLockPlaybackRate();
+
     const oldPlaybackRate = Number(player.playbackRate);
     const playbackRate = oldPlaybackRate === 1 ? t.lastPlaybackRate : 1;
     if (oldPlaybackRate !== 1) {
       t.lastPlaybackRate = oldPlaybackRate;
     }
 
-    t.unLockPlaybackRate();
     t.setPlaybackRate(playbackRate);
 
     /* 防止外部调速逻辑的干扰，所以锁定一段时间 */
@@ -5558,12 +6032,41 @@ const h5Player = {
     num = Number(num).toFixed(2);
     if (num < 0) {
       num = 0;
-    } else if (num > 1) {
-      num = 1;
+    }
+
+    if (num > 1) {
+      num = Math.ceil(num);
+
+      try {
+        player._amp_ = player._amp_ || new MediaElementAmplifier(player);
+      } catch (e) {
+        num = 1;
+        debug.error('媒体声音响度增益逻辑异常', e);
+      }
+
+      /* 限定增益的最大值 */
+      if (num > 6) {
+        num = 6;
+      }
+
+      if (!player._amp_ || !player._amp_.setLoudness) {
+        num = 1;
+      }
     }
 
     /* 记录播放音量信息 */
     t.volume = num;
+
+    /* 使用音量增益逻辑，增益音量不进行本地存储记录 */
+    if (num > 1 && player._amp_ && player._amp_.setLoudness) {
+      player._amp_.setLoudness(num);
+
+      if (!outerCall) { player.muted = false; }
+
+      !notips && t.tips(i18n.t('tipsMsg.volume') + parseInt(num * 100) + '%');
+      return true
+    }
+
     if (isInIframe() || configManager.get('enhance.blockSetVolume') === true) {
       configManager.setGlobalStorage('media.volume', num);
     } else {
@@ -5612,18 +6115,22 @@ const h5Player = {
     }
 
     /* 调节音量的时候顺便把静音模式关闭 */
-    if (!outerCall) {
-      player.muted = false;
-    }
+    if (!outerCall) { player.muted = false; }
 
     !notips && t.tips(i18n.t('tipsMsg.volume') + parseInt(player.volume * 100) + '%');
   },
 
   setVolumeUp (num) {
     num = numUp(num) || 0.2;
-    if (this.player()) {
+    const player = this.player();
+    if (player) {
       this.unLockVolume();
-      this.setVolume(this.player().volume + num);
+
+      if (this.volume > 1 && player._amp_) {
+        this.setVolume(this.volume + num);
+      } else {
+        this.setVolume(player.volume + num);
+      }
 
       /* 防止外部调音逻辑的干扰，所以锁定一段时间 */
       this.lockVolume(500);
@@ -5632,9 +6139,15 @@ const h5Player = {
 
   setVolumeDown (num) {
     num = numDown(num) || -0.2;
-    if (this.player()) {
+    const player = this.player();
+    if (player) {
       this.unLockVolume();
-      this.setVolume(this.player().volume + num);
+
+      if (this.volume > 1 && player._amp_) {
+        this.setVolume(Math.floor(this.volume + num));
+      } else {
+        this.setVolume(player.volume + num);
+      }
 
       /* 防止外部调音逻辑的干扰，所以锁定一段时间 */
       this.lockVolume(500);
@@ -5739,20 +6252,25 @@ const h5Player = {
 
   /* 缩放视频画面 */
   setScale (num) {
-    this.scale = num;
+    if (Number.isNaN(this.scale) || Number.isNaN(num)) {
+      this.scale = 1;
+    } else {
+      this.scale = num;
+    }
+
     this.setTransform();
   },
 
   /* 视频放大 +0.1 */
-  setScaleUp () {
-    this.scale += 0.05;
-    this.setTransform();
+  setScaleUp (num) {
+    num = numUp(num) || 0.05;
+    this.setScale(Number(this.scale) + num);
   },
 
   /* 视频缩小 -0.1 */
-  setScaleDown () {
-    this.scale -= 0.05;
-    this.setTransform();
+  setScaleDown (num) {
+    num = numDown(num) || -0.05;
+    this.setScale(Number(this.scale) + num);
   },
 
   /* 设置视频画面的位移属性 */
@@ -5769,27 +6287,27 @@ const h5Player = {
   },
 
   /* 视频画面向右平移 */
-  setTranslateRight () {
-    this.translate.x += 10;
-    this.setTransform();
+  setTranslateRight (num) {
+    num = numUp(num) || 10;
+    this.setTranslate(this.translate.x + num);
   },
 
   /* 视频画面向左平移 */
-  setTranslateLeft () {
-    this.translate.x -= 10;
-    this.setTransform();
+  setTranslateLeft (num) {
+    num = numDown(num) || -10;
+    this.setTranslate(this.translate.x + num);
   },
 
   /* 视频画面向上平移 */
-  setTranslateUp () {
-    this.translate.y -= 10;
-    this.setTransform();
+  setTranslateUp (num) {
+    num = numUp(num) || 10;
+    this.setTranslate(null, this.translate.y - num);
   },
 
   /* 视频画面向下平移 */
-  setTranslateDown () {
-    this.translate.y += 10;
-    this.setTransform();
+  setTranslateDown (num) {
+    num = numDown(num) || -10;
+    this.setTranslate(null, this.translate.y - num);
   },
 
   resetTransform (notTips) {
@@ -6279,6 +6797,23 @@ const h5Player = {
     t.tips(i18n.t('tipsMsg.imgattrreset'));
   },
 
+  mediaDownload () {
+    if (configManager.get('enhance.allowExperimentFeatures')) {
+      debug.warn('[experimentFeatures][mediaDownload]');
+      mediaDownload(this.player());
+    }
+  },
+
+  capture () {
+    const player = this.player();
+    videoCapturer.capture(player, true);
+
+    /* 暂停画面 */
+    if (!player.paused && !document.pictureInPictureElement && document.visibilityState !== 'visible') {
+      this.freezeFrame();
+    }
+  },
+
   _isFoucs: false,
 
   /* 播放器的聚焦事件 */
@@ -6314,12 +6849,7 @@ const h5Player = {
 
       // 截图并下载保存
       if (key === 's') {
-        videoCapturer.capture(player, true);
-
-        /* 暂停画面 */
-        if (!player.paused && !document.pictureInPictureElement && document.visibilityState !== 'visible') {
-          t.freezeFrame();
-        }
+        t.capture();
       }
 
       if (key === 'r') {
@@ -6332,10 +6862,7 @@ const h5Player = {
       }
 
       if (key === 'd') {
-        if (configManager.get('enhance.allowExperimentFeatures')) {
-          debug.warn('[experimentFeatures][mediaDownload]');
-          mediaDownload(t.player());
-        }
+        t.mediaDownload();
       }
 
       // 视频画面缩放相关事件
@@ -6601,22 +7128,32 @@ const h5Player = {
     /* 处于可编辑元素中不执行任何快捷键 */
     if (isEditableTarget(event.target)) return
 
-    /* 未用到的按键不进行任何事件监听 */
-    if (!isRegisterKey(event)) return
-
     /* 广播按键消息，进行跨域控制 */
     monkeyMsg.send('globalKeydownEvent', event, 0);
 
     if (!player) {
       if (t.hasCrossOriginVideoDetected) {
+        /**
+         * 利用热键运行器的匹配能力来决定要不要禁止事件冒泡和阻止默认事件
+         * 解决处于跨TAB、跨域控制时造成其它默认快捷键响应异常的问题
+         */
+        if (t.hotkeysRunner && t.hotkeysRunner.run) {
+          t.hotkeysRunner.run({
+            event,
+            stopPropagation: true,
+            preventDefault: true
+          });
+        } else {
+          t.registerHotkeysRunner();
+          event.stopPropagation();
+          event.preventDefault();
+        }
+
         // debug.log('当前页面检出了跨域受限的视频，仍需阻止默认事件和事件冒泡')
-        event.stopPropagation();
-        event.preventDefault();
-        return true
       }
 
-      // debug.log('无可用的播放，不执行相关操作')
-      return
+      // debug.log('无可用的媒体元素，不执行相关操作')
+      return false
     }
 
     /* 切换插件的可用状态 */
@@ -6650,8 +7187,32 @@ const h5Player = {
     /* 判断是否执行了自定义快捷键操作，如果是则不再响应后面默认定义操作 */
     if (t.runCustomShortcuts(player, event) === true) return
 
-    /* 响应播放器相关操作 */
-    t.palyerTrigger(player, event);
+    /* 热键运行器匹配到相关执行任务便不在执行后续的palyerTrigger */
+    if (t.hotkeysRunner && t.hotkeysRunner.run) {
+      const matchResult = t.hotkeysRunner.run({
+        event,
+        target: t,
+        stopPropagation: true,
+        preventDefault: true,
+        conditionHandler (condition) {
+          // TODO 完善条件限定回调逻辑
+          if (condition) {
+            return true
+          }
+        }
+      });
+
+      if (matchResult) {
+        debug.info('[hotkeysRunner][matchResult]', matchResult);
+        return true
+      }
+    } else {
+      /* 未用到的按键不进行任何事件监听 */
+      if (!isRegisterKey(event)) { return false }
+
+      /* 响应播放器相关操作 */
+      t.palyerTrigger(player, event);
+    }
   },
 
   /**
@@ -6963,8 +7524,32 @@ const h5Player = {
 
     t._hasBindEvent_ = true;
   },
+
+  setCustomConfiguration (config, tag = 'Default') {
+    if (!config) return false
+
+    const configuration = configManager.mergeDefConf(config.customConfiguration);
+    const taskConf = mergeTaskConf(config.customTaskControlCenter);
+    if (TCC$1 && TCC$1.setTaskConf) {
+      TCC$1.setTaskConf(taskConf);
+    }
+
+    h5Player.hasSetCustomConfiguration = tag;
+    debug.info(`[CustomConfiguration][${tag}]`, configuration, taskConf);
+  },
+
+  mergeExternalConfiguration (config, tag = 'Default') {
+    if (!config || !configManager.getGlobalStorage('enhance.allowExternalCustomConfiguration')) return false
+    h5Player.setCustomConfiguration(config, 'External');
+    h5Player.hasExternalCustomConfiguration = tag;
+  },
+
   init: function (global) {
     var t = this;
+
+    if (window.unsafeWindow && window.unsafeWindow.__h5PlayerCustomConfiguration__) {
+      !t.hasExternalCustomConfiguration && t.mergeExternalConfiguration(window.unsafeWindow.__h5PlayerCustomConfiguration__);
+    }
 
     if (TCC$1 && TCC$1.doTask('disable') === true) {
       debug.info(`[TCC][disable][${location.host}] 已禁止在该网站运行视频检测逻辑，您可查看任务配置中心的相关配置了解详情`);
@@ -6975,6 +7560,11 @@ const h5Player = {
       /* 检测是否存在H5播放器 */
       t.detecH5Player();
       return true
+    }
+
+    if (configManager.get('debug') === true) {
+      window._debugMode_ = true;
+      t.mountToGlobal();
     }
 
     setFakeUA();
@@ -7000,8 +7590,8 @@ const h5Player = {
       h5Player.initAutoPlay();
     });
 
-    if (debug.isDebugMode()) {
-      t.mountToGlobal();
+    if (window.unsafeWindow && configManager.getGlobalStorage('enhance.allowExternalCustomConfiguration')) {
+      window.unsafeWindow.__setH5PlayerCustomConfiguration__ = t.mergeExternalConfiguration;
     }
   }
 };
