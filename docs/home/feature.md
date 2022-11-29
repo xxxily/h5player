@@ -252,4 +252,19 @@
 
 ![global_mode_off](./img/global_mode_off.jpg)  
 
+## 自定义功能和配置
+
+为了解决键位被大量占用，和快捷键冲突的问题，`v3.7.0` 版本增加了允许外部自定义快捷键和自定义配置等能力。
+
+为了减少可能潜在的外部污染，自定义外部能力需要菜单开启后才能使用：
+
+<img src="./img/allowExternalCustomConfiguration.png" width=380 alt="allowExternalCustomConfiguration" />
+
+开启后即可通过外部脚本来定义该插件的快捷键和其它相关的能力  
+
+您可参照下面这份脚本来进行自定义：[https://greasyfork.org/zh-CN/scripts/455396](https://greasyfork.org/zh-CN/scripts/455396)  
+
+您也可以点击下面链接查看完整的自定义参考代码：
+[HTML5播放器自定义配置](./customConfiguration.md)
+
 <Vssue :title="$title" />

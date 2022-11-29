@@ -374,6 +374,10 @@ const defConfig = {
     blockSetVolume: false,
     allowExperimentFeatures: false,
     allowExternalCustomConfiguration: false,
+    /* 是否开启音量增益功能 */
+    allowAcousticGain: false,
+    /* 是否开启跨域控制 */
+    allowCrossOriginControl: true,
     unfoldMenu: false
   },
   debug: false

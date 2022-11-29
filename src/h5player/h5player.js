@@ -949,7 +949,7 @@ const h5Player = {
       num = 0
     }
 
-    if (num > 1) {
+    if (num > 1 && configManager.get('enhance.allowAcousticGain')) {
       num = Math.ceil(num)
 
       try {
@@ -967,6 +967,8 @@ const h5Player = {
       if (!player._amp_ || !player._amp_.setLoudness) {
         num = 1
       }
+    } else if (num > 1) {
+      num = 1
     }
 
     /* 记录播放音量信息 */
@@ -2056,6 +2058,10 @@ const h5Player = {
 
     if (!player) {
       if (t.hasCrossOriginVideoDetected) {
+        if (!configManager.get('enhance.allowCrossOriginControl')) {
+          return false
+        }
+
         /**
          * 利用热键运行器的匹配能力来决定要不要禁止事件冒泡和阻止默认事件
          * 解决处于跨TAB、跨域控制时造成其它默认快捷键响应异常的问题

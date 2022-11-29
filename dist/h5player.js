@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.7.0
+// @version      3.7.1
 // @description  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
 // @description:en  Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
 // @description:zh  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
@@ -1534,6 +1534,10 @@ const defConfig = {
     blockSetVolume: false,
     allowExperimentFeatures: false,
     allowExternalCustomConfiguration: false,
+    /* 是否开启音量增益功能 */
+    allowAcousticGain: false,
+    /* 是否开启跨域控制 */
+    allowCrossOriginControl: true,
     unfoldMenu: false
   },
   debug: false
@@ -3075,6 +3079,10 @@ var zhCN = {
   unblockSetPlaybackRate: '允许默认速度调节逻辑',
   unblockSetCurrentTime: '允许默认播放进度控制逻辑',
   unblockSetVolume: '允许默认音量控制逻辑',
+  allowAcousticGain: '开启音量增益能力',
+  notAllowAcousticGain: '禁用音量增益能力',
+  allowCrossOriginControl: '开启跨域控制能力',
+  notAllowCrossOriginControl: '禁用跨域控制能力',
   allowExperimentFeatures: '开启实验性功能',
   notAllowExperimentFeatures: '禁用实验性功能',
   experimentFeaturesWarning: '实验性功能容易造成一些不确定的问题，请谨慎开启',
@@ -3130,19 +3138,29 @@ var enUS = {
   openCrossOriginFramePage: 'Open cross-domain pages alone',
   disableInitAutoPlay: 'Prohibit autoplay of videos on this site',
   enableInitAutoPlay: 'Allow autoplay videos on this site',
-  restoreConfiguration: 'Restore default configuration',
+  restoreConfiguration: 'Restore the global default configuration',
   blockSetPlaybackRate: 'Disable default speed regulation logic',
   blockSetCurrentTime: 'Disable default playback progress control logic',
   blockSetVolume: 'Disable default volume control logic',
   unblockSetPlaybackRate: 'Allow default speed adjustment logic',
   unblockSetCurrentTime: 'Allow default playback progress control logic',
   unblockSetVolume: 'Allow default volume control logic',
+  allowAcousticGain: 'Turn on volume boost',
+  notAllowAcousticGain: 'Disable volume boost ability',
+  allowCrossOriginControl: 'Enable cross-domain control capability',
+  notAllowCrossOriginControl: 'Disable cross-domain control capabilities',
   allowExperimentFeatures: 'Turn on experimental features',
   notAllowExperimentFeatures: 'Disable experimental features',
   experimentFeaturesWarning: 'Experimental features are likely to cause some uncertain problems, please turn on with caution',
+  allowExternalCustomConfiguration: 'Enable external customization capabilities',
+  notAllowExternalCustomConfiguration: 'Turn off external customization capabilities',
   configFail: 'Configuration failed',
   globalSetting: 'Global Settings',
-  localSetting: 'for this site only',
+  localSetting: 'For this site only',
+  openDebugMode: 'Enable debug mode',
+  closeDebugMode: 'Turn off debug mode',
+  unfoldMenu: 'Expand menu',
+  foldMenu: 'Collapse menu',
   tipsMsg: {
     playspeed: 'Speed: ',
     forward: 'Forward: ',
@@ -3187,19 +3205,29 @@ var ru = {
   openCrossOriginFramePage: 'Открывать только междоменные страницы',
   disableInitAutoPlay: 'Запретить автовоспроизведение видео на этом сайте',
   enableInitAutoPlay: 'Разрешить автоматическое воспроизведение видео на этом сайте',
-  restoreConfiguration: 'Восстановить конфигурацию по умолчанию',
+  restoreConfiguration: 'Восстановить глобальную конфигурацию по умолчанию',
   blockSetPlaybackRate: 'Отключить логику регулирования скорости по умолчанию',
   blockSetCurrentTime: 'Отключить логику управления ходом воспроизведения по умолчанию',
   blockSetVolume: 'Отключить логику управления громкостью по умолчанию',
   unblockSetPlaybackRate: 'Разрешить логику регулировки скорости по умолчанию',
   unblockSetCurrentTime: 'Разрешить логику управления ходом воспроизведения по умолчанию',
   unblockSetVolume: 'Разрешить логику управления громкостью по умолчанию',
+  allowAcousticGain: 'Включите усиление громкости',
+  notAllowAcousticGain: 'Отключить возможность увеличения громкости',
+  allowCrossOriginControl: 'Включить возможность междоменного контроля',
+  notAllowCrossOriginControl: 'Отключить возможности междоменного контроля',
   allowExperimentFeatures: 'Включить экспериментальные функции',
   notAllowExperimentFeatures: 'Отключить экспериментальные функции',
   experimentFeaturesWarning: 'Экспериментальные функции могут вызвать определенные проблемы, включайте их с осторожностью.',
+  allowExternalCustomConfiguration: 'Включить возможности внешней настройки',
+  notAllowExternalCustomConfiguration: 'Отключить возможности внешней настройки',
   configFail: 'Ошибка конфигурации',
   globalSetting: 'Глобальные настройки',
   localSetting: 'только для этого сайта',
+  openDebugMode: 'Включить режим отладки',
+  closeDebugMode: 'отключить режим отладки',
+  unfoldMenu: 'развернуть меню',
+  foldMenu: 'свернуть меню',
   tipsMsg: {
     playspeed: 'Скорость: ',
     forward: 'Вперёд: ',
@@ -3243,19 +3271,29 @@ var zhTW = {
   openCrossOriginFramePage: '單獨打開跨域的頁面',
   disableInitAutoPlay: '禁止在此網站自動播放視頻',
   enableInitAutoPlay: '允許在此網站自動播放視頻',
-  restoreConfiguration: '还原默认配置',
+  restoreConfiguration: '還原全局的默認配置',
   blockSetPlaybackRate: '禁用默認速度調節邏輯',
   blockSetCurrentTime: '禁用默認播放進度控制邏輯',
   blockSetVolume: '禁用默認音量控制邏輯',
   unblockSetPlaybackRate: '允許默認速度調節邏輯',
   unblockSetCurrentTime: '允許默認播放進度控制邏輯',
   unblockSetVolume: '允許默認音量控制邏輯',
+  allowAcousticGain: '開啟音量增益能力',
+  notAllowAcousticGain: '禁用音量增益能力',
+  allowCrossOriginControl: '開啟跨域控制能力',
+  notAllowCrossOriginControl: '禁用跨域控制能力',
   allowExperimentFeatures: '開啟實驗性功能',
   notAllowExperimentFeatures: '禁用實驗性功能',
   experimentFeaturesWarning: '實驗性功能容易造成一些不確定的問題，請謹慎開啟',
+  allowExternalCustomConfiguration: '開啟外部自定義能力',
+  notAllowExternalCustomConfiguration: '關閉外部自定義能力',
   configFail: '配置失敗',
   globalSetting: '全局設置',
   localSetting: '僅用於此網站',
+  openDebugMode: '開啟調試模式',
+  closeDebugMode: '關閉調試模式',
+  unfoldMenu: '展開菜單',
+  foldMenu: '折疊菜單',
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '向前：',
@@ -4561,6 +4599,30 @@ function registerH5playerMenus (h5player) {
           if (confirm) {
             /* 倍速参数，只能全局设置 */
             configManager.setGlobalStorage('enhance.blockSetPlaybackRate', !configManager.get('enhance.blockSetPlaybackRate'));
+            window.location.reload();
+          }
+        }
+      },
+      {
+        title: () => `${configManager.get('enhance.allowAcousticGain') ? i18n.t('notAllowAcousticGain') : i18n.t('allowAcousticGain')} 「${i18n.t('globalSetting')}」`,
+        type: 'global',
+        disable: foldMenu,
+        fn: () => {
+          const confirm = window.confirm(configManager.get('enhance.allowAcousticGain') ? i18n.t('notAllowAcousticGain') : i18n.t('allowAcousticGain'));
+          if (confirm) {
+            configManager.setGlobalStorage('enhance.allowAcousticGain', !configManager.getGlobalStorage('enhance.allowAcousticGain'));
+            window.location.reload();
+          }
+        }
+      },
+      {
+        title: () => `${configManager.get('enhance.allowCrossOriginControl') ? i18n.t('notAllowCrossOriginControl') : i18n.t('allowCrossOriginControl')} 「${i18n.t('globalSetting')}」`,
+        type: 'global',
+        disable: foldMenu,
+        fn: () => {
+          const confirm = window.confirm(configManager.get('enhance.allowCrossOriginControl') ? i18n.t('notAllowCrossOriginControl') : i18n.t('allowCrossOriginControl'));
+          if (confirm) {
+            configManager.setGlobalStorage('enhance.allowCrossOriginControl', !configManager.getGlobalStorage('enhance.allowCrossOriginControl'));
             window.location.reload();
           }
         }
@@ -6034,7 +6096,7 @@ const h5Player = {
       num = 0;
     }
 
-    if (num > 1) {
+    if (num > 1 && configManager.get('enhance.allowAcousticGain')) {
       num = Math.ceil(num);
 
       try {
@@ -6052,6 +6114,8 @@ const h5Player = {
       if (!player._amp_ || !player._amp_.setLoudness) {
         num = 1;
       }
+    } else if (num > 1) {
+      num = 1;
     }
 
     /* 记录播放音量信息 */
@@ -7133,6 +7197,10 @@ const h5Player = {
 
     if (!player) {
       if (t.hasCrossOriginVideoDetected) {
+        if (!configManager.get('enhance.allowCrossOriginControl')) {
+          return false
+        }
+
         /**
          * 利用热键运行器的匹配能力来决定要不要禁止事件冒泡和阻止默认事件
          * 解决处于跨TAB、跨域控制时造成其它默认快捷键响应异常的问题
