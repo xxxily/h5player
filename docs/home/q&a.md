@@ -34,7 +34,8 @@
 ## 百度网盘视频无法倍速播放
 
 这是因为非百度会员使用的非h5标准的播放器进行播放导致的  
-建议结合[https://greasyfork.org/zh-CN/scripts/441747](https://greasyfork.org/zh-CN/scripts/441747) 这个脚本使用，即可实现倍速播放  
+
+建议结合[https://greasyfork.org/zh-CN/scripts/?q=pan.baidu.com](https://greasyfork.org/zh-CN/scripts/?q=pan.baidu.com) 其它百度盘脚本使用，即可实现倍速播放  
 
 如果你是百度会员用户，并且结合上面的脚本依然无法进行倍速播放，建议查看下控制台是否报错，并将报错信息反馈给作者  
 
