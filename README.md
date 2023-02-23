@@ -32,7 +32,7 @@
 
 | 加微信群（可能失效） | 加我拉你入群（注明来自：[h5player]） | Telegram群组（<a href="https://t.me/h5player" target="_blank">直接入群</a>） |
 | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
-| <img src="https://h5player.anzz.top/assets/img/WeChat.qun.jpg?t=2023.02.23" width="280"/> | <img src="https://h5player.anzz.top/assets/img/WeChat.jpg?t=2022.11.21" width=280 /> |  <img src="https://h5player.anzz.top/assets/img/tg.jpg?t=2022.11.21" width=280 /> |
+| <img src="https://h5player.anzz.top/assets/img/wechat.qun.jpg?t=2023.02.23" width="280"/> | <img src="https://h5player.anzz.top/assets/img/WeChat.jpg?t=2022.11.21" width=280 /> |  <img src="https://h5player.anzz.top/assets/img/tg.jpg?t=2022.11.21" width=280 /> |
 
 <br />
 
