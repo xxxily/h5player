@@ -29,12 +29,12 @@
 ## 交流群
 
 <br />
-<img src="/assets/img/WeChat.jpg?t=2022.11.21" width=280 />
+
+| 加微信群（可能失效） | 加我拉你入群（注明来自：[h5player]） | Telegram群组（<a href="https://t.me/h5player" target="_blank">直接入群</a>） |
+| :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
+| <img src="/assets/img/wechat.qun.jpg?t=2023.02.23" width="280"/> | <img src="/assets/img/WeChat.jpg?t=2022.11.21" width=280 /> |  <img src="/assets/img/tg.jpg?t=2022.11.21" width=280 /> |
+
 <br />
-<p>添加微信注明：[h5player] 即会拉你入群</p>
-<p>
-  TG群组：<a href="https://t.me/h5player" target="_blank">https://t.me/h5player</a>
-</p>
   
 ## 快捷键列表
 

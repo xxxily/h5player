@@ -8,7 +8,9 @@ export const fakeConfig = {
   // 'tv.cctv.com': userAgentMap.iPhone.chrome,
   // 'v.qq.com': userAgentMap.iPad.chrome,
   'open.163.com': userAgentMap.iPhone.chrome,
-  'm.open.163.com': userAgentMap.iPhone.chrome
+  'm.open.163.com': userAgentMap.iPhone.chrome,
+  /* 百度盘的非会员会使用自身的专用播放器，导致没法使用h5player，所以需要通过伪装ua来解决该问题 */
+  'pan.baidu.com': userAgentMap.mac.safari
 }
 
 export function setFakeUA (ua) {

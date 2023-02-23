@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.7.1
+// @version      3.7.2
 // @description  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
 // @description:en  Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
 // @description:zh  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
@@ -1008,12 +1008,15 @@ function objToInlineStyle (obj) {
 
 /* ua信息伪装 */
 function fakeUA (ua) {
-  Object.defineProperty(navigator, 'userAgent', {
-    value: ua,
-    writable: false,
-    configurable: false,
-    enumerable: true
-  });
+  // Object.defineProperty(navigator, 'userAgent', {
+  //   value: ua,
+  //   writable: false,
+  //   configurable: false,
+  //   enumerable: true
+  // })
+
+  const desc = Object.getOwnPropertyDescriptor(Navigator.prototype, 'userAgent');
+  Object.defineProperty(Navigator.prototype, 'userAgent', { ...desc, get: function () { return ua } });
 }
 
 /* ua信息来源：https://developers.whatismybrowser.com */
@@ -1029,6 +1032,10 @@ const userAgentMap = {
   iPad: {
     safari: 'Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1 Mobile/15E148 Safari/604.1',
     chrome: 'Mozilla/5.0 (iPad; CPU OS 12_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/74.0.3729.155 Mobile/15E148 Safari/605.1'
+  },
+  mac: {
+    safari: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Safari/605.1.15',
+    chrome: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/537.36 (KHTML, like Firefox) Chrome/74.0.3729.157 Safari/537.36'
   }
 };
 
@@ -2529,7 +2536,9 @@ const fakeConfig = {
   // 'tv.cctv.com': userAgentMap.iPhone.chrome,
   // 'v.qq.com': userAgentMap.iPad.chrome,
   'open.163.com': userAgentMap.iPhone.chrome,
-  'm.open.163.com': userAgentMap.iPhone.chrome
+  'm.open.163.com': userAgentMap.iPhone.chrome,
+  /* 百度盘的非会员会使用自身的专用播放器，导致没法使用h5player，所以需要通过伪装ua来解决该问题 */
+  'pan.baidu.com': userAgentMap.mac.safari
 };
 
 function setFakeUA (ua) {
@@ -4313,10 +4322,12 @@ function hackDefineProperCore (target, key, option) {
   if (target instanceof HTMLVideoElement) {
     const unLockProperties = ['playbackRate', 'currentTime', 'volume', 'muted'];
     if (unLockProperties.includes(key)) {
-      if (!option.configurable) {
+      try {
         debug.log(`禁止对${key}进行锁定`);
         option.configurable = true;
         key = key + '_hack';
+      } catch (e) {
+        debug.error(`禁止锁定${key}失败！`, e);
       }
     }
   }

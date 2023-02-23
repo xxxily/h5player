@@ -709,12 +709,12 @@ class BroadcastMessage {
 
 const broadcastMessage = new BroadcastMessage({
   // channelId: 1231,
-  targetOrigin: ['https://www.do1.com.cn', 'https://www.baidu.com'],
+  targetOrigin: ['https://www.sogou.com', 'https://www.baidu.com'],
   // targetOrigin: '*',
   // transportType: 'localStorage',
-  trustedDomainPages: 'https://h5player.anzz.top/demo/postMessage.html?t=ccc',
+  trustedDomainPages: 'https://broadcast-message.anzz.top/dist/pages/broadcast-message.html?t=ccc',
   allowLocalBroadcast: true,
-  emitOriginalMessage: false,
+  emitOriginalMessage: true,
   debug: true
 })
 
