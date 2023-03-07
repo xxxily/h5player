@@ -22,6 +22,8 @@ module.exports = [
         text: '油猴插件',
         items: [
           { text: 'Tampermonkey（推荐）', link: 'https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo', target: '_blank' },
+          { text: 'Tampermonkey（edge商店）', link: 'https://microsoftedge.microsoft.com/addons/detail/tampermonkey/iikmkjmpaadaobahmlepeloendndfphd', target: '_blank' },
+          { text: 'Tampermonkey（官网下载）', link: 'https://www.tampermonkey.net/index.php?browser=chrome&locale=zh', target: '_blank' },
           { text: 'Tampermonkey（国内站）', link: 'https://www.extfans.com/productivity/dhdgffkkebhmkfjojejmpbldmpobfkfo/', target: '_blank' },
         ]
       },

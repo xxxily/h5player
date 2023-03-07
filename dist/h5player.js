@@ -3038,7 +3038,7 @@ class I18n {
 
   changeLanguage (locale) {
     if (this._languages[locale]) {
-      this._languages = locale;
+      this._locale = locale;
       return locale
     } else {
       return false
