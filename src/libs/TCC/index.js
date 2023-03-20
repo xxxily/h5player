@@ -5,7 +5,7 @@ import {
 /**
  * 任务配置中心 Task Control Center
  * 用于配置所有无法进行通用处理的任务，如不同网站的全屏方式不一样，必须调用网站本身的全屏逻辑，才能确保字幕、弹幕等正常工作
- * */
+ **/
 
 class TCC {
   constructor (taskConf, doTaskFunc) {
@@ -57,6 +57,8 @@ class TCC {
     // 通过doTaskFunc回调定义配置该如何执行任务
     this.doTaskFunc = doTaskFunc instanceof Function ? doTaskFunc : function () {}
   }
+
+  setTaskConf (taskConf) { this.conf = taskConf }
 
   /**
    * 获取域名 , 目前实现方式不好，需改造，对地区性域名（如com.cn）、三级及以上域名支持不好

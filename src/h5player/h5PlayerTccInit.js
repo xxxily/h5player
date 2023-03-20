@@ -2,8 +2,11 @@ import TCC from '../libs/TCC/index'
 import {
   isObj,
   hideDom,
+  mergeObj,
   eachParentNode
 } from '../libs/utils/index'
+import debug from './debug'
+const $q = function (str) { return document.querySelector(str) }
 
 /**
  * 任务配置中心 Task Control Center
@@ -20,15 +23,18 @@ const taskConf = {
    * 注意：include，exclude这两个子级键名除外，这两个是用来进行url范围匹配的
    * */
   'demo.demo': {
+    // disable: true, // 在该域名下禁止插件的所有功能
     fullScreen: '.fullscreen-btn',
     exitFullScreen: '.exit-fullscreen-btn',
     webFullScreen: function () {},
     exitWebFullScreen: '.exit-fullscreen-btn',
     autoPlay: '.player-start-btn',
+    // pause: ['.player-pause', '.player-pause02'], //多种情况对应不同的选择器时，可使用数组，插件会对选择器进行遍历，知道找到可用的为止
     pause: '.player-pause',
     play: '.player-play',
     switchPlayStatus: '.player-play',
     playbackRate: function () {},
+    // playbackRate: true, // 当给某个功能设置true时，表示使用网站自身的能力控制视频，而忽略插件的能力
     currentTime: function () {},
     addCurrentTime: '.add-currenttime',
     subtractCurrentTime: '.subtract-currenttime',
@@ -48,6 +54,14 @@ const taskConf = {
         console.log(event, player)
       }
     },
+
+    /* 阻止网站自身的调速行为，增强突破调速限制的能力 */
+    blockSetPlaybackRate: true,
+    /* 阻止网站自身的播放进度控制逻辑，增强突破进度调控限制的能力 */
+    blockSetCurrentTime: true,
+    /* 阻止网站自身的音量控制逻辑，排除网站自身的调音干扰 */
+    blockSetVolume: true,
+
     /* 当前域名下需包含的路径信息，默认整个域名下所有路径可用 必须是正则 */
     include: /^.*/,
     /* 当前域名下需排除的路径信息，默认不排除任何路径 必须是正则 */
@@ -73,30 +87,62 @@ const taskConf = {
     }
   },
   'netflix.com': {
+    // 停止在netflix下使用插件的所有功能
+    // disable: true,
     fullScreen: 'button.button-nfplayerFullscreen',
     addCurrentTime: 'button.button-nfplayerFastForward',
-    subtractCurrentTime: 'button.button-nfplayerBackTen'
+    subtractCurrentTime: 'button.button-nfplayerBackTen',
+    /**
+     * 使用netflix自身的调速，因为目前插件没法解决调速导致的服务中断问题
+     * https://github.com/xxxily/h5player/issues/234
+     * https://github.com/xxxily/h5player/issues/317
+     * https://github.com/xxxily/h5player/issues/381
+     * https://github.com/xxxily/h5player/issues/179
+     * https://github.com/xxxily/h5player/issues/147
+     */
+    playbackRate: true,
+    shortcuts: {
+      /**
+       * TODO
+       * netflix 一些用户习惯使用F键进行全屏，所以此处屏蔽掉f键的下一帧功能
+       * 后续开放自定义配置能力后，让用户自行决定是否屏蔽
+       */
+      register: [
+        'f'
+      ],
+      callback: function (h5Player, taskConf, data) {
+        return true
+      }
+    }
   },
   'bilibili.com': {
-    // fullScreen: '[data-text="进入全屏"]',
-    // webFullScreen: '[data-text="网页全屏"]',
-    fullScreen: '.bilibili-player-video-btn-fullscreen',
+    fullScreen: function () {
+      const fullScreen = $q('.bpx-player-ctrl-full') || $q('.squirtle-video-fullscreen') || $q('.bilibili-player-video-btn-fullscreen')
+      if (fullScreen) {
+        fullScreen.click()
+        return true
+      }
+    },
     webFullScreen: function () {
-      const webFullscreen = document.querySelector('.bilibili-player-video-web-fullscreen')
-      if (webFullscreen) {
+      const oldWebFullscreen = $q('.bilibili-player-video-web-fullscreen')
+      const webFullscreenEnter = $q('.bpx-player-ctrl-web-enter') || $q('.squirtle-pagefullscreen-inactive')
+      const webFullscreenLeave = $q('.bpx-player-ctrl-web-leave') || $q('.squirtle-pagefullscreen-active')
+      if (oldWebFullscreen || (webFullscreenEnter && webFullscreenLeave)) {
+        const webFullscreen = oldWebFullscreen || (getComputedStyle(webFullscreenLeave).display === 'none' ? webFullscreenEnter : webFullscreenLeave)
         webFullscreen.click()
 
         /* 取消弹幕框聚焦，干扰了快捷键的操作 */
         setTimeout(function () {
-          document.querySelector('.bilibili-player-video-danmaku-input').blur()
+          const danmaku = $q('.bpx-player-dm-input') || $q('.bilibili-player-video-danmaku-input')
+          danmaku && danmaku.blur()
         }, 1000 * 0.1)
 
         return true
       }
     },
-    autoPlay: '.bilibili-player-video-btn-start',
-    switchPlayStatus: '.bilibili-player-video-btn-start',
-    next: '.bilibili-player-video-btn-next',
+    autoPlay: ['.bpx-player-ctrl-play', '.squirtle-video-start', '.bilibili-player-video-btn-start'],
+    switchPlayStatus: ['.bpx-player-ctrl-play', '.squirtle-video-start', '.bilibili-player-video-btn-start'],
+    next: ['.bpx-player-ctrl-next', '.squirtle-video-next', '.bilibili-player-video-btn-next', '.bpx-player-ctrl-btn[aria-label="下一个"]'],
     init: function (h5Player, taskConf) {},
     shortcuts: {
       register: [
@@ -106,9 +152,14 @@ const taskConf = {
         const { event } = data
         if (event.keyCode === 27) {
           /* 退出网页全屏 */
-          const webFullscreen = document.querySelector('.bilibili-player-video-web-fullscreen')
-          if (webFullscreen.classList.contains('closed')) {
-            webFullscreen.click()
+          const oldWebFullscreen = $q('.bilibili-player-video-web-fullscreen')
+          if (oldWebFullscreen && oldWebFullscreen.classList.contains('closed')) {
+            oldWebFullscreen.click()
+          } else {
+            const webFullscreenLeave = $q('.bpx-player-ctrl-web-leave') || $q('.squirtle-pagefullscreen-active')
+            if (getComputedStyle(webFullscreenLeave).display !== 'none') {
+              webFullscreenLeave.click()
+            }
           }
         }
       }
@@ -154,8 +205,8 @@ const taskConf = {
     }
   },
   'ixigua.com': {
-    fullScreen: 'xg-fullscreen.xgplayer-fullscreen',
-    webFullScreen: 'xg-cssfullscreen.xgplayer-cssfullscreen'
+    fullScreen: ['xg-fullscreen.xgplayer-fullscreen', '.xgplayer-control-item__entry[aria-label="全屏"]', '.xgplayer-control-item__entry[aria-label="退出全屏"]'],
+    webFullScreen: ['xg-cssfullscreen.xgplayer-cssfullscreen', '.xgplayer-control-item__entry[aria-label="剧场模式"]', '.xgplayer-control-item__entry[aria-label="退出剧场模式"]']
   },
   'tv.sohu.com': {
     fullScreen: 'button[data-title="网页全屏"]',
@@ -348,37 +399,94 @@ const taskConf = {
     init: function (h5Player, taskConf) {
       h5Player.player().setAttribute('crossOrigin', 'anonymous')
     }
+  },
+  'douyin.com': {
+    fullScreen: '.xgplayer-fullscreen',
+    webFullScreen: '.xgplayer-page-full-screen',
+    next: ['.xgplayer-playswitch-next'],
+    init: function (h5Player, taskConf) {
+      h5Player.player().setAttribute('crossOrigin', 'anonymous')
+    }
+  },
+  'live.douyin.com': {
+    fullScreen: '.xgplayer-fullscreen',
+    webFullScreen: '.xgplayer-page-full-screen',
+    next: ['.xgplayer-playswitch-next'],
+    init: function (h5Player, taskConf) {
+      h5Player.player().setAttribute('crossOrigin', 'anonymous')
+    }
+  },
+  'zhihu.com': {
+    fullScreen: ['button[aria-label="全屏"]', 'button[aria-label="退出全屏"]'],
+    play: function (h5Player, taskConf, data) {
+      const player = h5Player.player()
+      if (player && player.parentNode && player.parentNode.parentNode) {
+        const maskWrap = player.parentNode.parentNode.querySelector('div~div:nth-child(3)')
+        if (maskWrap) {
+          const mask = maskWrap.querySelector('div')
+          if (mask && mask.innerText === '') {
+            mask.click()
+          }
+        }
+      }
+    },
+    init: function (h5Player, taskConf) {
+      h5Player.player().setAttribute('crossOrigin', 'anonymous')
+    }
+  },
+  'weibo.com': {
+    fullScreen: ['button.wbpv-fullscreen-control'],
+    // webFullScreen: ['div[title="关闭弹层"]', 'div.wbpv-open-layer-button']
+    webFullScreen: ['div.wbpv-open-layer-button']
   }
 }
 
 function h5PlayerTccInit (h5Player) {
   return new TCC(taskConf, function (taskName, taskConf, data) {
-    const task = taskConf[taskName]
-    const wrapDom = h5Player.getPlayerWrapDom()
+    try {
+      const task = taskConf[taskName]
+      const wrapDom = h5Player.getPlayerWrapDom()
 
-    if (taskName === 'shortcuts') {
-      if (isObj(task) && task.callback instanceof Function) {
-        return task.callback(h5Player, taskConf, data)
+      if (!task) { return }
+
+      if (taskName === 'shortcuts') {
+        if (isObj(task) && task.callback instanceof Function) {
+          return task.callback(h5Player, taskConf, data)
+        }
+      } else if (task instanceof Function) {
+        try {
+          return task(h5Player, taskConf, data)
+        } catch (e) {
+          debug.error('任务配置中心的自定义函数执行失败：', taskName, taskConf, data, e)
+          return false
+        }
+      } else if (typeof task === 'boolean') {
+        return task
+      } else {
+        const selectorList = Array.isArray(task) ? task : [task]
+        for (let i = 0; i < selectorList.length; i++) {
+          const selector = selectorList[i]
+
+          /* 触发选择器上的点击事件 */
+          if (wrapDom && wrapDom.querySelector(selector)) {
+          // 在video的父元素里查找，是为了尽可能兼容多实例下的逻辑
+            wrapDom.querySelector(selector).click()
+            return true
+          } else if (document.querySelector(selector)) {
+            document.querySelector(selector).click()
+            return true
+          }
+        }
       }
-    } else if (task instanceof Function) {
-      try {
-        return task(h5Player, taskConf, data)
-      } catch (e) {
-        console.error('TCC自定义函数任务执行失败：', h5Player, taskConf, data)
-        return false
-      }
-    } else {
-      /* 触发选择器上的点击事件 */
-      if (wrapDom && wrapDom.querySelector(task)) {
-        // 在video的父元素里查找，是为了尽可能兼容多实例下的逻辑
-        wrapDom.querySelector(task).click()
-        return true
-      } else if (document.querySelector(task)) {
-        document.querySelector(task).click()
-        return true
-      }
+    } catch (e) {
+      debug.error('任务配置中心的自定义任务执行失败：', taskName, taskConf, data, e)
+      return false
     }
   })
 }
 
-export default h5PlayerTccInit
+function mergeTaskConf (config) {
+  return mergeObj(taskConf, config)
+}
+
+export { h5PlayerTccInit, mergeTaskConf }

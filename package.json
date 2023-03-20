@@ -9,11 +9,18 @@
     "h5player:prod": "npm run rollup --mode-dev --proj-h5player",
     "server": "node bin/staticService/index.js",
     "ui-dev": "webpack-dev-server --inline --config bin/webpack/webpack.dev.conf.js",
-    "ui-build": "webpack-cli --inline --config bin/webpack/webpack.prod.conf.js"
+    "ui-build": "webpack-cli --inline --config bin/webpack/webpack.prod.conf.js",
+    "docs:dev": "vuepress dev docs",
+    "docs:build": "vuepress build docs"
   },
   "dependencies": {
-    "vue": "^2.6.11"
+    "@vssue/api-github-v3": "^1.4.7",
+    "@vssue/vuepress-plugin-vssue": "^1.4.8",
+    "local-storage-proxy": "^4.0.3",
+    "lodash": "^4.17.21",
+    "vue": "2.7.10"
   },
+  "license": "GPL",
   "devDependencies": {
     "@babel/cli": "^7.6.0",
     "@babel/core": "^7.6.0",
@@ -45,7 +52,7 @@
     "html-webpack-plugin": "^4.2.0",
     "mini-css-extract-plugin": "^0.9.0",
     "morgan": "^1.10.0",
-    "node-sass": "^4.13.1",
+    "node-sass": "^7.0.1",
     "optimize-css-assets-webpack-plugin": "^5.0.3",
     "rollup": "^1.21.4",
     "rollup-plugin-alias": "^2.0.0",
@@ -53,8 +60,8 @@
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-json": "^4.0.0",
     "rollup-plugin-node-resolve": "^5.2.0",
-    "sass": "^1.26.3",
-    "sass-loader": "^8.0.2",
+    "sass": "^1.51.0",
+    "sass-loader": "^12.6.0",
     "socket.io": "^2.3.0",
     "style-loader": "^1.1.4",
     "url-join": "^4.0.1",
@@ -62,6 +69,7 @@
     "vue-loader": "^15.9.1",
     "vue-style-loader": "^4.1.2",
     "vue-template-compiler": "^2.6.11",
+    "vuepress": "^1.9.7",
     "webpack": "^4.42.1",
     "webpack-bundle-analyzer": "^3.6.1",
     "webpack-cli": "^3.3.11",

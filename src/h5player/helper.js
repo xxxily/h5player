@@ -1,6 +1,11 @@
+import {
+  parseURL,
+  stringifyToUrl
+} from '../libs/utils/index'
+
 /* 当前用到的快捷键 */
 const hasUseKey = {
-  keyCodeList: [13, 16, 17, 18, 27, 32, 37, 38, 39, 40, 49, 50, 51, 52, 67, 68, 69, 70, 73, 74, 75, 78, 79, 80, 81, 82, 83, 84, 85, 87, 88, 89, 90, 97, 98, 99, 100, 220],
+  keyCodeList: [13, 16, 17, 18, 27, 32, 37, 38, 39, 40, 49, 50, 51, 52, 67, 68, 69, 70, 73, 74, 75, 77, 78, 79, 80, 81, 82, 83, 84, 85, 87, 88, 89, 90, 97, 98, 99, 100, 220],
   keyList: ['enter', 'shift', 'control', 'alt', 'escape', ' ', 'arrowleft', 'arrowright', 'arrowup', 'arrowdown', '1', '2', '3', '4', 'c', 'd', 'e', 'f', 'i', 'j', 'k', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'w', 'x', 'y', 'z', '\\', '|'],
   keyMap: {
     enter: 13,
@@ -24,6 +29,7 @@ const hasUseKey = {
     i: 73,
     j: 74,
     k: 75,
+    m: 77,
     n: 78,
     o: 79,
     p: 80,
@@ -67,6 +73,18 @@ async function getPageWindow () {
       return resolve(window._pageWindow)
     }
 
+    /* 尝试通过同步的方式获取pageWindow */
+    try {
+      const pageWin = getPageWindowSync()
+      if (pageWin && pageWin.document && pageWin.XMLHttpRequest) {
+        window._pageWindow = pageWin
+        resolve(pageWin)
+        return pageWin
+      }
+    } catch (e) {}
+
+    /* 下面异步获取pagewindow的方法在最新的chrome浏览器里已失效 */
+
     const listenEventList = ['load', 'mousemove', 'scroll', 'get-page-window-event']
 
     function getWin (event) {
@@ -82,7 +100,7 @@ async function getPageWindow () {
       window.addEventListener(eventType, getWin, true)
     })
 
-    /* 自行派发事件以便用最短的时候获得pageWindow对象 */
+    /* 自行派发事件以便用最短的时间获得pageWindow对象 */
     window.dispatchEvent(new window.Event('get-page-window-event'))
   })
 }
@@ -93,20 +111,82 @@ getPageWindow()
  * 注意同步获取的方式需要将脚本写入head，部分网站由于安全策略会导致写入失败，而无法正常获取
  * @returns {*}
  */
-function getPageWindowSync () {
+function getPageWindowSync (rawFunction) {
+  if (window.unsafeWindow) return window.unsafeWindow
   if (document._win_) return document._win_
 
-  const head = document.head || document.querySelector('head')
-  const script = document.createElement('script')
-  script.appendChild(document.createTextNode('document._win_ = window'))
-  head.appendChild(script)
+  try {
+    rawFunction = rawFunction || window.__rawFunction__ || Function.prototype.constructor
+    // return rawFunction('return window')()
+    // Function('return (function(){}.constructor("return this")());')
+    return rawFunction('return (function(){}.constructor("var getPageWindowSync=1; return this")());')()
+  } catch (e) {
+    console.error('getPageWindowSync error', e)
 
-  return document._win_
+    const head = document.head || document.querySelector('head')
+    const script = document.createElement('script')
+    script.appendChild(document.createTextNode('document._win_ = window'))
+    head.appendChild(script)
+
+    return document._win_
+  }
+}
+
+function openInTab (url, opts, referer) {
+  if (referer) {
+    const urlObj = parseURL(url)
+    if (!urlObj.params.referer) {
+      urlObj.params.referer = encodeURIComponent(window.location.href)
+      url = stringifyToUrl(urlObj)
+    }
+  }
+
+  if (window.GM_openInTab) {
+    window.GM_openInTab(url, opts || {
+      active: true,
+      insert: true,
+      setParent: true
+    })
+  }
+}
+
+/* 确保数字为正数 */
+function numUp (num) {
+  if (typeof num === 'number' && num < 0) {
+    num = Math.abs(num)
+  }
+  return num
+}
+
+/* 确保数字为负数 */
+function numDown (num) {
+  if (typeof num === 'number' && num > 0) {
+    num = -num
+  }
+  return num
+}
+
+function isMediaElement (element) {
+  return element && (element instanceof HTMLMediaElement || element.HTMLMediaElement || element.HTMLVideoElement || element.HTMLAudioElement)
+}
+
+function isVideoElement (element) {
+  return element && (element instanceof HTMLVideoElement || element.HTMLVideoElement)
+}
+
+function isAudioElement (element) {
+  return element && (element instanceof HTMLAudioElement || element.HTMLAudioElement)
 }
 
 export {
   hasUseKey,
   isRegisterKey,
   getPageWindow,
-  getPageWindowSync
+  getPageWindowSync,
+  openInTab,
+  numUp,
+  numDown,
+  isMediaElement,
+  isVideoElement,
+  isAudioElement
 }

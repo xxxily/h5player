@@ -15,10 +15,12 @@ function hackDefineProperCore (target, key, option) {
   if (target instanceof HTMLVideoElement) {
     const unLockProperties = ['playbackRate', 'currentTime', 'volume', 'muted']
     if (unLockProperties.includes(key)) {
-      if (!option.configurable) {
+      try {
         debug.log(`禁止对${key}进行锁定`)
         option.configurable = true
         key = key + '_hack'
+      } catch (e) {
+        debug.error(`禁止锁定${key}失败！`, e)
       }
     }
   }
