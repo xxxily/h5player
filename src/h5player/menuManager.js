@@ -68,6 +68,17 @@ let monkeyMenuList = [
     }
   },
   {
+    title: `${configManager.get('enable') ? i18n.t('disableScript') : i18n.t('enableScript')} 「${i18n.t('localSetting')}」`,
+    disable: !configManager.get('enhance.unfoldMenu'),
+    fn: () => {
+      const confirm = window.confirm(configManager.get('enable') ? i18n.t('disableScript') : i18n.t('enableScript'))
+      if (confirm) {
+        configManager.setLocalStorage('enable', !configManager.get('enable'))
+        window.location.reload()
+      }
+    }
+  },
+  {
     title: i18n.t('restoreConfiguration'),
     disable: !configManager.get('enhance.unfoldMenu'),
     fn: () => {

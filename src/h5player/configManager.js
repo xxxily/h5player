@@ -75,6 +75,7 @@ const rawLocalStorage = (function getRawLocalStorage () {
 
 const configPrefix = '_h5player_'
 const defConfig = {
+  enable: true,
   media: {
     autoPlay: false,
     playbackRate: 1,

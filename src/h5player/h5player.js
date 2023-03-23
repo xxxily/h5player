@@ -1473,7 +1473,7 @@ const h5Player = {
       const newPlayerBox = player.getBoundingClientRect()
       if (Math.abs(newPlayerBox.height - playerBox.height) > 50) {
         parentNode.setAttribute('style', backupStyle)
-      // debug.info('应用新样式后给播放器高宽造成了严重的偏差，样式已被还原：', player, playerBox, newPlayerBox)
+        // debug.info('应用新样式后给播放器高宽造成了严重的偏差，样式已被还原：', player, playerBox, newPlayerBox)
       }
     }
 
@@ -1797,27 +1797,27 @@ const h5Player = {
       t.scale = Number(t.scale)
       switch (key) {
         // shift+X：视频缩小 -0.1
-        case 'x' :
+        case 'x':
           t.setScaleDown()
           break
         // shift+C：视频放大 +0.1
-        case 'c' :
+        case 'c':
           t.setScaleUp()
           break
         // shift+Z：视频恢复正常大小
-        case 'z' :
+        case 'z':
           t.resetTransform()
           break
-        case 'arrowright' :
+        case 'arrowright':
           t.setTranslateRight()
           break
-        case 'arrowleft' :
+        case 'arrowleft':
           t.setTranslateLeft()
           break
-        case 'arrowup' :
+        case 'arrowup':
           t.setTranslateUp()
           break
-        case 'arrowdown' :
+        case 'arrowdown':
           t.setTranslateDown()
           break
       }
@@ -2398,8 +2398,8 @@ const h5Player = {
       const player = t.player()
       if (player) {
         const fakeEvent = newVal.data
-        fakeEvent.stopPropagation = () => {}
-        fakeEvent.preventDefault = () => {}
+        fakeEvent.stopPropagation = () => { }
+        fakeEvent.preventDefault = () => { }
         t.palyerTrigger(player, fakeEvent)
 
         debug.log('已响应跨Tab/跨域按键控制信息：', newVal)
@@ -2482,6 +2482,11 @@ const h5Player = {
 
     if (TCC && TCC.doTask('disable') === true) {
       debug.info(`[TCC][disable][${location.host}] 已禁止在该网站运行视频检测逻辑，您可查看任务配置中心的相关配置了解详情`)
+      return true
+    }
+
+    if (!configManager.get('enable')) {
+      debug.info(`[config][disable][${location.host}] 当前网站已禁用脚本，如要启用脚本，请在菜单里开启`)
       return true
     }
 
