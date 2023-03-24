@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.7.2
+// @version      3.7.3
 // @description  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
 // @description:en  Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
 // @description:zh  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
@@ -923,7 +923,7 @@ function loadCSSText (cssText, id, insetTo) {
  */
 function isEditableTarget (target) {
   const isEditable = target.getAttribute && target.getAttribute('contenteditable') === 'true';
-  const isInputDom = /INPUT|TEXTAREA|SELECT/.test(target.nodeName);
+  const isInputDom = /INPUT|TEXTAREA|SELECT|LABEL/.test(target.nodeName);
   return isEditable || isInputDom
 }
 
@@ -1026,7 +1026,7 @@ const userAgentMap = {
     firefox: 'Mozilla/5.0 (Android 7.0; Mobile; rv:57.0) Gecko/57.0 Firefox/57.0'
   },
   iPhone: {
-    safari: 'Mozilla/5.0 (iPhone; CPU iPhone OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1 Mobile/15E148 Safari/604.1',
+    safari: 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/111.0.0.0 Mobile/15E148 Safari/604.1',
     chrome: 'Mozilla/5.0 (iPhone; CPU iPhone OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/74.0.3729.121 Mobile/15E148 Safari/605.1'
   },
   iPad: {
@@ -1242,6 +1242,7 @@ const rawLocalStorage = (function getRawLocalStorage () {
 
 const configPrefix = '_h5player_';
 const defConfig = {
+  enable: true,
   media: {
     autoPlay: false,
     playbackRate: 1,
@@ -2538,7 +2539,7 @@ const fakeConfig = {
   'open.163.com': userAgentMap.iPhone.chrome,
   'm.open.163.com': userAgentMap.iPhone.chrome,
   /* 百度盘的非会员会使用自身的专用播放器，导致没法使用h5player，所以需要通过伪装ua来解决该问题 */
-  'pan.baidu.com': userAgentMap.mac.safari
+  'pan.baidu.com': userAgentMap.iPhone.safari
 };
 
 function setFakeUA (ua) {
@@ -3078,6 +3079,8 @@ var zhCN = {
   setting: '设置',
   hotkeys: '快捷键',
   donate: '请作者喝杯咖啡👍',
+  enableScript: '启用脚本',
+  disableScript: '禁用脚本',
   openCrossOriginFramePage: '单独打开跨域的页面',
   disableInitAutoPlay: '禁止在此网站自动播放视频',
   enableInitAutoPlay: '允许在此网站自动播放视频',
@@ -3144,6 +3147,8 @@ var enUS = {
   setting: 'Setting',
   hotkeys: 'Hotkeys',
   donate: 'Donate',
+  enableScript: 'enable script',
+  disableScript: 'disable script',
   openCrossOriginFramePage: 'Open cross-domain pages alone',
   disableInitAutoPlay: 'Prohibit autoplay of videos on this site',
   enableInitAutoPlay: 'Allow autoplay videos on this site',
@@ -3211,6 +3216,8 @@ var ru = {
   setting: 'установка',
   hotkeys: 'горячие клавиши',
   donate: 'пожертвовать',
+  enableScript: 'включить скрипт',
+  disableScript: 'отключить скрипт',
   openCrossOriginFramePage: 'Открывать только междоменные страницы',
   disableInitAutoPlay: 'Запретить автовоспроизведение видео на этом сайте',
   enableInitAutoPlay: 'Разрешить автоматическое воспроизведение видео на этом сайте',
@@ -3277,6 +3284,8 @@ var zhTW = {
   setting: '設置',
   hotkeys: '快捷鍵',
   donate: '讚賞',
+  enableScript: '啟用腳本',
+  disableScript: '禁用腳本',
   openCrossOriginFramePage: '單獨打開跨域的頁面',
   disableInitAutoPlay: '禁止在此網站自動播放視頻',
   enableInitAutoPlay: '允許在此網站自動播放視頻',
@@ -4519,6 +4528,17 @@ let monkeyMenuList = [
     fn: () => {
       openInTab('https://h5player.anzz.top/configure/', null, true);
       window.alert('功能开发中，敬请期待...');
+    }
+  },
+  {
+    title: `${configManager.get('enable') ? i18n.t('disableScript') : i18n.t('enableScript')} 「${i18n.t('localSetting')}」`,
+    disable: !configManager.get('enhance.unfoldMenu'),
+    fn: () => {
+      const confirm = window.confirm(configManager.get('enable') ? i18n.t('disableScript') : i18n.t('enableScript'));
+      if (confirm) {
+        configManager.setLocalStorage('enable', !configManager.get('enable'));
+        window.location.reload();
+      }
     }
   },
   {
@@ -6623,7 +6643,7 @@ const h5Player = {
       const newPlayerBox = player.getBoundingClientRect();
       if (Math.abs(newPlayerBox.height - playerBox.height) > 50) {
         parentNode.setAttribute('style', backupStyle);
-      // debug.info('应用新样式后给播放器高宽造成了严重的偏差，样式已被还原：', player, playerBox, newPlayerBox)
+        // debug.info('应用新样式后给播放器高宽造成了严重的偏差，样式已被还原：', player, playerBox, newPlayerBox)
       }
     }
 
@@ -6947,27 +6967,27 @@ const h5Player = {
       t.scale = Number(t.scale);
       switch (key) {
         // shift+X：视频缩小 -0.1
-        case 'x' :
+        case 'x':
           t.setScaleDown();
           break
         // shift+C：视频放大 +0.1
-        case 'c' :
+        case 'c':
           t.setScaleUp();
           break
         // shift+Z：视频恢复正常大小
-        case 'z' :
+        case 'z':
           t.resetTransform();
           break
-        case 'arrowright' :
+        case 'arrowright':
           t.setTranslateRight();
           break
-        case 'arrowleft' :
+        case 'arrowleft':
           t.setTranslateLeft();
           break
-        case 'arrowup' :
+        case 'arrowup':
           t.setTranslateUp();
           break
-        case 'arrowdown' :
+        case 'arrowdown':
           t.setTranslateDown();
           break
       }
@@ -7548,8 +7568,8 @@ const h5Player = {
       const player = t.player();
       if (player) {
         const fakeEvent = newVal.data;
-        fakeEvent.stopPropagation = () => {};
-        fakeEvent.preventDefault = () => {};
+        fakeEvent.stopPropagation = () => { };
+        fakeEvent.preventDefault = () => { };
         t.palyerTrigger(player, fakeEvent);
 
         debug.log('已响应跨Tab/跨域按键控制信息：', newVal);
@@ -7632,6 +7652,11 @@ const h5Player = {
 
     if (TCC$1 && TCC$1.doTask('disable') === true) {
       debug.info(`[TCC][disable][${location.host}] 已禁止在该网站运行视频检测逻辑，您可查看任务配置中心的相关配置了解详情`);
+      return true
+    }
+
+    if (!configManager.get('enable')) {
+      debug.info(`[config][disable][${location.host}] 当前网站已禁用脚本，如要启用脚本，请在菜单里开启`);
       return true
     }
 

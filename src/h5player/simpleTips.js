@@ -5,6 +5,7 @@ class SimpleTips {
       parentNode: null,
       tipsClassName: 'simple-tips-' + Date.now(),
       timeout: 1000,
+      absolute: 'absolute',
       /* 是否允许输出html内容 */
       html: false
     }
@@ -24,7 +25,7 @@ class SimpleTips {
     if (!parentNode || !parentNode.querySelector || parentNode.querySelector('.' + opts.tipsClassName)) return
 
     const tipsStyle = `
-      position: absolute;
+      position: ${opts.position || 'absolute'};
       z-index: 999999;
       font-size: ${opts.fontSize || 16}px;
       padding: 5px 10px;
@@ -53,10 +54,10 @@ class SimpleTips {
   tips (msg, parentNode) {
     const t = this
 
-    /* 如果新指定了parentNode，则移除就的tipsEl，并重新创建tipsEl */
+    /* 如果新指定了parentNode，则移除旧的tipsEl，并重新创建tipsEl */
     if (parentNode && parentNode !== t.opts.parentNode) {
-      if (t.opts.parentNode && t.opts.parentNode.querySelector && t.tipsEl) {
-        t.tipsEl.parentNode.removeChild(t.tipsEl)
+      if (t.opts.parentNode && t.opts.parentNode.querySelector instanceof Function && t.tipsEl) {
+        t.tipsEl.parentNode && t.tipsEl.parentNode.removeChild(t.tipsEl)
       }
 
       t.opts.parentNode = parentNode
@@ -96,10 +97,10 @@ class SimpleTips {
     this.tips(msg)
   }
 
-  hide () {
+  hide (duration) {
     const tipsEl = this.tipsEl
     if (tipsEl && tipsEl.style) {
-      tipsEl.style.transition = 'opacity 1000ms'
+      tipsEl.style.transition = `opacity ${duration || 1000}ms`
       tipsEl.style.opacity = 0
     }
   }

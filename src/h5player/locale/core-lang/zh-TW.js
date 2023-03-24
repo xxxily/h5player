@@ -5,6 +5,8 @@ export default {
   setting: '設置',
   hotkeys: '快捷鍵',
   donate: '讚賞',
+  enableScript: '啟用腳本',
+  disableScript: '禁用腳本',
   openCrossOriginFramePage: '單獨打開跨域的頁面',
   disableInitAutoPlay: '禁止在此網站自動播放視頻',
   enableInitAutoPlay: '允許在此網站自動播放視頻',
