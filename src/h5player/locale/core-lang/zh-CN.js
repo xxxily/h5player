@@ -6,7 +6,7 @@ export default {
   hotkeys: '快捷键',
   donate: '请作者喝杯咖啡👍',
   enableScript: '启用脚本',
-  disableScript: '关闭脚本',
+  disableScript: '禁用脚本',
   openCrossOriginFramePage: '单独打开跨域的页面',
   disableInitAutoPlay: '禁止在此网站自动播放视频',
   enableInitAutoPlay: '允许在此网站自动播放视频',
