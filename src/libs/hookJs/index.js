@@ -235,7 +235,7 @@ class HookJs {
             }
           })
         } catch (err) {
-          // 设置defineProperty的时候出现异常，可能导致hookMethod部分功能确实，也可能不受影响
+          // 设置defineProperty的时候出现异常，可能导致hookMethod部分功能缺失，也可能不受影响
           util.debug.log(`[proxyMethodcGenerator] hookMethod defineProperty abnormal.  hookMethod:${methodName}, definePropertyName:${keyName}`, err)
         }
       })

@@ -1,4 +1,5 @@
 module.exports = [
+  { text: '❤️ 免费ChatGPT ❤️', link: 'https://github.com/xxxily/hello-ai', target: '_blank' },
   { text: '文档中心', link: '/home/' },
   {
     text: '相关连接',
