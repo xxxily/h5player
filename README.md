@@ -6,7 +6,7 @@
 - 项目地址：[https://github.com/xxxily/h5player](https://github.com/xxxily/h5player)  
 - 脚本安装地址：[https://greasyfork.org/scripts/381682](https://greasyfork.org/scripts/381682)
 
-> [❤️ 免费ChatGPT ❤️](https://github.com/xxxily/hello-ai)
+> [❤️ 免费ChatGPT ❤️](https://hello-ai.anzz.top/)
 
 ## 简介
 

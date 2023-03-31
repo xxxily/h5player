@@ -5,6 +5,7 @@ export default {
   setting: '设置',
   hotkeys: '快捷键',
   donate: '请作者喝杯咖啡👍',
+  recommend: '❤️ 免费ChatGPT ❤️',
   enableScript: '启用脚本',
   disableScript: '禁用脚本',
   openCrossOriginFramePage: '单独打开跨域的页面',

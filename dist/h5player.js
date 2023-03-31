@@ -3079,6 +3079,7 @@ var zhCN = {
   setting: '设置',
   hotkeys: '快捷键',
   donate: '请作者喝杯咖啡👍',
+  recommend: '❤️ 免费ChatGPT ❤️',
   enableScript: '启用脚本',
   disableScript: '禁用脚本',
   openCrossOriginFramePage: '单独打开跨域的页面',
@@ -4063,7 +4064,7 @@ class HookJs {
             }
           });
         } catch (err) {
-          // 设置defineProperty的时候出现异常，可能导致hookMethod部分功能确实，也可能不受影响
+          // 设置defineProperty的时候出现异常，可能导致hookMethod部分功能缺失，也可能不受影响
           util.debug.log(`[proxyMethodcGenerator] hookMethod defineProperty abnormal.  hookMethod:${methodName}, definePropertyName:${keyName}`, err);
         }
       });
@@ -4163,6 +4164,18 @@ class HookJs {
    * @returns {boolean}
    */
   hook (parentObj, hookMethods, fn, type, classHook, context, proxyHandler) {
+    /* 支持对象形式的传参 */
+    const opts = arguments[0];
+    if (util.isObj(opts) && opts.parentObj && opts.hookMethods) {
+      parentObj = opts.parentObj;
+      hookMethods = opts.hookMethods;
+      fn = opts.fn;
+      type = opts.type;
+      classHook = opts.classHook;
+      context = opts.context;
+      proxyHandler = opts.proxyHandler;
+    }
+
     classHook = toBoolean(classHook);
     type = type || 'before';
 
@@ -4286,6 +4299,17 @@ class HookJs {
         }
       }
     });
+  }
+
+  _hook (args, type) {
+    const t = this;
+    return function (obj, hookMethods, fn, classHook, context, proxyHandler) {
+      const opts = args[0];
+      if (util.isObj(opts) && opts.parentObj && opts.hookMethods) {
+        opts.type = type;
+      }
+      return t.hook.apply(t, args)
+    }
   }
 
   /* 源函数运行前的hook */
@@ -4510,6 +4534,14 @@ let monkeyMenuList = [
     title: i18n.t('donate'),
     fn: () => {
       openInTab('https://h5player.anzz.top/#%E8%B5%9E');
+    }
+  },
+  /* 推广位，只允许推荐有用的东西 */
+  {
+    title: i18n.t('recommend'),
+    disable: !i18n.language().includes('zh'),
+    fn: () => {
+      openInTab('https://hello-ai.anzz.top/');
     }
   },
   {

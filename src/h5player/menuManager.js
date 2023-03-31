@@ -49,6 +49,14 @@ let monkeyMenuList = [
       openInTab('https://h5player.anzz.top/#%E8%B5%9E')
     }
   },
+  /* 推广位，只允许推荐有用的东西 */
+  {
+    title: i18n.t('recommend'),
+    disable: !i18n.language().includes('zh'),
+    fn: () => {
+      openInTab('https://hello-ai.anzz.top/')
+    }
+  },
   {
     title: `${configManager.get('enhance.unfoldMenu') ? i18n.t('foldMenu') : i18n.t('unfoldMenu')} 「${i18n.t('globalSetting')}」`,
     fn: () => {

@@ -5,6 +5,8 @@
 - 官网地址：[https://h5player.anzz.top](https://h5player.anzz.top)  
 - 项目地址：[https://github.com/xxxily/h5player](https://github.com/xxxily/h5player)  
 - 脚本安装地址：[https://greasyfork.org/scripts/381682](https://greasyfork.org/scripts/381682)
+  
+> [❤️ 免费ChatGPT ❤️](https://hello-ai.anzz.top/)
 
 ## 简介
 
