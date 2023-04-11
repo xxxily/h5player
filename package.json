@@ -7,6 +7,7 @@
   "scripts": {
     "rollup": "rollup -w -c config/rollup.config.js",
     "h5player:prod": "npm run rollup --mode-dev --proj-h5player",
+    "jsonEditor:prod": "npm run rollup --mode-dev --proj-jsonEditor",
     "server": "node bin/staticService/index.js",
     "ui-dev": "webpack-dev-server --inline --config bin/webpack/webpack.dev.conf.js",
     "ui-build": "webpack-cli --inline --config bin/webpack/webpack.prod.conf.js",
@@ -60,6 +61,7 @@
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-json": "^4.0.0",
     "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-uglify": "^6.0.4",
     "sass": "^1.51.0",
     "sass-loader": "^12.6.0",
     "socket.io": "^2.3.0",

@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>JSONEditor | Viewer</title>
+
+  <link href="../dist/jsoneditor.css" rel="stylesheet" type="text/css">
+  <script src="../dist/jsoneditor.js"></script>
+
+
+  <style type="text/css">
+    body {
+      font: 11pt arial;
+    }
+    #jsoneditor {
+      width: 500px;
+    }
+  </style>
+</head>
+<body>
+<p>
+  This editor is read-only (mode='viewer').
+</p>
+<div id="jsoneditor"></div>
+
+<script>
+  const container = document.getElementById('jsoneditor')
+
+  const options = {
+    mode: 'view'
+  }
+
+  const json = {
+    'array': [1, 2, 3],
+    'boolean': true,
+    'null': null,
+    'number': 123,
+    'object': {'a': 'b', 'c': 'd'},
+    'string': 'Hello World'
+  }
+
+  const editor = new JSONEditor(container, options, json)
+</script>
+</body>
+</html>

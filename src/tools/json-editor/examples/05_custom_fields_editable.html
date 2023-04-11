@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>JSONEditor | Custom editable fields</title>
+
+  <link href="../dist/jsoneditor.css" rel="stylesheet" type="text/css">
+  <script src="../dist/jsoneditor.js"></script>
+
+  <style type="text/css">
+    #jsoneditor {
+      width: 500px;
+    }
+  </style>
+</head>
+<body>
+  <p>
+    In this example:
+  </p>
+  <ul>
+    <li>the field <code>_id</code> and its value are read-only</li>
+    <li>the field <code>name</code> is read-only but has an editable value</li>
+    <li>the field <code>age</code> and its value are editable</li>
+  </ul>
+
+  <div id="jsoneditor"></div>
+
+  <script>
+    const container = document.getElementById('jsoneditor')
+
+    const options = {
+      onEditable: function (node) {
+        // node is an object like:
+        //   {
+        //     field: 'FIELD',
+        //     value: 'VALUE',
+        //     path: ['PATH', 'TO', 'NODE']
+        //   }
+        switch (node.field) {
+          case '_id':
+            return false
+
+          case 'name':
+            return {
+              field: false,
+              value: true
+            }
+
+          default:
+            return true
+        }
+      }
+    }
+
+    const json = {
+      _id: 123456,
+      name: 'John',
+      age: 32
+    }
+
+    const editor = new JSONEditor(container, options, json)
+  </script>
+</body>
+</html>
