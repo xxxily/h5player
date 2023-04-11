@@ -1,0 +1,139 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.20/lodash.min.js"
+    integrity="sha512-90vH1Z83AJY9DmlWa8WkjkV79yfS2n2Oxhsi2dZbIv0nC4E6m5AbH8Nh156kkM7JePmqD6tcZsfad1ueoaovww=="
+    crossorigin="anonymous"
+  ></script>
+  <link href="../dist/jsoneditor.css" rel="stylesheet" type="text/css">
+  <script src="../dist/jsoneditor.js"></script>
+
+  <style type="text/css">
+    body {
+      font: 10.5pt arial;
+      color: #4d4d4d;
+      line-height: 150%;
+      width: 100%;
+      padding-left: 10px;
+    }
+
+    code {
+      background-color: #f5f5f5;
+    }
+
+    #containerLeft {
+      display: inline-block;
+      width: 500px;
+      height: 500px;
+      margin-right: 10px;
+    }
+
+    #containerRight {
+      display: inline-block;
+      width: 500px;
+      height: 500px;
+    }
+    #containerRight .different_element {
+      background-color: #acee61;
+    }
+    #containerRight .different_element div.jsoneditor-field,
+    #containerRight .different_element div.jsoneditor-value {
+      color: red;
+    }
+
+    #containerLeft .different_element {
+      background-color: pink;
+    }
+    #containerLeft .different_element div.jsoneditor-field,
+    #containerLeft .different_element div.jsoneditor-value {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+
+<h3>Custom class names</h3>
+<p>
+  This example highlights the differences between two JSON objects using the option <code>onClassName</code>.
+  Make a change in the left or right editor to see the changes update accordingly.
+</p>
+<p>
+  Please note that this is not a full-fledged, performant JSON diffing solution, it's just a small example to demonstrate <code>onClassName</code>.
+</p>
+<div id="wrapper">
+  <div id="containerLeft"></div>
+  <div id="containerRight"></div>
+</div>
+
+<script>
+  const containerLeft = document.getElementById('containerLeft')
+  const containerRight = document.getElementById('containerRight')
+
+  function onClassName({ path, field, value }) {
+    const leftValue = _.get(jsonRight, path)
+    const rightValue = _.get(jsonLeft, path)
+
+    return _.isEqual(leftValue, rightValue)
+      ? 'the_same_element'
+      : 'different_element'
+  }
+
+  const optionsLeft = {
+    mode: 'tree',
+    onClassName: onClassName,
+    onChangeJSON: function (j) {
+      jsonLeft = j
+      window.editorRight.refresh()
+    }
+  }
+
+  const optionsRight = {
+    mode: 'tree',
+    onClassName: onClassName,
+    onChangeJSON: function (j) {
+      jsonRight = j
+      window.editorLeft.refresh()
+    }
+  }
+
+  let jsonLeft = {
+    "arrayOfArrays": [1, 2, 999, [3,4,5]],
+    "someField": true,
+    "boolean": true,
+    "htmlcode": '&quot;',
+    "escaped_unicode": '\\u20b9',
+    "unicode": '\u20b9,\uD83D\uDCA9',
+    "return": '\n',
+    "null": null,
+    "thisObjectDoesntExistOnTheRight" : {key: "value"},
+    "number": 123,
+    "object": {"a": "b","new":4, "c": "d", "e": [1, 2, 3]},
+    "string": "Hello World",
+    "url": "http://jsoneditoronline.org",
+    "[0]": "zero"
+  }
+
+  let jsonRight = {
+    "arrayOfArrays": [1, 2, [3,4,5]],
+    "boolean": true,
+    "htmlcode": '&quot;',
+    "escaped_unicode": '\\u20b9',
+    "thisFieldDoesntExistOnTheLeft": 'foobar',
+    "unicode": '\u20b9,\uD83D\uDCA9',
+    "return": '\n',
+    "null": null,
+    "number": 123,
+    "object": {"a": "b",  "c": "d", "e": [1, 2, 3]},
+    "string": "Hello World",
+    "url": "http://jsoneditoronline.org",
+    "[0]": "zero"
+  }
+
+  window.editorLeft = new JSONEditor(containerLeft, optionsLeft, jsonLeft)
+  window.editorRight = new JSONEditor(containerRight, optionsRight, jsonRight)
+</script>
+</body>
+</html>
