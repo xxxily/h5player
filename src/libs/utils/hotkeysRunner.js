@@ -109,19 +109,24 @@ const combinationKeysMonitor = (function () {
 })()
 
 class HotkeysRunner {
-  constructor (hotkeys) {
+  constructor (hotkeys, win = window) {
+    this.window = win
     /* Mac和window使用的修饰符是不一样的 */
-    this.MOD = typeof navigator === 'object' && /Mac|iPod|iPhone|iPad/.test(navigator.platform) ? 'Meta' : 'Control'
+    this.MOD = typeof navigator === 'object' && /Mac|iPod|iPhone|iPad/.test(navigator.platform) ? 'Meta' : 'Ctrl'
+    // 'Control', 'Shift', 'Alt', 'Meta'
 
     this.prevPress = null
     this._prevTimer_ = null
 
     this.setHotkeys(hotkeys)
-    combinationKeysMonitor.init(window)
+    combinationKeysMonitor.init(win)
   }
 
   /* 设置其它window对象的组合键监控逻辑 */
-  setCombinationKeysMonitor (win) { combinationKeysMonitor.init(win) }
+  setCombinationKeysMonitor (win) {
+    this.window = win
+    combinationKeysMonitor.init(win)
+  }
 
   /* 数据预处理 */
   hotkeysPreprocess (hotkeys) {
@@ -210,6 +215,7 @@ class HotkeysRunner {
   isMatchPrevPress (press) { return this.isMatch(this.prevPress, press) }
 
   run (opts = {}) {
+    const KeyboardEvent = this.window.KeyboardEvent
     if (!(opts.event instanceof KeyboardEvent)) { return false }
 
     const event = opts.event
@@ -224,6 +230,11 @@ class HotkeysRunner {
       }
 
       let press = hotkeyConf.keyBindings[0]
+
+      /* 当存在prevPress，则不再响应与prevPress不匹配的其它快捷键 */
+      if (this.prevPress && (hotkeyConf.keyBindings.length <= 1 || !this.isMatchPrevPress(press))) {
+        return false
+      }
 
       /* 如果存在上一轮的操作快捷键记录，且之前的快捷键与第一个keyBindings定义的快捷键匹配，则去匹配第二个keyBindings */
       if (this.prevPress && hotkeyConf.keyBindings.length > 1 && this.isMatchPrevPress(press)) {
@@ -242,7 +253,7 @@ class HotkeysRunner {
       preventDefault && event.preventDefault()
 
       /* 记录上一次操作的快捷键，且一段时间后清空该操作的记录 */
-      if (press === hotkeyConf.keyBindings[0]) {
+      if (press === hotkeyConf.keyBindings[0] && hotkeyConf.keyBindings.length > 1) {
         /* 将prevPress变成一个具有event相关字段的对象 */
         this.prevPress = {
           combinationKeys: combinationKeysMonitor.getCombinationKeys(),
@@ -257,12 +268,13 @@ class HotkeysRunner {
 
         clearTimeout(this._prevTimer_)
         this._prevTimer_ = setTimeout(() => { this.prevPress = null }, 1000)
+
+        return true
       }
 
-      if (press === hotkeyConf.keyBindings[0] && hotkeyConf.keyBindings.length > 1) {
-        return true
-      } else {
-        this.prevPress = null
+      /* 如果当前匹配到了第二个快捷键，则当forEach循环结束后，马上注销prevPress，给其它快捷键让行 */
+      if (hotkeyConf.keyBindings.length > 1 && press !== hotkeyConf.keyBindings[0]) {
+        setTimeout(() => { this.prevPress = null }, 0)
       }
 
       /* 执行hotkeyConf.command对应的函数或命令 */
@@ -294,7 +306,7 @@ class HotkeysRunner {
       throw new Error('[hotkeysRunner] 提供给binding的参数不正确')
     }
 
-    opts.el = opts.el || window
+    opts.el = opts.el || this.window
     opts.type = opts.type || 'keydown'
     opts.debug && (this.debug = true)
 
