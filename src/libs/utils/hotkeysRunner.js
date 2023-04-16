@@ -278,10 +278,16 @@ class HotkeysRunner {
       }
 
       /* 执行hotkeyConf.command对应的函数或命令 */
-      const args = toArrArgs(hotkeyConf.args)
-      let commandFunc = hotkeyConf.command
+      let args = [];
+      let commandFunc = () => {};
       if (target && typeof hotkeyConf.command === 'string') {
-        commandFunc = getValByPath(target, hotkeyConf.command)
+        /* Reference via internal function name - Pass configured arguments */
+        commandFunc = getValByPath$1(target, hotkeyConf.command);
+        args = toArrArgs(hotkeyConf.args);
+      } else {
+        /* Function object - Pass general info */
+        commandFunc = hotkeyConf.command;
+        args = toArrArgs([h5Player, taskConf, event]);
       }
 
       if (!(commandFunc instanceof Function) && target) {
