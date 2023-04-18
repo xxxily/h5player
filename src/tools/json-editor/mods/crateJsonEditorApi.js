@@ -1,7 +1,7 @@
 import config from './config'
 import { parseURL } from '../../../libs/utils/url'
 import { getUrlData, saveJSON } from './helper'
-import newEditor from './newEditor'
+// import newEditor from './newEditor'
 const urlInfo = parseURL(location.href)
 
 function crateJsonEditorApi (editor) {
@@ -47,7 +47,7 @@ function crateJsonEditorApi (editor) {
     },
 
     save () {
-      saveJSON(editor)
+      saveJSON(editor, urlInfo.params.saveHandlerName)
     },
 
     formatter () {

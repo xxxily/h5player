@@ -28,10 +28,15 @@ function getJsonText (editor) {
   return JSON.stringify(editor.get(), null, 2)
 }
 
-function saveJSON (editor) {
+function saveJSON (editor, customSaveHandlerName) {
   /* 允许外部自定义保存方法 */
   if (window.jsonEditorSaveHandler instanceof Function) {
     window.jsonEditorSaveHandler(editor)
+    return
+  }
+
+  if (customSaveHandlerName && window[customSaveHandlerName] instanceof Function) {
+    window[customSaveHandlerName](editor)
     return
   }
 
