@@ -67,4 +67,8 @@ function saveJSON (editor, customSaveHandlerName) {
   saveAs(blob, fname)
 }
 
-export { getUrlData, saveAs, getJsonText, saveJSON }
+function isMobile () {
+  return /Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)
+}
+
+export { getUrlData, saveAs, getJsonText, saveJSON, isMobile }
