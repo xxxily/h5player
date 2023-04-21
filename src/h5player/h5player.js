@@ -2051,7 +2051,7 @@ const h5Player = {
     const player = t.player()
 
     /* 处于可编辑元素中不执行任何快捷键 */
-    if (isEditableTarget(event.target)) return
+    if (isEditableTarget(event.composedPath()[0] || event.target)) return
 
     /* 广播按键消息，进行跨域控制 */
     monkeyMsg.send('globalKeydownEvent', event, 0)
