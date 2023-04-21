@@ -24,7 +24,7 @@ const jsonEditor = (async function () {
         jsonEditorApi.createSaveButton()
 
         /* 展开所有节点 */
-        if (urlInfo.params.expandAll) { editor.expandAll() }
+        if (urlInfo.params.expandAll === 'true') { editor.expandAll() }
       }
     })
     window.jsonEditor = editor
@@ -41,11 +41,11 @@ const jsonEditor = (async function () {
         alert(`${urlInfo.params.loadJsonHandlerName} error: ${e}`)
       }
     } else {
-      editor.set(await jsonEditorApi.getDefaultText())
+      editor.setText(await jsonEditorApi.getDefaultText())
     }
 
     /* 展开所有节点 */
-    if (urlInfo.params.expandAll) { editor.expandAll() }
+    if (urlInfo.params.expandAll === 'true') { editor.expandAll() }
   }
 
   await init()
