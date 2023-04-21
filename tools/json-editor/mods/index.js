@@ -2,6 +2,8 @@ import config from './config'
 import { isMobile } from './helper'
 import crateJsonEditorApi from './crateJsonEditorApi'
 import HotkeysRunner from '../../../libs/utils/hotkeysRunner'
+import { parseURL } from '../../../libs/utils/url'
+const urlInfo = parseURL(location.href)
 
 const jsonEditor = (async function () {
   let editor = null
@@ -18,15 +20,32 @@ const jsonEditor = (async function () {
       navigationBar: true,
       statusBar: true,
       onModeChange: function (newMode, oldMode) {
-        console.log('Mode switched from', oldMode, 'to', newMode)
+        // console.log('Mode switched from', oldMode, 'to', newMode)
         jsonEditorApi.createSaveButton()
+
+        /* 展开所有节点 */
+        if (urlInfo.params.expandAll) { editor.expandAll() }
       }
     })
     window.jsonEditor = editor
 
     jsonEditorApi = crateJsonEditorApi(editor)
     jsonEditorApi.createSaveButton()
-    editor.setText(await jsonEditorApi.getDefaultText())
+
+    if (urlInfo.params.loadJsonHandlerName && window[urlInfo.params.loadJsonHandlerName] instanceof Function) {
+      try {
+        const json = await window[urlInfo.params.loadJsonHandlerName]()
+        editor.set(json)
+      } catch (e) {
+        console.error(`${urlInfo.params.loadJsonHandlerName} error:`, e)
+        alert(`${urlInfo.params.loadJsonHandlerName} error: ${e}`)
+      }
+    } else {
+      editor.set(await jsonEditorApi.getDefaultText())
+    }
+
+    /* 展开所有节点 */
+    if (urlInfo.params.expandAll) { editor.expandAll() }
   }
 
   await init()
