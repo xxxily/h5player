@@ -1,7 +1,7 @@
 import config from './config'
 import { parseURL } from '../../../libs/utils/url'
 import { getUrlData, saveJSON } from './helper'
-import newEditor from './newEditor'
+// import newEditor from './newEditor'
 const urlInfo = parseURL(location.href)
 
 function crateJsonEditorApi (editor) {
@@ -47,7 +47,7 @@ function crateJsonEditorApi (editor) {
     },
 
     save () {
-      saveJSON(editor)
+      saveJSON(editor, urlInfo.params.saveHandlerName)
     },
 
     formatter () {
@@ -132,6 +132,22 @@ function crateJsonEditorApi (editor) {
 
       /* 新开子窗口 */
       window.open(location.href, '_blank', 'width=1024,height=768')
+    },
+
+    createSaveButton () {
+      if (editor.menu.querySelector('.jsoneditor-save')) return
+
+      /* 增加个保存按钮 */
+      const saveBtn = document.createElement('button')
+      saveBtn.className = 'jsoneditor-save'
+      saveBtn.innerText = '💾'
+      saveBtn.style = 'background-image: none; border: 1px dashed #aaa; border-radius: 3px;'
+      saveBtn.onclick = () => {
+        this.save()
+      }
+
+      // editor.menu.appendChild(saveBtn)
+      editor.menu.insertBefore(saveBtn, editor.menu.firstChild)
     }
   }
 }
