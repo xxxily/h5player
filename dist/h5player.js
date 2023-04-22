@@ -1184,12 +1184,187 @@ function stringifyToUrl (urlObj) {
   return urlObj.origin + urlObj.path + query + hash
 }
 
+/* 当前用到的快捷键 */
+const hasUseKey = {
+  keyCodeList: [13, 16, 17, 18, 27, 32, 37, 38, 39, 40, 49, 50, 51, 52, 67, 68, 69, 70, 73, 74, 75, 77, 78, 79, 80, 81, 82, 83, 84, 85, 87, 88, 89, 90, 97, 98, 99, 100, 220],
+  keyList: ['enter', 'shift', 'control', 'alt', 'escape', ' ', 'arrowleft', 'arrowright', 'arrowup', 'arrowdown', '1', '2', '3', '4', 'c', 'd', 'e', 'f', 'i', 'j', 'k', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'w', 'x', 'y', 'z', '\\', '|'],
+  keyMap: {
+    enter: 13,
+    shift: 16,
+    ctrl: 17,
+    alt: 18,
+    esc: 27,
+    space: 32,
+    '←': 37,
+    '↑': 38,
+    '→': 39,
+    '↓': 40,
+    1: 49,
+    2: 50,
+    3: 51,
+    4: 52,
+    c: 67,
+    d: 68,
+    e: 69,
+    f: 70,
+    i: 73,
+    j: 74,
+    k: 75,
+    m: 77,
+    n: 78,
+    o: 79,
+    p: 80,
+    q: 81,
+    r: 82,
+    s: 83,
+    t: 84,
+    u: 85,
+    w: 87,
+    x: 88,
+    y: 89,
+    z: 90,
+    pad1: 97,
+    pad2: 98,
+    pad3: 99,
+    pad4: 100,
+    '\\': 220
+  }
+};
+
+/**
+ * 判断当前按键是否注册为需要用的按键
+ * 用于减少对其它键位的干扰
+ */
+function isRegisterKey (event) {
+  const keyCode = event.keyCode;
+  const key = event.key.toLowerCase();
+  return hasUseKey.keyCodeList.includes(keyCode) ||
+    hasUseKey.keyList.includes(key)
+}
+
+/**
+ * 由于tampermonkey对window对象进行了封装，我们实际访问到的window并非页面真实的window
+ * 这就导致了如果我们需要将某些对象挂载到页面的window进行调试的时候就无法挂载了
+ * 所以必须使用特殊手段才能访问到页面真实的window对象，于是就有了下面这个函数
+ * @returns {Promise<void>}
+ */
+async function getPageWindow () {
+  return new Promise(function (resolve, reject) {
+    if (window._pageWindow) {
+      return resolve(window._pageWindow)
+    }
+
+    /* 尝试通过同步的方式获取pageWindow */
+    try {
+      const pageWin = getPageWindowSync();
+      if (pageWin && pageWin.document && pageWin.XMLHttpRequest) {
+        window._pageWindow = pageWin;
+        resolve(pageWin);
+        return pageWin
+      }
+    } catch (e) {}
+
+    /* 下面异步获取pagewindow的方法在最新的chrome浏览器里已失效 */
+
+    const listenEventList = ['load', 'mousemove', 'scroll', 'get-page-window-event'];
+
+    function getWin (event) {
+      window._pageWindow = this;
+      // debug.log('getPageWindow succeed', event)
+      listenEventList.forEach(eventType => {
+        window.removeEventListener(eventType, getWin, true);
+      });
+      resolve(window._pageWindow);
+    }
+
+    listenEventList.forEach(eventType => {
+      window.addEventListener(eventType, getWin, true);
+    });
+
+    /* 自行派发事件以便用最短的时间获得pageWindow对象 */
+    window.dispatchEvent(new window.Event('get-page-window-event'));
+  })
+}
+getPageWindow();
+
+/**
+ * 通过同步的方式获取pageWindow
+ * 注意同步获取的方式需要将脚本写入head，部分网站由于安全策略会导致写入失败，而无法正常获取
+ * @returns {*}
+ */
+function getPageWindowSync (rawFunction) {
+  if (window.unsafeWindow) return window.unsafeWindow
+  if (document._win_) return document._win_
+
+  try {
+    rawFunction = rawFunction || window.__rawFunction__ || Function.prototype.constructor;
+    // return rawFunction('return window')()
+    // Function('return (function(){}.constructor("return this")());')
+    return rawFunction('return (function(){}.constructor("var getPageWindowSync=1; return this")());')()
+  } catch (e) {
+    console.error('getPageWindowSync error', e);
+
+    const head = document.head || document.querySelector('head');
+    const script = document.createElement('script');
+    script.appendChild(document.createTextNode('document._win_ = window'));
+    head.appendChild(script);
+
+    return document._win_
+  }
+}
+
+function openInTab (url, opts, referer) {
+  if (referer) {
+    const urlObj = parseURL(url);
+    if (!urlObj.params.referer) {
+      urlObj.params.referer = encodeURIComponent(window.location.href);
+      url = stringifyToUrl(urlObj);
+    }
+  }
+
+  if (window.GM_openInTab) {
+    window.GM_openInTab(url, opts || {
+      active: true,
+      insert: true,
+      setParent: true
+    });
+  }
+}
+
+/* 确保数字为正数 */
+function numUp (num) {
+  if (typeof num === 'number' && num < 0) {
+    num = Math.abs(num);
+  }
+  return num
+}
+
+/* 确保数字为负数 */
+function numDown (num) {
+  if (typeof num === 'number' && num > 0) {
+    num = -num;
+  }
+  return num
+}
+
+function isMediaElement (element) {
+  return element && (element instanceof HTMLMediaElement || element.HTMLMediaElement || element.HTMLVideoElement || element.HTMLAudioElement)
+}
+
+function isVideoElement (element) {
+  return element && (element instanceof HTMLVideoElement || element.HTMLVideoElement)
+}
+
+function isAudioElement (element) {
+  return element && (element instanceof HTMLAudioElement || element.HTMLAudioElement)
+}
+
 /*!
-configManager parse localStorage error * @name         configManager.js
+ * configManager parse localStorage error * @name         configManager.ts
  * @description  配置统一管理脚本
  * @version      0.0.1
  * @author       xxxily
- * @date         2022/09/20 16:10
+ * @date         2023/03/06 14:29
  * @github       https://github.com/xxxily
  */
 
@@ -1200,7 +1375,7 @@ configManager parse localStorage error * @name         configManager.js
  * https://cloud.tencent.com/developer/article/1803097 (当localStorage不能用时，window.localStorage为null，而不是文中的undefined)
  */
 function isLocalStorageUsable () {
-  return window.localStorage && window.localStorage.getItem && window.localStorage.setItem
+  return window.localStorage && window.localStorage.getItem instanceof Function && window.localStorage.setItem instanceof Function
 }
 
 /**
@@ -1216,17 +1391,11 @@ function isGlobalStorageUsable () {
  * 防止localStorage对象下的方法被改写而导致读取和写入规则不一样的问题
  */
 const rawLocalStorage = (function getRawLocalStorage () {
-  const localStorageApis = [
-    'getItem',
-    'setItem',
-    'removeItem',
-    'clear',
-    'key'
-  ];
+  const localStorageApis = ['getItem', 'setItem', 'removeItem', 'clear', 'key'];
 
   const rawLocalStorage = {};
 
-  localStorageApis.forEach(apiKey => {
+  localStorageApis.forEach((apiKey) => {
     if (isLocalStorageUsable()) {
       rawLocalStorage[`_${apiKey}_`] = localStorage[apiKey];
       rawLocalStorage[apiKey] = function () {
@@ -1242,326 +1411,19 @@ const rawLocalStorage = (function getRawLocalStorage () {
   return rawLocalStorage
 })();
 
-const configPrefix = '_h5player_';
-const defConfig = {
-  enable: true,
-  media: {
-    autoPlay: false,
-    playbackRate: 1,
-    volume: 1,
+class ConfigManager {
+  constructor (opts) {
+    this.opts = opts;
+  }
 
-    /* 是否允许存储播放进度 */
-    allowRestorePlayProgress: {
-
-    },
-    /* 视频播放进度映射表 */
-    progress: {}
-  },
-  hotkeys: [
-    {
-      desc: '网页全屏',
-      key: 'shift+enter',
-      command: 'setWebFullScreen',
-      /* 如需禁用快捷键，将disabled设为true */
-      disabled: false
-    },
-    {
-      desc: '全屏',
-      key: 'enter',
-      command: 'setFullScreen'
-    },
-    {
-      desc: '切换画中画模式',
-      key: 'shift+p',
-      command: 'togglePictureInPicture'
-    },
-    {
-      desc: '视频截图',
-      key: 'shift+s',
-      command: 'capture'
-    },
-    {
-      desc: '启用或禁止自动恢复播放进度功能',
-      key: 'shift+r',
-      command: 'capture'
-    },
-    {
-      desc: '垂直镜像翻转',
-      key: 'shift+m',
-      command: 'setMirror',
-      args: [true]
-    },
-    {
-      desc: '水平镜像翻转',
-      key: 'm',
-      command: 'setMirror'
-    },
-    {
-      desc: '下载音视频文件（实验性功能）',
-      key: 'shift+d',
-      command: 'mediaDownload'
-    },
-    {
-      desc: '缩小视频画面 -0.05',
-      key: 'shift+x',
-      command: 'setScaleDown'
-    },
-    {
-      desc: '放大视频画面 +0.05',
-      key: 'shift+c',
-      command: 'setScaleUp'
-    },
-    {
-      desc: '恢复视频画面',
-      key: 'shift+z',
-      command: 'resetTransform'
-    },
-    {
-      desc: '画面向右移动10px',
-      key: 'shift+arrowright',
-      command: 'setTranslateRight'
-    },
-    {
-      desc: '画面向左移动10px',
-      key: 'shift+arrowleft',
-      command: 'setTranslateLeft'
-    },
-    {
-      desc: '画面向上移动10px',
-      key: 'shift+arrowup',
-      command: 'setTranslateUp'
-    },
-    {
-      desc: '画面向下移动10px',
-      key: 'shift+arrowdown',
-      command: 'setTranslateDown'
-    },
-    {
-      desc: '前进5秒',
-      key: 'arrowright',
-      command: 'setCurrentTimeUp'
-    },
-    {
-      desc: '后退5秒',
-      key: 'arrowleft',
-      command: 'setCurrentTimeDown'
-    },
-    {
-      desc: '前进30秒',
-      key: 'ctrl+arrowright',
-      command: 'setCurrentTimeUp',
-      args: [30]
-    },
-    {
-      desc: '后退30秒',
-      key: 'ctrl+arrowleft',
-      command: 'setCurrentTimeDown',
-      args: [-30]
-    },
-    {
-      desc: '音量升高 5%',
-      key: 'arrowup',
-      command: 'setVolumeUp',
-      args: [0.05]
-    },
-    {
-      desc: '音量降低 5%',
-      key: 'arrowdown',
-      command: 'setVolumeDown',
-      args: [-0.05]
-    },
-    {
-      desc: '音量升高 20%',
-      key: 'ctrl+arrowup',
-      command: 'setVolumeUp',
-      args: [0.2]
-    },
-    {
-      desc: '音量降低 20%',
-      key: 'ctrl+arrowdown',
-      command: 'setVolumeDown',
-      args: [-0.2]
-    },
-    {
-      desc: '切换暂停/播放',
-      key: 'space',
-      command: 'switchPlayStatus'
-    },
-    {
-      desc: '减速播放 -0.1',
-      key: 'x',
-      command: 'setPlaybackRateDown'
-    },
-    {
-      desc: '加速播放 +0.1',
-      key: 'c',
-      command: 'setPlaybackRateUp'
-    },
-    {
-      desc: '正常速度播放',
-      key: 'z',
-      command: 'resetPlaybackRate'
-    },
-    {
-      desc: '设置1x的播放速度',
-      key: 'Digit1',
-      command: 'setPlaybackRatePlus',
-      args: 1
-    },
-    {
-      desc: '设置1x的播放速度',
-      key: 'Numpad1',
-      command: 'setPlaybackRatePlus',
-      args: 1
-    },
-    {
-      desc: '设置2x的播放速度',
-      key: 'Digit2',
-      command: 'setPlaybackRatePlus',
-      args: 2
-    },
-    {
-      desc: '设置2x的播放速度',
-      key: 'Numpad2',
-      command: 'setPlaybackRatePlus',
-      args: 2
-    },
-    {
-      desc: '设置3x的播放速度',
-      key: 'Digit3',
-      command: 'setPlaybackRatePlus',
-      args: 3
-    },
-    {
-      desc: '设置3x的播放速度',
-      key: 'Numpad3',
-      command: 'setPlaybackRatePlus',
-      args: 3
-    },
-    {
-      desc: '设置4x的播放速度',
-      key: 'Digit4',
-      command: 'setPlaybackRatePlus',
-      args: 4
-    },
-    {
-      desc: '设置4x的播放速度',
-      key: 'Numpad4',
-      command: 'setPlaybackRatePlus',
-      args: 4
-    },
-    {
-      desc: '下一帧',
-      key: 'F',
-      command: 'freezeFrame',
-      args: 1
-    },
-    {
-      desc: '上一帧',
-      key: 'D',
-      command: 'freezeFrame',
-      args: -1
-    },
-    {
-      desc: '增加亮度',
-      key: 'E',
-      command: 'setBrightnessUp'
-    },
-    {
-      desc: '减少亮度',
-      key: 'W',
-      command: 'setBrightnessDown'
-    },
-    {
-      desc: '增加对比度',
-      key: 'T',
-      command: 'setContrastUp'
-    },
-    {
-      desc: '减少对比度',
-      key: 'R',
-      command: 'setContrastDown'
-    },
-    {
-      desc: '增加饱和度',
-      key: 'U',
-      command: 'setSaturationUp'
-    },
-    {
-      desc: '减少饱和度',
-      key: 'Y',
-      command: 'setSaturationDown'
-    },
-    {
-      desc: '增加色相',
-      key: 'O',
-      command: 'setHueUp'
-    },
-    {
-      desc: '减少色相',
-      key: 'I',
-      command: 'setHueDown'
-    },
-    {
-      desc: '模糊增加 1 px',
-      key: 'K',
-      command: 'setBlurUp'
-    },
-    {
-      desc: '模糊减少 1 px',
-      key: 'J',
-      command: 'setBlurDown'
-    },
-    {
-      desc: '图像复位',
-      key: 'Q',
-      command: 'resetFilterAndTransform'
-    },
-    {
-      desc: '画面旋转 90 度',
-      key: 'S',
-      command: 'setRotate'
-    },
-    {
-      desc: '播放下一集',
-      key: 'N',
-      command: 'setNextVideo'
-    },
-    {
-      desc: '执行JS脚本',
-      key: 'ctrl+j ctrl+s',
-      command: () => {
-        alert('自定义JS脚本');
-      },
-      when: ''
-    }
-  ],
-  enhance: {
-    /* 不禁用默认的调速逻辑，则在多个视频切换时，速度很容易被重置，所以该选项默认开启 */
-    blockSetPlaybackRate: true,
-
-    blockSetCurrentTime: false,
-    blockSetVolume: false,
-    allowExperimentFeatures: false,
-    allowExternalCustomConfiguration: false,
-    /* 是否开启音量增益功能 */
-    allowAcousticGain: false,
-    /* 是否开启跨域控制 */
-    allowCrossOriginControl: true,
-    unfoldMenu: false
-  },
-  debug: false
-};
-
-const configManager = {
   /**
    * 将confPath转换称最终存储到localStorage或globalStorage里的键名
    * @param {String} confPath -必选，配置路径信息：例如：'enhance.blockSetPlaybackRate'
    * @returns {keyName}
    */
   getConfKeyName (confPath = '') {
-    return configPrefix + confPath.replace(/\./g, '_')
-  },
+    return this.opts.prefix + confPath.replace(/\./g, '_')
+  }
 
   /**
    * 将存储到localStorage或globalStorage里的键名转换成实际调用时候的confPath
@@ -1569,8 +1431,27 @@ const configManager = {
    * @returns {confPath}
    */
   getConfPath (keyName = '') {
-    return keyName.replace(configPrefix, '').replace(/_/g, '.')
-  },
+    return keyName.replace(this.opts.prefix, '').replace(/_/g, '.')
+  }
+
+  getConfPathList (config) {
+    const confPathList = [];
+
+    /* 递归获取所有配置项的路径 */
+    function getConfPathList (config, path = '') {
+      Object.keys(config).forEach((key) => {
+        const pathKey = path ? `${path}.${key}` : key;
+        if (Object.prototype.toString.call(config[key]) === '[object Object]') {
+          getConfPathList(config[key], pathKey);
+        } else {
+          confPathList.push(pathKey);
+        }
+      });
+    }
+    getConfPathList(config);
+
+    return confPathList
+  }
 
   /**
    * 根据给定的配置路径，获取相关配置信息
@@ -1584,25 +1465,26 @@ const configManager = {
     }
 
     /* 默认优先使用本地的localStorage配置 */
-    const localConf = configManager.getLocalStorage(confPath);
+    const localConf = this.getLocalStorage(confPath);
     if (localConf !== null && localConf !== undefined) {
       return localConf
     }
 
     /* 如果localStorage没相关配置，则尝试使用GlobalStorage的配置 */
-    const globalConf = configManager.getGlobalStorage(confPath);
+    const globalConf = this.getGlobalStorage(confPath);
     if (globalConf !== null && globalConf !== undefined) {
       return globalConf
     }
 
     /* 如果localStorage和GlobalStorage配置都没找到，则尝试在默认配置表里拿相关配置信息 */
-    const defConfVal = getValByPath(defConfig, confPath);
+    const config = this.getConfObj();
+    const defConfVal = getValByPath(config, confPath);
     if (typeof defConfVal !== 'undefined' && defConfVal !== null) {
       return defConfVal
     }
 
     return null
-  },
+  }
 
   /**
    * 将配置结果写入到localStorage或GlobalStorage
@@ -1617,34 +1499,34 @@ const configManager = {
       return false
     }
 
-    // setValByPath(defConfig, confPath, val)
+    setValByPath(this.opts.config, confPath, val);
 
     let sucStatus = false;
 
-    sucStatus = configManager.setLocalStorage(confPath, val);
+    sucStatus = this.setLocalStorage(confPath, val);
 
     if (!sucStatus) {
-      sucStatus = configManager.setGlobalStorage(confPath, val);
+      sucStatus = this.setGlobalStorage(confPath, val);
     }
 
     return sucStatus
-  },
+  }
 
   /* 获取并列出当前所有已设定的配置项 */
   list () {
     const result = {
-      localConf: configManager.listLocalStorage(),
-      globalConf: configManager.listGlobalStorage(),
-      defConfig
+      localConf: this.listLocalStorage(),
+      globalConf: this.listGlobalStorage(),
+      defConfig: this.opts.config
     };
     return result
-  },
+  }
 
   /* 清除已经写入到本地存储里的配置项 */
   clear () {
-    configManager.clearLocalStorage();
-    configManager.clearGlobalStorage();
-  },
+    this.clearLocalStorage();
+    this.clearGlobalStorage();
+  }
 
   /**
    * 根据给定的配置路径，获取LocalStorage下定义的配置信息
@@ -1656,7 +1538,7 @@ const configManager = {
       return null
     }
 
-    const key = configManager.getConfKeyName(confPath);
+    const key = this.getConfKeyName(confPath);
 
     if (isLocalStorageUsable()) {
       let localConf = rawLocalStorage.getItem(key);
@@ -1672,7 +1554,7 @@ const configManager = {
     }
 
     return null
-  },
+  }
 
   /**
    * 根据给定的配置路径，获取GlobalStorage下定义的配置信息
@@ -1684,7 +1566,7 @@ const configManager = {
       return null
     }
 
-    const key = configManager.getConfKeyName(confPath);
+    const key = this.getConfKeyName(confPath);
 
     if (isGlobalStorageUsable()) {
       const globalConf = window.GM_getValue(key);
@@ -1694,7 +1576,7 @@ const configManager = {
     }
 
     return null
-  },
+  }
 
   /**
    * 将配置结果写入到localStorage里
@@ -1707,9 +1589,9 @@ const configManager = {
       return false
     }
 
-    setValByPath(defConfig, confPath, val);
+    setValByPath(this.opts.config, confPath, val);
 
-    const key = configManager.getConfKeyName(confPath);
+    const key = this.getConfKeyName(confPath);
 
     if (isLocalStorageUsable()) {
       try {
@@ -1727,7 +1609,7 @@ const configManager = {
     } else {
       return false
     }
-  },
+  }
 
   /**
    * 将配置结果写入到globalStorage里
@@ -1740,9 +1622,9 @@ const configManager = {
       return false
     }
 
-    setValByPath(defConfig, confPath, val);
+    setValByPath(this.opts.config, confPath, val);
 
-    const key = configManager.getConfKeyName(confPath);
+    const key = this.getConfKeyName(confPath);
 
     if (isGlobalStorageUsable()) {
       try {
@@ -1755,62 +1637,509 @@ const configManager = {
     } else {
       return false
     }
-  },
+  }
 
   listLocalStorage () {
     if (isLocalStorageUsable()) {
       const result = {};
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith(configPrefix)) {
-          const confPath = configManager.getConfPath(key);
-          result[confPath] = configManager.getLocalStorage(confPath);
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith(this.opts.prefix)) {
+          const confPath = this.getConfPath(key);
+          result[confPath] = this.getLocalStorage(confPath);
         }
       });
       return result
     } else {
       return {}
     }
-  },
+  }
 
   listGlobalStorage () {
     if (isGlobalStorageUsable()) {
       const result = {};
       const globalStorage = window.GM_listValues();
-      globalStorage.forEach(key => {
-        if (key.startsWith(configPrefix)) {
-          const confPath = configManager.getConfPath(key);
-          result[confPath] = configManager.getGlobalStorage(confPath);
+      globalStorage.forEach((key) => {
+        if (key.startsWith(this.opts.prefix)) {
+          const confPath = this.getConfPath(key);
+          result[confPath] = this.getGlobalStorage(confPath);
         }
       });
       return result
     } else {
       return {}
     }
-  },
+  }
+
+  getConfObj () {
+    const confList = this.list();
+
+    /* 同步全局配置到this.opts.config */
+    Object.keys(confList.globalConf).forEach((confPath) => {
+      setValByPath(this.opts.config, confPath, confList.globalConf[confPath]);
+    });
+
+    /* 同步本地配置到this.opts.config */
+    Object.keys(confList.localConf).forEach((confPath) => {
+      setValByPath(this.opts.config, confPath, confList.localConf[confPath]);
+    });
+
+    return this.opts.config
+  }
+
+  setLocalStorageByObj (config) {
+    const oldConfig = this.getConfObj();
+    const confPathList = this.getConfPathList(config);
+    confPathList.forEach((confPath) => {
+      const oldVal = getValByPath(oldConfig, confPath);
+      const val = getValByPath(config, confPath);
+
+      /* 跳过一样的值或在旧配置中不存在的值 */
+      if (oldVal === val || oldVal === undefined) {
+        return
+      }
+
+      this.setLocalStorage(confPath, val);
+    });
+  }
+
+  setGlobalStorageByObj (config) {
+    const oldConfig = this.getConfObj();
+    const confPathList = this.getConfPathList(config);
+    confPathList.forEach((confPath) => {
+      const oldVal = getValByPath(oldConfig, confPath);
+      const val = getValByPath(config, confPath);
+
+      /* 跳过一样的值或在旧配置中不存在的值 */
+
+      if (oldVal === val || oldVal === undefined) {
+        return
+      }
+
+      console.log('setGlobalStorageByObj', confPath, val);
+
+      this.setGlobalStorage(confPath, val);
+    });
+  }
 
   clearLocalStorage () {
     if (isLocalStorageUsable()) {
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith(configPrefix)) {
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith(this.opts.prefix)) {
           rawLocalStorage.removeItem(key);
         }
       });
     }
-  },
+  }
 
   clearGlobalStorage () {
     if (isGlobalStorageUsable()) {
       const globalStorage = window.GM_listValues();
-      globalStorage.forEach(key => {
-        if (key.startsWith(configPrefix)) {
+      globalStorage.forEach((key) => {
+        if (key.startsWith(this.opts.prefix)) {
           window.GM_deleteValue(key);
         }
       });
     }
-  },
+  }
 
-  mergeDefConf (conf) { return mergeObj(defConfig, conf) }
-};
+  mergeDefConf (conf) {
+    return mergeObj(this.opts.config, conf)
+  }
+}
+
+/* 使用示例： */
+// const myConfig = new ConfigManager({
+//   prefix: '_myConfig_',
+//   config: {
+//     hotkeys: [
+//       {
+//         desc: '测试',
+//         key: 'v',
+//         command: 'toogleVisible',
+//         /* 如需禁用快捷键，将disabled设为true */
+//         disabled: false,
+//       },
+//     ],
+//     enable: true,
+//     debug: false,
+//   },
+// })
+// myConfig.set('enable', false)
+// /* 对于数组，暂不支持直接修改数组元素，需要先获取数组，再修改数组元素，再重新写入 */
+// const hotkeys = myConfig.get('hotkeys')
+// hotkeys[0].disabled = true
+// myConfig.set('hotkeys', hotkeys)
+
+const configManager = new ConfigManager({
+  prefix: '_h5player_',
+  config: {
+    enable: true,
+    media: {
+      autoPlay: false,
+      playbackRate: 1,
+      volume: 1,
+
+      /* 是否允许存储播放进度 */
+      allowRestorePlayProgress: {
+
+      },
+      /* 视频播放进度映射表 */
+      progress: {}
+    },
+    hotkeys: [
+      {
+        desc: '网页全屏',
+        key: 'shift+enter',
+        command: 'setWebFullScreen',
+        /* 如需禁用快捷键，将disabled设为true */
+        disabled: false
+      },
+      {
+        desc: '全屏',
+        key: 'enter',
+        command: 'setFullScreen'
+      },
+      {
+        desc: '切换画中画模式',
+        key: 'shift+p',
+        command: 'togglePictureInPicture'
+      },
+      {
+        desc: '视频截图',
+        key: 'shift+s',
+        command: 'capture'
+      },
+      {
+        desc: '启用或禁止自动恢复播放进度功能',
+        key: 'shift+r',
+        command: 'capture'
+      },
+      {
+        desc: '垂直镜像翻转',
+        key: 'shift+m',
+        command: 'setMirror',
+        args: [true]
+      },
+      {
+        desc: '水平镜像翻转',
+        key: 'm',
+        command: 'setMirror'
+      },
+      {
+        desc: '下载音视频文件（实验性功能）',
+        key: 'shift+d',
+        command: 'mediaDownload'
+      },
+      {
+        desc: '缩小视频画面 -0.05',
+        key: 'shift+x',
+        command: 'setScaleDown'
+      },
+      {
+        desc: '放大视频画面 +0.05',
+        key: 'shift+c',
+        command: 'setScaleUp'
+      },
+      {
+        desc: '恢复视频画面',
+        key: 'shift+z',
+        command: 'resetTransform'
+      },
+      {
+        desc: '画面向右移动10px',
+        key: 'shift+arrowright',
+        command: 'setTranslateRight'
+      },
+      {
+        desc: '画面向左移动10px',
+        key: 'shift+arrowleft',
+        command: 'setTranslateLeft'
+      },
+      {
+        desc: '画面向上移动10px',
+        key: 'shift+arrowup',
+        command: 'setTranslateUp'
+      },
+      {
+        desc: '画面向下移动10px',
+        key: 'shift+arrowdown',
+        command: 'setTranslateDown'
+      },
+      {
+        desc: '前进5秒',
+        key: 'arrowright',
+        command: 'setCurrentTimeUp'
+      },
+      {
+        desc: '后退5秒',
+        key: 'arrowleft',
+        command: 'setCurrentTimeDown'
+      },
+      {
+        desc: '前进30秒',
+        key: 'ctrl+arrowright',
+        command: 'setCurrentTimeUp',
+        args: [30]
+      },
+      {
+        desc: '后退30秒',
+        key: 'ctrl+arrowleft',
+        command: 'setCurrentTimeDown',
+        args: [-30]
+      },
+      {
+        desc: '音量升高 5%',
+        key: 'arrowup',
+        command: 'setVolumeUp',
+        args: [0.05]
+      },
+      {
+        desc: '音量降低 5%',
+        key: 'arrowdown',
+        command: 'setVolumeDown',
+        args: [-0.05]
+      },
+      {
+        desc: '音量升高 20%',
+        key: 'ctrl+arrowup',
+        command: 'setVolumeUp',
+        args: [0.2]
+      },
+      {
+        desc: '音量降低 20%',
+        key: 'ctrl+arrowdown',
+        command: 'setVolumeDown',
+        args: [-0.2]
+      },
+      {
+        desc: '切换暂停/播放',
+        key: 'space',
+        command: 'switchPlayStatus'
+      },
+      {
+        desc: '减速播放 -0.1',
+        key: 'x',
+        command: 'setPlaybackRateDown'
+      },
+      {
+        desc: '加速播放 +0.1',
+        key: 'c',
+        command: 'setPlaybackRateUp'
+      },
+      {
+        desc: '正常速度播放',
+        key: 'z',
+        command: 'resetPlaybackRate'
+      },
+      {
+        desc: '设置1x的播放速度',
+        key: 'Digit1',
+        command: 'setPlaybackRatePlus',
+        args: 1
+      },
+      {
+        desc: '设置1x的播放速度',
+        key: 'Numpad1',
+        command: 'setPlaybackRatePlus',
+        args: 1
+      },
+      {
+        desc: '设置2x的播放速度',
+        key: 'Digit2',
+        command: 'setPlaybackRatePlus',
+        args: 2
+      },
+      {
+        desc: '设置2x的播放速度',
+        key: 'Numpad2',
+        command: 'setPlaybackRatePlus',
+        args: 2
+      },
+      {
+        desc: '设置3x的播放速度',
+        key: 'Digit3',
+        command: 'setPlaybackRatePlus',
+        args: 3
+      },
+      {
+        desc: '设置3x的播放速度',
+        key: 'Numpad3',
+        command: 'setPlaybackRatePlus',
+        args: 3
+      },
+      {
+        desc: '设置4x的播放速度',
+        key: 'Digit4',
+        command: 'setPlaybackRatePlus',
+        args: 4
+      },
+      {
+        desc: '设置4x的播放速度',
+        key: 'Numpad4',
+        command: 'setPlaybackRatePlus',
+        args: 4
+      },
+      {
+        desc: '下一帧',
+        key: 'F',
+        command: 'freezeFrame',
+        args: 1
+      },
+      {
+        desc: '上一帧',
+        key: 'D',
+        command: 'freezeFrame',
+        args: -1
+      },
+      {
+        desc: '增加亮度',
+        key: 'E',
+        command: 'setBrightnessUp'
+      },
+      {
+        desc: '减少亮度',
+        key: 'W',
+        command: 'setBrightnessDown'
+      },
+      {
+        desc: '增加对比度',
+        key: 'T',
+        command: 'setContrastUp'
+      },
+      {
+        desc: '减少对比度',
+        key: 'R',
+        command: 'setContrastDown'
+      },
+      {
+        desc: '增加饱和度',
+        key: 'U',
+        command: 'setSaturationUp'
+      },
+      {
+        desc: '减少饱和度',
+        key: 'Y',
+        command: 'setSaturationDown'
+      },
+      {
+        desc: '增加色相',
+        key: 'O',
+        command: 'setHueUp'
+      },
+      {
+        desc: '减少色相',
+        key: 'I',
+        command: 'setHueDown'
+      },
+      {
+        desc: '模糊增加 1 px',
+        key: 'K',
+        command: 'setBlurUp'
+      },
+      {
+        desc: '模糊减少 1 px',
+        key: 'J',
+        command: 'setBlurDown'
+      },
+      {
+        desc: '图像复位',
+        key: 'Q',
+        command: 'resetFilterAndTransform'
+      },
+      {
+        desc: '画面旋转 90 度',
+        key: 'S',
+        command: 'setRotate'
+      },
+      {
+        desc: '播放下一集',
+        key: 'N',
+        command: 'setNextVideo'
+      },
+      {
+        desc: '执行JS脚本',
+        key: 'ctrl+j ctrl+s',
+        command: () => {
+          alert('自定义JS脚本');
+        },
+        when: ''
+      }
+    ],
+    enhance: {
+    /* 不禁用默认的调速逻辑，则在多个视频切换时，速度很容易被重置，所以该选项默认开启 */
+      blockSetPlaybackRate: true,
+
+      blockSetCurrentTime: false,
+      blockSetVolume: false,
+      allowExperimentFeatures: false,
+      allowExternalCustomConfiguration: false,
+      /* 是否开启音量增益功能 */
+      allowAcousticGain: false,
+      /* 是否开启跨域控制 */
+      allowCrossOriginControl: true,
+      unfoldMenu: false
+    },
+    debug: false
+  }
+});
+
+async function initUiConfigManager () {
+  const isUiConfigPage = location.href.indexOf('h5player.anzz.top/tools/json-editor') > -1;
+  const isUiConfigMode = location.href.indexOf('saveHandlerName=saveH5PlayerConfig') > -1;
+  if (!isUiConfigPage || !isUiConfigMode) return
+
+  function init (pageWindow) {
+    const config = JSON.parse(JSON.stringify(configManager.getConfObj()));
+    if (Array.isArray(config.hotkeys)) {
+      /* 给hotkeys的各自项添加disabled选项，以便在界面侧可以快速禁用或启用某个项 */
+      config.hotkeys.forEach(item => {
+        if (item.disabled === undefined) {
+          item.disabled = false;
+        }
+      });
+    }
+
+    pageWindow.jsonEditor.set(config);
+
+    // pageWindow.jsonEditor.collapseAll()
+    pageWindow.jsonEditor.expandAll();
+
+    pageWindow.saveH5PlayerConfig = function (editor) {
+      try {
+        const newConfig = editor.get();
+        configManager.setGlobalStorageByObj(newConfig);
+        alert('配置已更新');
+      } catch (e) {
+        alert(`配置格式异常，保存失败：${e}`);
+      }
+    };
+  }
+
+  let checkCount = 0;
+  function checkJSONEditor (pageWindow) {
+    if (!pageWindow.JSONEditor) {
+      if (checkCount < 30) {
+        setTimeout(() => {
+          checkCount++;
+          checkJSONEditor(pageWindow);
+        }, 200);
+      }
+
+      return
+    }
+
+    init(pageWindow);
+  }
+
+  const pageWindow = await getPageWindow();
+
+  if (!pageWindow) {
+    return
+  }
+
+  checkJSONEditor(pageWindow);
+}
+initUiConfigManager();
 
 /* 保存重要的原始函数，防止被外部脚本污染 */
 const originalMethods = {
@@ -3540,181 +3869,6 @@ const monkeyMsg = {
   }
 };
 
-/* 当前用到的快捷键 */
-const hasUseKey = {
-  keyCodeList: [13, 16, 17, 18, 27, 32, 37, 38, 39, 40, 49, 50, 51, 52, 67, 68, 69, 70, 73, 74, 75, 77, 78, 79, 80, 81, 82, 83, 84, 85, 87, 88, 89, 90, 97, 98, 99, 100, 220],
-  keyList: ['enter', 'shift', 'control', 'alt', 'escape', ' ', 'arrowleft', 'arrowright', 'arrowup', 'arrowdown', '1', '2', '3', '4', 'c', 'd', 'e', 'f', 'i', 'j', 'k', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'w', 'x', 'y', 'z', '\\', '|'],
-  keyMap: {
-    enter: 13,
-    shift: 16,
-    ctrl: 17,
-    alt: 18,
-    esc: 27,
-    space: 32,
-    '←': 37,
-    '↑': 38,
-    '→': 39,
-    '↓': 40,
-    1: 49,
-    2: 50,
-    3: 51,
-    4: 52,
-    c: 67,
-    d: 68,
-    e: 69,
-    f: 70,
-    i: 73,
-    j: 74,
-    k: 75,
-    m: 77,
-    n: 78,
-    o: 79,
-    p: 80,
-    q: 81,
-    r: 82,
-    s: 83,
-    t: 84,
-    u: 85,
-    w: 87,
-    x: 88,
-    y: 89,
-    z: 90,
-    pad1: 97,
-    pad2: 98,
-    pad3: 99,
-    pad4: 100,
-    '\\': 220
-  }
-};
-
-/**
- * 判断当前按键是否注册为需要用的按键
- * 用于减少对其它键位的干扰
- */
-function isRegisterKey (event) {
-  const keyCode = event.keyCode;
-  const key = event.key.toLowerCase();
-  return hasUseKey.keyCodeList.includes(keyCode) ||
-    hasUseKey.keyList.includes(key)
-}
-
-/**
- * 由于tampermonkey对window对象进行了封装，我们实际访问到的window并非页面真实的window
- * 这就导致了如果我们需要将某些对象挂载到页面的window进行调试的时候就无法挂载了
- * 所以必须使用特殊手段才能访问到页面真实的window对象，于是就有了下面这个函数
- * @returns {Promise<void>}
- */
-async function getPageWindow () {
-  return new Promise(function (resolve, reject) {
-    if (window._pageWindow) {
-      return resolve(window._pageWindow)
-    }
-
-    /* 尝试通过同步的方式获取pageWindow */
-    try {
-      const pageWin = getPageWindowSync();
-      if (pageWin && pageWin.document && pageWin.XMLHttpRequest) {
-        window._pageWindow = pageWin;
-        resolve(pageWin);
-        return pageWin
-      }
-    } catch (e) {}
-
-    /* 下面异步获取pagewindow的方法在最新的chrome浏览器里已失效 */
-
-    const listenEventList = ['load', 'mousemove', 'scroll', 'get-page-window-event'];
-
-    function getWin (event) {
-      window._pageWindow = this;
-      // debug.log('getPageWindow succeed', event)
-      listenEventList.forEach(eventType => {
-        window.removeEventListener(eventType, getWin, true);
-      });
-      resolve(window._pageWindow);
-    }
-
-    listenEventList.forEach(eventType => {
-      window.addEventListener(eventType, getWin, true);
-    });
-
-    /* 自行派发事件以便用最短的时间获得pageWindow对象 */
-    window.dispatchEvent(new window.Event('get-page-window-event'));
-  })
-}
-getPageWindow();
-
-/**
- * 通过同步的方式获取pageWindow
- * 注意同步获取的方式需要将脚本写入head，部分网站由于安全策略会导致写入失败，而无法正常获取
- * @returns {*}
- */
-function getPageWindowSync (rawFunction) {
-  if (window.unsafeWindow) return window.unsafeWindow
-  if (document._win_) return document._win_
-
-  try {
-    rawFunction = rawFunction || window.__rawFunction__ || Function.prototype.constructor;
-    // return rawFunction('return window')()
-    // Function('return (function(){}.constructor("return this")());')
-    return rawFunction('return (function(){}.constructor("var getPageWindowSync=1; return this")());')()
-  } catch (e) {
-    console.error('getPageWindowSync error', e);
-
-    const head = document.head || document.querySelector('head');
-    const script = document.createElement('script');
-    script.appendChild(document.createTextNode('document._win_ = window'));
-    head.appendChild(script);
-
-    return document._win_
-  }
-}
-
-function openInTab (url, opts, referer) {
-  if (referer) {
-    const urlObj = parseURL(url);
-    if (!urlObj.params.referer) {
-      urlObj.params.referer = encodeURIComponent(window.location.href);
-      url = stringifyToUrl(urlObj);
-    }
-  }
-
-  if (window.GM_openInTab) {
-    window.GM_openInTab(url, opts || {
-      active: true,
-      insert: true,
-      setParent: true
-    });
-  }
-}
-
-/* 确保数字为正数 */
-function numUp (num) {
-  if (typeof num === 'number' && num < 0) {
-    num = Math.abs(num);
-  }
-  return num
-}
-
-/* 确保数字为负数 */
-function numDown (num) {
-  if (typeof num === 'number' && num > 0) {
-    num = -num;
-  }
-  return num
-}
-
-function isMediaElement (element) {
-  return element && (element instanceof HTMLMediaElement || element.HTMLMediaElement || element.HTMLVideoElement || element.HTMLAudioElement)
-}
-
-function isVideoElement (element) {
-  return element && (element instanceof HTMLVideoElement || element.HTMLVideoElement)
-}
-
-function isAudioElement (element) {
-  return element && (element instanceof HTMLAudioElement || element.HTMLAudioElement)
-}
-
 /*!
  * @name         crossTabCtl.js
  * @description  跨Tab控制脚本逻辑
@@ -4544,6 +4698,14 @@ let monkeyMenuList = [
     disable: !i18n.language().includes('zh'),
     fn: () => {
       openInTab('https://hello-ai.anzz.top/');
+    }
+  },
+  {
+    title: i18n.t('globalSetting'),
+    disable: !i18n.language().includes('zh'),
+    fn: () => {
+      // openInTab(`https://h5player.anzz.top/tools/json-editor/index.html?mode=code&referrer=${encodeURIComponent(window.location.href)}`)
+      openInTab('https://h5player.anzz.top/tools/json-editor/index.html?mode=tree&saveHandlerName=saveH5PlayerConfig&expandAll=true&json={}');
     }
   },
   {

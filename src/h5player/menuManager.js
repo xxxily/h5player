@@ -58,6 +58,14 @@ let monkeyMenuList = [
     }
   },
   {
+    title: i18n.t('globalSetting'),
+    disable: !i18n.language().includes('zh'),
+    fn: () => {
+      // openInTab(`https://h5player.anzz.top/tools/json-editor/index.html?mode=code&referrer=${encodeURIComponent(window.location.href)}`)
+      openInTab('https://h5player.anzz.top/tools/json-editor/index.html?mode=tree&saveHandlerName=saveH5PlayerConfig&expandAll=true&json={}')
+    }
+  },
+  {
     title: `${configManager.get('enhance.unfoldMenu') ? i18n.t('foldMenu') : i18n.t('unfoldMenu')} 「${i18n.t('globalSetting')}」`,
     fn: () => {
       const confirm = window.confirm(configManager.get('enhance.unfoldMenu') ? i18n.t('foldMenu') : i18n.t('unfoldMenu'))
