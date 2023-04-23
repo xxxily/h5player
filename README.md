@@ -180,6 +180,7 @@
 | [ChatBot](https://chatbot.theb.ai/) | 免费，无广告，可畅快使用 | [需科学上网](https://hello-ai.anzz.top/home/airport.html) |
 | [Phind](https://www.phind.com/) | 号称基于GPT4.0的搜索引擎 | [需科学上网](https://hello-ai.anzz.top/home/airport.html) |
 | [Poe](https://poe.com/) | 支持多个不同类型的AI | [需科学上网](https://hello-ai.anzz.top/home/airport.html) 需注册账号 |
+| [Hello-AI GPT](https://chat.in.anzz.top/) | HelloAI用户优享，极速对话 | [需自备ApiKey](https://hello-ai.anzz.top/home/buy.html) 无需科学上网 |
 | [ChatBotUI](https://www.chatbotui.com/zh) | GitHub开源高赞应用 | [需自备ApiKey](https://hello-ai.anzz.top/home/buy.html) 无需科学上网 |
 | [YakGPT](https://yakgpt.vercel.app/) | GitHub开源高赞应用 | [需自备ApiKey](https://hello-ai.anzz.top/home/buy.html) [需科学上网](https://hello-ai.anzz.top/home/airport.html) |
 | [PizzaGPT](https://www.pizzagpt.it/) | 意大利公益GPT,卡慢，可作为备用站 | [需科学上网](https://hello-ai.anzz.top/home/airport.html) |
