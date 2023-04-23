@@ -94,7 +94,8 @@ const crossTabCtl = {
   crossTabKeydownEvent (event) {
     const t = crossTabCtl
     /* 处于可编辑元素中不执行任何快捷键 */
-    if (isEditableTarget(event.composedPath()[0] || event.target)) return
+    const target = event.composedPath ? event.composedPath()[0] || event.target : event.target
+    if (isEditableTarget(target)) return
     if (t.isNeedSendCrossTabCtlEvent() && isRegisterKey(event) && !t.excludeShortcuts(event)) {
       // 阻止事件冒泡和默认事件
       event.stopPropagation()
