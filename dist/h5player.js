@@ -6809,13 +6809,13 @@ const h5Player = {
 
       backupStyle = parentNode.getAttribute('style-backup') || '';
       if (!backupStyle) {
-        let backupSty = defStyle || 'style-backup:none';
+        let backupSty = defStyle || 'style-backup: none';
         const backupStyObj = inlineStyleToObj(backupSty);
 
         /**
-       * 修复因为缓存时机获取到错误样式的问题
-       * 例如在：https://www.xuetangx.com/
-       */
+         * 修复因为缓存时机获取到错误样式的问题
+         * 例如在：https://www.xuetangx.com/
+         */
         if (backupStyObj.opacity === '0') {
           backupStyObj.opacity = '1';
         }
@@ -6827,6 +6827,11 @@ const h5Player = {
 
         parentNode.setAttribute('style-backup', backupSty);
         backupStyle = defStyle;
+      } else {
+        /* 如果defStyle被外部修改了，则需要更新备份样式 */
+        if (defStyle && !defStyle.includes('style-backup')) {
+          backupStyle = defStyle;
+        }
       }
 
       const newStyleArr = backupStyle.split(';');
