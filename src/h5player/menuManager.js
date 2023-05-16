@@ -54,7 +54,15 @@ let monkeyMenuList = [
     title: i18n.t('recommend'),
     disable: !i18n.language().includes('zh'),
     fn: () => {
-      openInTab('https://hello-ai.anzz.top/')
+      function randomZeroOrOne () {
+        return Math.floor(Math.random() * 2)
+      }
+
+      if (randomZeroOrOne()) {
+        openInTab('https://hello-ai.anzz.top/home/')
+      } else {
+        openInTab('https://github.com/xxxily/hello-ai')
+      }
     }
   },
   {
