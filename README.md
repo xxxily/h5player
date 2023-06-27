@@ -12,11 +12,10 @@
 
 | 网站 | 描述 | 备注 |
 | :---- | :---- | :---- |
-| [公益ChatGPT 01](https://chat.fed.qiweioa.cn) | 免费，可畅快使用（无连续对话） | 暂无需科学上网 |
+| [公益ChatGPT 01](https://free.anzz.top/) | 每天100次免费问答，可畅快使用 | [需魔法上网](https://github.com/xxxily/hello-ai/blob/main/home/airport.md) |
 | [公益ChatGPT 02](https://gpt.anzz.top/) | 每天100次免费问答，可畅快使用 | [需科学上网](https://hello-ai.anzz.top/home/airport.html) |
 | [公益ChatGPT 03](https://gpt.in.anzz.top/) | 每天100次免费问答，可畅快使用 | [需科学上网](https://hello-ai.anzz.top/home/airport.html) |
 | [公益ChatGPT 04](https://chat.in.anzz.top/) | 每天100次免费问答，可畅快使用 | [需魔法上网](https://github.com/xxxily/hello-ai/blob/main/home/airport.md) |
-| [公益ChatGPT 05](https://free.anzz.top/) | 每天100次免费问答，可畅快使用 | [需魔法上网](https://github.com/xxxily/hello-ai/blob/main/home/airport.md) |
 
 ## ChatGPT账号+ApiKey购买
 

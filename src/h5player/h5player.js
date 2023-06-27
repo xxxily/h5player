@@ -523,6 +523,16 @@ const h5Player = {
     return Date.now() - this.playbackRateInfo.lockTimeout < 0
   },
 
+  /* 解决高低倍速频繁切换后，音画不同步的问题 */
+  fixPlaybackRate: function (oldPlaybackRate) {
+    const t = this
+    const curPlaybackRate = t.getPlaybackRate()
+
+    if (Math.abs(curPlaybackRate - oldPlaybackRate) > 1) {
+      t.setCurrentTimeUp(0.1, true)
+    }
+  },
+
   /* 设置播放速度 */
   setPlaybackRate: function (num, notips, duplicate) {
     const t = this
@@ -539,6 +549,8 @@ const h5Player = {
     }
 
     if (!player) return
+
+    const oldPlaybackRate = t.getPlaybackRate()
 
     let curPlaybackRate
     if (num) {
@@ -584,6 +596,7 @@ const h5Player = {
         }
       })
 
+      t.fixPlaybackRate(oldPlaybackRate)
       return true
     }
 
@@ -658,6 +671,8 @@ const h5Player = {
       /* 600ms时重新触发无效的话，再来个1200ms后触发，如果是1200ms才生效，则调速生效的延迟已经非常明显了 */
       t._setPlaybackRateDuplicate2_ = setTimeout(duplicatePlaybackRate, 1200)
     }
+
+    t.fixPlaybackRate(oldPlaybackRate)
   },
 
   /**
@@ -840,7 +855,7 @@ const h5Player = {
     }
   },
 
-  setCurrentTimeUp (num) {
+  setCurrentTimeUp (num, hideTips) {
     num = Number(numUp(num) || this.skipStep)
 
     if (TCC.doTask('addCurrentTime')) {
@@ -853,7 +868,9 @@ const h5Player = {
         /* 防止外部进度控制逻辑的干扰，所以锁定一段时间 */
         this.lockCurrentTime(500)
 
-        this.tips(i18n.t('tipsMsg.forward') + num + i18n.t('tipsMsg.seconds'))
+        if (!hideTips) {
+          this.tips(i18n.t('tipsMsg.forward') + num + i18n.t('tipsMsg.seconds'))
+        }
       }
     }
   },
