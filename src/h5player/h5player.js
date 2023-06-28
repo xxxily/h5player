@@ -2568,6 +2568,7 @@ async function h5PlayerInit () {
 
     /* 禁止对playbackRate等属性进行锁定 */
     hackDefineProperty()
+    // if (!location.host.includes('bilibili')) {}
 
     /* 禁止对shadowdom使用close模式 */
     hackAttachShadow()

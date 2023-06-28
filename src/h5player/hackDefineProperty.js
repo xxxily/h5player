@@ -1,5 +1,7 @@
 import debug from './debug'
-import hookJs from '../libs/hookJs'
+import { HookJs } from '../libs/hookJs'
+const hookJs = new HookJs(true)
+
 /**
  * 禁止对playbackRate进行锁定
  * 部分播放器会阻止修改playbackRate

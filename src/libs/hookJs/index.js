@@ -42,7 +42,7 @@ const util = {
   }
 }
 
-class HookJs {
+export class HookJs {
   constructor (useProxy) {
     this.useProxy = useProxy || false
     this.hookPropertiesKeyName = '_hookProperties' + Date.now()
