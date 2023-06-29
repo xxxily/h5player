@@ -1,5 +1,7 @@
 import debug from './debug'
-import hookJs from '../libs/hookJs'
+import { HookJs } from '../libs/hookJs'
+const hookJs = new HookJs(true)
+
 /**
  * 禁止对playbackRate进行锁定
  * 部分播放器会阻止修改playbackRate
@@ -15,10 +17,12 @@ function hackDefineProperCore (target, key, option) {
   if (target instanceof HTMLVideoElement) {
     const unLockProperties = ['playbackRate', 'currentTime', 'volume', 'muted']
     if (unLockProperties.includes(key)) {
-      if (!option.configurable) {
+      try {
         debug.log(`禁止对${key}进行锁定`)
         option.configurable = true
         key = key + '_hack'
+      } catch (e) {
+        debug.error(`禁止锁定${key}失败！`, e)
       }
     }
   }

@@ -5,6 +5,8 @@ export default {
   setting: 'Setting',
   hotkeys: 'Hotkeys',
   donate: 'Donate',
+  enableScript: 'enable script',
+  disableScript: 'disable script',
   openCrossOriginFramePage: 'Open cross-domain pages alone',
   disableInitAutoPlay: 'Prohibit autoplay of videos on this site',
   enableInitAutoPlay: 'Allow autoplay videos on this site',

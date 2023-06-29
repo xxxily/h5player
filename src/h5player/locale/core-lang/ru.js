@@ -5,6 +5,8 @@ export default {
   setting: 'установка',
   hotkeys: 'горячие клавиши',
   donate: 'пожертвовать',
+  enableScript: 'включить скрипт',
+  disableScript: 'отключить скрипт',
   openCrossOriginFramePage: 'Открывать только междоменные страницы',
   disableInitAutoPlay: 'Запретить автовоспроизведение видео на этом сайте',
   enableInitAutoPlay: 'Разрешить автоматическое воспроизведение видео на этом сайте',

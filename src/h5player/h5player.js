@@ -523,6 +523,16 @@ const h5Player = {
     return Date.now() - this.playbackRateInfo.lockTimeout < 0
   },
 
+  /* 解决高低倍速频繁切换后，音画不同步的问题 */
+  fixPlaybackRate: function (oldPlaybackRate) {
+    const t = this
+    const curPlaybackRate = t.getPlaybackRate()
+
+    if (Math.abs(curPlaybackRate - oldPlaybackRate) > 1) {
+      t.setCurrentTimeUp(0.1, true)
+    }
+  },
+
   /* 设置播放速度 */
   setPlaybackRate: function (num, notips, duplicate) {
     const t = this
@@ -539,6 +549,8 @@ const h5Player = {
     }
 
     if (!player) return
+
+    const oldPlaybackRate = t.getPlaybackRate()
 
     let curPlaybackRate
     if (num) {
@@ -584,6 +596,7 @@ const h5Player = {
         }
       })
 
+      t.fixPlaybackRate(oldPlaybackRate)
       return true
     }
 
@@ -658,6 +671,8 @@ const h5Player = {
       /* 600ms时重新触发无效的话，再来个1200ms后触发，如果是1200ms才生效，则调速生效的延迟已经非常明显了 */
       t._setPlaybackRateDuplicate2_ = setTimeout(duplicatePlaybackRate, 1200)
     }
+
+    t.fixPlaybackRate(oldPlaybackRate)
   },
 
   /**
@@ -840,7 +855,7 @@ const h5Player = {
     }
   },
 
-  setCurrentTimeUp (num) {
+  setCurrentTimeUp (num, hideTips) {
     num = Number(numUp(num) || this.skipStep)
 
     if (TCC.doTask('addCurrentTime')) {
@@ -853,7 +868,9 @@ const h5Player = {
         /* 防止外部进度控制逻辑的干扰，所以锁定一段时间 */
         this.lockCurrentTime(500)
 
-        this.tips(i18n.t('tipsMsg.forward') + num + i18n.t('tipsMsg.seconds'))
+        if (!hideTips) {
+          this.tips(i18n.t('tipsMsg.forward') + num + i18n.t('tipsMsg.seconds'))
+        }
       }
     }
   },
@@ -1430,13 +1447,13 @@ const h5Player = {
 
       backupStyle = parentNode.getAttribute('style-backup') || ''
       if (!backupStyle) {
-        let backupSty = defStyle || 'style-backup:none'
+        let backupSty = defStyle || 'style-backup: none'
         const backupStyObj = inlineStyleToObj(backupSty)
 
         /**
-       * 修复因为缓存时机获取到错误样式的问题
-       * 例如在：https://www.xuetangx.com/
-       */
+         * 修复因为缓存时机获取到错误样式的问题
+         * 例如在：https://www.xuetangx.com/
+         */
         if (backupStyObj.opacity === '0') {
           backupStyObj.opacity = '1'
         }
@@ -1448,6 +1465,11 @@ const h5Player = {
 
         parentNode.setAttribute('style-backup', backupSty)
         backupStyle = defStyle
+      } else {
+        /* 如果defStyle被外部修改了，则需要更新备份样式 */
+        if (defStyle && !defStyle.includes('style-backup')) {
+          backupStyle = defStyle
+        }
       }
 
       const newStyleArr = backupStyle.split(';')
@@ -1473,7 +1495,7 @@ const h5Player = {
       const newPlayerBox = player.getBoundingClientRect()
       if (Math.abs(newPlayerBox.height - playerBox.height) > 50) {
         parentNode.setAttribute('style', backupStyle)
-      // debug.info('应用新样式后给播放器高宽造成了严重的偏差，样式已被还原：', player, playerBox, newPlayerBox)
+        // debug.info('应用新样式后给播放器高宽造成了严重的偏差，样式已被还原：', player, playerBox, newPlayerBox)
       }
     }
 
@@ -1797,27 +1819,27 @@ const h5Player = {
       t.scale = Number(t.scale)
       switch (key) {
         // shift+X：视频缩小 -0.1
-        case 'x' :
+        case 'x':
           t.setScaleDown()
           break
         // shift+C：视频放大 +0.1
-        case 'c' :
+        case 'c':
           t.setScaleUp()
           break
         // shift+Z：视频恢复正常大小
-        case 'z' :
+        case 'z':
           t.resetTransform()
           break
-        case 'arrowright' :
+        case 'arrowright':
           t.setTranslateRight()
           break
-        case 'arrowleft' :
+        case 'arrowleft':
           t.setTranslateLeft()
           break
-        case 'arrowup' :
+        case 'arrowup':
           t.setTranslateUp()
           break
-        case 'arrowdown' :
+        case 'arrowdown':
           t.setTranslateDown()
           break
       }
@@ -2051,7 +2073,8 @@ const h5Player = {
     const player = t.player()
 
     /* 处于可编辑元素中不执行任何快捷键 */
-    if (isEditableTarget(event.target)) return
+    const target = event.composedPath ? event.composedPath()[0] || event.target : event.target
+    if (isEditableTarget(target)) return
 
     /* 广播按键消息，进行跨域控制 */
     monkeyMsg.send('globalKeydownEvent', event, 0)
@@ -2398,8 +2421,8 @@ const h5Player = {
       const player = t.player()
       if (player) {
         const fakeEvent = newVal.data
-        fakeEvent.stopPropagation = () => {}
-        fakeEvent.preventDefault = () => {}
+        fakeEvent.stopPropagation = () => { }
+        fakeEvent.preventDefault = () => { }
         t.palyerTrigger(player, fakeEvent)
 
         debug.log('已响应跨Tab/跨域按键控制信息：', newVal)
@@ -2485,6 +2508,11 @@ const h5Player = {
       return true
     }
 
+    if (!configManager.get('enable')) {
+      debug.info(`[config][disable][${location.host}] 当前网站已禁用脚本，如要启用脚本，请在菜单里开启`)
+      return true
+    }
+
     if (!global) {
       /* 检测是否存在H5播放器 */
       t.detecH5Player()
@@ -2540,6 +2568,7 @@ async function h5PlayerInit () {
 
     /* 禁止对playbackRate等属性进行锁定 */
     hackDefineProperty()
+    // if (!location.host.includes('bilibili')) {}
 
     /* 禁止对shadowdom使用close模式 */
     hackAttachShadow()

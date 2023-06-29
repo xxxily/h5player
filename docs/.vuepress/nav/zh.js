@@ -1,4 +1,6 @@
 module.exports = [
+  { text: '❤️ Hello-AI ❤️', link: 'https://github.com/xxxily/hello-ai', target: '_blank' },
+  { text: '免费ChatGPT', link: 'https://github.com/xxxily/hello-ai/blob/main/home/FreeChatGPTSiteList.md', target: '_blank' },
   { text: '文档中心', link: '/home/' },
   {
     text: '相关连接',
@@ -22,6 +24,8 @@ module.exports = [
         text: '油猴插件',
         items: [
           { text: 'Tampermonkey（推荐）', link: 'https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo', target: '_blank' },
+          { text: 'Tampermonkey（edge商店）', link: 'https://microsoftedge.microsoft.com/addons/detail/tampermonkey/iikmkjmpaadaobahmlepeloendndfphd', target: '_blank' },
+          { text: 'Tampermonkey（官网下载）', link: 'https://www.tampermonkey.net/index.php?browser=chrome&locale=zh', target: '_blank' },
           { text: 'Tampermonkey（国内站）', link: 'https://www.extfans.com/productivity/dhdgffkkebhmkfjojejmpbldmpobfkfo/', target: '_blank' },
         ]
       },

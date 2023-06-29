@@ -42,7 +42,7 @@ const util = {
   }
 }
 
-class HookJs {
+export class HookJs {
   constructor (useProxy) {
     this.useProxy = useProxy || false
     this.hookPropertiesKeyName = '_hookProperties' + Date.now()
@@ -235,7 +235,7 @@ class HookJs {
             }
           })
         } catch (err) {
-          // 设置defineProperty的时候出现异常，可能导致hookMethod部分功能确实，也可能不受影响
+          // 设置defineProperty的时候出现异常，可能导致hookMethod部分功能缺失，也可能不受影响
           util.debug.log(`[proxyMethodcGenerator] hookMethod defineProperty abnormal.  hookMethod:${methodName}, definePropertyName:${keyName}`, err)
         }
       })
@@ -335,6 +335,18 @@ class HookJs {
    * @returns {boolean}
    */
   hook (parentObj, hookMethods, fn, type, classHook, context, proxyHandler) {
+    /* 支持对象形式的传参 */
+    const opts = arguments[0]
+    if (util.isObj(opts) && opts.parentObj && opts.hookMethods) {
+      parentObj = opts.parentObj
+      hookMethods = opts.hookMethods
+      fn = opts.fn
+      type = opts.type
+      classHook = opts.classHook
+      context = opts.context
+      proxyHandler = opts.proxyHandler
+    }
+
     classHook = toBoolean(classHook)
     type = type || 'before'
 
@@ -458,6 +470,19 @@ class HookJs {
         }
       }
     })
+  }
+
+  _hook (args, type) {
+    const t = this
+    return function (obj, hookMethods, fn, classHook, context, proxyHandler) {
+      const opts = args[0]
+      if (util.isObj(opts) && opts.parentObj && opts.hookMethods) {
+        opts.type = type
+      } else {
+        // args[3] = type
+      }
+      return t.hook.apply(t, args)
+    }
   }
 
   /* 源函数运行前的hook */

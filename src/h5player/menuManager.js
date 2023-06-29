@@ -49,6 +49,30 @@ let monkeyMenuList = [
       openInTab('https://h5player.anzz.top/#%E8%B5%9E')
     }
   },
+  /* 推广位，只允许推荐有用的东西 */
+  {
+    title: i18n.t('recommend'),
+    disable: !i18n.language().includes('zh'),
+    fn: () => {
+      function randomZeroOrOne () {
+        return Math.floor(Math.random() * 2)
+      }
+
+      if (randomZeroOrOne()) {
+        openInTab('https://hello-ai.anzz.top/home/')
+      } else {
+        openInTab('https://github.com/xxxily/hello-ai')
+      }
+    }
+  },
+  {
+    title: i18n.t('globalSetting'),
+    disable: !i18n.language().includes('zh'),
+    fn: () => {
+      // openInTab(`https://h5player.anzz.top/tools/json-editor/index.html?mode=code&referrer=${encodeURIComponent(window.location.href)}`)
+      openInTab('https://h5player.anzz.top/tools/json-editor/index.html?mode=tree&saveHandlerName=saveH5PlayerConfig&expandAll=true&json={}')
+    }
+  },
   {
     title: `${configManager.get('enhance.unfoldMenu') ? i18n.t('foldMenu') : i18n.t('unfoldMenu')} 「${i18n.t('globalSetting')}」`,
     fn: () => {
@@ -65,6 +89,17 @@ let monkeyMenuList = [
     fn: () => {
       openInTab('https://h5player.anzz.top/configure/', null, true)
       window.alert('功能开发中，敬请期待...')
+    }
+  },
+  {
+    title: `${configManager.get('enable') ? i18n.t('disableScript') : i18n.t('enableScript')} 「${i18n.t('localSetting')}」`,
+    disable: !configManager.get('enhance.unfoldMenu'),
+    fn: () => {
+      const confirm = window.confirm(configManager.get('enable') ? i18n.t('disableScript') : i18n.t('enableScript'))
+      if (confirm) {
+        configManager.setLocalStorage('enable', !configManager.get('enable'))
+        window.location.reload()
+      }
     }
   },
   {

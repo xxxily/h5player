@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         HTML5视频播放器增强脚本Mode
+// @name         HTML5视频播放器增强脚本
 // @name:en      HTML5 video player enhanced script
 // @name:zh      HTML5视频播放器增强脚本
 // @name:zh-TW   HTML5視頻播放器增強腳本
@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/sylph520/h5playerMod
 // @homepage     https://github.com/sylph520/h5playerMod
-// @version      3.7.1.1
+// @version      3.7.8
 // @description  slight mod for my own requirements. 视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
 // @description:en  Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
 // @description:zh  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
@@ -18,10 +18,11 @@
 // @description:ko  비디오 향상 스크립트는 Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu 네트워크 디스크, Alibaba 클라우드 디스크와 같은 모든 H5 비디오 웹사이트를 지원합니다. 테드, 인스타그램, 트위터 등 전체 바로 1가기 키 제어, 지원: 배속 재생/가속 재생, 비디오 스크린샷, PIP(Picture-in-Picture), 전체 화면 웹 페이지, 밝기, 채도, 대비, 사용자 정의 구성 향상 및 기타 기능 조정, 쾌적한 온라인 환경 제공 비디오 재생 경험. 비디오 광고, 온라인 자습서/교육 비디오 등을 빨리 감기하는 기능도 있습니다.
 // @description:ru  Сценарий улучшения видео поддерживает все видео-сайты H5, такие как: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, сетевой диск Baidu, облачный диск Alibaba, Тед, инстаграм, твиттер и т.д. Полное управление клавишами быстрого доступа, поддержка: воспроизведение с удвоенной скоростью/ускоренное воспроизведение, скриншоты видео, картинка в картинке, полноэкранные веб-страницы
 // @description:de  Videoverbesserungsskript, unterstützt alle H5-Videowebsites, wie z. ted, instagram, twitter usw. Vollständige Tastenkombinationssteuerung, Unterstützung: Wiedergabe mit doppelter Geschwindigkeit/beschleunigte Wiedergabe, Video-Screenshots, Bild-in-Bild, Vollbild-Webseiten, Anpassung von Helligkeit, Sättigung, Kontrast, benutzerdefinierte Konfigurationsverbesserungen und andere Funktionen
-// @author       ankvps (original author) & sylph520 (Mod)
+// @author       ankvps
 // @icon         https://cdn.jsdelivr.net/gh/xxxily/h5player@master/logo.png
-// @match        www.acfun.cn/v/*
-// @match        https://www.bilibili.com/video/*
+// @match        *://*/*
+// @exclude      *://yiyan.baidu.com/*
+// @exclude      *://*.bing.com/search*
 // @grant        unsafeWindow
 // @grant        GM_addStyle
 // @grant        GM_setValue
@@ -5865,7 +5866,7 @@ const h5Player = {
 
   /* 提升播放速率 */
   setPlaybackRateUp (num) {
-    num = numUp(num) || 0.5;
+    num = numUp(num) || 0.1;
     if (this.player()) {
       this.unLockPlaybackRate();
       this.setPlaybackRate(this.player().playbackRate + num);
@@ -5877,7 +5878,7 @@ const h5Player = {
 
   /* 降低播放速率 */
   setPlaybackRateDown (num) {
-    num = numDown(num) || -0.5;
+    num = numDown(num) || -0.1;
     if (this.player()) {
       this.unLockPlaybackRate();
       this.setPlaybackRate(this.player().playbackRate + num);

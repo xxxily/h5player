@@ -6,6 +6,24 @@
 - 项目地址：[https://github.com/xxxily/h5player](https://github.com/xxxily/h5player)  
 - 脚本安装地址：[https://greasyfork.org/scripts/381682](https://greasyfork.org/scripts/381682)
 
+<br />
+
+## ❤️ ChatGPT推广 ❤️
+
+| 网站 | 描述 | 备注 |
+| :---- | :---- | :---- |
+| [公益ChatGPT 01](https://free.anzz.top/) | 每天100次免费问答，可畅快使用 | [需魔法上网](https://github.com/xxxily/hello-ai/blob/main/home/airport.md) |
+| [公益ChatGPT 02](https://gpt.anzz.top/) | 每天100次免费问答，可畅快使用 | [需科学上网](https://hello-ai.anzz.top/home/airport.html) |
+| [公益ChatGPT 03](https://gpt.in.anzz.top/) | 每天100次免费问答，可畅快使用 | [需科学上网](https://hello-ai.anzz.top/home/airport.html) |
+| [公益ChatGPT 04](https://chat.in.anzz.top/) | 每天100次免费问答，可畅快使用 | [需魔法上网](https://github.com/xxxily/hello-ai/blob/main/home/airport.md) |
+
+## ChatGPT账号+ApiKey购买
+
+商品地址：[https://hello-ai.anzz.top/home/buy.html](https://hello-ai.anzz.top/home/buy.html)  
+备用地址：[https://kdocs.cn/l/cbjuzdPtzZ1W](https://kdocs.cn/l/cbjuzdPtzZ1W)  
+
+<br />
+
 ## 简介
 
 视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
@@ -29,12 +47,12 @@
 ## 交流群
 
 <br />
-<img src="/assets/img/WeChat.jpg?t=2022.11.21" width=280 />
+
+| 加我拉你入群<br/>（注明来自：[h5player]） | Telegram群组<br/>（<a href="https://t.me/h5player" target="_blank">直接入群</a>） | Telegram AI群组<br/>（<a href="https://t.me/auto_gpt_ai" target="_blank">直接入群</a>） |
+| :----: | :----: | :----: |
+| <img src="https://h5player.anzz.top/assets/img/WeChat2.png?t=2022.11.21" width=280 /> |  <img src="https://h5player.anzz.top/assets/img/tg.jpg?t=2022.11.21" width=280 /> | <img src="https://h5player.anzz.top/assets/img/ai_tg_qun.jpg?t=2022.11.21" width="280"/> |
+
 <br />
-<p>添加微信注明：[h5player] 即会拉你入群</p>
-<p>
-  TG群组：<a href="https://t.me/h5player" target="_blank">https://t.me/h5player</a>
-</p>
   
 ## 快捷键列表
 
@@ -152,16 +170,15 @@
 - [https://github.com/xxxily/h5player/blob/master/changeLog.md](https://github.com/xxxily/h5player/blob/master/changeLog.md)
 
 ## 支持作者
-
-如果我的努力给你带来了便利，请不要吝啬你的赞赏
-
+<br />
+<details>
+  <summary>如果我的努力给你带来了便利，请不要吝啬你的赞赏</summary>
 <p>
   <a href="https://h5player.anzz.top" target="_blank">
   <img src="https://h5player.anzz.top/assets/img/donate.png" width=480 alt="如果我的努力给你带来了便利，请不要吝啬你的赞赏" />
   </a>
 </p>
-
-<br />
+</details>
 <br />
 
 <Vssue :title="$title" />

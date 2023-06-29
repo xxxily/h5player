@@ -91,7 +91,7 @@ function loadCSSText (cssText, id, insetTo) {
  */
 function isEditableTarget (target) {
   const isEditable = target.getAttribute && target.getAttribute('contenteditable') === 'true'
-  const isInputDom = /INPUT|TEXTAREA|SELECT/.test(target.nodeName)
+  const isInputDom = /INPUT|TEXTAREA|SELECT|LABEL/.test(target.nodeName)
   return isEditable || isInputDom
 }
 
