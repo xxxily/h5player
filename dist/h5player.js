@@ -18,7 +18,7 @@
 // @description:ko  비디오 향상 스크립트는 Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu 네트워크 디스크, Alibaba 클라우드 디스크와 같은 모든 H5 비디오 웹사이트를 지원합니다. 테드, 인스타그램, 트위터 등 전체 바로 1가기 키 제어, 지원: 배속 재생/가속 재생, 비디오 스크린샷, PIP(Picture-in-Picture), 전체 화면 웹 페이지, 밝기, 채도, 대비, 사용자 정의 구성 향상 및 기타 기능 조정, 쾌적한 온라인 환경 제공 비디오 재생 경험. 비디오 광고, 온라인 자습서/교육 비디오 등을 빨리 감기하는 기능도 있습니다.
 // @description:ru  Сценарий улучшения видео поддерживает все видео-сайты H5, такие как: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, сетевой диск Baidu, облачный диск Alibaba, Тед, инстаграм, твиттер и т.д. Полное управление клавишами быстрого доступа, поддержка: воспроизведение с удвоенной скоростью/ускоренное воспроизведение, скриншоты видео, картинка в картинке, полноэкранные веб-страницы
 // @description:de  Videoverbesserungsskript, unterstützt alle H5-Videowebsites, wie z. ted, instagram, twitter usw. Vollständige Tastenkombinationssteuerung, Unterstützung: Wiedergabe mit doppelter Geschwindigkeit/beschleunigte Wiedergabe, Video-Screenshots, Bild-in-Bild, Vollbild-Webseiten, Anpassung von Helligkeit, Sättigung, Kontrast, benutzerdefinierte Konfigurationsverbesserungen und andere Funktionen
-// @author       ankvps
+// @author       ankvps & sylph
 // @icon         https://cdn.jsdelivr.net/gh/xxxily/h5player@master/logo.png
 // @match        https://www.acfun.cn/v/*
 // @match        https://www.bilibili.com/video/*
@@ -1385,12 +1385,12 @@ const defConfig = {
       command: 'switchPlayStatus'
     },
     {
-      desc: '减速播放 -0.1',
+      desc: '减速播放 -0.5',
       key: 'x',
       command: 'setPlaybackRateDown'
     },
     {
-      desc: '加速播放 +0.1',
+      desc: '加速播放 +0.5',
       key: 'c',
       command: 'setPlaybackRateUp'
     },
@@ -5871,7 +5871,7 @@ const h5Player = {
 
   /* 提升播放速率 */
   setPlaybackRateUp (num) {
-    num = numUp(num) || 0.1;
+    num = numUp(num) || 0.5;
     if (this.player()) {
       this.unLockPlaybackRate();
       this.setPlaybackRate(this.player().playbackRate + num);
@@ -5883,7 +5883,7 @@ const h5Player = {
 
   /* 降低播放速率 */
   setPlaybackRateDown (num) {
-    num = numDown(num) || -0.1;
+    num = numDown(num) || -0.5;
     if (this.player()) {
       this.unLockPlaybackRate();
       this.setPlaybackRate(this.player().playbackRate + num);
@@ -7018,11 +7018,11 @@ const h5Player = {
       t.switchPlayStatus();
     }
 
-    // 按键X：减速播放 -0.1
+    // 按键X：减速播放 -0.5
     if (keyCode === 88) {
       t.setPlaybackRateDown();
     }
-    // 按键C：加速播放 +0.1
+    // 按键C：加速播放 +0.5
     if (keyCode === 67) {
       t.setPlaybackRateUp();
     }
