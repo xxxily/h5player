@@ -27,7 +27,7 @@
 // @match        https://www.bilibili.com/bangumi/play/*
 // @match        https://pan.quark.cn/list*
 // @match        https://www.youtube.com/*
-// @match        https://www.aliyundrive.com/drive/*
+// @match        https://www.aliyundrive.com/drive/*/*
 // @exclude      *://yiyan.baidu.com/*
 // @exclude      *://*.bing.com/search*
 // @grant        unsafeWindow
