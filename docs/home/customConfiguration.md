@@ -164,12 +164,14 @@ const customConfiguration = {
     {
       desc: '减速播放 -0.1',
       key: 'x',
-      command: 'setPlaybackRateDown'
+      command: 'setPlaybackRateDown',
+      args: [-0.1]
     },
     {
       desc: '加速播放 +0.1',
       key: 'c',
-      command: 'setPlaybackRateUp'
+      command: 'setPlaybackRateUp',
+      args: [0.1]
     },
     {
       desc: '正常速度播放',
