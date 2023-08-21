@@ -683,7 +683,7 @@ const h5Player = {
    */
   setPlaybackRatePlus: function (num) {
     num = Number(num)
-    if (!num || !Number.isInteger(num)) {
+    if (!num || Number.isNaN(num)) {
       return false
     }
 
