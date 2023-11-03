@@ -4756,7 +4756,8 @@ let monkeyMenuList = [
   /* 推广位，只允许推荐有用的东西 */
   {
     title: i18n.t('recommend'),
-    disable: !i18n.language().includes('zh'),
+    // disable: !i18n.language().includes('zh'),
+    disable: true,
     fn: () => {
       function randomZeroOrOne () {
         return Math.floor(Math.random() * 2)
