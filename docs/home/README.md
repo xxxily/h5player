@@ -8,22 +8,6 @@
 
 <br />
 
-## ❤️ ChatGPT推广 ❤️
-
-| 网站 | 描述 | 备注 |
-| :---- | :---- | :---- |
-| [公益ChatGPT 01](https://free.anzz.top/) | 每天100次免费问答，可畅快使用 | [需魔法上网](https://github.com/xxxily/hello-ai/blob/main/home/airport.md) |
-| [公益ChatGPT 02](https://gpt.anzz.top/) | 每天100次免费问答，可畅快使用 | [需科学上网](https://hello-ai.anzz.top/home/airport.html) |
-| [公益ChatGPT 03](https://gpt.in.anzz.top/) | 每天100次免费问答，可畅快使用 | [需科学上网](https://hello-ai.anzz.top/home/airport.html) |
-| [公益ChatGPT 04](https://chat.in.anzz.top/) | 每天100次免费问答，可畅快使用 | [需魔法上网](https://github.com/xxxily/hello-ai/blob/main/home/airport.md) |
-
-## ChatGPT账号+ApiKey购买
-
-商品地址：[https://hello-ai.anzz.top/home/buy.html](https://hello-ai.anzz.top/home/buy.html)  
-备用地址：[https://kdocs.cn/l/cbjuzdPtzZ1W](https://kdocs.cn/l/cbjuzdPtzZ1W)  
-
-<br />
-
 ## 简介
 
 视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
@@ -170,6 +154,7 @@
 - [https://github.com/xxxily/h5player/blob/master/changeLog.md](https://github.com/xxxily/h5player/blob/master/changeLog.md)
 
 ## 支持作者
+
 <br />
 <details>
   <summary>如果我的努力给你带来了便利，请不要吝啬你的赞赏</summary>

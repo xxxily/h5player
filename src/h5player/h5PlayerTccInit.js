@@ -32,6 +32,8 @@ const taskConf = {
     // pause: ['.player-pause', '.player-pause02'], //多种情况对应不同的选择器时，可使用数组，插件会对选择器进行遍历，知道找到可用的为止
     pause: '.player-pause',
     play: '.player-play',
+    afterPlay: function (h5Player, taskConf) {},
+    afterPause: function (h5Player, taskConf) {},
     switchPlayStatus: '.player-play',
     playbackRate: function () {},
     // playbackRate: true, // 当给某个功能设置true时，表示使用网站自身的能力控制视频，而忽略插件的能力
@@ -71,6 +73,64 @@ const taskConf = {
     webFullScreen: 'button.ytp-size-button',
     fullScreen: 'button.ytp-fullscreen-button',
     next: '.ytp-next-button',
+    afterPlay: function (h5Player, taskConf) {
+      /* 解决快捷键暂停、播放后一直有loading图标滞留的问题 */
+      const player = h5Player.player()
+      const playerwWrap = player.closest('.html5-video-player')
+
+      if (!playerwWrap) {
+        return
+      }
+
+      playerwWrap.classList.add('ytp-autohide', 'playing-mode')
+
+      if (!playerwWrap.hasBindCustomEvents) {
+        const mousemoveHander = (event) => {
+          playerwWrap.classList.remove('ytp-autohide', 'ytp-hide-info-bar')
+
+          clearTimeout(playerwWrap.mousemoveTimer)
+          playerwWrap.mousemoveTimer = setTimeout(() => {
+            playerwWrap.classList.add('ytp-autohide', 'ytp-hide-info-bar')
+          }, 1000 * 2)
+        }
+
+        const clickHander = (event) => {
+          h5Player.switchPlayStatus()
+          mousemoveHander(event)
+        }
+
+        player.addEventListener('mousemove', mousemoveHander)
+        player.addEventListener('click', clickHander)
+
+        playerwWrap.hasBindCustomEvents = true
+      }
+
+      const spinner = playerwWrap.querySelector('.ytp-spinner')
+
+      if (spinner) {
+        const hiddenSpinner = () => { spinner && (spinner.style.visibility = 'hidden') }
+        const visibleSpinner = () => { spinner && (spinner.style.visibility = 'visible') }
+
+        /* 点击播放时立即隐藏spinner */
+        hiddenSpinner()
+
+        clearTimeout(playerwWrap.spinnerTimer)
+        playerwWrap.spinnerTimer = setTimeout(() => {
+          /* 1秒后将spinner设置为none，并且恢复Spinner的可见状态，以便其它逻辑仍能正确控制spinner的显隐状态 */
+          spinner.style.display = 'none'
+          visibleSpinner()
+        }, 1000)
+      }
+    },
+    afterPause: function (h5Player, taskConf) {
+      const player = h5Player.player()
+      const playerwWrap = player.closest('.html5-video-player')
+
+      if (!playerwWrap) return
+
+      playerwWrap.classList.remove('ytp-autohide', 'playing-mode')
+      playerwWrap.classList.add('paused-mode')
+    },
     shortcuts: {
       register: [
         'escape'

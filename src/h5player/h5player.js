@@ -1357,6 +1357,8 @@ const h5Player = {
 
         t.tips(i18n.t('tipsMsg.play'))
       }
+
+      TCC.doTask('afterPlay')
     } else {
       if (TCC.doTask('pause')) {
         // debug.log('[TCC][pause]', 'suc')
@@ -1377,6 +1379,8 @@ const h5Player = {
 
         t.tips(i18n.t('tipsMsg.pause'))
       }
+
+      TCC.doTask('afterPause')
     }
   },
 
