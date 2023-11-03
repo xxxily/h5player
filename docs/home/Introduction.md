@@ -32,9 +32,9 @@
 
 <br />
 
-| 加我拉你入群<br/>（注明来自：[h5player]） | Telegram群组<br/>（<a href="https://t.me/h5player" target="_blank">直接入群</a>） | Telegram AI群组<br/>（<a href="https://t.me/auto_gpt_ai" target="_blank">直接入群</a>） |
-| :----: | :----: | :----: |
-| <img src="https://h5player.anzz.top/assets/img/WeChat2.png?t=2022.11.21" width=280 /> |  <img src="https://h5player.anzz.top/assets/img/tg.jpg?t=2022.11.21" width=280 /> | <img src="https://h5player.anzz.top/assets/img/ai_tg_qun.jpg?t=2022.11.21" width="280"/> |
+| 加我拉你入群<br/>（注明来自：[h5player]） | Telegram群组<br/>（<a href="https://t.me/h5player" target="_blank">直接入群</a>） |
+| :----: | :----: |
+| <img src="https://h5player.anzz.top/assets/img/WeChat2.png?t=2022.11.21" width=280 /> |  <img src="https://h5player.anzz.top/assets/img/tg.jpg?t=2022.11.21" width=280 /> |
 
 <br />
   
@@ -154,6 +154,8 @@
 - [https://github.com/xxxily/h5player/blob/master/changeLog.md](https://github.com/xxxily/h5player/blob/master/changeLog.md)
 
 ## 支持作者
+
+
 <br />
 <details>
   <summary>如果我的努力给你带来了便利，请不要吝啬你的赞赏</summary>
