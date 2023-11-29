@@ -83,6 +83,10 @@ const taskConf = {
       }
 
       playerwWrap.classList.add('ytp-autohide', 'playing-mode')
+      clearTimeout(playerwWrap.autohideTimer)
+      playerwWrap.autohideTimer = setTimeout(() => {
+        playerwWrap.classList.add('ytp-autohide', 'playing-mode')
+      }, 1000)
 
       if (!playerwWrap.hasBindCustomEvents) {
         const mousemoveHander = (event) => {
@@ -90,7 +94,9 @@ const taskConf = {
 
           clearTimeout(playerwWrap.mousemoveTimer)
           playerwWrap.mousemoveTimer = setTimeout(() => {
-            playerwWrap.classList.add('ytp-autohide', 'ytp-hide-info-bar')
+            if (!player.paused) {
+              playerwWrap.classList.add('ytp-autohide', 'ytp-hide-info-bar')
+            }
           }, 1000 * 2)
         }
 
@@ -130,6 +136,7 @@ const taskConf = {
 
       playerwWrap.classList.remove('ytp-autohide', 'playing-mode')
       playerwWrap.classList.add('paused-mode')
+      clearTimeout(playerwWrap.autohideTimer)
     },
     shortcuts: {
       register: [
