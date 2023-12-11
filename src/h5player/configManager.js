@@ -10,6 +10,9 @@ const configManager = new ConfigManager({
       playbackRate: 1,
       volume: 1,
 
+      /* 最后一次设定的播放速度，默认1.5 */
+      lastPlaybackRate: 1.5,
+
       /* 是否允许存储播放进度 */
       allowRestorePlayProgress: {
 

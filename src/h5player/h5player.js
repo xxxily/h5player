@@ -87,7 +87,7 @@ const h5Player = {
 
   playbackRate: configManager.get('media.playbackRate'),
   volume: configManager.get('media.volume'),
-  lastPlaybackRate: 1,
+  lastPlaybackRate: configManager.get('media.lastPlaybackRate'),
   /* 快进快退步长 */
   skipStep: 5,
 
@@ -718,6 +718,7 @@ const h5Player = {
     const playbackRate = oldPlaybackRate === 1 ? t.lastPlaybackRate : 1
     if (oldPlaybackRate !== 1) {
       t.lastPlaybackRate = oldPlaybackRate
+      configManager.setLocalStorage('media.lastPlaybackRate', oldPlaybackRate)
     }
 
     t.setPlaybackRate(playbackRate)

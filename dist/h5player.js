@@ -1779,6 +1779,9 @@ const configManager = new ConfigManager({
       playbackRate: 1,
       volume: 1,
 
+      /* 最后一次设定的播放速度，默认1.5 */
+      lastPlaybackRate: 1.5,
+
       /* 是否允许存储播放进度 */
       allowRestorePlayProgress: {
 
@@ -5631,7 +5634,7 @@ const h5Player = {
 
   playbackRate: configManager.get('media.playbackRate'),
   volume: configManager.get('media.volume'),
-  lastPlaybackRate: 1,
+  lastPlaybackRate: configManager.get('media.lastPlaybackRate'),
   /* 快进快退步长 */
   skipStep: 5,
 
@@ -6262,6 +6265,7 @@ const h5Player = {
     const playbackRate = oldPlaybackRate === 1 ? t.lastPlaybackRate : 1;
     if (oldPlaybackRate !== 1) {
       t.lastPlaybackRate = oldPlaybackRate;
+      configManager.setLocalStorage('media.lastPlaybackRate', oldPlaybackRate);
     }
 
     t.setPlaybackRate(playbackRate);
