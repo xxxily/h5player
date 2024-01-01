@@ -3688,6 +3688,74 @@ var enUS = {
   demo: 'demo-test'
 };
 
+var ptBR = {
+  website: 'Site do Script',
+  about: 'Sobre',
+  issues: 'Problemas',
+  setting: 'Configurações',
+  hotkeys: 'Teclas de Atalho',
+  donate: 'Doar',
+  enableScript: 'Ativar Script',
+  disableScript: 'Desativar Script',
+  openCrossOriginFramePage: 'Abrir páginas de origem cruzada sozinho',
+  disableInitAutoPlay: 'Proibir reprodução automática de vídeos neste site',
+  enableInitAutoPlay: 'Permitir reprodução automática de vídeos neste site',
+  restoreConfiguration: 'Restaurar a configuração padrão global',
+  blockSetPlaybackRate: 'Desativar lógica de regulação de velocidade padrão',
+  blockSetCurrentTime: 'Desativar lógica de controle de progresso de reprodução padrão',
+  blockSetVolume: 'Desativar lógica de controle de volume padrão',
+  unblockSetPlaybackRate: 'Permitir lógica de ajuste de velocidade padrão',
+  unblockSetCurrentTime: 'Permitir controle de progresso de reprodução padrão',
+  unblockSetVolume: 'Permitir controle de volume padrão',
+  allowAcousticGain: 'Ativar aumento de volume',
+  notAllowAcousticGain: 'Desativar capacidade de aumento de volume',
+  allowCrossOriginControl: 'Habilitar capacidade de controle de origem cruzada',
+  notAllowCrossOriginControl: 'Desabilitar capacidades de controle de origem cruzada',
+  allowExperimentFeatures: 'Ativar recursos experimentais',
+  notAllowExperimentFeatures: 'Desativar recursos experimentais',
+  experimentFeaturesWarning: 'Recursos experimentais provavelmente causarão alguns problemas incertos, ative com cautela',
+  allowExternalCustomConfiguration: 'Habilitar capacidades de personalização externa',
+  notAllowExternalCustomConfiguration: 'Desabilitar capacidades de personalização externa',
+  configFail: 'Falha na configuração',
+  globalSetting: 'Configurações Globais',
+  localSetting: 'Apenas para este site',
+  openDebugMode: 'Ativar modo de depuração',
+  closeDebugMode: 'Desativar modo de depuração',
+  unfoldMenu: 'Expandir menu',
+  foldMenu: 'Recolher menu',
+  tipsMsg: {
+    playspeed: 'Velocidade: ',
+    forward: 'Avançar: ',
+    backward: 'Retroceder: ',
+    seconds: 's',
+    volume: 'Volume: ',
+    nextframe: 'Próximo quadro',
+    previousframe: 'Quadro anterior',
+    stopframe: 'Parar quadro: ',
+    play: 'Reproduzir',
+    pause: 'Pausar',
+    arpl: 'Permitir retomada automática do progresso de reprodução',
+    drpl: 'Desativar retomada automática do progresso de reprodução',
+    brightness: 'Brilho: ',
+    contrast: 'Contraste: ',
+    saturation: 'Saturação: ',
+    hue: 'Matiz: ',
+    blur: 'Desfoque: ',
+    imgattrreset: 'Atributos: resetar',
+    imgrotate: 'Rotação da imagem: ',
+    onplugin: 'Ativar plugin h5Player',
+    offplugin: 'Desativar plugin h5Player',
+    globalmode: 'Modo global: ',
+    playbackrestored: 'Restaurado o último progresso de reprodução para você',
+    playbackrestoreoff: 'A função de restaurar o progresso de reprodução está desativada. Pressione SHIFT+R para ativar a função',
+    horizontal: 'Deslocamento horizontal: ',
+    vertical: 'Deslocamento vertical: ',
+    horizontalMirror: 'Espelhamento horizontal',
+    verticalMirror: 'Espelhamento vertical',
+    videozoom: 'Zoom de vídeo: '
+  }
+}
+
 var ru = {
   website: 'официальный сайт скрипта',
   about: 'около',
@@ -3831,7 +3899,8 @@ const messages = {
   'zh-TW': zhTW,
   'en-US': enUS,
   en: enUS,
-  ru: ru
+  ru: ru,
+  'pt-BR': ptBR
 };
 
 const i18n = new I18n({
