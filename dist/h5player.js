@@ -2455,7 +2455,7 @@ var Debug$1 = new Debug();
 
 var debug = Debug$1.create({
   msg: '[H5player Msg]',
-  trace: true,
+  trace: false,
   traceGroup: true,
   printTime: false
 });
@@ -5245,6 +5245,7 @@ const combinationKeysMonitor = (function () {
 class HotkeysRunner {
   constructor (hotkeys, win = window) {
     this.window = win;
+    this.windowList = [win];
     /* Mac和window使用的修饰符是不一样的 */
     this.MOD = typeof navigator === 'object' && /Mac|iPod|iPhone|iPad/.test(navigator.platform) ? 'Meta' : 'Ctrl';
     // 'Control', 'Shift', 'Alt', 'Meta'
@@ -5259,6 +5260,11 @@ class HotkeysRunner {
   /* 设置其它window对象的组合键监控逻辑 */
   setCombinationKeysMonitor (win) {
     this.window = win;
+
+    if (!this.windowList.includes(win)) {
+      this.windowList.push(win);
+    }
+
     combinationKeysMonitor.init(win);
   }
 
@@ -5349,8 +5355,14 @@ class HotkeysRunner {
   isMatchPrevPress (press) { return this.isMatch(this.prevPress, press) }
 
   run (opts = {}) {
-    const KeyboardEvent = this.window.KeyboardEvent;
-    if (!(opts.event instanceof KeyboardEvent)) { return false }
+    // 这里只对单个window有效
+    // const KeyboardEvent = this.window.KeyboardEvent
+    // if (!(opts.event instanceof KeyboardEvent)) { return false }
+
+    const KeyboardEventList = this.windowList.map(win => win.KeyboardEvent);
+    if (!KeyboardEventList.includes(opts.event.constructor)) {
+      return false
+    }
 
     const event = opts.event;
     const target = opts.target || null;
