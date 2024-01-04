@@ -3,7 +3,8 @@ import {
   isObj,
   hideDom,
   mergeObj,
-  eachParentNode
+  eachParentNode,
+  ready
 } from '../libs/utils/index'
 import debug from './debug'
 const $q = function (str) { return document.querySelector(str) }
@@ -24,6 +25,7 @@ const taskConf = {
    * */
   'demo.demo': {
     // disable: true, // 在该域名下禁止插件的所有功能
+    init: function (h5Player, taskConf) {},
     fullScreen: '.fullscreen-btn',
     exitFullScreen: '.exit-fullscreen-btn',
     webFullScreen: function () {},
@@ -70,6 +72,40 @@ const taskConf = {
     exclude: /\t/
   },
   'youtube.com': {
+    init: function (h5Player, taskConf) {
+      if (h5Player.hasBindSkipAdEvents) { return }
+      const startTime = new Date().getTime()
+      let skipCount = 0
+
+      const skipHandler = (element) => {
+        const endTime = new Date().getTime()
+        const time = endTime - startTime
+        /* 过早触发会导致广告无法跳过 */
+        if (time < 3000) {
+          return false
+        }
+
+        /* 页面处于不可见状态时候也不触发 */
+        if (document.hidden) {
+          return false
+        }
+
+        element.click()
+        skipCount++
+
+        debug.log('youtube.com ad skip count', skipCount)
+      }
+
+      ready('.ytp-ad-skip-button', function (element) {
+        skipHandler(element)
+      })
+
+      ready('.ytp-ad-skip-button-modern', function (element) {
+        skipHandler(element)
+      })
+
+      h5Player.hasBindSkipAdEvents = true
+    },
     webFullScreen: 'button.ytp-size-button',
     fullScreen: 'button.ytp-fullscreen-button',
     next: '.ytp-next-button',
