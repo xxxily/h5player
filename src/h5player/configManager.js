@@ -46,7 +46,7 @@ const configManager = new ConfigManager({
       {
         desc: '启用或禁止自动恢复播放进度功能',
         key: 'shift+r',
-        command: 'capture'
+        command: 'switchRestorePlayProgressStatus'
       },
       {
         desc: '垂直镜像翻转',
