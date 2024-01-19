@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.7.11
+// @version      3.7.12
 // @description  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
 // @description:en  Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
 // @description:zh  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
@@ -3291,9 +3291,9 @@ async function setClipboard (blob) {
         [blob.type]: blob
       })
     ]).then(() => {
-      console.info('[setClipboard] clipboard suc');
+      console.info('[setClipboard] clipboard suc', blob.type);
     }).catch((e) => {
-      console.error('[setClipboard] clipboard err', e);
+      console.error('[setClipboard] clipboard err', blob.type, e);
     });
   } else {
     console.error('当前网站不支持将数据写入到剪贴板里，见：\n https://developer.mozilla.org/en-US/docs/Web/API/Clipboard');
@@ -3348,15 +3348,26 @@ var videoCapturer = {
     title = title || 'videoCapturer_' + Date.now();
 
     try {
+      /**
+       * 尝试复制到剪贴板
+       * 注意部分浏览器不支持将'image/jpeg'类型的数据写入到剪贴板，image/jpg可以，但会导致toBlob的结果为png的数据，
+       * 所以这里新起了'image/png'来尝试复制到剪贴板，而不能将setClipboard(blob)放到下面的try里
+       * 另外由于下面的自动下载截图会导致页面失焦，也会造成复制到剪贴板失败，所以这里先复制到剪贴板，再进行下载
+       */
+      canvas.toBlob(function (blob) {
+        setClipboard(blob);
+      }, 'image/png', 0.99);
+    } catch (e) {
+      console.error('无法将截图复制到剪贴板。', e);
+    }
+
+    try {
       canvas.toBlob(function (blob) {
         const el = document.createElement('a');
         el.download = `${title}.jpg`;
         el.href = URL.createObjectURL(blob);
         el.click();
-
-        /* 尝试复制到剪贴板 */
-        setClipboard(blob);
-      }, 'image/jpg', 0.99);
+      }, 'image/jpeg', 0.99);
     } catch (e) {
       videoCapturer.previe(canvas, title);
       console.error('视频源受CORS标识限制，无法直接下载截图，见：\n https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS');
