@@ -44,6 +44,9 @@ import {
   isAudioElement
 } from './helper'
 
+import h5playerUiWraper from './ui/h5playerUI.es'
+
+
 /* 定义支持哪些媒体标签 */
 // const supportMediaTags = ['video', 'bwp-video', 'audio']
 const supportMediaTags = ['video', 'bwp-video']
@@ -115,7 +118,7 @@ const h5Player = {
     return playerInstance
   },
 
-  isAudioInstance () {
+  isAudioInstance() {
     return isAudioElement(this.player())
   },
 
@@ -123,7 +126,7 @@ const h5Player = {
   getPlayerList: function () {
     const list = mediaCore.mediaElementList || []
 
-    function findPlayer (context) {
+    function findPlayer(context) {
       supportMediaTags.forEach(tagName => {
         context.querySelectorAll(tagName).forEach(function (player) {
           if (player.tagName.toLowerCase() === 'bwp-video') {
@@ -170,7 +173,7 @@ const h5Player = {
   },
 
   /* 挂载到页面上的window对象，用于调试 */
-  async mountToGlobal () {
+  async mountToGlobal() {
     try {
       const pageWindow = await getPageWindow()
       if (pageWindow) {
@@ -190,7 +193,7 @@ const h5Player = {
    * 初始化播放器实例
    * @param isSingle 是否为单实例video标签
    */
-  initPlayerInstance (isSingle) {
+  initPlayerInstance(isSingle) {
     const t = this
     if (!t.playerInstance) return
 
@@ -300,7 +303,7 @@ const h5Player = {
     }
   },
 
-  registerHotkeysRunner () {
+  registerHotkeysRunner() {
     if (!this.hotkeysRunner) {
       this.hotkeysRunner = new HotkeysRunner(configManager.get('hotkeys'))
 
@@ -312,7 +315,7 @@ const h5Player = {
   },
 
   /* 刚关闭画中画不久，此段时间内允许跨TAB控制 */
-  isLeavepictureinpictureAwhile () {
+  isLeavepictureinpictureAwhile() {
     const t = this
     return t.leavepictureinpictureTime && (Date.now() - t.leavepictureinpictureTime < 1000 * 10)
   },
@@ -321,7 +324,7 @@ const h5Player = {
    * 对播放器实例的方法或属性进行代理
    * @param player
    */
-  proxyPlayerInstance (player) {
+  proxyPlayerInstance(player) {
     if (!player) return
 
     /* 要代理的方法或属性列表 */
@@ -335,7 +338,7 @@ const h5Player = {
       if (Reflect.has(player, key) && !Reflect.has(player, originKey)) {
         player[originKey] = player[key]
         const proxy = new Proxy(player[key], {
-          apply (target, ctx, args) {
+          apply(target, ctx, args) {
             // debug.log(key + '被调用')
 
             /* 处理挂起逻辑 */
@@ -450,7 +453,7 @@ const h5Player = {
   },
 
   /* 设置视频全屏 */
-  setFullScreen () {
+  setFullScreen() {
     const player = this.player()
     const isDo = TCC.doTask('fullScreen')
     if (!isDo && player && player._fullScreen_) {
@@ -468,7 +471,7 @@ const h5Player = {
     }
   },
 
-  initPlaybackRate () {
+  initPlaybackRate() {
     const t = this
     t.playbackRate = t.getPlaybackRate()
   },
@@ -480,7 +483,7 @@ const h5Player = {
     value: -1
   },
 
-  getPlaybackRate () {
+  getPlaybackRate() {
     let playbackRate = configManager.get('media.playbackRate') || this.playbackRate
     if (isInIframe()) {
       const globalPlaybackRate = configManager.getGlobalStorage('media.playbackRate')
@@ -728,7 +731,7 @@ const h5Player = {
   },
 
   /* 提升播放速率 */
-  setPlaybackRateUp (num) {
+  setPlaybackRateUp(num) {
     num = numUp(num) || 0.1
     if (this.player()) {
       this.unLockPlaybackRate()
@@ -740,7 +743,7 @@ const h5Player = {
   },
 
   /* 降低播放速率 */
-  setPlaybackRateDown (num) {
+  setPlaybackRateDown(num) {
     num = numDown(num) || -0.1
     if (this.player()) {
       this.unLockPlaybackRate()
@@ -856,7 +859,7 @@ const h5Player = {
     }
   },
 
-  setCurrentTimeUp (num, hideTips) {
+  setCurrentTimeUp(num, hideTips) {
     num = Number(numUp(num) || this.skipStep)
 
     if (TCC.doTask('addCurrentTime')) {
@@ -876,7 +879,7 @@ const h5Player = {
     }
   },
 
-  setCurrentTimeDown (num) {
+  setCurrentTimeDown(num) {
     num = Number(numDown(num) || -this.skipStep)
 
     if (TCC.doTask('subtractCurrentTime')) {
@@ -1055,7 +1058,7 @@ const h5Player = {
     !notips && t.tips(i18n.t('tipsMsg.volume') + parseInt(player.volume * 100) + '%')
   },
 
-  setVolumeUp (num) {
+  setVolumeUp(num) {
     num = numUp(num) || 0.2
     const player = this.player()
     if (player) {
@@ -1072,7 +1075,7 @@ const h5Player = {
     }
   },
 
-  setVolumeDown (num) {
+  setVolumeDown(num) {
     num = numDown(num) || -0.2
     const player = this.player()
     if (player) {
@@ -1090,7 +1093,7 @@ const h5Player = {
   },
 
   /* 采集Transform值的历史变更记录，以便后续进行还原 */
-  collectTransformHistoryInfo () {
+  collectTransformHistoryInfo() {
     const t = this
     Object.keys(t.defaultTransform).forEach(key => {
       if (key === 'translate') {
@@ -1110,7 +1113,7 @@ const h5Player = {
   },
 
   /* 判断h5Player下的Transform值是否跟默认的Transform值一致 */
-  isSameAsDefaultTransform () {
+  isSameAsDefaultTransform() {
     let result = true
     const t = this
     Object.keys(t.defaultTransform).forEach(key => {
@@ -1130,7 +1133,7 @@ const h5Player = {
   },
 
   /* 设置视频画面的缩放与位移 */
-  setTransform (notTips) {
+  setTransform(notTips) {
     const t = this
     const player = t.player()
     const scale = t.scale = Number(t.scale).toFixed(2)
@@ -1163,7 +1166,7 @@ const h5Player = {
   },
 
   /* 视频画面旋转 90 度 */
-  setRotate () {
+  setRotate() {
     const t = this
     t.rotate += 90
     if (t.rotate % 360 === 0) t.rotate = 0
@@ -1172,7 +1175,7 @@ const h5Player = {
   },
 
   /* 设置镜像翻转 */
-  setMirror (vertical = false) {
+  setMirror(vertical = false) {
     const t = this
     let tipsMsg = ''
     if (vertical) {
@@ -1188,7 +1191,7 @@ const h5Player = {
   },
 
   /* 缩放视频画面 */
-  setScale (num) {
+  setScale(num) {
     if (Number.isNaN(this.scale) || Number.isNaN(num)) {
       this.scale = 1
     } else {
@@ -1199,19 +1202,19 @@ const h5Player = {
   },
 
   /* 视频放大 +0.1 */
-  setScaleUp (num) {
+  setScaleUp(num) {
     num = numUp(num) || 0.05
     this.setScale(Number(this.scale) + num)
   },
 
   /* 视频缩小 -0.1 */
-  setScaleDown (num) {
+  setScaleDown(num) {
     num = numDown(num) || -0.05
     this.setScale(Number(this.scale) + num)
   },
 
   /* 设置视频画面的位移属性 */
-  setTranslate (x, y) {
+  setTranslate(x, y) {
     if (typeof x === 'number') {
       this.translate.x = x
     }
@@ -1224,30 +1227,30 @@ const h5Player = {
   },
 
   /* 视频画面向右平移 */
-  setTranslateRight (num) {
+  setTranslateRight(num) {
     num = numUp(num) || 10
     this.setTranslate(this.translate.x + num)
   },
 
   /* 视频画面向左平移 */
-  setTranslateLeft (num) {
+  setTranslateLeft(num) {
     num = numDown(num) || -10
     this.setTranslate(this.translate.x + num)
   },
 
   /* 视频画面向上平移 */
-  setTranslateUp (num) {
+  setTranslateUp(num) {
     num = numUp(num) || 10
     this.setTranslate(null, this.translate.y - num)
   },
 
   /* 视频画面向下平移 */
-  setTranslateDown (num) {
+  setTranslateDown(num) {
     num = numDown(num) || -10
     this.setTranslate(null, this.translate.y - num)
   },
 
-  resetTransform (notTips) {
+  resetTransform(notTips) {
     const t = this
 
     if (t.isSameAsDefaultTransform() && Object.keys(t.historyTransform).length) {
@@ -1276,7 +1279,7 @@ const h5Player = {
    * 定格帧画面
    * @param perFps {Number} -可选 默认 1，即定格到下一帧，如果是-1则为定格到上一帧
    */
-  freezeFrame (perFps) {
+  freezeFrame(perFps) {
     perFps = perFps || 1
     const t = this
     const player = t.player()
@@ -1302,7 +1305,7 @@ const h5Player = {
   /**
    * 切换画中画功能
    */
-  togglePictureInPicture () {
+  togglePictureInPicture() {
     const player = this.player()
     if (window._isPictureInPicture_ && document.pictureInPictureElement) {
       document.exitPictureInPicture().then(() => {
@@ -1322,7 +1325,7 @@ const h5Player = {
   },
 
   /* 播放下一个视频，默认是没有这个功能的，只有在TCC里配置了next字段才会有该功能 */
-  setNextVideo () {
+  setNextVideo() {
     const isDo = TCC.doTask('next')
     if (!isDo) {
       debug.log('当前网页不支持一键播放下个视频功能~')
@@ -1330,7 +1333,7 @@ const h5Player = {
   },
 
   /* 切换播放状态 */
-  switchPlayStatus () {
+  switchPlayStatus() {
     const t = this
     const player = t.player()
     if (TCC.doTask('switchPlayStatus')) {
@@ -1533,7 +1536,7 @@ const h5Player = {
       if (this.on_off[i]) clearTimeout(this.on_off[i])
     }
 
-    function showTips () {
+    function showTips() {
       style.display = 'block'
       t.on_off[0] = setTimeout(function () {
         style.opacity = 1
@@ -1635,7 +1638,7 @@ const h5Player = {
     }
   },
 
-  setFilter (item, num, isDown) {
+  setFilter(item, num, isDown) {
     if (![0, 1, 2, 3, 4].includes(item) || typeof num !== 'number') {
       debug.error('[setFilter]', '参数有误', item, num)
       return false
@@ -1667,81 +1670,81 @@ const h5Player = {
   },
 
   /* 设置视频的亮度 */
-  setBrightness (num) {
+  setBrightness(num) {
     this.setFilter(0, num)
   },
 
   /* 提升视频的亮度 */
-  setBrightnessUp (num) {
+  setBrightnessUp(num) {
     this.setFilter(0, num || 0.1)
   },
 
   /* 降低视频的亮度 */
-  setBrightnessDown (num) {
+  setBrightnessDown(num) {
     this.setFilter(0, num || -0.1, true)
   },
 
   /* 设置视频的对比度 */
-  setContrast (num) {
+  setContrast(num) {
     this.setFilter(1, num)
   },
 
   /* 提升视频的对比度 */
-  setContrastUp (num) {
+  setContrastUp(num) {
     this.setFilter(1, num || 0.1)
   },
 
   /* 降低视频的对比度 */
-  setContrastDown (num) {
+  setContrastDown(num) {
     this.setFilter(1, num || -0.1, true)
   },
 
   /* 设置饱和度 */
-  setSaturation (num) {
+  setSaturation(num) {
     this.setFilter(2, num)
   },
 
   /* 提升饱和度 */
-  setSaturationUp (num) {
+  setSaturationUp(num) {
     this.setFilter(2, num || 0.1)
   },
 
   /* 降低饱和度 */
-  setSaturationDown (num) {
+  setSaturationDown(num) {
     this.setFilter(2, num || -0.1, true)
   },
 
   /* 设置色相 */
-  setHue (num) {
+  setHue(num) {
     this.setFilter(3, num)
   },
 
   /* 增加色相 */
-  setHueUp (num) {
+  setHueUp(num) {
     this.setFilter(3, num || 1)
   },
 
   /* 降低色相 */
-  setHueDown (num) {
+  setHueDown(num) {
     this.setFilter(3, num || -1, true)
   },
 
   /* 设置模糊度 */
-  setBlur (num) {
+  setBlur(num) {
     this.setFilter(4, num)
   },
 
   /* 增加模糊度 */
-  setBlurUp (num) {
+  setBlurUp(num) {
     this.setFilter(4, num || 1)
   },
 
   /* 降低模糊度 */
-  setBlurDown (num) {
+  setBlurDown(num) {
     this.setFilter(4, num || -1, true)
   },
 
-  resetFilterAndTransform () {
+  resetFilterAndTransform() {
     const t = this
 
     t.resetTransform(true)
@@ -1749,14 +1752,14 @@ const h5Player = {
     t.tips(i18n.t('tipsMsg.imgattrreset'))
   },
 
-  mediaDownload () {
+  mediaDownload() {
     if (configManager.get('enhance.allowExperimentFeatures')) {
       debug.warn('[experimentFeatures][mediaDownload]')
       mediaDownload(this.player())
     }
   },
 
-  capture () {
+  capture() {
     const player = this.player()
     videoCapturer.capture(player, true)
 
@@ -2011,7 +2014,7 @@ const h5Player = {
       taskConf.shortcuts.callback instanceof Function
 
     /* 判断当前触发的快捷键是否已被注册 */
-    function isRegister () {
+    function isRegister() {
       const list = taskConf.shortcuts.register
 
       /* 当前触发的组合键 */
@@ -2151,7 +2154,7 @@ const h5Player = {
         target: t,
         stopPropagation: true,
         preventDefault: true,
-        conditionHandler (condition) {
+        conditionHandler(condition) {
           // TODO 完善条件限定回调逻辑
           if (condition) {
             return true
@@ -2199,7 +2202,7 @@ const h5Player = {
   playProgressRecorder: function (player) {
     const t = h5Player
     clearTimeout(player._playProgressTimer_)
-    function recorder (player) {
+    function recorder(player) {
       player._playProgressTimer_ = setTimeout(function () {
         /* 时长小于两分钟的视频不记录播放进度 */
         const isToShort = !player.duration || Number.isNaN(Number(player.duration)) || player.duration < 120
@@ -2293,7 +2296,7 @@ const h5Player = {
     }
   },
 
-  setPlayerInstance (el) {
+  setPlayerInstance(el) {
     if (!el && !el.getBoundingClientRect) {
       return false
     }
@@ -2417,7 +2420,7 @@ const h5Player = {
   },
 
   /* 响应来自按键消息的广播 */
-  bindFakeEvent () {
+  bindFakeEvent() {
     const t = this
     if (t._hasBindFakeEvent_) return
 
@@ -2482,7 +2485,7 @@ const h5Player = {
     t._hasBindEvent_ = true
   },
 
-  setCustomConfiguration (config, tag = 'Default') {
+  setCustomConfiguration(config, tag = 'Default') {
     if (!config) return false
 
     const configuration = configManager.mergeDefConf(config.customConfiguration)
@@ -2495,7 +2498,7 @@ const h5Player = {
     debug.info(`[CustomConfiguration][${tag}]`, configuration, taskConf)
   },
 
-  mergeExternalConfiguration (config, tag = 'Default') {
+  mergeExternalConfiguration(config, tag = 'Default') {
     if (!config || !configManager.getGlobalStorage('enhance.allowExternalCustomConfiguration')) return false
     h5Player.setCustomConfiguration(config, 'External')
     h5Player.hasExternalCustomConfiguration = tag
@@ -2558,7 +2561,7 @@ const h5Player = {
   }
 }
 
-async function h5PlayerInit () {
+async function h5PlayerInit() {
   try {
     mediaCore.init(function (mediaElement) {
       // debug.log('[mediaCore][mediaChecker]', mediaElement)
@@ -2623,6 +2626,16 @@ async function h5PlayerInit () {
   } catch (e) {
     debug.error('h5Player init fail', e)
   }
+
+  h5Player.UI = h5playerUiWraper()
+
+  setTimeout(() => {
+    try {
+      h5Player.UI.init()
+    } catch (e) {
+      debug.error('h5Player UI init fail', e)
+    }
+  }, 1000)
 }
 
 export default h5PlayerInit

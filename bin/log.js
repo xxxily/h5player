@@ -6,9 +6,13 @@
  * @github    https://github.com/xxxily
  */
 
-const fs = require('fs-extra')
-const path = require('path')
-const dayjs = require('dayjs')
+// const fs = require('fs-extra')
+// const path = require('path')
+// const dayjs = require('dayjs')
+
+import fs from 'fs-extra'
+import path from 'path'
+import dayjs from 'dayjs'
 
 class LogSystem {
   constructor (setting) {
@@ -223,4 +227,5 @@ class LogSystem {
   }
 }
 
-module.exports = new LogSystem()
+// module.exports = new LogSystem()
+export default new LogSystem()

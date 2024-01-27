@@ -6,33 +6,32 @@
  * @date         15/03/2019 11:54
  * @github       https://github.com/xxxily
  */
-import json from 'rollup-plugin-json'
-import commonjs from 'rollup-plugin-commonjs'
-import nodeResolve from 'rollup-plugin-node-resolve'
-import babel from 'rollup-plugin-babel'
-const alias = require('rollup-plugin-alias')
-const path = require('path')
-const utils = require('../bin/utils')
-const confTree = require('./rollup.tree.config')
+import alias from '@rollup/plugin-alias'
+import json from '@rollup/plugin-json'
+import css from "rollup-plugin-import-css"
+import image from '@rollup/plugin-image'
+import commonjs from '@rollup/plugin-commonjs'
+import nodeResolve from '@rollup/plugin-node-resolve'
+import dynamicImportVars from '@rollup/plugin-dynamic-import-vars'
+import { babel } from '@rollup/plugin-babel'
+import path, { dirname } from 'path'
+import { fileURLToPath } from 'url'
+import utils from '../bin/utils.js'
+import confTree from './rollup.tree.config.js'
+import log from '../bin/log.js'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 /* 日志记录 */
-const log = require('../bin/log')
 const msgLog = log.create({
   fileNamePrefix: 'rollup_log',
   path: path.resolve(__dirname, '../log')
 })
 
-const npmArgv = utils.getNpmConfigArgv()
 /* 运行模式，只有开发(dev)或发布(prod)两种模式 */
-let runMode = utils.getArgvCode('--mode-', npmArgv) || 'dev'
-let projectName = utils.getArgvCode('--proj-', npmArgv) || 'utils'
-
-/* 修正yarn运行模式下的参数获取 */
-if (npmArgv.length === 2 && npmArgv[1].includes(':')) {
-  const arg = npmArgv[1].split(':')
-  runMode = arg[1] || 'dev'
-  projectName = arg[0] || 'utils'
-}
+let runMode = process.env.MODE || 'prod'
+let projectName = process.env.PROJECT_NAME || 'h5player'
 
 const projectConf = confTree[projectName]
 
@@ -58,31 +57,46 @@ const merge = function (objA, objB) {
 const baseConf = {
   plugins: [
     json(),
+    // https://github.com/jleeson/rollup-plugin-import-css
+    css({
+      /* modules为true时，会将css文件转换成js文件，作为模块引入 */
+      modules: true,
+      minify: false
+    }),
+    image(),
     alias({
-      libs: resolve('src/libs')
+      entries: {
+        utils: resolve('src/libs')
+      }
     }),
-    nodeResolve({
-      jsnext: true,
-      main: true
-    }),
+    // https://github.com/rollup/plugins/tree/master/packages/node-resolve
+    nodeResolve(),
+    // https://github.com/rollup/plugins/tree/master/packages/commonjs
     commonjs({
-      include: 'node_modules/**'
-    })
+      // include: 'node_modules/**'
+    }),
+    // https://github.com/rollup/plugins/tree/master/packages/dynamic-import-vars
+    dynamicImportVars()
   ]
 }
 
 let rollupConfig = merge(baseConf, projectConf)
-if (runMode === 'prod') {
+
+if (!projectName.includes('h5player') && runMode === 'prod') {
   // 发布模式下，会对脚本进行babel转换
   rollupConfig = merge(rollupConfig, {
     plugins: [
+      // 注意：babel插件必须放在commonjs插件之后
+      // https://github.com/rollup/plugins/tree/master/packages/babel
       babel({
-        externalHelpers: false,
-        runtimeHelpers: true,
         exclude: 'node_modules/**'
       })
     ]
   })
 }
+
+// console.log('当前运行配置：', rollupConfig)
+msgLog.log('当前运行配置：')
+msgLog.log(rollupConfig)
 
 export default rollupConfig

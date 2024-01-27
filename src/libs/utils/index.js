@@ -8,6 +8,7 @@ import { getType, isType, isObj, isErr, isArr, isRegExp, isFunction, isUndefined
 import { clone, forIn, getObjKeys, mergeObj, merge, getValByPath, setValByPath } from './object'
 import { quickSort } from './number'
 import { hideDom, eachParentNode, getContainer, loadCSSText, isEditableTarget, isInShadow, isInViewPort } from './dom'
+import { createTrustedHTML, parseHTML } from './html'
 import { inlineStyleToObj, objToInlineStyle } from './style'
 import { fakeUA, userAgentMap } from './fakeUA'
 import { fakeVisible, fakeHidden } from './fakeVisibilityState'
@@ -54,6 +55,8 @@ export {
   fakeHidden,
   isInIframe,
   isInCrossOriginFrame,
+  createTrustedHTML,
+  parseHTML,
   throttle,
   parseURL,
   stringifyParams,

@@ -104,6 +104,13 @@ const taskConf = {
         skipHandler(element)
       })
 
+      setInterval(function () {
+        const adSkipBtn = document.querySelector('.ytp-ad-skip-button')
+        const adSkipBtnModern = document.querySelector('.ytp-ad-skip-button-modern')
+        adSkipBtn && skipHandler(adSkipBtn)
+        adSkipBtnModern && skipHandler(adSkipBtnModern)
+      }, 1000)
+
       h5Player.hasBindSkipAdEvents = true
     },
     webFullScreen: 'button.ytp-size-button',
