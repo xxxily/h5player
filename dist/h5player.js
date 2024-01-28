@@ -2994,6 +2994,9 @@ const taskConf = {
     fullScreen: ['button.wbpv-fullscreen-control'],
     // webFullScreen: ['div[title="关闭弹层"]', 'div.wbpv-open-layer-button']
     webFullScreen: ['div.wbpv-open-layer-button']
+  },
+  'udemy.com': {
+    switchPlayStatus: '[data-purpose=play-button],[data-purpose=pause-button]'
   }
 };
 
