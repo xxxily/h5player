@@ -3,7 +3,8 @@ import {
   isObj,
   hideDom,
   mergeObj,
-  eachParentNode
+  eachParentNode,
+  ready
 } from '../libs/utils/index'
 import debug from './debug'
 const $q = function (str) { return document.querySelector(str) }
@@ -24,6 +25,7 @@ const taskConf = {
    * */
   'demo.demo': {
     // disable: true, // 在该域名下禁止插件的所有功能
+    init: function (h5Player, taskConf) {},
     fullScreen: '.fullscreen-btn',
     exitFullScreen: '.exit-fullscreen-btn',
     webFullScreen: function () {},
@@ -32,6 +34,8 @@ const taskConf = {
     // pause: ['.player-pause', '.player-pause02'], //多种情况对应不同的选择器时，可使用数组，插件会对选择器进行遍历，知道找到可用的为止
     pause: '.player-pause',
     play: '.player-play',
+    afterPlay: function (h5Player, taskConf) {},
+    afterPause: function (h5Player, taskConf) {},
     switchPlayStatus: '.player-play',
     playbackRate: function () {},
     // playbackRate: true, // 当给某个功能设置true时，表示使用网站自身的能力控制视频，而忽略插件的能力
@@ -68,9 +72,108 @@ const taskConf = {
     exclude: /\t/
   },
   'youtube.com': {
+    init: function (h5Player, taskConf) {
+      if (h5Player.hasBindSkipAdEvents) { return }
+      const startTime = new Date().getTime()
+      let skipCount = 0
+
+      const skipHandler = (element) => {
+        const endTime = new Date().getTime()
+        const time = endTime - startTime
+        /* 过早触发会导致广告无法跳过 */
+        if (time < 3000) {
+          return false
+        }
+
+        /* 页面处于不可见状态时候也不触发 */
+        if (document.hidden) {
+          return false
+        }
+
+        element.click()
+        skipCount++
+
+        debug.log('youtube.com ad skip count', skipCount)
+      }
+
+      ready('.ytp-ad-skip-button', function (element) {
+        skipHandler(element)
+      })
+
+      ready('.ytp-ad-skip-button-modern', function (element) {
+        skipHandler(element)
+      })
+
+      h5Player.hasBindSkipAdEvents = true
+    },
     webFullScreen: 'button.ytp-size-button',
     fullScreen: 'button.ytp-fullscreen-button',
     next: '.ytp-next-button',
+    afterPlay: function (h5Player, taskConf) {
+      /* 解决快捷键暂停、播放后一直有loading图标滞留的问题 */
+      const player = h5Player.player()
+      const playerwWrap = player.closest('.html5-video-player')
+
+      if (!playerwWrap) {
+        return
+      }
+
+      playerwWrap.classList.add('ytp-autohide', 'playing-mode')
+      clearTimeout(playerwWrap.autohideTimer)
+      playerwWrap.autohideTimer = setTimeout(() => {
+        playerwWrap.classList.add('ytp-autohide', 'playing-mode')
+      }, 1000)
+
+      if (!playerwWrap.hasBindCustomEvents) {
+        const mousemoveHander = (event) => {
+          playerwWrap.classList.remove('ytp-autohide', 'ytp-hide-info-bar')
+
+          clearTimeout(playerwWrap.mousemoveTimer)
+          playerwWrap.mousemoveTimer = setTimeout(() => {
+            if (!player.paused) {
+              playerwWrap.classList.add('ytp-autohide', 'ytp-hide-info-bar')
+            }
+          }, 1000 * 2)
+        }
+
+        const clickHander = (event) => {
+          h5Player.switchPlayStatus()
+          mousemoveHander(event)
+        }
+
+        player.addEventListener('mousemove', mousemoveHander)
+        player.addEventListener('click', clickHander)
+
+        playerwWrap.hasBindCustomEvents = true
+      }
+
+      const spinner = playerwWrap.querySelector('.ytp-spinner')
+
+      if (spinner) {
+        const hiddenSpinner = () => { spinner && (spinner.style.visibility = 'hidden') }
+        const visibleSpinner = () => { spinner && (spinner.style.visibility = 'visible') }
+
+        /* 点击播放时立即隐藏spinner */
+        hiddenSpinner()
+
+        clearTimeout(playerwWrap.spinnerTimer)
+        playerwWrap.spinnerTimer = setTimeout(() => {
+          /* 1秒后将spinner设置为none，并且恢复Spinner的可见状态，以便其它逻辑仍能正确控制spinner的显隐状态 */
+          spinner.style.display = 'none'
+          visibleSpinner()
+        }, 1000)
+      }
+    },
+    afterPause: function (h5Player, taskConf) {
+      const player = h5Player.player()
+      const playerwWrap = player.closest('.html5-video-player')
+
+      if (!playerwWrap) return
+
+      playerwWrap.classList.remove('ytp-autohide', 'playing-mode')
+      playerwWrap.classList.add('paused-mode')
+      clearTimeout(playerwWrap.autohideTimer)
+    },
     shortcuts: {
       register: [
         'escape'

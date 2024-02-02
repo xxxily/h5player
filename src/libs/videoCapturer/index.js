@@ -14,9 +14,9 @@ async function setClipboard (blob) {
         [blob.type]: blob
       })
     ]).then(() => {
-      console.info('[setClipboard] clipboard suc')
+      console.info('[setClipboard] clipboard suc', blob.type)
     }).catch((e) => {
-      console.error('[setClipboard] clipboard err', e)
+      console.error('[setClipboard] clipboard err', blob.type, e)
     })
   } else {
     console.error('当前网站不支持将数据写入到剪贴板里，见：\n https://developer.mozilla.org/en-US/docs/Web/API/Clipboard')
@@ -71,15 +71,26 @@ var videoCapturer = {
     title = title || 'videoCapturer_' + Date.now()
 
     try {
+      /**
+       * 尝试复制到剪贴板
+       * 注意部分浏览器不支持将'image/jpeg'类型的数据写入到剪贴板，image/jpg可以，但会导致toBlob的结果为png的数据，
+       * 所以这里新起了'image/png'来尝试复制到剪贴板，而不能将setClipboard(blob)放到下面的try里
+       * 另外由于下面的自动下载截图会导致页面失焦，也会造成复制到剪贴板失败，所以这里先复制到剪贴板，再进行下载
+       */
+      canvas.toBlob(function (blob) {
+        setClipboard(blob)
+      }, 'image/png', 0.99)
+    } catch (e) {
+      console.error('无法将截图复制到剪贴板。', e)
+    }
+
+    try {
       canvas.toBlob(function (blob) {
         const el = document.createElement('a')
         el.download = `${title}.jpg`
         el.href = URL.createObjectURL(blob)
         el.click()
-
-        /* 尝试复制到剪贴板 */
-        setClipboard(blob)
-      }, 'image/jpg', 0.99)
+      }, 'image/jpeg', 0.99)
     } catch (e) {
       videoCapturer.previe(canvas, title)
       console.error('视频源受CORS标识限制，无法直接下载截图，见：\n https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS')

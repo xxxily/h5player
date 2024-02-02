@@ -87,7 +87,7 @@ const h5Player = {
 
   playbackRate: configManager.get('media.playbackRate'),
   volume: configManager.get('media.volume'),
-  lastPlaybackRate: 1,
+  lastPlaybackRate: configManager.get('media.lastPlaybackRate'),
   /* 快进快退步长 */
   skipStep: 5,
 
@@ -683,7 +683,7 @@ const h5Player = {
    */
   setPlaybackRatePlus: function (num) {
     num = Number(num)
-    if (!num || !Number.isInteger(num)) {
+    if (!num || Number.isNaN(num)) {
       return false
     }
 
@@ -718,6 +718,7 @@ const h5Player = {
     const playbackRate = oldPlaybackRate === 1 ? t.lastPlaybackRate : 1
     if (oldPlaybackRate !== 1) {
       t.lastPlaybackRate = oldPlaybackRate
+      configManager.setLocalStorage('media.lastPlaybackRate', oldPlaybackRate)
     }
 
     t.setPlaybackRate(playbackRate)
@@ -1357,6 +1358,8 @@ const h5Player = {
 
         t.tips(i18n.t('tipsMsg.play'))
       }
+
+      TCC.doTask('afterPlay')
     } else {
       if (TCC.doTask('pause')) {
         // debug.log('[TCC][pause]', 'suc')
@@ -1377,6 +1380,8 @@ const h5Player = {
 
         t.tips(i18n.t('tipsMsg.pause'))
       }
+
+      TCC.doTask('afterPause')
     }
   },
 

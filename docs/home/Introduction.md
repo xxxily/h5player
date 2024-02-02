@@ -5,24 +5,8 @@
 - 官网地址：[https://h5player.anzz.top](https://h5player.anzz.top)  
 - 项目地址：[https://github.com/xxxily/h5player](https://github.com/xxxily/h5player)  
 - 脚本安装地址：[https://greasyfork.org/scripts/381682](https://greasyfork.org/scripts/381682)
-  
+
 <br />
-
-## ❤️ ChatGPT推广 ❤️
-
-| 网站 | 描述 | 备注 |
-| :---- | :---- | :---- |
-| [公益ChatGPT 01](https://free.anzz.top/) | 每天100次免费问答，可畅快使用 | [需魔法上网](https://github.com/xxxily/hello-ai/blob/main/home/airport.md) |
-| [公益ChatGPT 02](https://gpt.anzz.top/) | 每天100次免费问答，可畅快使用 | [需科学上网](https://hello-ai.anzz.top/home/airport.html) |
-| [公益ChatGPT 03](https://gpt.in.anzz.top/) | 每天100次免费问答，可畅快使用 | [需科学上网](https://hello-ai.anzz.top/home/airport.html) |
-| [公益ChatGPT 04](https://chat.in.anzz.top/) | 每天100次免费问答，可畅快使用 | [需魔法上网](https://github.com/xxxily/hello-ai/blob/main/home/airport.md) |
-
-## ChatGPT账号+ApiKey购买
-
-商品地址：[https://hello-ai.anzz.top/home/buy.html](https://hello-ai.anzz.top/home/buy.html)  
-备用地址：[https://kdocs.cn/l/cbjuzdPtzZ1W](https://kdocs.cn/l/cbjuzdPtzZ1W)  
-
-<br /> 
 
 ## 简介
 
@@ -48,11 +32,24 @@
 
 <br />
 
-| 加我拉你入群<br/>（注明来自：[h5player]） | Telegram群组<br/>（<a href="https://t.me/h5player" target="_blank">直接入群</a>） | Telegram AI群组<br/>（<a href="https://t.me/auto_gpt_ai" target="_blank">直接入群</a>） |
-| :----: | :----: | :----: |
-| <img src="https://h5player.anzz.top/assets/img/WeChat2.png?t=2022.11.21" width=280 /> |  <img src="https://h5player.anzz.top/assets/img/tg.jpg?t=2022.11.21" width=280 /> | <img src="https://h5player.anzz.top/assets/img/ai_tg_qun.jpg?t=2022.11.21" width="280"/> |
+| 加我拉你入群<br/>（注明来自：h5player） | Telegram群组<br/>（<a href="https://t.me/h5player" target="_blank">直接入群</a>） |
+| :----: | :----: |
+| <img src="https://h5player.anzz.top/assets/img/WeChat2.png?t=2022.11.21" width=280 /> |  <img src="https://h5player.anzz.top/assets/img/tg.jpg?t=2022.11.21" width=280 /> |
 
 <br />
+
+## 功能定制
+
+脚本已经支持了大部分常用的功能，如果你有更多的需求，可以通过自定义配置来实现。  
+具体参考：[自定义配置](https://h5player.anzz.top/home/customConfiguration.html)  
+<br />
+如果你不懂编程或不想折腾，又有相对复杂的功能需求，可以考虑找作者`付费定制`；  
+[通过上面的微信或者TG联系作者](#交流群)  
+
+## 使用文档
+
+- [功能手册](https://h5player.anzz.top/home/feature.html)
+- [常见问题Q&A](https://h5player.anzz.top/home/q&a.html)
   
 ## 快捷键列表
 
@@ -162,25 +159,22 @@
 
 ## 其他说明
 
-1、该脚本是利用业余时间进行开发维护的，有问题欢迎反馈，但不接受任何差评
-2、如果发现脚本完全不可用，一般都不是脚本本身的问题，建议先删除后再次安装即可
+- 1、该脚本是利用业余时间进行开发维护的，有问题欢迎反馈，但不接受任何差评  
+- 2、如果发现脚本完全不可用，一般都不是脚本本身的问题，建议重装一下插件试试  
 
 ## 更新日志
 
 - [https://github.com/xxxily/h5player/blob/master/changeLog.md](https://github.com/xxxily/h5player/blob/master/changeLog.md)
 
 ## 支持作者
-<br />
-<details>
-  <summary>如果我的努力给你带来了便利，请不要吝啬你的赞赏</summary>
 
+如果我的努力给你带来了便利，请不要吝啬你的赞赏
 <p>
   <a href="https://h5player.anzz.top" target="_blank">
   <img src="https://h5player.anzz.top/assets/img/donate.png" width=480 alt="如果我的努力给你带来了便利，请不要吝啬你的赞赏" />
   </a>
 </p>
 
-</details>
 <br />
 
 <Vssue :title="$title" />

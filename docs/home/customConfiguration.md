@@ -1,5 +1,27 @@
 # HTML5播放器自定义配置
 
+为了解决键位被大量占用，和快捷键冲突等问题，`v3.7.0` 版本增加了允许外部自定义快捷键和自定义配置等能力。
+
+出于安全的考虑和尽可能减少潜在的外部污染，自定义外部能力需要菜单开启后才能使用：
+
+<img src="./img/allowExternalCustomConfiguration.png" width=380 alt="allowExternalCustomConfiguration" />
+
+开启后即可通过外部脚本来定义该插件的快捷键和其它相关的能力  
+
+## 功能定制说明
+
+::: tip
+通过自定义配置，基本可以满足绝大部分的个性化需求，但同时要求你有一定的编程能力。  
+如果是简单的自定义，例如自定义快捷键，不懂的可以入群，问群友即可。  
+复杂的功能定制，不想折腾的，可以考虑找作者付费定制。  
+:::
+
+您可参照下面这份脚本来进行自定义：[https://greasyfork.org/zh-CN/scripts/455396](https://greasyfork.org/zh-CN/scripts/455396)  
+
+## 完整自定义参考代码
+
+下面是完整的自定义参考代码：
+
 ```javascript
 // ==UserScript==
 // @name         HTML5播放器自定义配置

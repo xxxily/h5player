@@ -8,6 +8,7 @@ module.exports = {
       children: [
         '/home/Introduction',
         '/home/feature',
+        '/home/customConfiguration',
         '/home/q&a',
         '/home/changeLog'
       ]
