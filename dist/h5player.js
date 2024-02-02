@@ -28,6 +28,8 @@
 // @match        https://pan.quark.cn/list*
 // @match        https://www.youtube.com/*
 // @match        https://www.aliyundrive.com/drive/*/*
+// @match        https://www.agemys.org/play/*
+// @match        https://pan.baidu.com/pfile/video*
 // @exclude      *://yiyan.baidu.com/*
 // @exclude      *://*.bing.com/search*
 // @grant        unsafeWindow
