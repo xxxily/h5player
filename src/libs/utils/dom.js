@@ -138,4 +138,70 @@ function isInViewPort (element) {
   )
 }
 
-export { hideDom, eachParentNode, loadCSSText, getContainer, isEditableTarget, isInShadow, isInViewPort }
+/**
+ * 基于IntersectionObserver的可视区域判断
+ * @param { Function } callback
+ * @param { Element } element
+ * @returns { IntersectionObserver }
+ */
+function observeVisibility (callback, element) {
+  const observer = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        /* 元素在可视区域内 */
+        callback(entry, observer)
+      } else {
+        /* 元素不在可视区域内 */
+        callback(null, observer)
+      }
+    })
+  })
+
+  if (element) {
+    observer.observe(element)
+  }
+
+  /* 返回观察对象，以便外部可以取消观察：observer.disconnect()，或者增加新的观察对象：observer.observe(element) */
+  return observer
+}
+
+// 使用示例：
+// const temp1 = document.querySelector('#temp1')
+// var observer = observeVisibility(function (entry, observer) {
+//   if (entry) {
+//     console.log('[entry]', entry)
+//   } else {
+//     console.log('[entry]', 'null')
+//   }
+// }, temp1)
+
+/**
+ * 判断是否为不可见的元素，主要用以判断是否已经脱离文档流或被设置为display:none的元素
+ * @param {*} element
+ * @returns
+ */
+function isOutOfDocument (element) {
+  if (!element || element.offsetParent === null) {
+    return true
+  }
+
+  const {
+    top,
+    right,
+    bottom,
+    left,
+    width,
+    height
+  } = element.getBoundingClientRect()
+
+  return (
+    top === 0 &&
+    right === 0 &&
+    bottom === 0 &&
+    left === 0 &&
+    width === 0 &&
+    height === 0
+  )
+}
+
+export { hideDom, eachParentNode, loadCSSText, getContainer, isEditableTarget, isInShadow, isInViewPort, observeVisibility, isOutOfDocument }

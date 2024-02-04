@@ -25,6 +25,7 @@ export default {
   allowExperimentFeatures: '开启实验性功能',
   notAllowExperimentFeatures: '禁用实验性功能',
   experimentFeaturesWarning: '实验性功能容易造成一些不确定的问题，请谨慎开启',
+  useMediaDownloadTips: '使用下载功能，需开启实验性功能，\n实验性功能容易造成一些不确定的问题，确定要开启吗？',
   allowExternalCustomConfiguration: '开启外部自定义能力',
   notAllowExternalCustomConfiguration: '关闭外部自定义能力',
   configFail: '配置失败',

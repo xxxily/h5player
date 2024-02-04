@@ -5,7 +5,14 @@ const originalMethods = {
     defineProperties: Object.defineProperties
   },
   setInterval: window.setInterval,
-  setTimeout: window.setTimeout
+  setTimeout: window.setTimeout,
+
+  HTMLElement: window.HTMLElement,
+  customElements: window.customElements,
+  customElementsMethods: {
+    define: window.customElements.define,
+    get: window.customElements.get
+  }
 }
 
 export default originalMethods

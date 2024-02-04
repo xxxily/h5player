@@ -6,110 +6,33 @@
  * @date         2022/08/11 10:05
  * @github       https://github.com/xxxily
  */
-import i18n from './i18n'
 import monkeyMenu from './monkeyMenu'
 import configManager from './configManager'
-import { openInTab } from './helper'
 import {
   isInIframe,
   isInCrossOriginFrame
 } from '../libs/utils/index'
-
-function refreshPage (msg) {
-  msg = msg || '配置已更改，马上刷新页面让配置生效？'
-  const status = confirm(msg)
-  if (status) {
-    window.location.reload()
-  }
-}
+import globalFunctional from './globalFunctional'
 
 let monkeyMenuList = [
+  { ...globalFunctional.openWebsite },
+  { ...globalFunctional.openHotkeysPage },
   {
-    title: i18n.t('website'),
-    fn: () => {
-      openInTab('https://h5player.anzz.top/')
-    }
+    ...globalFunctional.openIssuesPage,
+    disable: !configManager.get('enhance.unfoldMenu')
   },
+  { ...globalFunctional.openDonatePage },
   {
-    title: i18n.t('hotkeys'),
-    fn: () => {
-      openInTab('https://h5player.anzz.top/home/Introduction.html#%E5%BF%AB%E6%8D%B7%E9%94%AE%E5%88%97%E8%A1%A8')
-    }
-  },
-  {
-    title: i18n.t('issues'),
-    disable: !configManager.get('enhance.unfoldMenu'),
-    fn: () => {
-      openInTab('https://github.com/xxxily/h5player/issues')
-    }
-  },
-  {
-    title: i18n.t('donate'),
-    fn: () => {
-      openInTab('https://h5player.anzz.top/#%E8%B5%9E')
-    }
-  },
-  /* 推广位，只允许推荐有用的东西 */
-  {
-    title: i18n.t('recommend'),
+    ...globalFunctional.openRecommendPage,
     // disable: !i18n.language().includes('zh'),
-    disable: true,
-    fn: () => {
-      function randomZeroOrOne () {
-        return Math.floor(Math.random() * 2)
-      }
-
-      if (randomZeroOrOne()) {
-        openInTab('https://hello-ai.anzz.top/home/')
-      } else {
-        openInTab('https://github.com/xxxily/hello-ai')
-      }
-    }
+    disable: true
   },
+  { ...globalFunctional.openGlobalSettingPage },
+  { ...globalFunctional.toggleExpandedOrCollapsedStateOfMonkeyMenu },
+  { ...globalFunctional.toggleScriptEnableState },
   {
-    title: i18n.t('globalSetting'),
-    disable: !i18n.language().includes('zh'),
-    fn: () => {
-      // openInTab(`https://h5player.anzz.top/tools/json-editor/index.html?mode=code&referrer=${encodeURIComponent(window.location.href)}`)
-      openInTab('https://h5player.anzz.top/tools/json-editor/index.html?mode=tree&saveHandlerName=saveH5PlayerConfig&expandAll=true&json={}')
-    }
-  },
-  {
-    title: `${configManager.get('enhance.unfoldMenu') ? i18n.t('foldMenu') : i18n.t('unfoldMenu')} 「${i18n.t('globalSetting')}」`,
-    fn: () => {
-      const confirm = window.confirm(configManager.get('enhance.unfoldMenu') ? i18n.t('foldMenu') : i18n.t('unfoldMenu'))
-      if (confirm) {
-        configManager.setGlobalStorage('enhance.unfoldMenu', !configManager.get('enhance.unfoldMenu'))
-        window.location.reload()
-      }
-    }
-  },
-  {
-    title: i18n.t('setting'),
-    disable: true,
-    fn: () => {
-      openInTab('https://h5player.anzz.top/configure/', null, true)
-      window.alert('功能开发中，敬请期待...')
-    }
-  },
-  {
-    title: `${configManager.get('enable') ? i18n.t('disableScript') : i18n.t('enableScript')} 「${i18n.t('localSetting')}」`,
-    disable: !configManager.get('enhance.unfoldMenu'),
-    fn: () => {
-      const confirm = window.confirm(configManager.get('enable') ? i18n.t('disableScript') : i18n.t('enableScript'))
-      if (confirm) {
-        configManager.setLocalStorage('enable', !configManager.get('enable'))
-        window.location.reload()
-      }
-    }
-  },
-  {
-    title: i18n.t('restoreConfiguration'),
-    disable: !configManager.get('enhance.unfoldMenu'),
-    fn: () => {
-      configManager.clear()
-      refreshPage()
-    }
+    ...globalFunctional.restoreGlobalConfiguration,
+    disable: !configManager.get('enhance.unfoldMenu')
   }
 ]
 
@@ -153,107 +76,47 @@ export function registerH5playerMenus (h5player) {
   if (player && !t._hasRegisterH5playerMenus_) {
     const menus = [
       {
-        title: () => i18n.t('openCrossOriginFramePage'),
-        disable: foldMenu || !isInCrossOriginFrame(),
-        fn: () => {
-          openInTab(location.href)
-        }
+        ...globalFunctional.openCrossOriginFramePage,
+        disable: foldMenu || !isInCrossOriginFrame()
       },
       {
-        title: () => `${configManager.get('enhance.blockSetCurrentTime') ? i18n.t('unblockSetCurrentTime') : i18n.t('blockSetCurrentTime')} 「${i18n.t('localSetting')}」`,
+        ...globalFunctional.toggleSetCurrentTimeFunctional,
         type: 'local',
-        disable: foldMenu,
-        fn: () => {
-          const confirm = window.confirm(configManager.get('enhance.blockSetCurrentTime') ? i18n.t('unblockSetCurrentTime') : i18n.t('blockSetCurrentTime'))
-          if (confirm) {
-            configManager.setLocalStorage('enhance.blockSetCurrentTime', !configManager.get('enhance.blockSetCurrentTime'))
-            window.location.reload()
-          }
-        }
+        disable: foldMenu
       },
       {
-        title: () => `${configManager.get('enhance.blockSetVolume') ? i18n.t('unblockSetVolume') : i18n.t('blockSetVolume')} 「${i18n.t('localSetting')}」`,
+        ...globalFunctional.toogleSetVolumeFunctional,
         type: 'local',
-        disable: foldMenu,
-        fn: () => {
-          const confirm = window.confirm(configManager.get('enhance.blockSetVolume') ? i18n.t('unblockSetVolume') : i18n.t('blockSetVolume'))
-          if (confirm) {
-            configManager.setLocalStorage('enhance.blockSetVolume', !configManager.get('enhance.blockSetVolume'))
-            window.location.reload()
-          }
-        }
+        disable: foldMenu
       },
       {
-        title: () => `${configManager.get('enhance.blockSetPlaybackRate') ? i18n.t('unblockSetPlaybackRate') : i18n.t('blockSetPlaybackRate')} 「${i18n.t('globalSetting')}」`,
+        ...globalFunctional.toogleSetPlaybackRateFunctional,
         type: 'global',
-        disable: foldMenu,
-        fn: () => {
-          const confirm = window.confirm(configManager.get('enhance.blockSetPlaybackRate') ? i18n.t('unblockSetPlaybackRate') : i18n.t('blockSetPlaybackRate'))
-          if (confirm) {
-            /* 倍速参数，只能全局设置 */
-            configManager.setGlobalStorage('enhance.blockSetPlaybackRate', !configManager.get('enhance.blockSetPlaybackRate'))
-            window.location.reload()
-          }
-        }
+        disable: foldMenu
       },
       {
-        title: () => `${configManager.get('enhance.allowAcousticGain') ? i18n.t('notAllowAcousticGain') : i18n.t('allowAcousticGain')} 「${i18n.t('globalSetting')}」`,
+        ...globalFunctional.toogleAcousticGainFunctional,
         type: 'global',
-        disable: foldMenu,
-        fn: () => {
-          const confirm = window.confirm(configManager.get('enhance.allowAcousticGain') ? i18n.t('notAllowAcousticGain') : i18n.t('allowAcousticGain'))
-          if (confirm) {
-            configManager.setGlobalStorage('enhance.allowAcousticGain', !configManager.getGlobalStorage('enhance.allowAcousticGain'))
-            window.location.reload()
-          }
-        }
+        disable: foldMenu
       },
       {
-        title: () => `${configManager.get('enhance.allowCrossOriginControl') ? i18n.t('notAllowCrossOriginControl') : i18n.t('allowCrossOriginControl')} 「${i18n.t('globalSetting')}」`,
+        ...globalFunctional.toogleCrossOriginControlFunctional,
         type: 'global',
-        disable: foldMenu,
-        fn: () => {
-          const confirm = window.confirm(configManager.get('enhance.allowCrossOriginControl') ? i18n.t('notAllowCrossOriginControl') : i18n.t('allowCrossOriginControl'))
-          if (confirm) {
-            configManager.setGlobalStorage('enhance.allowCrossOriginControl', !configManager.getGlobalStorage('enhance.allowCrossOriginControl'))
-            window.location.reload()
-          }
-        }
+        disable: foldMenu
       },
       {
-        title: () => `${configManager.get('enhance.allowExperimentFeatures') ? i18n.t('notAllowExperimentFeatures') : i18n.t('allowExperimentFeatures')} 「${i18n.t('globalSetting')}」`,
+        ...globalFunctional.toogleExperimentFeatures,
         type: 'global',
-        disable: foldMenu,
-        fn: () => {
-          const confirm = window.confirm(configManager.get('enhance.allowExperimentFeatures') ? i18n.t('notAllowExperimentFeatures') : i18n.t('experimentFeaturesWarning'))
-          if (confirm) {
-            configManager.setGlobalStorage('enhance.allowExperimentFeatures', !configManager.get('enhance.allowExperimentFeatures'))
-            window.location.reload()
-          }
-        }
+        disable: foldMenu
       },
       {
-        title: () => `${configManager.get('enhance.allowExternalCustomConfiguration') ? i18n.t('notAllowExternalCustomConfiguration') : i18n.t('allowExternalCustomConfiguration')} 「${i18n.t('globalSetting')}」`,
+        ...globalFunctional.toogleExternalCustomConfiguration,
         type: 'global',
-        disable: foldMenu,
-        fn: () => {
-          const confirm = window.confirm(configManager.get('enhance.allowExternalCustomConfiguration') ? i18n.t('notAllowExternalCustomConfiguration') : i18n.t('allowExternalCustomConfiguration'))
-          if (confirm) {
-            configManager.setGlobalStorage('enhance.allowExternalCustomConfiguration', !configManager.getGlobalStorage('enhance.allowExternalCustomConfiguration'))
-            window.location.reload()
-          }
-        }
+        disable: foldMenu
       },
       {
-        title: () => `${configManager.getGlobalStorage('debug') ? i18n.t('closeDebugMode') : i18n.t('openDebugMode')} 「${i18n.t('globalSetting')}」`,
-        disable: foldMenu,
-        fn: () => {
-          const confirm = window.confirm(configManager.getGlobalStorage('debug') ? i18n.t('closeDebugMode') : i18n.t('openDebugMode'))
-          if (confirm) {
-            configManager.setGlobalStorage('debug', !configManager.getGlobalStorage('debug'))
-            window.location.reload()
-          }
-        }
+        ...globalFunctional.toogleDebugMode,
+        disable: foldMenu
       }
     ]
 

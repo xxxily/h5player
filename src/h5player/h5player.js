@@ -1,6 +1,6 @@
 import './comment'
-import configManager from './configManager'
 import originalMethods from './originalMethods'
+import configManager from './configManager'
 import { h5PlayerTccInit, mergeTaskConf } from './h5PlayerTccInit'
 import { setFakeUA } from './userAgent'
 import FullScreen from '../libs/FullScreen/index'
@@ -33,6 +33,7 @@ import {
 import HotkeysRunner from '../libs/utils/hotkeysRunner'
 import MediaElementAmplifier from '../libs/utils/MediaElementAmplifier'
 import mediaDownload from './mediaDownload'
+import windowSandbox from './h5playerUISandbox'
 
 import {
   isRegisterKey,
@@ -300,6 +301,31 @@ const h5Player = {
         debug.log(`video durationchange: ${player.duration}`)
       })
     }
+
+    /* 注册UI界面 */
+    t.UI && t.UI.popup && t.UI.popup(player, t)
+
+    /* 在播放或暂停时，也尝试注册UI界面，这样即使popup被意外删除，也还是能正常再次创建回来 */
+    player.addEventListener('play', function () {
+      t.UI && t.UI.popup && t.UI.popup(player, t)
+    })
+    player.addEventListener('pause', function () {
+      t.UI && t.UI.popup && t.UI.popup(player, t)
+    })
+    let lastRegisterUIPopupTime = Date.now()
+    let tryRegisterUIPopupCount = 0
+    player.addEventListener('timeupdate', function () {
+      if (Date.now() - lastRegisterUIPopupTime > 800 && tryRegisterUIPopupCount < 60) {
+        lastRegisterUIPopupTime = Date.now()
+        tryRegisterUIPopupCount += 1
+        t.UI && t.UI.popup && t.UI.popup(player, t)
+      }
+    })
+    player.addEventListener('durationchange', function () {
+      lastRegisterUIPopupTime = Date.now()
+      tryRegisterUIPopupCount = 0
+      t.UI && t.UI.popup && t.UI.popup(player, t)
+    })
   },
 
   registerHotkeysRunner () {
@@ -536,11 +562,11 @@ const h5Player = {
   },
 
   /* 设置播放速度 */
-  setPlaybackRate: function (num, notips, duplicate) {
+  setPlaybackRate: function (num, notips, duplicate, skipLock) {
     const t = this
     const player = t.player()
 
-    if (t.isLockPlaybackRate()) {
+    if (!skipLock && t.isLockPlaybackRate()) {
       debug.info('调速能力已被锁定')
       return false
     }
@@ -1335,6 +1361,7 @@ const h5Player = {
   switchPlayStatus () {
     const t = this
     const player = t.player()
+
     if (TCC.doTask('switchPlayStatus')) {
       // debug.log('[TCC][switchPlayStatus]', 'suc')
       return
@@ -1755,6 +1782,12 @@ const h5Player = {
     if (configManager.get('enhance.allowExperimentFeatures')) {
       debug.warn('[experimentFeatures][mediaDownload]')
       mediaDownload(this.player())
+    } else {
+      const result = window.confirm(i18n.t('useMediaDownloadTips'))
+      if (result) {
+        configManager.setGlobalStorage('enhance.allowExperimentFeatures', !configManager.get('enhance.allowExperimentFeatures'))
+        window.location.reload()
+      }
     }
   },
 
@@ -2563,7 +2596,6 @@ const h5Player = {
 async function h5PlayerInit () {
   try {
     mediaCore.init(function (mediaElement) {
-      // debug.log('[mediaCore][mediaChecker]', mediaElement)
       h5Player.init()
     })
 
@@ -2575,7 +2607,6 @@ async function h5PlayerInit () {
 
     /* 禁止对playbackRate等属性进行锁定 */
     hackDefineProperty()
-    // if (!location.host.includes('bilibili')) {}
 
     /* 禁止对shadowdom使用close模式 */
     hackAttachShadow()
@@ -2626,15 +2657,15 @@ async function h5PlayerInit () {
     debug.error('h5Player init fail', e)
   }
 
-  h5Player.UI = h5playerUiWraper()
-
-  setTimeout(() => {
-    try {
+  if (window.customElements && document.adoptedStyleSheets) {
+    h5Player.UI = h5playerUiWraper(windowSandbox)
+    setTimeout(async () => {
       h5Player.UI.init()
-    } catch (e) {
-      debug.error('h5Player UI init fail', e)
-    }
-  }, 1000)
+    }, 400)
+  } else {
+    /* webkit内核建议73以上的浏览器才允许使用UI组件，否则兼容或性能都是很大的问题 */
+    debug.warn('当前浏览器不支持customElements或adoptedStyleSheets，无法使用UI组件，建议使用Chrome 83+，Edge 83+')
+  }
 }
 
 export default h5PlayerInit

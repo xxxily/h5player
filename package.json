@@ -8,6 +8,7 @@
     "rollup": "rollup -w -c config/rollup.config.js",
     "h5player": "cross-env MODE=prod  PROJECT_NAME=h5player rollup -w -c config/rollup.config.js",
     "h5playerUI": "cross-env MODE=prod  PROJECT_NAME=h5playerUI rollup -w -c config/rollup.config.js",
+    "start": "yarn run h5playerUI & yarn run h5player",
     "jsonEditor": "cross-env MODE=prod  PROJECT_NAME=jsonEditor rollup -c config/rollup.config.js",
     "server": "node bin/staticService/index.js",
     "ui-dev": "webpack-dev-server --inline --config bin/webpack/webpack.dev.conf.js",

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="cn">
+
 <head>
   <meta charset="UTF-8">
   <title>h5player - ui</title>
@@ -7,7 +8,139 @@
   <script src="https://unpkg.com/vue@2.6.11/dist/vue.min.js"></script>
   <script src="https://unpkg.com/element-ui@2.13.0/lib/index.js"></script>
 </head>
+
 <body>
-<div>h5player - ui</div>
+  <div>h5player - ui</div>
+
+  <div id="h5player-popup-wrap">
+    <sl-popup placement="top" sync="width">
+      <div class="h5player-popup-content">
+        <div>
+          <!-- <sl-icon src="${logo}" title="h5player"></sl-icon> -->
+          <a href="https://github.com/xxxily/h5player" target="_blank">h5player</a>
+        </div>
+        <div>
+          <!-- 广告位 -->
+        </div>
+        <div class="h5p-action-mod">
+          <span class="h5p-action-btn">
+            <sl-icon src="${iconDownload}" title="下载"></sl-icon>
+            <span class="h5p-desc">下载</span>
+          </span>
+          <span class="h5p-action-btn">
+            <sl-icon src="${iconImage}" title="截图"></sl-icon>
+            <span class="h5p-desc">截图</span>
+          </span>
+
+          <sl-dropdown distance="6">
+            <span class="h5p-action-btn" slot="trigger">
+              <sl-icon src="${iconFastForwardBtn}" title="倍速"></sl-icon>
+              <span class="h5p-desc">倍速</span>
+            </span>
+            <sl-menu>
+              <sl-menu-item value="0.5">0.5x</sl-menu-item>
+              <sl-menu-item value="0.75">0.75x</sl-menu-item>
+              <sl-menu-item value="1">1.0x</sl-menu-item>
+              <sl-menu-item value="1.25">1.25x</sl-menu-item>
+              <sl-menu-item value="1.5">1.5x</sl-menu-item>
+              <sl-menu-item value="2">2.0x</sl-menu-item>
+              <sl-menu-item value="3">3.0x</sl-menu-item>
+              <sl-menu-item value="4">4.0x</sl-menu-item>
+              <sl-menu-item value="8">8.0x</sl-menu-item>
+              <sl-menu-item value="16">16.0x</sl-menu-item>
+            </sl-menu>
+          </sl-dropdown>
+
+          <sl-dropdown distance="6">
+            <span class="h5p-action-btn" slot="trigger">
+              <sl-icon src="${iconList}" title="菜单"></sl-icon>
+              <span class="h5p-desc">菜单</span>
+            </span>
+            <sl-menu>
+              <sl-menu-item value="cut">
+                画面滤镜
+                <sl-menu slot="submenu">
+                  <sl-menu-item value="">图像复位</sl-menu-item>
+                  <sl-menu-item value="">增加亮度</sl-menu-item>
+                  <sl-menu-item value="">减少亮度</sl-menu-item>
+                  <sl-menu-item value="">增加对比度</sl-menu-item>
+                  <sl-menu-item value="">减少对比度</sl-menu-item>
+                  <sl-menu-item value="">增加饱和度</sl-menu-item>
+                  <sl-menu-item value="">减少饱和度</sl-menu-item>
+                  <sl-menu-item value="">增加色相</sl-menu-item>
+                  <sl-menu-item value="">减少色相</sl-menu-item>
+                  <sl-menu-item value="">增加模糊度</sl-menu-item>
+                  <sl-menu-item value="">减少模糊度</sl-menu-item>
+                </sl-menu>
+              </sl-menu-item>
+              <sl-menu-item value="">
+                旋转镜像
+                <sl-menu slot="submenu">
+                  <sl-menu-item value="">画面旋转 90 度</sl-menu-item>
+                  <sl-menu-item value="">画面水平镜像翻转</sl-menu-item>
+                  <sl-menu-item value="">画面垂直镜像翻转</sl-menu-item>
+                </sl-menu>
+              </sl-menu-item>
+              <sl-menu-item value="">
+                画面移动
+                <sl-menu slot="submenu">
+                  <sl-menu-item value="">画面向右移动10px</sl-menu-item>
+                  <sl-menu-item value="">画面向左移动10px</sl-menu-item>
+                  <sl-menu-item value="">画面向上移动10px</sl-menu-item>
+                  <sl-menu-item value="">画面向下移动10px</sl-menu-item>
+                </sl-menu>
+              </sl-menu-item>
+              <sl-menu-item value="">
+                更多操作
+                <sl-menu slot="submenu">
+                  <sl-menu-item value="closeUI">临时移除当前UI栏</sl-menu-item>
+                  <sl-menu-item value="closeUI">永久关闭UI栏</sl-menu-item>
+                  <sl-menu-item value="closeUI">禁用脚本</sl-menu-item>
+                  <sl-menu-item value="closeUI">禁用所有快捷键</sl-menu-item>
+                  <sl-menu-item value="openConfigEditor">打开配置编辑器</sl-menu-item>
+                </sl-menu>
+              </sl-menu-item>
+              <sl-divider></sl-divider>
+              <sl-menu-item value="hotkey">快捷键</sl-menu-item>
+              <sl-menu-item>
+                设置
+                <sl-menu slot="submenu">
+                  <sl-menu-item value="homepage">还原全局默认配置</sl-menu-item>
+                  <sl-menu-item value="GitHub">禁用默认播放进度控制逻辑</sl-menu-item>
+                  <sl-menu-item value="issue">禁用默认音量控制逻辑</sl-menu-item>
+                  <sl-menu-item value="issue">允许默认速度调节逻辑</sl-menu-item>
+                  <sl-menu-item value="issue">开启音量增益能力</sl-menu-item>
+                  <sl-menu-item value="issue">禁用跨域控制能力</sl-menu-item>
+                  <sl-menu-item value="issue">开启实验性功能</sl-menu-item>
+                  <sl-menu-item value="issue">开启外部自定义能力</sl-menu-item>
+                  <sl-menu-item value="issue">开启调试能力</sl-menu-item>
+                  <sl-menu-item value="openConfigEditor">打开配置编辑器</sl-menu-item>
+                </sl-menu>
+              </sl-menu-item>
+              <sl-menu-item>
+                关于
+                <sl-menu slot="submenu">
+                  <sl-menu-item value="homepage">官网</sl-menu-item>
+                  <sl-menu-item value="GitHub">GitHub</sl-menu-item>
+                  <sl-menu-item value="issue">问题反馈</sl-menu-item>
+                  <sl-menu-item value="issue">添加群聊</sl-menu-item>
+                  <sl-menu-item value="issue">打赏作者</sl-menu-item>
+                </sl-menu>
+              </sl-menu-item>
+              <sl-menu-item>
+                更多
+                <sl-menu slot="submenu">
+                  <sl-menu-item value="homepage">音视频合并脚本</sl-menu-item>
+                  <sl-menu-item value="GitHub">视频转换工具</sl-menu-item>
+                </sl-menu>
+              </sl-menu-item>
+            </sl-menu>
+          </sl-dropdown>
+        </div>
+      </div>
+    </sl-popup>
+  </div>
+
 </body>
+
 </html>

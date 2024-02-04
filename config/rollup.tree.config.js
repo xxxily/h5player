@@ -47,11 +47,11 @@ const confTree = {
     },
     plugins: [
       /**
-       * 对输出的代码进行二次包裹，防止直接执行代码 
+       * 对输出的代码进行二次包裹，防止直接执行代码
        * 此处将输出的iife代码包裹成一个函数，然后转化成es模块，以便在其他地方引用
        */
       codeWraper({
-        before: 'const h5playerUI = function () {',
+        before: 'const h5playerUI = function (window) {',
         after: 'return h5playerUI};\nexport default h5playerUI'
       })
     ]

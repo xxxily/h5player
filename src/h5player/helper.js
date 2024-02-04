@@ -147,6 +147,19 @@ function openInTab (url, opts, referer) {
       insert: true,
       setParent: true
     })
+  } else {
+    // 创建新的a标签并模拟点击
+    const a = document.createElement
+    a.href = url
+    a.target = '_blank'
+    a.rel = 'noopener noreferrer'
+    a.style.display = 'inline-block'
+    a.style.width = '1px'
+    a.style.height = '1px'
+    a.style.opcity = 0
+    document.body.appendChild(a)
+    a.click()
+    setTimeout(() => { document.body.removeChild(a) }, 300)
   }
 }
 

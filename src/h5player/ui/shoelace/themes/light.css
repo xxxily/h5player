@@ -474,3 +474,97 @@
 sl-drawer::part(base) {
   color: var(--sl-color-neutral-800) !important;
 }
+
+.h5player-popup-wrap {
+  position: relative;
+  z-index: 99999999;
+  /* opacity: 0; */
+  opacity: 1;
+}
+
+.h5player-popup-wrap sl-popup {
+  position: relative;
+}
+
+.h5player-popup-wrap .h5player-popup-content {
+  background-color: rgba(0, 0, 0, 0.9);
+  color: #fff;
+  font-size: 16px;
+  min-width: 220px;
+  height: 48px;
+  line-height: 48px;
+  display: flex;
+  padding: 0 16px;
+  border-radius: 6px 6px 0 0;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+
+  /* 灰色向下的过度阴影 */
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.7);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.h5player-popup-content .h5p-action-mod {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.h5player-popup-content .h5p-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  padding: 0 8px;
+  cursor: pointer;
+}
+
+.h5player-popup-content .h5p-action-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.h5player-popup-content .h5p-action-btn sl-icon {
+  padding: 0 4px;
+}
+
+/* 激活态 */
+.h5player-popup-active {
+  /* opacity: 0.1; */
+  opacity: 1;
+  transition: opacity 0.2s;
+}
+
+.h5player-popup-content a, .h5player-popup-content a:visited{
+  color: #fff;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.h5player-popup-wrap:hover, .h5player-popup-full-active {
+  opacity: 1 !important;
+  transition: opacity 0.2s;
+}
+
+.h5player-popup-wrap:hover .h5player-popup-content, .h5player-popup-full-active .h5player-popup-content {
+  border-bottom: 2px solid rgba(255, 255, 255, 0.6);
+}
+
+.h5player-popup-content .h5p-action-mod sl-menu {
+  background-color: rgba(0, 0, 0, 0.9);
+  color: #fff;
+  border-radius: 4px;
+  padding: 5px 0;
+}
+
+.h5player-popup-content .h5p-action-mod sl-menu-item::part(base) {
+  /* background-color: rgba(0, 0, 0, 0.9); */
+  color: #fff;
+  font-size: 14px;
+  padding: 2px 0;
+}
+
+.h5player-popup-content .h5p-action-mod sl-menu-item::part(base):hover:not([aria-disabled="true"], :focus-visible) {
+  background-color: rgba(255, 255, 255, 0.2);
+}
