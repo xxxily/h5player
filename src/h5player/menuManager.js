@@ -16,20 +16,35 @@ import globalFunctional from './globalFunctional'
 
 let monkeyMenuList = [
   { ...globalFunctional.openWebsite },
-  { ...globalFunctional.openHotkeysPage },
+  // { ...globalFunctional.openHotkeysPage },
   {
     ...globalFunctional.openIssuesPage,
     disable: !configManager.get('enhance.unfoldMenu')
   },
   { ...globalFunctional.openDonatePage },
   {
-    ...globalFunctional.openRecommendPage,
-    // disable: !i18n.language().includes('zh'),
-    disable: true
+    ...globalFunctional.toggleScriptEnableState,
+    disable: configManager.get('enable') !== false
   },
-  { ...globalFunctional.openGlobalSettingPage },
+  {
+    ...globalFunctional.toggleGUIStatusUnderCurrentSite,
+    disable: configManager.getLocalStorage('ui.enable') !== false
+  },
+  {
+    ...globalFunctional.toggleGUIStatus,
+    disable: configManager.get('ui.enable') !== false
+  },
+  {
+    ...globalFunctional.toggleHotkeysStatusUnderCurrentSite,
+    disable: configManager.getLocalStorage('enableHotkeys') !== false
+  },
+  {
+    ...globalFunctional.toggleHotkeysStatus,
+    disable: configManager.get('enableHotkeys') !== false
+  },
+  { ...globalFunctional.openCustomConfigurationEditor },
+  /* 展开或收起菜单 */
   { ...globalFunctional.toggleExpandedOrCollapsedStateOfMonkeyMenu },
-  { ...globalFunctional.toggleScriptEnableState },
   {
     ...globalFunctional.restoreGlobalConfiguration,
     disable: !configManager.get('enhance.unfoldMenu')
@@ -85,37 +100,37 @@ export function registerH5playerMenus (h5player) {
         disable: foldMenu
       },
       {
-        ...globalFunctional.toogleSetVolumeFunctional,
+        ...globalFunctional.toggleSetVolumeFunctional,
         type: 'local',
         disable: foldMenu
       },
       {
-        ...globalFunctional.toogleSetPlaybackRateFunctional,
+        ...globalFunctional.toggleSetPlaybackRateFunctional,
         type: 'global',
         disable: foldMenu
       },
       {
-        ...globalFunctional.toogleAcousticGainFunctional,
+        ...globalFunctional.toggleAcousticGainFunctional,
         type: 'global',
         disable: foldMenu
       },
       {
-        ...globalFunctional.toogleCrossOriginControlFunctional,
+        ...globalFunctional.toggleCrossOriginControlFunctional,
         type: 'global',
         disable: foldMenu
       },
       {
-        ...globalFunctional.toogleExperimentFeatures,
+        ...globalFunctional.toggleExperimentFeatures,
         type: 'global',
         disable: foldMenu
       },
       {
-        ...globalFunctional.toogleExternalCustomConfiguration,
+        ...globalFunctional.toggleExternalCustomConfiguration,
         type: 'global',
         disable: foldMenu
       },
       {
-        ...globalFunctional.toogleDebugMode,
+        ...globalFunctional.toggleDebugMode,
         disable: foldMenu
       }
     ]

@@ -2,378 +2,267 @@ import iconFastForwardBtn from '../../../../node_modules/@shoelace-style/shoelac
 import iconImage from '../../../../node_modules/@shoelace-style/shoelace/dist/assets/icons/image.svg'
 import iconList from '../../../../node_modules/@shoelace-style/shoelace/dist/assets/icons/list.svg'
 import iconDownload from '../../../../node_modules/@shoelace-style/shoelace/dist/assets/icons/download.svg'
+// import iconGear from '../../../node_modules/@shoelace-style/shoelace/dist/assets/icons/gear.svg'
+// import iconXLg from '../../../node_modules/@shoelace-style/shoelace/dist/assets/icons/x-lg.svg'
 
-/**
- * 参考模板，不用删除，只要不引用就不会打包进去
- */
-const template = `
-<div class="h5p-action-mod">
-  <span class="h5p-action-btn">
-    <sl-icon src="${iconDownload}" title="下载"></sl-icon>
-    <span class="h5p-desc">下载</span>
-  </span>
-  <span class="h5p-action-btn">
-    <sl-icon src="${iconImage}" title="截图"></sl-icon>
-    <span class="h5p-desc">截图</span>
-  </span>
-
-  <sl-dropdown distance="6">
-    <span class="h5p-action-btn" slot="trigger">
-      <sl-icon src="${iconFastForwardBtn}" title="倍速"></sl-icon>
-      <span class="h5p-desc">倍速</span>
-    </span>
-    <sl-menu>
-      <sl-menu-item value="0.5">0.5x</sl-menu-item>
-      <sl-menu-item value="0.75">0.75x</sl-menu-item>
-      <sl-menu-item value="1">1.0x</sl-menu-item>
-      <sl-menu-item value="1.25">1.25x</sl-menu-item>
-      <sl-menu-item value="1.5">1.5x</sl-menu-item>
-      <sl-menu-item value="2">2.0x</sl-menu-item>
-      <sl-menu-item value="3">3.0x</sl-menu-item>
-      <sl-menu-item value="4">4.0x</sl-menu-item>
-      <sl-menu-item value="8">8.0x</sl-menu-item>
-      <sl-menu-item value="16">16.0x</sl-menu-item>
-    </sl-menu>
-  </sl-dropdown>
-
-  <sl-dropdown distance="6">
-    <span class="h5p-action-btn" slot="trigger">
-      <sl-icon src="${iconList}" title="菜单"></sl-icon>
-      <span class="h5p-desc">菜单</span>
-    </span>
-    <sl-menu>
-      <sl-menu-item value="cut">
-        画面滤镜
-        <sl-menu slot="submenu">
-          <sl-menu-item value="">图像复位</sl-menu-item>
-          <sl-menu-item value="">增加亮度</sl-menu-item>
-          <sl-menu-item value="">减少亮度</sl-menu-item>
-          <sl-menu-item value="">增加对比度</sl-menu-item>
-          <sl-menu-item value="">减少对比度</sl-menu-item>
-          <sl-menu-item value="">增加饱和度</sl-menu-item>
-          <sl-menu-item value="">减少饱和度</sl-menu-item>
-          <sl-menu-item value="">增加色相</sl-menu-item>
-          <sl-menu-item value="">减少色相</sl-menu-item>
-          <sl-menu-item value="">增加模糊度</sl-menu-item>
-          <sl-menu-item value="">减少模糊度</sl-menu-item>
-        </sl-menu>
-      </sl-menu-item>
-      <sl-menu-item value="">
-        旋转镜像
-        <sl-menu slot="submenu">
-          <sl-menu-item value="">画面旋转 90 度</sl-menu-item>
-          <sl-menu-item value="">画面水平镜像翻转</sl-menu-item>
-          <sl-menu-item value="">画面垂直镜像翻转</sl-menu-item>
-        </sl-menu>
-      </sl-menu-item>
-      <sl-menu-item value="">
-        画面移动
-        <sl-menu slot="submenu">
-          <sl-menu-item value="">画面向右移动10px</sl-menu-item>
-          <sl-menu-item value="">画面向左移动10px</sl-menu-item>
-          <sl-menu-item value="">画面向上移动10px</sl-menu-item>
-          <sl-menu-item value="">画面向下移动10px</sl-menu-item>
-        </sl-menu>
-      </sl-menu-item>
-      <sl-menu-item value="">
-        更多操作
-        <sl-menu slot="submenu">
-          <sl-menu-item value="closeUI">临时移除当前UI栏</sl-menu-item>
-          <sl-menu-item value="closeUI">永久关闭UI栏</sl-menu-item>
-          <sl-menu-item value="closeUI">禁用脚本</sl-menu-item>
-          <sl-menu-item value="closeUI">禁用所有快捷键</sl-menu-item>
-          <sl-menu-item value="openConfigEditor">打开配置编辑器</sl-menu-item>
-        </sl-menu>
-      </sl-menu-item>
-      <sl-divider></sl-divider>
-      <sl-menu-item value="hotkey">快捷键</sl-menu-item>
-      <sl-menu-item>
-        设置
-        <sl-menu slot="submenu">
-          <sl-menu-item value="homepage">还原全局默认配置</sl-menu-item>
-          <sl-menu-item value="GitHub">禁用默认播放进度控制逻辑</sl-menu-item>
-          <sl-menu-item value="issue">禁用默认音量控制逻辑</sl-menu-item>
-          <sl-menu-item value="issue">允许默认速度调节逻辑</sl-menu-item>
-          <sl-menu-item value="issue">开启音量增益能力</sl-menu-item>
-          <sl-menu-item value="issue">禁用跨域控制能力</sl-menu-item>
-          <sl-menu-item value="issue">开启实验性功能</sl-menu-item>
-          <sl-menu-item value="issue">开启外部自定义能力</sl-menu-item>
-          <sl-menu-item value="issue">开启调试能力</sl-menu-item>
-          <sl-menu-item value="openConfigEditor">打开配置编辑器</sl-menu-item>
-        </sl-menu>
-      </sl-menu-item>
-      <sl-menu-item>
-        关于
-        <sl-menu slot="submenu">
-          <sl-menu-item value="homepage">官网</sl-menu-item>
-          <sl-menu-item value="GitHub">GitHub</sl-menu-item>
-          <sl-menu-item value="issue">问题反馈</sl-menu-item>
-          <sl-menu-item value="issue">添加群聊</sl-menu-item>
-          <sl-menu-item value="issue">打赏作者</sl-menu-item>
-        </sl-menu>
-      </sl-menu-item>
-      <sl-menu-item>
-        更多
-        <sl-menu slot="submenu">
-          <sl-menu-item value="homepage">音视频合并脚本</sl-menu-item>
-          <sl-menu-item value="GitHub">视频转换工具</sl-menu-item>
-        </sl-menu>
-      </sl-menu-item>
-    </sl-menu>
-  </sl-dropdown>
-</div>
-`
+const { i18n, debug, globalFunctional } = window.h5playerUIProvider
 
 export const menuConfig = [
   {
-    title: '下载',
-    desc: '下载当前视频',
+    title: i18n.t('download'),
+    desc: i18n.t('download'),
     icon: iconDownload,
-    action: 'mediaDownload'
+    action: 'mediaDownload',
+    args: null
   },
   {
-    title: '截图',
-    desc: '截取当前视频',
+    title: i18n.t('capture'),
+    desc: i18n.t('capture'),
     icon: iconImage,
-    action: 'capture'
+    action: 'capture',
+    args: null
   },
   {
-    title: '倍速',
-    desc: '选择播放倍速',
+    title: i18n.t('speed'),
+    desc: i18n.t('speed'),
     icon: iconFastForwardBtn,
-    action: 'speed',
     dropdownMenu: [
       {
         title: '0.5x',
-        desc: '0.5倍速',
+        desc: '0.5x',
         action: 'setPlaybackRate',
-        value: 0.5
+        args: 0.5
       },
       {
         title: '0.75x',
-        desc: '0.75倍速',
+        desc: '0.75x',
         action: 'setPlaybackRate',
-        value: 0.75
+        args: 0.75
       },
       {
         title: '1.0x',
-        desc: '1倍速',
+        desc: '1.0x',
         action: 'setPlaybackRate',
-        value: 1
+        args: 1
       },
       {
         title: '1.25x',
-        desc: '1.25倍速',
+        desc: '1.25x',
         action: 'setPlaybackRate',
-        value: 1.25
+        args: 1.25
       },
       {
         title: '1.5x',
-        desc: '1.5倍速',
+        desc: '1.5x',
         action: 'setPlaybackRate',
-        value: 1.5
+        args: 1.5
       },
       {
         title: '2.0x',
-        desc: '2倍速',
+        desc: '2.0x',
         action: 'setPlaybackRate',
-        value: 2
+        args: 2
       },
       {
         title: '3.0x',
-        desc: '3倍速',
+        desc: '3.0x',
         action: 'setPlaybackRate',
-        value: 3
+        args: 3
       },
       {
         title: '4.0x',
-        desc: '4倍速',
+        desc: '4.0x',
         action: 'setPlaybackRate',
-        value: 4
+        args: 4
       },
       {
         title: '8.0x',
-        desc: '8倍速',
+        desc: '8.0x',
         action: 'setPlaybackRate',
-        value: 8
+        args: 8
       },
       {
         title: '16.0x',
-        desc: '16倍速',
+        desc: '16.0x',
         action: 'setPlaybackRate',
-        value: 16
+        args: 16
       }
     ]
   },
   {
-    title: '菜单',
-    desc: '更多功能',
+    title: i18n.t('menu'),
+    desc: i18n.t('menu'),
     icon: iconList,
-    action: 'more',
     dropdownMenu: [
       {
-        title: '画面滤镜',
-        desc: '调整画面效果',
-        action: 'filter',
+        title: i18n.t('videoFilter'),
+        desc: i18n.t('videoFilter'),
         subMenu: [
           {
-            title: '图像复位',
-            desc: '图像复位',
+            title: i18n.t('resetFilterAndTransform'),
+            desc: i18n.t('resetFilterAndTransform'),
             action: 'resetFilterAndTransform',
-            value: ''
+            args: null
           },
           {
-            title: '增加亮度',
-            desc: '增加亮度',
+            title: i18n.t('brightnessUp'),
+            desc: i18n.t('brightnessUp'),
             action: 'setBrightnessUp',
-            value: 0.1
+            args: 0.1
           },
           {
-            title: '减少亮度',
-            desc: '减少亮度',
+            title: i18n.t('brightnessDown'),
+            desc: i18n.t('brightnessDown'),
             action: 'setBrightnessDown',
-            value: -0.1
+            args: -0.1
           },
           {
-            title: '增加对比度',
-            desc: '增加对比度',
+            title: i18n.t('contrastUp'),
+            desc: i18n.t('contrastUp'),
             action: 'setContrastUp',
-            value: 0.1
+            args: 0.1
           },
           {
-            title: '减少对比度',
-            desc: '减少对比度',
+            title: i18n.t('contrastDown'),
+            desc: i18n.t('contrastDown'),
             action: 'setContrastDown',
-            value: -0.1
+            args: -0.1
           },
           {
-            title: '增加饱和度',
-            desc: '增加饱和度',
+            title: i18n.t('saturationUp'),
+            desc: i18n.t('saturationUp'),
             action: 'setSaturationUp',
-            value: 0.1
+            args: 0.1
           },
           {
-            title: '减少饱和度',
-            desc: '减少饱和度',
+            title: i18n.t('saturationDown'),
+            desc: i18n.t('saturationDown'),
             action: 'setSaturationDown',
-            value: -0.1
+            args: -0.1
           },
           {
-            title: '增加色相',
-            desc: '增加色相',
+            title: i18n.t('hueUp'),
+            desc: i18n.t('hueUp'),
             action: 'setHueUp',
-            value: 1
+            args: 1
           },
           {
-            title: '减少色相',
-            desc: '减少色相',
+            title: i18n.t('hueDown'),
+            desc: i18n.t('hueDown'),
             action: 'setHueDown',
-            value: -1
+            args: -1
           },
           {
-            title: '增加模糊度',
-            desc: '增加模糊度',
+            title: i18n.t('blurUp'),
+            desc: i18n.t('blurUp'),
             action: 'setBlurUp',
-            value: 1
+            args: 1
           },
           {
-            title: '减少模糊度',
-            desc: '减少模糊度',
+            title: i18n.t('blurDown'),
+            desc: i18n.t('blurDown'),
             action: 'setBlurDown',
-            value: -1
+            args: -1
           }
         ]
       },
       {
-        title: '旋转镜像',
-        desc: '旋转或镜像画面',
+        title: i18n.t('rotateAndMirror'),
+        desc: i18n.t('rotateAndMirror'),
         action: 'rotateAndMirror',
         subMenu: [
           {
-            title: '画面旋转 90 度',
-            desc: '画面旋转 90度',
+            title: i18n.t('rotate90'),
+            desc: i18n.t('rotate90'),
             action: 'setRotate',
-            value: ''
+            args: null
           },
           {
-            title: '画面水平镜像翻转',
-            desc: '画面水平镜像翻转',
+            title: i18n.t('horizontalMirror'),
+            desc: i18n.t('horizontalMirror'),
             action: 'setMirror',
-            value: ''
+            args: null
           },
           {
-            title: '画面垂直镜像翻转',
-            desc: '画面垂直镜像翻转',
+            title: i18n.t('verticalMirror'),
+            desc: i18n.t('verticalMirror'),
             action: 'setMirror',
-            value: true
+            args: true
           }
         ]
       },
       {
-        title: '画面移动',
-        desc: '移动画面位置',
+        title: i18n.t('videoTransform'),
+        desc: i18n.t('videoTransform'),
         action: 'translate',
         subMenu: [
           {
-            title: '画面向右移动10px',
-            desc: '画面向右移动10px',
+            title: i18n.t('translateRight'),
+            desc: i18n.t('translateRight'),
             action: 'setTranslateRight',
-            value: ''
+            args: null
           },
           {
-            title: '画面向左移动10px',
-            desc: '画面向左移动10px',
+            title: i18n.t('translateLeft'),
+            desc: i18n.t('translateLeft'),
             action: 'setTranslateLeft',
-            value: ''
+            args: null
           },
           {
-            title: '画面向上移动10px',
-            desc: '画面向上移动10px',
+            title: i18n.t('translateUp'),
+            desc: i18n.t('translateUp'),
             action: 'setTranslateUp',
-            value: ''
+            args: null
           },
           {
-            title: '画面向下移动10px',
-            desc: '画面向下移动10px',
+            title: i18n.t('translateDown'),
+            desc: i18n.t('translateDown'),
             action: 'setTranslateDown',
-            value: ''
+            args: null
           }
         ]
       },
       {
-        title: '更多操作',
-        desc: '更多操作',
-        action: 'more',
+        title: i18n.t('graphicalInterface'),
+        desc: i18n.t('graphicalInterface'),
         subMenu: [
           {
-            title: '临时移除当前UI栏',
-            desc: '临时移除当前UI栏',
-            action: 'closeUI',
-            value: 'closeUI'
+            title: i18n.t('disableGUITemporarily'),
+            desc: i18n.t('disableGUITemporarily'),
+            action: 'disableGUITemporarily',
+            args: null
           },
           {
-            title: '永久关闭UI栏',
-            desc: '永久关闭UI栏',
-            action: 'closeUI',
-            value: 'closeUI'
+            ...globalFunctional.toggleGUIStatusUnderCurrentSite,
+            action: 'toggleGUIStatusUnderCurrentSite',
+            args: null
           },
           {
-            title: '禁用脚本',
-            desc: '禁用脚本',
-            action: 'disableScript',
-            value: ''
+            ...globalFunctional.toggleGUIStatus,
+            action: 'toggleGUIStatus',
+            args: null
           },
           {
-            title: '禁用所有快捷键',
-            desc: '禁用所有快捷键',
-            action: 'disableHotkey',
-            value: ''
+            ...globalFunctional.alwaysShowGraphicalInterface,
+            action: 'alwaysShowGraphicalInterface',
+            args: null,
+            disabled: !debug.isDebugMode()
+          }
+        ]
+      },
+      {
+        title: i18n.t('moreActions'),
+        desc: i18n.t('moreActions'),
+        subMenu: [
+          {
+            ...globalFunctional.openCustomConfigurationEditor,
+            action: 'openCustomConfigurationEditor',
+            args: null,
+            disabled: true
           },
           {
-            title: '打开配置编辑器',
-            desc: '打开配置编辑器',
-            action: 'openConfigEditor',
-            value: 'openConfigEditor'
+            title: i18n.t('comingSoon'),
+            desc: i18n.t('comingSoon')
           }
         ]
       },
@@ -381,130 +270,183 @@ export const menuConfig = [
         divider: true
       },
       {
-        title: '快捷键',
-        desc: '快捷键',
-        action: 'hotkey'
-      },
-      {
-        title: '设置',
-        desc: '设置',
-        action: 'setting',
+        title: i18n.t('hotkeys'),
+        desc: i18n.t('hotkeys'),
         subMenu: [
           {
-            title: '还原全局默认配置',
-            desc: '还原全局默认配置',
-            action: 'restoreGlobalConfig',
-            value: ''
+            ...globalFunctional.openHotkeysPage,
+            action: 'openHotkeysPage',
+            args: ''
           },
           {
-            title: '禁用默认播放进度控制逻辑',
-            desc: '禁用默认播放进度控制逻辑',
-            action: 'disableDefaultProgressControl',
-            value: ''
+            title: i18n.t('toggleHotkeysTemporarily'),
+            desc: i18n.t('toggleHotkeysTemporarily'),
+            action: 'toggleHotkeys',
+            args: null
           },
           {
-            title: '禁用默认音量控制逻辑',
-            desc: '禁用默认音量控制逻辑',
-            action: 'disableDefaultVolumeControl',
-            value: ''
+            ...globalFunctional.toggleHotkeysStatusUnderCurrentSite,
+            action: 'toggleHotkeysStatusUnderCurrentSite',
+            args: null
           },
           {
-            title: '允许默认速度调节逻辑',
-            desc: '允许默认速度调节逻辑',
-            action: 'allowDefaultSpeedControl',
-            value: ''
-          },
-          {
-            title: '开启音量增益能力',
-            desc: '开启音量增益能力',
-            action: 'addVolumeGain',
-            value: ''
-          },
-          {
-            title: '禁用跨域控制能力',
-            desc: '禁用跨域控制能力',
-            action: 'disableCrossDomainControl',
-            value: ''
-          },
-          {
-            title: '开启实验性功能',
-            desc: '开启实验性功能',
-            action: 'openExperimental',
-            value: ''
-          },
-          {
-            title: '开启外部自定义能力',
-            desc: '开启外部自定义能力',
-            action: 'openCustomAbility',
-            value: ''
-          },
-          {
-            title: '开启调试能力',
-            desc: '开启调试能力',
-            action: 'enableDebug',
-            value: ''
-          },
-          {
-            title: '打开配置编辑器',
-            desc: '打开配置编辑器',
-            action: 'openConfigEditor',
-            value: ''
+            ...globalFunctional.toggleHotkeysStatus,
+            action: 'toggleHotkeysStatus',
+            args: null
           }
         ]
       },
       {
-        title: '关于',
-        desc: '关于',
-        action: 'about',
+        title: i18n.t('setting'),
+        desc: i18n.t('setting'),
         subMenu: [
           {
-            title: '官网',
-            desc: '官网',
-            action: 'openHomepage',
-            value: ''
+            ...globalFunctional.openCustomConfigurationEditor,
+            action: 'openCustomConfigurationEditor',
+            args: ''
           },
           {
-            title: 'GitHub',
-            desc: 'GitHub',
-            action: 'openGitHub',
-            value: ''
+            ...globalFunctional.restoreGlobalConfiguration,
+            action: 'restoreGlobalConfiguration',
+            args: ''
           },
           {
-            title: '问题反馈',
-            desc: '问题反馈',
-            action: 'issue',
-            value: ''
+            ...globalFunctional.toggleScriptEnableState,
+            action: 'toggleScriptEnableState',
+            args: null
           },
           {
-            title: '添加群聊',
-            desc: '添加群聊',
-            action: 'addChat',
-            value: ''
+            ...globalFunctional.toggleSetCurrentTimeFunctional,
+            action: 'toggleSetCurrentTimeFunctional',
+            args: ''
           },
           {
-            title: '打赏作者',
-            desc: '打赏作者',
-            action: 'reward',
-            value: ''
+            ...globalFunctional.toggleSetVolumeFunctional,
+            action: 'toggleSetVolumeFunctional',
+            args: ''
+          },
+          {
+            ...globalFunctional.toggleSetPlaybackRateFunctional,
+            action: 'toggleSetPlaybackRateFunctional',
+            args: ''
+          },
+          {
+            ...globalFunctional.toggleAcousticGainFunctional,
+            action: 'toggleAcousticGainFunctional',
+            args: ''
+          },
+          {
+            ...globalFunctional.toggleCrossOriginControlFunctional,
+            action: 'toggleCrossOriginControlFunctional',
+            args: ''
+          },
+          {
+            ...globalFunctional.toggleExperimentFeatures,
+            action: 'toggleExperimentFeatures',
+            args: ''
+          },
+          {
+            ...globalFunctional.toggleExternalCustomConfiguration,
+            action: 'toggleExternalCustomConfiguration',
+            args: ''
+          },
+          {
+            ...globalFunctional.toggleDebugMode,
+            action: 'toggleDebugMode',
+            args: ''
+          },
+          {
+            title: `${i18n.t('languageSettings')}「${i18n.t('globalSetting')}」`,
+            desc: `${i18n.t('languageSettings')}「${i18n.t('globalSetting')}」`,
+            subMenu: [
+              {
+                title: i18n.t('autoChoose'),
+                desc: i18n.t('autoChoose'),
+                action: 'setLanguage',
+                args: 'auto'
+              },
+              {
+                title: '简体中文',
+                desc: '简体中文',
+                action: 'setLanguage',
+                args: 'zh-CN'
+              },
+              {
+                title: '繁體中文',
+                desc: '繁體中文',
+                action: 'setLanguage',
+                args: 'zh-TW'
+              },
+              {
+                title: 'English',
+                desc: 'English',
+                action: 'setLanguage',
+                args: 'en-US'
+              },
+              {
+                title: 'русский',
+                desc: 'русский',
+                action: 'setLanguage',
+                args: 'ru'
+              }
+            ]
           }
         ]
       },
       {
-        title: '更多',
-        desc: '更多',
-        action: 'more',
+        title: i18n.t('about'),
+        desc: i18n.t('about'),
         subMenu: [
           {
-            title: '音视频合并脚本',
-            desc: '音视频合并脚本',
-            action: 'mergeMedia',
-            value: ''
+            ...globalFunctional.openWebsite,
+            action: 'openWebsite',
+            args: ''
           },
           {
-            title: '视频转换工具',
-            desc: '视频转换工具',
-            action: 'videoConverter',
-            value: ''
+            ...globalFunctional.openProjectGithub,
+            action: 'openProjectGithub',
+            args: ''
+          },
+          {
+            ...globalFunctional.openIssuesPage,
+            action: 'openIssuesPage',
+            args: ''
+          },
+          {
+            ...globalFunctional.openAddGroupChatPage,
+            action: 'openAddGroupChatPage',
+            args: ''
+          },
+          {
+            ...globalFunctional.openChangeLogPage,
+            action: 'openChangeLogPage',
+            args: ''
+          },
+          {
+            ...globalFunctional.openCheckVersionPage,
+            action: 'openCheckVersionPage',
+            args: ''
+          },
+          {
+            ...globalFunctional.openDonatePage,
+            action: 'openDonatePage',
+            args: ''
+          },
+          {
+            ...globalFunctional.openAuthorHomePage,
+            action: 'openAuthorHomePage',
+            args: ''
+          }
+        ]
+      },
+      {
+        title: i18n.t('more'),
+        desc: i18n.t('more'),
+        subMenu: [
+          {
+            title: i18n.t('ffmpegScript'),
+            desc: i18n.t('ffmpegScript'),
+            url: 'https://github.com/xxxily/ffmpeg-script'
           }
         ]
       }
@@ -512,15 +454,35 @@ export const menuConfig = [
   }
 ]
 
+/* menuConfig预处理函数，根据指定的参考dom元素，通过判断元素的宽度来决定是否只显示菜单的图标，以节省展示位置 */
+export function menuConfigPreprocess (menuConfig, refDom) {
+  const refWidth = refDom.offsetWidth
+  const iconOnly = refWidth < 500
+
+  return menuConfig.map(item => {
+    if (item.dropdownMenu) {
+      item.dropdownMenu = menuConfigPreprocess(item.dropdownMenu, refDom)
+    }
+
+    return {
+      ...item,
+      iconOnly
+    }
+  })
+}
+
 /* 写个函数，支持将menuConfig.dropdownMenu的数据构建成sl-menu组件的template */
 export function convertDropdownMenuToTemplate (dropdownMenu, isRootMenu = true) {
   const menuItems = dropdownMenu.map(item => {
     if (item.disabled) return ''
+    const title = (item.title instanceof Function ? item.title() : item.title) || ''
+    const desc = (item.desc instanceof Function ? item.desc() : item.desc) || ''
+    const id = item.id || Math.random().toString(36).substr(2)
 
     if (item.subMenu) {
       return `
-        <sl-menu-item class="h5p-menu-action" value="${item.id || item.value || item.action}" title="${item.desc || item.title}" data-action="${item.action}" data-args='${JSON.stringify(item.args || item.value || null)}'>
-          ${item.title}
+        <sl-menu-item class="h5p-menu-action" value="${id}" title="${desc || title}" data-action="${item.action || ''}" data-args='${JSON.stringify(item.args || null)}'>
+          ${title}
           <sl-menu slot="submenu">
             ${convertDropdownMenuToTemplate(item.subMenu, false)}
           </sl-menu>
@@ -529,8 +491,8 @@ export function convertDropdownMenuToTemplate (dropdownMenu, isRootMenu = true) 
     } else if (item.divider) {
       return '<sl-divider></sl-divider>'
     } else {
-      return `<sl-menu-item class="h5p-menu-action" value="${item.id || item.value || item.action}" title="${item.desc || item.title}" data-action="${item.action}" data-args='${JSON.stringify(item.args || item.value || null)}'>
-        ${item.title}
+      return `<sl-menu-item class="h5p-menu-action" value="${id}" title="${desc || title}" data-action="${item.action || ''}" data-args='${JSON.stringify(item.args || null)}' data-url="${item.url || ''}">
+        ${title}
       </sl-menu-item>
       `
     }
@@ -546,22 +508,26 @@ export function convertMenuConfigToTemplate (menuConfig) {
       ${menuConfig.map(item => {
         if (item.disabled) return ''
 
+        const title = (item.title instanceof Function ? item.title() : item.title) || ''
+        const desc = (item.desc instanceof Function ? item.desc() : item.desc) || ''
         const iconHtml = item.icon ? `<sl-icon src="${item.icon}"></sl-icon>` : ''
+        const menuDesc = item.iconOnly && iconHtml ? '' : `<span class="h5p-desc">${title}</span>`
+
         if (item.dropdownMenu) {
           return `
             <sl-dropdown distance="6">
-              <span class="h5p-action-btn" slot="trigger" title="${item.desc || item.title}" data-action="${item.action}">
+              <span slot="trigger" class="h5p-action-btn" title="${desc || title}" data-title="${title}" data-action="${item.action || ''}">
                 ${iconHtml}
-                <span class="h5p-desc">${item.title}</span>
+                ${menuDesc}
               </span>
               ${convertDropdownMenuToTemplate(item.dropdownMenu)}
             </sl-dropdown>
           `
         } else {
           return `
-            <span class="h5p-action-btn h5p-menu-action" title="${item.desc || item.title}"  data-action="${item.action}" data-args='${JSON.stringify(item.args || item.value || null)}'>
+            <span class="h5p-action-btn h5p-menu-action" title="${desc || title}" data-title="${title}" data-action="${item.action || ''}" data-args='${JSON.stringify(item.args || null)}'>
               ${iconHtml}
-              <span class="h5p-desc">${item.title}</span>
+              ${menuDesc}
             </span>
           `
         }
@@ -575,35 +541,69 @@ export function createMenuTemplate (config = menuConfig || []) {
   return convertMenuConfigToTemplate(config)
 }
 
+export function createLogoModTemplate () {
+  const homepage = globalFunctional.getHomePageLink.fn()
+  return `<a class="h5p-logo-mod" href="${homepage}" target="_blank">h5player</a>`
+}
+
+export function createRecommendModTemplate (refDom) {
+  const refWidth = refDom.offsetWidth
+  return refWidth < 500 ? '' : `<a class="h5p-recommend-mod" href="https://chatgpt.com" target="_blank">${i18n.t('recommend')}</a>`
+}
+
 /**
  * 通过事件委托的方式处理菜单点击事件，减少事件绑定，提升性能
  * @param { Event } event -必选 事件对象
  */
-export function menuActionHandler (event, videoElement, h5Player, popup) {
+export function menuActionHandler (obj) {
+  const { event, h5Player, h5playerUI, videoElement, popup, actionCallback } = obj
   const target = event.target
 
   /* 根据target查找是否包含data-action属性，注意这里可能需要使用closest来向上查找 */
   const actionDOM = target.closest('.h5p-menu-action')
   if (!actionDOM) {
-    console.log('[menuActionHandler]', '未找到actionDOM', event.target)
+    debug.log('[menuActionHandler]', '未找到actionDOM', event.target)
     return
   }
 
   const action = actionDOM.getAttribute('data-action')
   const args = JSON.parse(actionDOM.getAttribute('data-args') || null)
+  const url = actionDOM.getAttribute('data-url')
+
+  console.log('[menuActionHandler]', action, args, url)
+
+  if (url) {
+    globalFunctional.openInTab(url)
+    return
+  }
 
   h5Player.setPlayerInstance(videoElement)
 
-  if (action && h5Player[action] instanceof Function) {
-    console.log('[menuActionHandler]', actionDOM, action, args)
+  if (action === 'disableGUITemporarily') {
+    h5playerUI.disableGUITemporarily()
+    debug.log('[menuActionHandler][disableGUITemporarily]')
+    return
+  }
 
-    if (action === 'setPlaybackRate') {
-      /* 使用UI操作需强行跳过锁检测逻辑 */
-      h5Player.setPlaybackRate(args, false, false, true)
-    } else {
-      h5Player[action](args)
+  if (action && (h5Player[action] instanceof Function || globalFunctional[action])) {
+    debug.log('[menuActionHandler]', actionDOM, action, args)
+
+    try {
+      if (action === 'setPlaybackRate') {
+        /* 使用UI操作需强行跳过锁检测逻辑 */
+        h5Player.setPlaybackRate(args, false, false, true)
+      } else if (globalFunctional[action] && globalFunctional[action].fn instanceof Function) {
+        globalFunctional[action].fn(args)
+      } else {
+        h5Player[action](args)
+        popup && popup.reposition()
+      }
+    } catch (e) {
+      debug.error('[menuActionHandler][error]', e)
     }
 
-    popup && popup.reposition()
+    if (actionCallback instanceof Function) {
+      actionCallback(action, args)
+    }
   }
 }

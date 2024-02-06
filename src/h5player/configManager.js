@@ -20,6 +20,7 @@ const configManager = new ConfigManager({
       /* 视频播放进度映射表 */
       progress: {}
     },
+    enableHotkeys: true,
     hotkeys: [
       {
         desc: '网页全屏',
@@ -291,6 +292,11 @@ const configManager = new ConfigManager({
         command: 'setNextVideo'
       },
       {
+        desc: '插入debugger断点',
+        key: 'ctrl+shift+alt+d',
+        command: 'debuggerNow'
+      },
+      {
         desc: '执行JS脚本',
         key: 'ctrl+j ctrl+s',
         command: () => {
@@ -299,6 +305,10 @@ const configManager = new ConfigManager({
         when: ''
       }
     ],
+    ui: {
+      enable: true,
+      alwaysShow: false
+    },
     enhance: {
     /* 不禁用默认的调速逻辑，则在多个视频切换时，速度很容易被重置，所以该选项默认开启 */
       blockSetPlaybackRate: true,
@@ -313,6 +323,7 @@ const configManager = new ConfigManager({
       allowCrossOriginControl: true,
       unfoldMenu: false
     },
+    language: 'auto',
     debug: false
   }
 })

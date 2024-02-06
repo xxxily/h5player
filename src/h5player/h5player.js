@@ -34,6 +34,7 @@ import HotkeysRunner from '../libs/utils/hotkeysRunner'
 import MediaElementAmplifier from '../libs/utils/MediaElementAmplifier'
 import mediaDownload from './mediaDownload'
 import windowSandbox from './h5playerUISandbox'
+import version from './version'
 
 import {
   isRegisterKey,
@@ -53,6 +54,7 @@ const supportMediaTags = ['video', 'bwp-video']
 
 let TCC = null
 const h5Player = {
+  version,
   mediaCore,
   mediaPlusApi: null,
   mediaSource,
@@ -96,6 +98,27 @@ const h5Player = {
 
   /* 监听鼠标活动的观察对象 */
   mouseObserver: new MouseObserver(),
+
+  disableHotkeysTemporarily () {
+    this.__disableHotkeysTemporarily__ = true
+  },
+  enableHotkeys () {
+    this.__disableHotkeysTemporarily__ = false
+  },
+  toggleHotkeys () {
+    const confirm = window.confirm(this.__disableHotkeysTemporarily__ ? i18n.t('enableHotkeys') : i18n.t('disableHotkeys'))
+    if (confirm) {
+      this.__disableHotkeysTemporarily__ = !this.__disableHotkeysTemporarily__
+    }
+  },
+
+  debuggerNow () {
+    if (debug.isDebugMode()) {
+      const script = document.createElement('script')
+      script.innerText = 'debugger'
+      document.body.appendChild(script)
+    }
+  },
 
   /* 获取当前播放器的实例 */
   player: function () {
@@ -292,15 +315,14 @@ const h5Player = {
       debug.log('leavepictureinpicture', player)
     })
 
-    if (debug.isDebugMode()) {
-      player.addEventListener('loadeddata', function () {
-        debug.log(`video url: ${player.src} video duration: ${player.duration} video dom:`, player)
-      })
-
-      player.addEventListener('durationchange', function () {
-        debug.log(`video durationchange: ${player.duration}`)
-      })
-    }
+    // if (debug.isDebugMode()) {
+    //   player.addEventListener('loadeddata', function () {
+    //     debug.log(`video url: ${player.src} video duration: ${player.duration} video dom:`, player)
+    //   })
+    //   player.addEventListener('durationchange', function () {
+    //     debug.log(`video durationchange: ${player.duration}`)
+    //   })
+    // }
 
     /* 注册UI界面 */
     t.UI && t.UI.popup && t.UI.popup(player, t)
@@ -2114,7 +2136,7 @@ const h5Player = {
 
     /* 处于可编辑元素中不执行任何快捷键 */
     const target = event.composedPath ? event.composedPath()[0] || event.target : event.target
-    if (isEditableTarget(target)) return
+    if (t.__disableHotkeysTemporarily__ || isEditableTarget(target)) return
 
     /* 广播按键消息，进行跨域控制 */
     monkeyMsg.send('globalKeydownEvent', event, 0)
@@ -2459,7 +2481,7 @@ const h5Player = {
     /* 触发来自消息广播的模拟事件，实现跨域、跨Tab控制视频播放 */
     let triggerFakeEvent = function (name, oldVal, newVal, remote) {
       const player = t.player()
-      if (player) {
+      if (player && !t.__disableHotkeysTemporarily__) {
         const fakeEvent = newVal.data
         fakeEvent.stopPropagation = () => { }
         fakeEvent.preventDefault = () => { }
@@ -2570,8 +2592,12 @@ const h5Player = {
     TCC = h5PlayerTccInit(t)
 
     /* 绑定键盘事件 */
-    t.bindEvent()
-    t.bindFakeEvent()
+    if (configManager.get('enableHotkeys') !== false) {
+      t.bindEvent()
+      t.bindFakeEvent()
+    } else {
+      debug.warn('快捷键能力已被禁用')
+    }
 
     /* 响应来自跨域受限的视频检出事件 */
     monkeyMsg.on('videoDetected', async (name, oldVal, newVal, remote) => {
@@ -2657,14 +2683,19 @@ async function h5PlayerInit () {
     debug.error('h5Player init fail', e)
   }
 
-  if (window.customElements && document.adoptedStyleSheets) {
-    h5Player.UI = h5playerUiWraper(windowSandbox)
-    setTimeout(async () => {
-      h5Player.UI.init()
-    }, 400)
+  /* 注意：只有明确为fasle才隐藏GUI */
+  if (configManager.get('ui.enable') !== false) {
+    if (window.customElements && document.adoptedStyleSheets) {
+      h5Player.UI = h5playerUiWraper(windowSandbox)
+      setTimeout(async () => {
+        h5Player.UI.init()
+      }, 400)
+    } else {
+      /* webkit内核建议73以上的浏览器才允许使用UI组件，否则兼容或性能都是很大的问题 */
+      debug.warn('当前浏览器不支持customElements或adoptedStyleSheets，无法使用UI组件，建议使用Chrome 83+，Edge 83+')
+    }
   } else {
-    /* webkit内核建议73以上的浏览器才允许使用UI组件，否则兼容或性能都是很大的问题 */
-    debug.warn('当前浏览器不支持customElements或adoptedStyleSheets，无法使用UI组件，建议使用Chrome 83+，Edge 83+')
+    debug.warn('UI组件已被禁用', configManager.get('ui.enable'))
   }
 }
 

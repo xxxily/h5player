@@ -407,7 +407,7 @@ export default class ConfigManager {
 //       {
 //         desc: '测试',
 //         key: 'v',
-//         command: 'toogleVisible',
+//         command: 'toggleVisible',
 //         /* 如需禁用快捷键，将disabled设为true */
 //         disabled: false,
 //       },

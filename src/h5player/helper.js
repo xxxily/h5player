@@ -149,7 +149,7 @@ function openInTab (url, opts, referer) {
     })
   } else {
     // 创建新的a标签并模拟点击
-    const a = document.createElement
+    const a = document.createElement('a')
     a.href = url
     a.target = '_blank'
     a.rel = 'noopener noreferrer'

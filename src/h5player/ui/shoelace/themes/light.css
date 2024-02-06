@@ -478,8 +478,7 @@ sl-drawer::part(base) {
 .h5player-popup-wrap {
   position: relative;
   z-index: 99999999;
-  /* opacity: 0; */
-  opacity: 1;
+  opacity: 0;
 }
 
 .h5player-popup-wrap sl-popup {
@@ -506,6 +505,20 @@ sl-drawer::part(base) {
   justify-content: space-between;
 }
 
+@keyframes text-lumos {
+  0%,100%{ color:#fff; }
+	50%{ color:#ccc; }
+}
+
+.h5player-popup-content .h5p-logo-mod {
+  white-space: nowrap;
+  font-weight: 500;
+  text-shadow: 0px 0px 2px #666, 0 0 30px #666;
+  animation: text-lumos 5s infinite;
+}
+
+.h5player-popup-content .h5p-menu-wrap {}
+
 .h5player-popup-content .h5p-action-mod {
   display: flex;
   align-items: center;
@@ -519,6 +532,7 @@ sl-drawer::part(base) {
   font-size: 14px;
   padding: 0 8px;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .h5player-popup-content .h5p-action-btn:hover {
@@ -531,8 +545,7 @@ sl-drawer::part(base) {
 
 /* 激活态 */
 .h5player-popup-active {
-  /* opacity: 0.1; */
-  opacity: 1;
+  opacity: 0.8;
   transition: opacity 0.2s;
 }
 
@@ -565,6 +578,38 @@ sl-drawer::part(base) {
   padding: 2px 0;
 }
 
-.h5player-popup-content .h5p-action-mod sl-menu-item::part(base):hover:not([aria-disabled="true"], :focus-visible) {
-  background-color: rgba(255, 255, 255, 0.2);
+.h5player-popup-content .h5p-action-mod sl-menu-item::part(base):hover {
+  background-color: var(--sl-color-primary-500);
+  color: #fff;
+}
+
+.h5player-popup-content .h5p-recommend-wrap {
+  flex-grow: 1;
+  box-sizing: border-box;
+  padding: 0 20px;
+  text-align: center;
+  font-size: 14px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+@keyframes text-marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+.h5player-popup-content .h5p-recommend-mod {
+  display: inline-block;
+  padding-left: 100%;
+  animation: text-marquee 15s linear infinite;
+}
+
+.h5player-popup-content .h5p-recommend-wrap>div {
+  opacity: 0.5;
+}
+.h5player-popup-content .h5p-recommend-wrap>div:hover{
+  opacity: 1;
+}
+.h5player-popup-content .h5p-recommend-wrap>div:hover .h5p-recommend-mod {
+  animation-play-state: paused;
 }

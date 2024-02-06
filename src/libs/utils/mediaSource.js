@@ -35,11 +35,13 @@ const mediaSource = (function () {
           })
         }
 
-        original.console.log('[addSourceBuffer]', ctx, args)
-
         const mediaSourceInfo = original.map.get.call(mediaSourceMap, ctx)
         const mimeCodecs = args[0] || ''
         const sourceBuffer = target.apply(ctx, args)
+
+        // original.console.log('[MediaSource][addSourceBuffer]', ctx, args)
+        // original.console.log('[MediaSource][addSourceBuffer][mediaSourceMap]', mediaSourceMap)
+        // original.console.log('[MediaSource][addSourceBuffer][mediaSourceInfo]', mediaSourceInfo)
 
         const sourceBufferItem = {
           mimeCodecs,
