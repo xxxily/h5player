@@ -120,6 +120,16 @@ const h5Player = {
     }
   },
 
+  /* 关闭当前视频实例的UI界面，以便消除UI界面对其他元素遮挡等相关影响 */
+  disableCurrentInstanceGUI () {
+    const t = this
+    const player = t.player()
+    if (player && t.UI && t.UI.removePopupWrapByElement) {
+      player.__disableGUITemporarily__ = true
+      t.UI.removePopupWrapByElement(player)
+    }
+  },
+
   /* 获取当前播放器的实例 */
   player: function () {
     const t = this
@@ -294,19 +304,21 @@ const h5Player = {
       TCC.doTask('init', player)
     }
 
+    const needInitEvent = !player.__registeredInitEvent__
+
     /* 注册鼠标响应事件 */
-    t.mouseObserver.on(player, 'click', function (event, offset, target) {
+    needInitEvent && t.mouseObserver.on(player, 'click', function (event, offset, target) {
       // debug.log('捕捉到鼠标点击事件：', event, offset, target)
     })
 
     /* 画中画事件监听 */
-    player.addEventListener('enterpictureinpicture', () => {
+    needInitEvent && player.addEventListener('enterpictureinpicture', () => {
       monkeyMsg.send('globalPictureInPictureInfo', {
         usePictureInPicture: true
       })
       debug.log('enterpictureinpicture', player)
     })
-    player.addEventListener('leavepictureinpicture', () => {
+    needInitEvent && player.addEventListener('leavepictureinpicture', () => {
       t.leavepictureinpictureTime = Date.now()
 
       monkeyMsg.send('globalPictureInPictureInfo', {
@@ -315,39 +327,88 @@ const h5Player = {
       debug.log('leavepictureinpicture', player)
     })
 
-    // if (debug.isDebugMode()) {
-    //   player.addEventListener('loadeddata', function () {
-    //     debug.log(`video url: ${player.src} video duration: ${player.duration} video dom:`, player)
-    //   })
-    //   player.addEventListener('durationchange', function () {
-    //     debug.log(`video durationchange: ${player.duration}`)
-    //   })
-    // }
+    // if (debug.isDebugMode()) {}
+
+    /* 记录player使用过的src */
+    function srcRecord (player) {
+      const src = player.currentSrc || player.src
+      if (!src) { return }
+
+      player.srcList = player.srcList || [src]
+      if (!player.srcList.includes(src)) {
+        player.srcList.push(src)
+      }
+    }
+
+    function updataBufferedTime (player) {
+      /* 随时记录缓存数据到了哪个时间节点 */
+      if (player.buffered.length > 0) {
+        const bufferedTime = player.buffered.end(player.buffered.length - 1)
+        player.bufferedTime = bufferedTime
+      }
+
+      if (t.autoGotoBufferedTime && player.bufferedTime && t.player() === player && player.bufferedTime < player.duration - 1 && player.currentTime < player.bufferedTime - 1) {
+        t.setCurrentTime(player.bufferedTime)
+      }
+    }
+
+    needInitEvent && player.addEventListener('loadeddata', function () {
+      debug.log(`[player][loadeddata] ${player.src} video duration: ${player.duration} video dom:`, player)
+      srcRecord(player)
+    })
+    needInitEvent && player.addEventListener('durationchange', function () {
+      debug.log(`[player][durationchange] ${player.duration}`)
+      srcRecord(player)
+    })
+
+    needInitEvent && player.addEventListener('loadstart', function () {
+      debug.log('[player][loadstart]', player.currentSrc, player.src)
+      srcRecord(player)
+    })
 
     /* 注册UI界面 */
     t.UI && t.UI.popup && t.UI.popup(player, t)
 
     /* 在播放或暂停时，也尝试注册UI界面，这样即使popup被意外删除，也还是能正常再次创建回来 */
-    player.addEventListener('play', function () {
+    needInitEvent && player.addEventListener('play', function () {
       t.UI && t.UI.popup && t.UI.popup(player, t)
     })
-    player.addEventListener('pause', function () {
+    needInitEvent && player.addEventListener('pause', function () {
       t.UI && t.UI.popup && t.UI.popup(player, t)
     })
     let lastRegisterUIPopupTime = Date.now()
     let tryRegisterUIPopupCount = 0
-    player.addEventListener('timeupdate', function () {
+    needInitEvent && player.addEventListener('timeupdate', function () {
+      // updataBufferedTime(player)
+
       if (Date.now() - lastRegisterUIPopupTime > 800 && tryRegisterUIPopupCount < 60) {
         lastRegisterUIPopupTime = Date.now()
         tryRegisterUIPopupCount += 1
         t.UI && t.UI.popup && t.UI.popup(player, t)
       }
+
+      srcRecord(player)
+      mediaSource.connectMediaSourceWithMediaElement(player)
     })
-    player.addEventListener('durationchange', function () {
+
+    let lastCleanMediaSourceDataTime = Date.now()
+    needInitEvent && player.addEventListener('progress', () => {
+      updataBufferedTime(player)
+      mediaSource.connectMediaSourceWithMediaElement(player)
+
+      if (Date.now() - lastCleanMediaSourceDataTime > 1000 * 10) {
+        lastCleanMediaSourceDataTime = Date.now()
+        mediaSource.cleanMediaSourceData()
+      }
+    })
+
+    needInitEvent && player.addEventListener('durationchange', function () {
       lastRegisterUIPopupTime = Date.now()
       tryRegisterUIPopupCount = 0
       t.UI && t.UI.popup && t.UI.popup(player, t)
     })
+
+    player.__registeredInitEvent__ = true
   },
 
   registerHotkeysRunner () {
@@ -497,6 +558,26 @@ const h5Player = {
         }, 200)
       }
     }
+  },
+
+  printPlayerInfo (p) {
+    const t = this
+    const player = p || t.player()
+
+    const info = {
+      curPlayer: player,
+      srcList: player.srcList,
+      h5player: t,
+      h5playerUI: t.UI,
+      mediaSource
+    }
+
+    if (t.UI && t.UI.findPopupWrapWithElement) {
+      info.curlPopupWrap = t.UI.findPopupWrapWithElement(player)
+      info.allPopupWrap = t.UI.getAllPopupWrapElement()
+    }
+
+    debug.info('[playerInfo]', info)
   },
 
   /* 设置视频全屏 */
@@ -1347,6 +1428,13 @@ const h5Player = {
     } else {
       t.tips(i18n.t('tipsMsg.stopframe') + perFps)
     }
+  },
+
+  autoGotoBufferedTime: false,
+  toggleAutoGotoBufferedTime () {
+    const t = this
+    t.autoGotoBufferedTime = !t.autoGotoBufferedTime
+    t.tips(t.autoGotoBufferedTime ? i18n.t('autoGotoBufferedTime') : i18n.t('disableAutoGotoBufferedTime'))
   },
 
   /**
@@ -2671,9 +2759,9 @@ async function h5PlayerInit () {
     crossTabCtl.init()
 
     if (isInIframe()) {
-      debug.log('h5Player init suc, in iframe:', window, window.location.href)
+      debug.log('h5Player init suc, in iframe:')
     } else {
-      debug.log('h5Player init suc', window, h5Player)
+      debug.log('h5Player init suc')
     }
 
     if (isInCrossOriginFrame()) {

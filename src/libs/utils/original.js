@@ -22,7 +22,8 @@ const original = {
     clear: Map.prototype.clear,
     set: Map.prototype.set,
     has: Map.prototype.has,
-    get: Map.prototype.get
+    get: Map.prototype.get,
+    delete: Map.prototype.delete
   },
 
   console: {

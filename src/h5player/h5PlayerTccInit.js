@@ -516,6 +516,30 @@ const taskConf = {
     next: ['.xgplayer-playswitch-next'],
     init: function (h5Player, taskConf) {
       h5Player.player().setAttribute('crossOrigin', 'anonymous')
+
+      const player = h5Player.player()
+      const wrapEl = player.closest('div[data-e2e="feed-item"]')
+
+      const setVideoTitle = () => {
+        if (wrapEl && wrapEl.querySelector('.video-info-detail')) {
+          const videoInfo = wrapEl.querySelector('.video-info-detail')
+          const accountNameEL = videoInfo.querySelector('.account-name')
+          /* 移除accountName前面的@符号 */
+          const accountName = accountNameEL.innerText.replace(/^@*/, '')
+
+          const titleEl = videoInfo.querySelector('.title')
+          const titleText = titleEl.innerText.trim()
+          const title = `${titleText} - ${accountName}`.replace(/[\\/:*?"<>|]/g, '-')
+
+          wrapEl.setAttribute('data-title', title)
+          player.setAttribute('data-title', title)
+          document.title = title
+          wrapEl.removeEventListener('mouseover', setVideoTitle)
+        }
+      }
+
+      wrapEl && wrapEl.addEventListener('mouseover', setVideoTitle)
+      setTimeout(setVideoTitle, 1200)
     }
   },
   'live.douyin.com': {
@@ -548,6 +572,27 @@ const taskConf = {
     fullScreen: ['button.wbpv-fullscreen-control'],
     // webFullScreen: ['div[title="关闭弹层"]', 'div.wbpv-open-layer-button']
     webFullScreen: ['div.wbpv-open-layer-button']
+  },
+  'twitter.com': {
+    init: function (h5Player, taskConf) {
+      const player = h5Player.player()
+      const wrapEl = player.closest('article[data-testid="tweet"]')
+
+      const setVideoTitle = () => {
+        if (wrapEl && !wrapEl.getAttribute('data-title') && wrapEl.querySelector('div[data-testid="tweetText"]')) {
+          const titleEl = wrapEl.querySelector('div[data-testid="tweetText"]')
+          const titleText = titleEl.innerText.trim()
+          const title = `${titleText}`.replace(/[\\/:*?"<>|]/g, '-')
+
+          wrapEl.setAttribute('data-title', title)
+          player.setAttribute('data-title', title)
+          wrapEl.removeEventListener('mouseover', setVideoTitle)
+        }
+      }
+
+      wrapEl && wrapEl.addEventListener('mouseover', setVideoTitle)
+      setTimeout(setVideoTitle, 600)
+    }
   }
 }
 

@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      3.7.12
+// @version      4.0.0
 // @description  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
 // @description:en  Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
 // @description:zh  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
@@ -186,7 +186,8 @@ const original = {
     clear: Map.prototype.clear,
     set: Map.prototype.set,
     has: Map.prototype.has,
-    get: Map.prototype.get
+    get: Map.prototype.get,
+    delete: Map.prototype.delete
   },
 
   console: {
@@ -525,12 +526,213 @@ const mediaCore = (function () {
   }
 })();
 
+function hideDom (selector, delay) {
+  setTimeout(function () {
+    const dom = document.querySelector(selector);
+    if (dom) {
+      dom.style.opacity = 0;
+    }
+  }, delay || 1000 * 5);
+}
+
+/**
+ * 向上查找操作
+ * @param dom {Element} -必选 初始dom元素
+ * @param fn {function} -必选 每一级ParentNode的回调操作
+ * 如果函数返回true则表示停止向上查找动作
+ */
+function eachParentNode (dom, fn) {
+  let parent = dom.parentNode;
+  while (parent) {
+    const isEnd = fn(parent, dom);
+    parent = parent.parentNode;
+    if (isEnd) {
+      break
+    }
+  }
+}
+
+/**
+ * 动态加载css内容
+ * @param cssText {String} -必选 样式的文本内容
+ * @param id {String} -可选 指定样式文本的id号，如果已存在对应id号则不会再次插入
+ * @param insetTo {Dom} -可选 指定插入到哪
+ * @returns {HTMLStyleElement}
+ */
+function loadCSSText (cssText, id, insetTo) {
+  if (id && document.getElementById(id)) {
+    return false
+  }
+
+  const style = document.createElement('style');
+  const head = insetTo || document.head || document.getElementsByTagName('head')[0];
+  style.appendChild(document.createTextNode(cssText));
+  head.appendChild(style);
+
+  if (id) {
+    style.setAttribute('id', id);
+  }
+
+  return style
+}
+
+/**
+ * 判断当前元素是否为可编辑元素
+ * @param target
+ * @returns Boolean
+ */
+function isEditableTarget (target) {
+  const isEditable = target.getAttribute && target.getAttribute('contenteditable') === 'true';
+  const isInputDom = /INPUT|TEXTAREA|SELECT|LABEL/.test(target.nodeName);
+  return isEditable || isInputDom
+}
+
+/**
+ * 判断某个元素是否处于shadowDom里面
+ * 参考：https://www.coder.work/article/299700
+ * @param node
+ * @returns {boolean}
+ */
+function isInShadow (node, returnShadowRoot) {
+  for (; node; node = node.parentNode) {
+    if (node.toString() === '[object ShadowRoot]') {
+      if (returnShadowRoot) {
+        return node
+      } else {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+/**
+ * 判断某个元素是否处于可视区域，适用于被动调用情况，需要高性能，请使用IntersectionObserver
+ * 参考：https://github.com/febobo/web-interview/issues/84
+ * @param element
+ * @returns {boolean}
+ */
+function isInViewPort (element) {
+  const viewWidth = window.innerWidth || document.documentElement.clientWidth;
+  const viewHeight = window.innerHeight || document.documentElement.clientHeight;
+  const {
+    top,
+    right,
+    bottom,
+    left
+  } = element.getBoundingClientRect();
+
+  return (
+    top >= 0 &&
+    left >= 0 &&
+    right <= viewWidth &&
+    bottom <= viewHeight
+  )
+}
+
+/**
+ * 基于IntersectionObserver的可视区域判断
+ * @param { Function } callback
+ * @param { Element } element
+ * @returns { IntersectionObserver }
+ */
+function observeVisibility (callback, element) {
+  const observer = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        /* 元素在可视区域内 */
+        callback(entry, observer);
+      } else {
+        /* 元素不在可视区域内 */
+        callback(null, observer);
+      }
+    });
+  });
+
+  if (element) {
+    observer.observe(element);
+  }
+
+  /* 返回观察对象，以便外部可以取消观察：observer.disconnect()，或者增加新的观察对象：observer.observe(element) */
+  return observer
+}
+
+// 使用示例：
+// const temp1 = document.querySelector('#temp1')
+// var observer = observeVisibility(function (entry, observer) {
+//   if (entry) {
+//     console.log('[entry]', entry)
+//   } else {
+//     console.log('[entry]', 'null')
+//   }
+// }, temp1)
+
+/**
+ * 判断是否为不可见的元素，主要用以判断是否已经脱离文档流或被设置为display:none的元素
+ * @param {*} element
+ * @returns
+ */
+function isOutOfDocument (element) {
+  if (!element || element.offsetParent === null) {
+    return true
+  }
+
+  const {
+    top,
+    right,
+    bottom,
+    left,
+    width,
+    height
+  } = element.getBoundingClientRect();
+
+  return (
+    top === 0 &&
+    right === 0 &&
+    bottom === 0 &&
+    left === 0 &&
+    width === 0 &&
+    height === 0
+  )
+}
+
 const mediaSource = (function () {
   let hasMediaSourceInit = false;
   const originMethods = {};
   const originURLMethods = {};
   const mediaSourceMap = new original.Map();
   const objectURLMap = new original.Map();
+
+  function connectMediaSourceWithMediaElement (mediaEl) {
+    const curSrc = mediaEl.currentSrc || mediaEl.src;
+
+    if (!curSrc) { return false }
+
+    mediaSourceMap.forEach(mediaSourceInfo => {
+      if (mediaSourceInfo.mediaSource.__objURL__ && curSrc === mediaSourceInfo.mediaSource.__objURL__) {
+        mediaSourceInfo.mediaElement = mediaEl;
+      }
+    });
+  }
+
+  /* 如果mediaSourceMap中关联的mediaEl检测到不存在了，则清理mediaSourceMap中的数据，减少内存占用 */
+  function cleanMediaSourceData () {
+    function removeMediaSourceData (mediaSourceInfo) {
+      console.log('[cleanMediaSourceData][removeMediaSourceData]', mediaSourceInfo.mediaUrl || mediaSourceInfo.mediaSource.__objURL__);
+      original.map.delete.call(mediaSourceMap, mediaSourceInfo.mediaSource);
+      original.map.delete.call(objectURLMap, mediaSourceInfo.mediaSource);
+    }
+
+    mediaSourceMap.forEach((mediaSourceInfo) => {
+      if (!mediaSourceInfo.mediaElement || !(mediaSourceInfo.mediaElement instanceof HTMLMediaElement)) {
+        removeMediaSourceData(mediaSourceInfo);
+      } else {
+        if (isOutOfDocument(mediaSourceInfo.mediaElement)) {
+          removeMediaSourceData(mediaSourceInfo);
+        }
+      }
+    });
+  }
 
   function proxyMediaSourceMethod () {
     if (!originMethods.addSourceBuffer || !originMethods.endOfStream) {
@@ -541,9 +743,13 @@ const mediaSource = (function () {
     originURLMethods.createObjectURL = originURLMethods.createObjectURL || URL.prototype.constructor.createObjectURL;
     URL.prototype.constructor.createObjectURL = new original.Proxy(originURLMethods.createObjectURL, {
       apply (target, ctx, args) {
+        const object = args[0];
         const objectURL = target.apply(ctx, args);
 
-        original.map.set.call(objectURLMap, args[0], objectURL);
+        if (object instanceof MediaSource && !original.map.has.call(objectURLMap, object)) {
+          object.__objURL__ = objectURL;
+          original.map.set.call(objectURLMap, object, objectURL);
+        }
 
         return objectURL
       }
@@ -563,10 +769,6 @@ const mediaSource = (function () {
         const mediaSourceInfo = original.map.get.call(mediaSourceMap, ctx);
         const mimeCodecs = args[0] || '';
         const sourceBuffer = target.apply(ctx, args);
-
-        // original.console.log('[MediaSource][addSourceBuffer]', ctx, args)
-        // original.console.log('[MediaSource][addSourceBuffer][mediaSourceMap]', mediaSourceMap)
-        // original.console.log('[MediaSource][addSourceBuffer][mediaSourceInfo]', mediaSourceInfo)
 
         const sourceBufferItem = {
           mimeCodecs,
@@ -593,11 +795,19 @@ const mediaSource = (function () {
         sourceBuffer.appendBuffer = new original.Proxy(sourceBufferItem.originAppendBuffer, {
           apply (bufTarget, bufCtx, bufArgs) {
             const buffer = bufArgs[0];
-            sourceBufferItem.bufferData.push(buffer);
+
+            if (!mediaSourceInfo.endOfStream) {
+              sourceBufferItem.bufferData.push(buffer);
+            }
 
             /* 确保mediaUrl的存在和对应 */
             if (original.map.get.call(objectURLMap, ctx)) {
               mediaSourceInfo.mediaUrl = original.map.get.call(objectURLMap, ctx);
+            }
+
+            /* 如果appendBuffer依然活跃，但对应的mediaSource却被清理了，则尝试重新将数据关联回去 */
+            if (!original.map.get.call(mediaSourceMap, ctx)) {
+              original.map.set.call(mediaSourceMap, ctx, mediaSourceInfo);
             }
 
             return bufTarget.apply(bufCtx, bufArgs)
@@ -614,6 +824,10 @@ const mediaSource = (function () {
         const mediaSourceInfo = original.map.get.call(mediaSourceMap, ctx);
         if (mediaSourceInfo) {
           mediaSourceInfo.endOfStream = true;
+
+          if (mediaSourceInfo.mediaElement && mediaSourceInfo.autoDownload && !mediaSourceInfo.hasDownload) {
+            downloadMediaSource(mediaSourceInfo.mediaElement);
+          }
         }
 
         return target.apply(ctx, args)
@@ -624,8 +838,36 @@ const mediaSource = (function () {
   /**
    * 下载媒体资源，下载代码参考：https://juejin.cn/post/6873267073674379277
    */
-  function downloadMediaSource () {
+  function downloadMediaSource (mediaEl, title) {
+    // const srcList = mediaEl.srcList || []
+    const curSrc = mediaEl.currentSrc || mediaEl.src;
+
+    if (!curSrc) {
+      original.alert('当前媒体元素没有src属性，无法下载');
+      return false
+    }
+
+    let hasFindMediaSource = false;
     mediaSourceMap.forEach(mediaSourceInfo => {
+      const mediaSource = mediaSourceInfo.mediaSource;
+      if (!mediaSource.__objURL__) {
+        console.error('no objURL', mediaSource, mediaSourceInfo);
+        return false
+      }
+
+      /* 排除非当前媒体元素的媒体流 */
+      // if (srcList.length > 0 && !srcList.includes(mediaSource.__objURL__)) {
+      //   return false
+      // }
+      if (curSrc !== mediaSource.__objURL__) {
+        return false
+      }
+
+      hasFindMediaSource = true;
+      mediaSourceInfo.mediaElement = mediaEl;
+
+      // original.console.log('[downloadMediaSource][mediaSourceInfo]', mediaSourceInfo)
+
       if (mediaSourceInfo.hasDownload) {
         const confirm = original.confirm('该媒体文件已经下载过了，确定需要再次下载？');
         if (!confirm) {
@@ -634,15 +876,26 @@ const mediaSource = (function () {
       }
 
       if (!mediaSourceInfo.hasDownload && !mediaSourceInfo.endOfStream) {
+        // original.console.log('[downloadMediaSource] 媒体数据还没完全就绪', mediaSourceInfo)
+
         const confirm = original.confirm('媒体数据还没完全就绪，确定要执行下载操作？');
         if (!confirm) {
+          if (mediaSourceInfo.autoDownload) {
+            const cancelAutoDownload = original.confirm('是否取消自动下载？');
+            if (cancelAutoDownload) {
+              mediaSourceInfo.autoDownload = false;
+            }
+          } else {
+            const autoDownload = original.confirm('媒体数据完全就绪后，是否自动下载？');
+            if (autoDownload) {
+              mediaSourceInfo.autoDownload = true;
+            }
+          }
+
           return false
         }
-
-        original.console.log('[downloadMediaSource] 媒体数据还没完全就绪', mediaSourceInfo);
       }
 
-      mediaSourceInfo.hasDownload = true;
       mediaSourceInfo.sourceBuffer.forEach(sourceBufferItem => {
         if (!sourceBufferItem.mimeCodecs || sourceBufferItem.mimeCodecs.toString().indexOf(';') === -1) {
           const msg = '[downloadMediaSource][mimeCodecs][error] mimeCodecs不存在或信息异常，无法下载';
@@ -652,10 +905,13 @@ const mediaSource = (function () {
         }
 
         try {
-          let mediaTitle = sourceBufferItem.mediaInfo.title || `${document.title || Date.now()}_${sourceBufferItem.mediaInfo.type}.${sourceBufferItem.mediaInfo.format}`;
+          let mediaTitle = `${sourceBufferItem.mediaInfo.title || title || mediaEl.getAttribute('data-title') || document.title || Date.now()}_${sourceBufferItem.mediaInfo.type}.${sourceBufferItem.mediaInfo.format}`;
 
           if (!sourceBufferItem.mediaInfo.title) {
-            mediaTitle = original.prompt('请确认文件标题：', mediaTitle) || mediaTitle;
+            mediaTitle = original.prompt('请确认文件标题：', mediaTitle);
+
+            if (!mediaTitle) { return false }
+
             sourceBufferItem.mediaInfo.title = mediaTitle;
           }
 
@@ -668,6 +924,8 @@ const mediaSource = (function () {
           a.download = mediaTitle;
           a.click();
           URL.revokeObjectURL(a.href);
+
+          mediaSourceInfo.hasDownload = true;
         } catch (e) {
           mediaSourceInfo.hasDownload = false;
           const msg = '[downloadMediaSource][error]';
@@ -676,6 +934,10 @@ const mediaSource = (function () {
         }
       });
     });
+
+    if (!hasFindMediaSource) {
+      original.alert('未找到对应的媒体流数据，数据可能被清理或者媒体元素已经被移除，建议刷新页面后重试');
+    }
   }
 
   function hasInit () {
@@ -711,7 +973,9 @@ const mediaSource = (function () {
     originURLMethods,
     mediaSourceMap,
     objectURLMap,
-    downloadMediaSource
+    downloadMediaSource,
+    cleanMediaSourceData,
+    connectMediaSourceWithMediaElement
   }
 })();
 
@@ -886,176 +1150,6 @@ const quickSort = function (arr) {
   }
   return quickSort(left).concat([pivot], quickSort(right))
 };
-
-function hideDom (selector, delay) {
-  setTimeout(function () {
-    const dom = document.querySelector(selector);
-    if (dom) {
-      dom.style.opacity = 0;
-    }
-  }, delay || 1000 * 5);
-}
-
-/**
- * 向上查找操作
- * @param dom {Element} -必选 初始dom元素
- * @param fn {function} -必选 每一级ParentNode的回调操作
- * 如果函数返回true则表示停止向上查找动作
- */
-function eachParentNode (dom, fn) {
-  let parent = dom.parentNode;
-  while (parent) {
-    const isEnd = fn(parent, dom);
-    parent = parent.parentNode;
-    if (isEnd) {
-      break
-    }
-  }
-}
-
-/**
- * 动态加载css内容
- * @param cssText {String} -必选 样式的文本内容
- * @param id {String} -可选 指定样式文本的id号，如果已存在对应id号则不会再次插入
- * @param insetTo {Dom} -可选 指定插入到哪
- * @returns {HTMLStyleElement}
- */
-function loadCSSText (cssText, id, insetTo) {
-  if (id && document.getElementById(id)) {
-    return false
-  }
-
-  const style = document.createElement('style');
-  const head = insetTo || document.head || document.getElementsByTagName('head')[0];
-  style.appendChild(document.createTextNode(cssText));
-  head.appendChild(style);
-
-  if (id) {
-    style.setAttribute('id', id);
-  }
-
-  return style
-}
-
-/**
- * 判断当前元素是否为可编辑元素
- * @param target
- * @returns Boolean
- */
-function isEditableTarget (target) {
-  const isEditable = target.getAttribute && target.getAttribute('contenteditable') === 'true';
-  const isInputDom = /INPUT|TEXTAREA|SELECT|LABEL/.test(target.nodeName);
-  return isEditable || isInputDom
-}
-
-/**
- * 判断某个元素是否处于shadowDom里面
- * 参考：https://www.coder.work/article/299700
- * @param node
- * @returns {boolean}
- */
-function isInShadow (node, returnShadowRoot) {
-  for (; node; node = node.parentNode) {
-    if (node.toString() === '[object ShadowRoot]') {
-      if (returnShadowRoot) {
-        return node
-      } else {
-        return true
-      }
-    }
-  }
-  return false
-}
-
-/**
- * 判断某个元素是否处于可视区域，适用于被动调用情况，需要高性能，请使用IntersectionObserver
- * 参考：https://github.com/febobo/web-interview/issues/84
- * @param element
- * @returns {boolean}
- */
-function isInViewPort (element) {
-  const viewWidth = window.innerWidth || document.documentElement.clientWidth;
-  const viewHeight = window.innerHeight || document.documentElement.clientHeight;
-  const {
-    top,
-    right,
-    bottom,
-    left
-  } = element.getBoundingClientRect();
-
-  return (
-    top >= 0 &&
-    left >= 0 &&
-    right <= viewWidth &&
-    bottom <= viewHeight
-  )
-}
-
-/**
- * 基于IntersectionObserver的可视区域判断
- * @param { Function } callback
- * @param { Element } element
- * @returns { IntersectionObserver }
- */
-function observeVisibility (callback, element) {
-  const observer = new IntersectionObserver((entries, observer) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        /* 元素在可视区域内 */
-        callback(entry, observer);
-      } else {
-        /* 元素不在可视区域内 */
-        callback(null, observer);
-      }
-    });
-  });
-
-  if (element) {
-    observer.observe(element);
-  }
-
-  /* 返回观察对象，以便外部可以取消观察：observer.disconnect()，或者增加新的观察对象：observer.observe(element) */
-  return observer
-}
-
-// 使用示例：
-// const temp1 = document.querySelector('#temp1')
-// var observer = observeVisibility(function (entry, observer) {
-//   if (entry) {
-//     console.log('[entry]', entry)
-//   } else {
-//     console.log('[entry]', 'null')
-//   }
-// }, temp1)
-
-/**
- * 判断是否为不可见的元素，主要用以判断是否已经脱离文档流或被设置为display:none的元素
- * @param {*} element
- * @returns
- */
-function isOutOfDocument (element) {
-  if (!element || element.offsetParent === null) {
-    return true
-  }
-
-  const {
-    top,
-    right,
-    bottom,
-    left,
-    width,
-    height
-  } = element.getBoundingClientRect();
-
-  return (
-    top === 0 &&
-    right === 0 &&
-    bottom === 0 &&
-    left === 0 &&
-    width === 0 &&
-    height === 0
-  )
-}
 
 /**
  * 有些网站开启了CSP，会导致无法使用innerHTML，所以需要使用trustedTypes
@@ -3127,6 +3221,30 @@ const taskConf = {
     next: ['.xgplayer-playswitch-next'],
     init: function (h5Player, taskConf) {
       h5Player.player().setAttribute('crossOrigin', 'anonymous');
+
+      const player = h5Player.player();
+      const wrapEl = player.closest('div[data-e2e="feed-item"]');
+
+      const setVideoTitle = () => {
+        if (wrapEl && wrapEl.querySelector('.video-info-detail')) {
+          const videoInfo = wrapEl.querySelector('.video-info-detail');
+          const accountNameEL = videoInfo.querySelector('.account-name');
+          /* 移除accountName前面的@符号 */
+          const accountName = accountNameEL.innerText.replace(/^@*/, '');
+
+          const titleEl = videoInfo.querySelector('.title');
+          const titleText = titleEl.innerText.trim();
+          const title = `${titleText} - ${accountName}`.replace(/[\\/:*?"<>|]/g, '-');
+
+          wrapEl.setAttribute('data-title', title);
+          player.setAttribute('data-title', title);
+          document.title = title;
+          wrapEl.removeEventListener('mouseover', setVideoTitle);
+        }
+      };
+
+      wrapEl && wrapEl.addEventListener('mouseover', setVideoTitle);
+      setTimeout(setVideoTitle, 1200);
     }
   },
   'live.douyin.com': {
@@ -3159,6 +3277,27 @@ const taskConf = {
     fullScreen: ['button.wbpv-fullscreen-control'],
     // webFullScreen: ['div[title="关闭弹层"]', 'div.wbpv-open-layer-button']
     webFullScreen: ['div.wbpv-open-layer-button']
+  },
+  'twitter.com': {
+    init: function (h5Player, taskConf) {
+      const player = h5Player.player();
+      const wrapEl = player.closest('article[data-testid="tweet"]');
+
+      const setVideoTitle = () => {
+        if (wrapEl && !wrapEl.getAttribute('data-title') && wrapEl.querySelector('div[data-testid="tweetText"]')) {
+          const titleEl = wrapEl.querySelector('div[data-testid="tweetText"]');
+          const titleText = titleEl.innerText.trim();
+          const title = `${titleText}`.replace(/[\\/:*?"<>|]/g, '-');
+
+          wrapEl.setAttribute('data-title', title);
+          player.setAttribute('data-title', title);
+          wrapEl.removeEventListener('mouseover', setVideoTitle);
+        }
+      };
+
+      wrapEl && wrapEl.addEventListener('mouseover', setVideoTitle);
+      setTimeout(setVideoTitle, 600);
+    }
   }
 };
 
@@ -3780,6 +3919,7 @@ var zhCN = {
   recommend: '❤️ 免费ChatGPT-4 ❤️',
   enableScript: '启用脚本',
   disableScript: '禁用脚本',
+  disableCurrentInstanceGUI: '关闭当前图形用户界面',
   disableGUITemporarily: '临时禁用图形用户界面',
   enableGUI: '启用图形用户界面',
   disableGUI: '禁用图形用户界面',
@@ -3849,6 +3989,8 @@ var zhCN = {
   autoChoose: '自动选择',
   comingSoon: '更多功能正在完善中，敬请期待',
   ffmpegScript: '音视频合并/转换脚本',
+  autoGotoBufferedTime: '自动跟随跳转到缓冲区时间',
+  disableAutoGotoBufferedTime: '禁用自动跟随跳转到缓冲区时间',
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '前进：',
@@ -3900,6 +4042,7 @@ var enUS = {
   aboutAuthor: 'About the author',
   enableScript: 'Enable script',
   disableScript: 'Disable script',
+  disableCurrentInstanceGUI: 'Close the current graphical user interface',
   disableGUITemporarily: 'Temporarily disable the graphical interface',
   enableGUI: 'Enable Graphical User Interface',
   disableGUI: 'Disable Graphical User Interface',
@@ -3969,6 +4112,8 @@ var enUS = {
   autoChoose: 'Auto choose',
   comingSoon: 'More features are being improved, stay tuned',
   ffmpegScript: 'Audio and video merge/convert script',
+  autoGotoBufferedTime: 'Automatically jump to the buffered time',
+  disableAutoGotoBufferedTime: 'Disable automatic jump to the buffered time',
   tipsMsg: {
     playspeed: 'Speed: ',
     forward: 'Forward: ',
@@ -4021,6 +4166,7 @@ var ru = {
   aboutAuthor: 'о авторе',
   enableScript: 'включить скрипт',
   disableScript: 'отключить скрипт',
+  disableCurrentInstanceGUI: 'отключить текущий графический интерфейс пользователя',
   disableGUITemporarily: 'Временно отключить графический интерфейс пользователя',
   enableGUI: 'Включить графический интерфейс пользователя',
   disableGUI: 'Отключить графический интерфейс пользователя',
@@ -4090,6 +4236,8 @@ var ru = {
   autoChoose: 'Автоматический выбор',
   comingSoon: 'Больше функций находится в процессе улучшения, следите за обновлениями',
   ffmpegScript: 'Скрипт слияния/преобразования аудио и видео',
+  autoGotoBufferedTime: 'Автоматически перейти к времени буфера',
+  disableAutoGotoBufferedTime: 'Отключить автоматический переход к времени буфера',
   tipsMsg: {
     playspeed: 'Скорость: ',
     forward: 'Вперёд: ',
@@ -4141,6 +4289,7 @@ var zhTW = {
   aboutAuthor: '關於作者',
   enableScript: '啟用腳本',
   disableScript: '禁用腳本',
+  disableCurrentInstanceGUI: '關閉當前圖形用戶界面',
   disableGUITemporarily: '臨時禁用圖形用戶界面',
   enableGUI: '啟用圖形用戶界面',
   disableGUI: '禁用圖形用戶界面',
@@ -4210,6 +4359,8 @@ var zhTW = {
   autoChoose: '自動選擇',
   comingSoon: '更多功能正在完善中，敬請期待',
   ffmpegScript: '音視頻合併/轉換腳本',
+  autoGotoBufferedTime: '自動跟隨跳轉到緩衝區時間',
+  disableAutoGotoBufferedTime: '禁用自動跟隨跳轉到緩衝區時間',
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '向前：',
@@ -5220,7 +5371,7 @@ const monkeyMenu = {
   }
 };
 
-const version = '3.7.12';
+const version = '4.0.0';
 
 function refreshPage (msg) {
   msg = msg || '配置已更改，马上刷新页面让配置生效？';
@@ -5243,7 +5394,8 @@ const globalFunctional = {
       const homePageLinks = [
         'https://h5player.anzz.top',
         'https://github.com/xxxily/h5player',
-        'https://greasyfork.org/scripts/381682'
+        'https://greasyfork.org/scripts/381682',
+        'https://u.anzz.top/h5player'
       ];
 
       /* 从homePageLinks中随机选取一个链接返回 */
@@ -5256,14 +5408,15 @@ const globalFunctional = {
     title: i18n.t('website'),
     desc: i18n.t('website'),
     fn: () => {
-      openInTab('https://h5player.anzz.top/');
+      openInTab('https://u.anzz.top/h5player');
     }
   },
   openAuthorHomePage: {
     title: i18n.t('aboutAuthor'),
     desc: i18n.t('aboutAuthor'),
     fn: () => {
-      openInTab('https://github.com/xxxily');
+      // openInTab('https://github.com/xxxily')
+      openInTab('https://u.anzz.top/xxxily');
     }
   },
   openHotkeysPage: {
@@ -5291,14 +5444,14 @@ const globalFunctional = {
     title: i18n.t('donate'),
     desc: i18n.t('donate'),
     fn: () => {
-      openInTab('https://h5player.anzz.top/#%E8%B5%9E');
+      openInTab('https://u.anzz.top/h5playerdonate');
     }
   },
   openAddGroupChatPage: {
     title: i18n.t('addGroupChat'),
     desc: i18n.t('addGroupChat'),
     fn: () => {
-      openInTab('https://h5player.anzz.top/home/#%E4%BA%A4%E6%B5%81%E7%BE%A4');
+      openInTab('https://u.anzz.top/h5playerddhatroup');
     }
   },
   openChangeLogPage: {
@@ -5337,7 +5490,8 @@ const globalFunctional = {
     title: i18n.t('openCustomConfigurationEditor'),
     desc: i18n.t('openCustomConfigurationEditor'),
     fn: () => {
-      openInTab('https://h5player.anzz.top/tools/json-editor/index.html?mode=tree&saveHandlerName=saveH5PlayerConfig&expandAll=true&json={}');
+      // openInTab('https://h5player.anzz.top/tools/json-editor/index.html?mode=tree&saveHandlerName=saveH5PlayerConfig&expandAll=true&json={}')
+      openInTab('https://u.anzz.top/h5pjsoneditor');
     }
   },
   /* 切换tampermonkey菜单的展开或折叠状态 */
@@ -6155,6 +6309,8 @@ function MediaElementAmplifier (mediaElem) {
   MediaElementAmplifier.prototype[name] = fn;
 });
 
+const downloadState = new Map();
+
 function download (url, title) {
   const downloadEl = document.createElement('a');
   downloadEl.href = url;
@@ -6164,24 +6320,25 @@ function download (url, title) {
 }
 
 function mediaDownload (mediaEl, title, downloadType) {
-  if (mediaEl && (mediaEl.src || mediaEl.currentSrc) && !mediaEl.src.startsWith('blob:')) {
+  /**
+   * 当媒体包含source标签时，媒体标签的真实地址将会是currentSrc
+   * https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/currentSrc
+   */
+  const mediaUrl = mediaEl.src || mediaEl.currentSrc;
+  const mediaState = downloadState.get(mediaUrl) || {};
+
+  if (mediaEl && mediaUrl && !mediaUrl.startsWith('blob:')) {
     const mediaInfo = {
       type: mediaEl instanceof HTMLVideoElement ? 'video' : 'audio',
       format: mediaEl instanceof HTMLVideoElement ? 'mp4' : 'mp3'
     };
-    let mediaTitle = `${title || mediaEl.title || document.title || Date.now()}_${mediaInfo.type}.${mediaInfo.format}`;
-
-    /**
-     * 当媒体包含source标签时，媒体标签的真实地址将会是currentSrc
-     * https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/currentSrc
-     */
-    const mediaUrl = mediaEl.src || mediaEl.currentSrc;
+    let mediaTitle = `${title || mediaEl.getAttribute('data-title') || document.title || Date.now()}_${mediaInfo.type}.${mediaInfo.format}`;
 
     /* 小于5分钟的媒体文件，尝试通过fetch下载 */
     if (downloadType === 'blob' || mediaEl.duration < 60 * 5) {
-      if (mediaEl.downloading) {
+      if (mediaState.downloading) {
         /* 距上次点下载小于1s的情况直接不响应任何操作 */
-        if (Date.now() - mediaEl.downloading < 1000 * 1) {
+        if (Date.now() - mediaState.downloading < 1000 * 1) {
           return false
         } else {
           const confirm = original.confirm('文件正在下载中，确定重复执行此操作？');
@@ -6191,14 +6348,15 @@ function mediaDownload (mediaEl, title, downloadType) {
         }
       }
 
-      if (mediaEl.hasDownload) {
+      if (mediaState.hasDownload) {
         const confirm = original.confirm('该媒体文件已经下载过了，确定需要再次下载？');
         if (!confirm) {
           return false
         }
       }
 
-      mediaTitle = original.prompt('请确认文件标题：', mediaTitle) || mediaTitle;
+      mediaTitle = original.prompt('请确认文件标题：', mediaTitle);
+      if (!mediaTitle) { return false }
 
       if (!mediaTitle.endsWith(mediaInfo.format)) {
         mediaTitle = mediaTitle + '.' + mediaInfo.format;
@@ -6210,14 +6368,16 @@ function mediaDownload (mediaEl, title, downloadType) {
         fetchUrl = mediaUrl.replace('http://', 'https://');
       }
 
-      mediaEl.downloading = Date.now();
+      mediaState.downloading = Date.now();
+      downloadState.set(mediaUrl, mediaState);
       fetch(fetchUrl).then(res => {
         res.blob().then(blob => {
           const blobUrl = window.URL.createObjectURL(blob);
           download(blobUrl, mediaTitle);
 
-          mediaEl.hasDownload = true;
-          delete mediaEl.downloading;
+          mediaState.hasDownload = true;
+          delete mediaState.downloading;
+          downloadState.set(mediaUrl, mediaState);
           window.URL.revokeObjectURL(blobUrl);
         });
       }).catch(err => {
@@ -6225,13 +6385,17 @@ function mediaDownload (mediaEl, title, downloadType) {
 
         /* 下载兜底 */
         download(mediaUrl, mediaTitle);
+
+        delete mediaState.downloading;
+        mediaState.hasDownload = true;
+        downloadState.set(mediaUrl, mediaState);
       });
     } else {
       download(mediaUrl, mediaTitle);
     }
   } else if (mediaSource.hasInit()) {
     /* 下载通过MediaSource管理的媒体文件 */
-    mediaSource.downloadMediaSource();
+    mediaSource.downloadMediaSource(mediaEl, title);
   } else {
     original.alert('当前媒体文件无法下载，下载功能待优化完善');
   }
@@ -6301,7 +6465,7 @@ const windowSandbox = new Proxy({}, {
 
 const h5playerUI = function (window) {var h5playerUI = (function () {
 
-  const sheet = new CSSStyleSheet();sheet.replaceSync(":root,\n:host,\n.sl-theme-light {\n  color-scheme: light;\n\n  --sl-color-gray-50: hsl(0 0% 97.5%);\n  --sl-color-gray-100: hsl(240 4.8% 95.9%);\n  --sl-color-gray-200: hsl(240 5.9% 90%);\n  --sl-color-gray-300: hsl(240 4.9% 83.9%);\n  --sl-color-gray-400: hsl(240 5% 64.9%);\n  --sl-color-gray-500: hsl(240 3.8% 46.1%);\n  --sl-color-gray-600: hsl(240 5.2% 33.9%);\n  --sl-color-gray-700: hsl(240 5.3% 26.1%);\n  --sl-color-gray-800: hsl(240 3.7% 15.9%);\n  --sl-color-gray-900: hsl(240 5.9% 10%);\n  --sl-color-gray-950: hsl(240 7.3% 8%);\n\n  --sl-color-red-50: hsl(0 85.7% 97.3%);\n  --sl-color-red-100: hsl(0 93.3% 94.1%);\n  --sl-color-red-200: hsl(0 96.3% 89.4%);\n  --sl-color-red-300: hsl(0 93.5% 81.8%);\n  --sl-color-red-400: hsl(0 90.6% 70.8%);\n  --sl-color-red-500: hsl(0 84.2% 60.2%);\n  --sl-color-red-600: hsl(0 72.2% 50.6%);\n  --sl-color-red-700: hsl(0 73.7% 41.8%);\n  --sl-color-red-800: hsl(0 70% 35.3%);\n  --sl-color-red-900: hsl(0 62.8% 30.6%);\n  --sl-color-red-950: hsl(0 60% 19.6%);\n\n  --sl-color-orange-50: hsl(33.3 100% 96.5%);\n  --sl-color-orange-100: hsl(34.3 100% 91.8%);\n  --sl-color-orange-200: hsl(32.1 97.7% 83.1%);\n  --sl-color-orange-300: hsl(30.7 97.2% 72.4%);\n  --sl-color-orange-400: hsl(27 96% 61%);\n  --sl-color-orange-500: hsl(24.6 95% 53.1%);\n  --sl-color-orange-600: hsl(20.5 90.2% 48.2%);\n  --sl-color-orange-700: hsl(17.5 88.3% 40.4%);\n  --sl-color-orange-800: hsl(15 79.1% 33.7%);\n  --sl-color-orange-900: hsl(15.3 74.6% 27.8%);\n  --sl-color-orange-950: hsl(15.2 69.1% 19%);\n\n  --sl-color-amber-50: hsl(48 100% 96.1%);\n  --sl-color-amber-100: hsl(48 96.5% 88.8%);\n  --sl-color-amber-200: hsl(48 96.6% 76.7%);\n  --sl-color-amber-300: hsl(45.9 96.7% 64.5%);\n  --sl-color-amber-400: hsl(43.3 96.4% 56.3%);\n  --sl-color-amber-500: hsl(37.7 92.1% 50.2%);\n  --sl-color-amber-600: hsl(32.1 94.6% 43.7%);\n  --sl-color-amber-700: hsl(26 90.5% 37.1%);\n  --sl-color-amber-800: hsl(22.7 82.5% 31.4%);\n  --sl-color-amber-900: hsl(21.7 77.8% 26.5%);\n  --sl-color-amber-950: hsl(22.9 74.1% 16.7%);\n\n  --sl-color-yellow-50: hsl(54.5 91.7% 95.3%);\n  --sl-color-yellow-100: hsl(54.9 96.7% 88%);\n  --sl-color-yellow-200: hsl(52.8 98.3% 76.9%);\n  --sl-color-yellow-300: hsl(50.4 97.8% 63.5%);\n  --sl-color-yellow-400: hsl(47.9 95.8% 53.1%);\n  --sl-color-yellow-500: hsl(45.4 93.4% 47.5%);\n  --sl-color-yellow-600: hsl(40.6 96.1% 40.4%);\n  --sl-color-yellow-700: hsl(35.5 91.7% 32.9%);\n  --sl-color-yellow-800: hsl(31.8 81% 28.8%);\n  --sl-color-yellow-900: hsl(28.4 72.5% 25.7%);\n  --sl-color-yellow-950: hsl(33.1 69% 13.9%);\n\n  --sl-color-lime-50: hsl(78.3 92% 95.1%);\n  --sl-color-lime-100: hsl(79.6 89.1% 89.2%);\n  --sl-color-lime-200: hsl(80.9 88.5% 79.6%);\n  --sl-color-lime-300: hsl(82 84.5% 67.1%);\n  --sl-color-lime-400: hsl(82.7 78% 55.5%);\n  --sl-color-lime-500: hsl(83.7 80.5% 44.3%);\n  --sl-color-lime-600: hsl(84.8 85.2% 34.5%);\n  --sl-color-lime-700: hsl(85.9 78.4% 27.3%);\n  --sl-color-lime-800: hsl(86.3 69% 22.7%);\n  --sl-color-lime-900: hsl(87.6 61.2% 20.2%);\n  --sl-color-lime-950: hsl(86.5 60.6% 13.9%);\n\n  --sl-color-green-50: hsl(138.5 76.5% 96.7%);\n  --sl-color-green-100: hsl(140.6 84.2% 92.5%);\n  --sl-color-green-200: hsl(141 78.9% 85.1%);\n  --sl-color-green-300: hsl(141.7 76.6% 73.1%);\n  --sl-color-green-400: hsl(141.9 69.2% 58%);\n  --sl-color-green-500: hsl(142.1 70.6% 45.3%);\n  --sl-color-green-600: hsl(142.1 76.2% 36.3%);\n  --sl-color-green-700: hsl(142.4 71.8% 29.2%);\n  --sl-color-green-800: hsl(142.8 64.2% 24.1%);\n  --sl-color-green-900: hsl(143.8 61.2% 20.2%);\n  --sl-color-green-950: hsl(144.3 60.7% 12%);\n\n  --sl-color-emerald-50: hsl(151.8 81% 95.9%);\n  --sl-color-emerald-100: hsl(149.3 80.4% 90%);\n  --sl-color-emerald-200: hsl(152.4 76% 80.4%);\n  --sl-color-emerald-300: hsl(156.2 71.6% 66.9%);\n  --sl-color-emerald-400: hsl(158.1 64.4% 51.6%);\n  --sl-color-emerald-500: hsl(160.1 84.1% 39.4%);\n  --sl-color-emerald-600: hsl(161.4 93.5% 30.4%);\n  --sl-color-emerald-700: hsl(162.9 93.5% 24.3%);\n  --sl-color-emerald-800: hsl(163.1 88.1% 19.8%);\n  --sl-color-emerald-900: hsl(164.2 85.7% 16.5%);\n  --sl-color-emerald-950: hsl(164.3 87.5% 9.4%);\n\n  --sl-color-teal-50: hsl(166.2 76.5% 96.7%);\n  --sl-color-teal-100: hsl(167.2 85.5% 89.2%);\n  --sl-color-teal-200: hsl(168.4 83.8% 78.2%);\n  --sl-color-teal-300: hsl(170.6 76.9% 64.3%);\n  --sl-color-teal-400: hsl(172.5 66% 50.4%);\n  --sl-color-teal-500: hsl(173.4 80.4% 40%);\n  --sl-color-teal-600: hsl(174.7 83.9% 31.6%);\n  --sl-color-teal-700: hsl(175.3 77.4% 26.1%);\n  --sl-color-teal-800: hsl(176.1 69.4% 21.8%);\n  --sl-color-teal-900: hsl(175.9 60.8% 19%);\n  --sl-color-teal-950: hsl(176.5 58.6% 11.4%);\n\n  --sl-color-cyan-50: hsl(183.2 100% 96.3%);\n  --sl-color-cyan-100: hsl(185.1 95.9% 90.4%);\n  --sl-color-cyan-200: hsl(186.2 93.5% 81.8%);\n  --sl-color-cyan-300: hsl(187 92.4% 69%);\n  --sl-color-cyan-400: hsl(187.9 85.7% 53.3%);\n  --sl-color-cyan-500: hsl(188.7 94.5% 42.7%);\n  --sl-color-cyan-600: hsl(191.6 91.4% 36.5%);\n  --sl-color-cyan-700: hsl(192.9 82.3% 31%);\n  --sl-color-cyan-800: hsl(194.4 69.6% 27.1%);\n  --sl-color-cyan-900: hsl(196.4 63.6% 23.7%);\n  --sl-color-cyan-950: hsl(196.8 61% 16.1%);\n\n  --sl-color-sky-50: hsl(204 100% 97.1%);\n  --sl-color-sky-100: hsl(204 93.8% 93.7%);\n  --sl-color-sky-200: hsl(200.6 94.4% 86.1%);\n  --sl-color-sky-300: hsl(199.4 95.5% 73.9%);\n  --sl-color-sky-400: hsl(198.4 93.2% 59.6%);\n  --sl-color-sky-500: hsl(198.6 88.7% 48.4%);\n  --sl-color-sky-600: hsl(200.4 98% 39.4%);\n  --sl-color-sky-700: hsl(201.3 96.3% 32.2%);\n  --sl-color-sky-800: hsl(201 90% 27.5%);\n  --sl-color-sky-900: hsl(202 80.3% 23.9%);\n  --sl-color-sky-950: hsl(202.3 73.8% 16.5%);\n\n  --sl-color-blue-50: hsl(213.8 100% 96.9%);\n  --sl-color-blue-100: hsl(214.3 94.6% 92.7%);\n  --sl-color-blue-200: hsl(213.3 96.9% 87.3%);\n  --sl-color-blue-300: hsl(211.7 96.4% 78.4%);\n  --sl-color-blue-400: hsl(213.1 93.9% 67.8%);\n  --sl-color-blue-500: hsl(217.2 91.2% 59.8%);\n  --sl-color-blue-600: hsl(221.2 83.2% 53.3%);\n  --sl-color-blue-700: hsl(224.3 76.3% 48%);\n  --sl-color-blue-800: hsl(225.9 70.7% 40.2%);\n  --sl-color-blue-900: hsl(224.4 64.3% 32.9%);\n  --sl-color-blue-950: hsl(226.2 55.3% 18.4%);\n\n  --sl-color-indigo-50: hsl(225.9 100% 96.7%);\n  --sl-color-indigo-100: hsl(226.5 100% 93.9%);\n  --sl-color-indigo-200: hsl(228 96.5% 88.8%);\n  --sl-color-indigo-300: hsl(229.7 93.5% 81.8%);\n  --sl-color-indigo-400: hsl(234.5 89.5% 73.9%);\n  --sl-color-indigo-500: hsl(238.7 83.5% 66.7%);\n  --sl-color-indigo-600: hsl(243.4 75.4% 58.6%);\n  --sl-color-indigo-700: hsl(244.5 57.9% 50.6%);\n  --sl-color-indigo-800: hsl(243.7 54.5% 41.4%);\n  --sl-color-indigo-900: hsl(242.2 47.4% 34.3%);\n  --sl-color-indigo-950: hsl(243.5 43.6% 22.9%);\n\n  --sl-color-violet-50: hsl(250 100% 97.6%);\n  --sl-color-violet-100: hsl(251.4 91.3% 95.5%);\n  --sl-color-violet-200: hsl(250.5 95.2% 91.8%);\n  --sl-color-violet-300: hsl(252.5 94.7% 85.1%);\n  --sl-color-violet-400: hsl(255.1 91.7% 76.3%);\n  --sl-color-violet-500: hsl(258.3 89.5% 66.3%);\n  --sl-color-violet-600: hsl(262.1 83.3% 57.8%);\n  --sl-color-violet-700: hsl(263.4 70% 50.4%);\n  --sl-color-violet-800: hsl(263.4 69.3% 42.2%);\n  --sl-color-violet-900: hsl(263.5 67.4% 34.9%);\n  --sl-color-violet-950: hsl(265.1 61.5% 21.4%);\n\n  --sl-color-purple-50: hsl(270 100% 98%);\n  --sl-color-purple-100: hsl(268.7 100% 95.5%);\n  --sl-color-purple-200: hsl(268.6 100% 91.8%);\n  --sl-color-purple-300: hsl(269.2 97.4% 85.1%);\n  --sl-color-purple-400: hsl(270 95.2% 75.3%);\n  --sl-color-purple-500: hsl(270.7 91% 65.1%);\n  --sl-color-purple-600: hsl(271.5 81.3% 55.9%);\n  --sl-color-purple-700: hsl(272.1 71.7% 47.1%);\n  --sl-color-purple-800: hsl(272.9 67.2% 39.4%);\n  --sl-color-purple-900: hsl(273.6 65.6% 32%);\n  --sl-color-purple-950: hsl(276 59.5% 16.5%);\n\n  --sl-color-fuchsia-50: hsl(289.1 100% 97.8%);\n  --sl-color-fuchsia-100: hsl(287 100% 95.5%);\n  --sl-color-fuchsia-200: hsl(288.3 95.8% 90.6%);\n  --sl-color-fuchsia-300: hsl(291.1 93.1% 82.9%);\n  --sl-color-fuchsia-400: hsl(292 91.4% 72.5%);\n  --sl-color-fuchsia-500: hsl(292.2 84.1% 60.6%);\n  --sl-color-fuchsia-600: hsl(293.4 69.5% 48.8%);\n  --sl-color-fuchsia-700: hsl(294.7 72.4% 39.8%);\n  --sl-color-fuchsia-800: hsl(295.4 70.2% 32.9%);\n  --sl-color-fuchsia-900: hsl(296.7 63.6% 28%);\n  --sl-color-fuchsia-950: hsl(297.1 56.8% 14.5%);\n\n  --sl-color-pink-50: hsl(327.3 73.3% 97.1%);\n  --sl-color-pink-100: hsl(325.7 77.8% 94.7%);\n  --sl-color-pink-200: hsl(325.9 84.6% 89.8%);\n  --sl-color-pink-300: hsl(327.4 87.1% 81.8%);\n  --sl-color-pink-400: hsl(328.6 85.5% 70.2%);\n  --sl-color-pink-500: hsl(330.4 81.2% 60.4%);\n  --sl-color-pink-600: hsl(333.3 71.4% 50.6%);\n  --sl-color-pink-700: hsl(335.1 77.6% 42%);\n  --sl-color-pink-800: hsl(335.8 74.4% 35.3%);\n  --sl-color-pink-900: hsl(335.9 69% 30.4%);\n  --sl-color-pink-950: hsl(336.2 65.4% 15.9%);\n\n  --sl-color-rose-50: hsl(355.7 100% 97.3%);\n  --sl-color-rose-100: hsl(355.6 100% 94.7%);\n  --sl-color-rose-200: hsl(352.7 96.1% 90%);\n  --sl-color-rose-300: hsl(352.6 95.7% 81.8%);\n  --sl-color-rose-400: hsl(351.3 94.5% 71.4%);\n  --sl-color-rose-500: hsl(349.7 89.2% 60.2%);\n  --sl-color-rose-600: hsl(346.8 77.2% 49.8%);\n  --sl-color-rose-700: hsl(345.3 82.7% 40.8%);\n  --sl-color-rose-800: hsl(343.4 79.7% 34.7%);\n  --sl-color-rose-900: hsl(341.5 75.5% 30.4%);\n  --sl-color-rose-950: hsl(341.3 70.1% 17.1%);\n\n  --sl-color-primary-50: var(--sl-color-sky-50);\n  --sl-color-primary-100: var(--sl-color-sky-100);\n  --sl-color-primary-200: var(--sl-color-sky-200);\n  --sl-color-primary-300: var(--sl-color-sky-300);\n  --sl-color-primary-400: var(--sl-color-sky-400);\n  --sl-color-primary-500: var(--sl-color-sky-500);\n  --sl-color-primary-600: var(--sl-color-sky-600);\n  --sl-color-primary-700: var(--sl-color-sky-700);\n  --sl-color-primary-800: var(--sl-color-sky-800);\n  --sl-color-primary-900: var(--sl-color-sky-900);\n  --sl-color-primary-950: var(--sl-color-sky-950);\n\n  --sl-color-success-50: var(--sl-color-green-50);\n  --sl-color-success-100: var(--sl-color-green-100);\n  --sl-color-success-200: var(--sl-color-green-200);\n  --sl-color-success-300: var(--sl-color-green-300);\n  --sl-color-success-400: var(--sl-color-green-400);\n  --sl-color-success-500: var(--sl-color-green-500);\n  --sl-color-success-600: var(--sl-color-green-600);\n  --sl-color-success-700: var(--sl-color-green-700);\n  --sl-color-success-800: var(--sl-color-green-800);\n  --sl-color-success-900: var(--sl-color-green-900);\n  --sl-color-success-950: var(--sl-color-green-950);\n\n  --sl-color-warning-50: var(--sl-color-amber-50);\n  --sl-color-warning-100: var(--sl-color-amber-100);\n  --sl-color-warning-200: var(--sl-color-amber-200);\n  --sl-color-warning-300: var(--sl-color-amber-300);\n  --sl-color-warning-400: var(--sl-color-amber-400);\n  --sl-color-warning-500: var(--sl-color-amber-500);\n  --sl-color-warning-600: var(--sl-color-amber-600);\n  --sl-color-warning-700: var(--sl-color-amber-700);\n  --sl-color-warning-800: var(--sl-color-amber-800);\n  --sl-color-warning-900: var(--sl-color-amber-900);\n  --sl-color-warning-950: var(--sl-color-amber-950);\n\n  --sl-color-danger-50: var(--sl-color-red-50);\n  --sl-color-danger-100: var(--sl-color-red-100);\n  --sl-color-danger-200: var(--sl-color-red-200);\n  --sl-color-danger-300: var(--sl-color-red-300);\n  --sl-color-danger-400: var(--sl-color-red-400);\n  --sl-color-danger-500: var(--sl-color-red-500);\n  --sl-color-danger-600: var(--sl-color-red-600);\n  --sl-color-danger-700: var(--sl-color-red-700);\n  --sl-color-danger-800: var(--sl-color-red-800);\n  --sl-color-danger-900: var(--sl-color-red-900);\n  --sl-color-danger-950: var(--sl-color-red-950);\n\n  --sl-color-neutral-50: var(--sl-color-gray-50);\n  --sl-color-neutral-100: var(--sl-color-gray-100);\n  --sl-color-neutral-200: var(--sl-color-gray-200);\n  --sl-color-neutral-300: var(--sl-color-gray-300);\n  --sl-color-neutral-400: var(--sl-color-gray-400);\n  --sl-color-neutral-500: var(--sl-color-gray-500);\n  --sl-color-neutral-600: var(--sl-color-gray-600);\n  --sl-color-neutral-700: var(--sl-color-gray-700);\n  --sl-color-neutral-800: var(--sl-color-gray-800);\n  --sl-color-neutral-900: var(--sl-color-gray-900);\n  --sl-color-neutral-950: var(--sl-color-gray-950);\n\n  --sl-color-neutral-0: hsl(0, 0%, 100%);\n  --sl-color-neutral-1000: hsl(0, 0%, 0%);\n\n  --sl-border-radius-small: 0.1875rem;\n  --sl-border-radius-medium: 0.25rem;\n  --sl-border-radius-large: 0.5rem;\n  --sl-border-radius-x-large: 1rem;\n\n  --sl-border-radius-circle: 50%;\n  --sl-border-radius-pill: 9999px;\n\n  --sl-shadow-x-small: 0 1px 2px hsl(240 3.8% 46.1% / 6%);\n  --sl-shadow-small: 0 1px 2px hsl(240 3.8% 46.1% / 12%);\n  --sl-shadow-medium: 0 2px 4px hsl(240 3.8% 46.1% / 12%);\n  --sl-shadow-large: 0 2px 8px hsl(240 3.8% 46.1% / 12%);\n  --sl-shadow-x-large: 0 4px 16px hsl(240 3.8% 46.1% / 12%);\n\n  --sl-spacing-3x-small: 0.125rem;\n  --sl-spacing-2x-small: 0.25rem;\n  --sl-spacing-x-small: 0.5rem;\n  --sl-spacing-small: 0.75rem;\n  --sl-spacing-medium: 1rem;\n  --sl-spacing-large: 1.25rem;\n  --sl-spacing-x-large: 1.75rem;\n  --sl-spacing-2x-large: 2.25rem;\n  --sl-spacing-3x-large: 3rem;\n  --sl-spacing-4x-large: 4.5rem;\n\n  --sl-transition-x-slow: 1000ms;\n  --sl-transition-slow: 500ms;\n  --sl-transition-medium: 250ms;\n  --sl-transition-fast: 150ms;\n  --sl-transition-x-fast: 50ms;\n\n  --sl-font-mono: SFMono-Regular, Consolas, \"Liberation Mono\", Menlo, monospace;\n  --sl-font-sans: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n    Helvetica, Arial, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\",\n    \"Segoe UI Symbol\";\n  --sl-font-serif: Georgia, \"Times New Roman\", serif;\n\n  --sl-font-size-2x-small: 0.625rem;\n  --sl-font-size-x-small: 0.75rem;\n  --sl-font-size-small: 0.875rem;\n  --sl-font-size-medium: 1rem;\n  --sl-font-size-large: 1.25rem;\n  --sl-font-size-x-large: 1.5rem;\n  --sl-font-size-2x-large: 2.25rem;\n  --sl-font-size-3x-large: 3rem;\n  --sl-font-size-4x-large: 4.5rem;\n\n  --sl-font-weight-light: 300;\n  --sl-font-weight-normal: 400;\n  --sl-font-weight-semibold: 500;\n  --sl-font-weight-bold: 700;\n\n  --sl-letter-spacing-denser: -0.03em;\n  --sl-letter-spacing-dense: -0.015em;\n  --sl-letter-spacing-normal: normal;\n  --sl-letter-spacing-loose: 0.075em;\n  --sl-letter-spacing-looser: 0.15em;\n\n  --sl-line-height-denser: 1;\n  --sl-line-height-dense: 1.4;\n  --sl-line-height-normal: 1.8;\n  --sl-line-height-loose: 2.2;\n  --sl-line-height-looser: 2.6;\n\n  --sl-focus-ring-color: var(--sl-color-primary-600);\n  --sl-focus-ring-style: solid;\n  --sl-focus-ring-width: 3px;\n  --sl-focus-ring: var(--sl-focus-ring-style) var(--sl-focus-ring-width)\n    var(--sl-focus-ring-color);\n  --sl-focus-ring-offset: 1px;\n\n  --sl-button-font-size-small: var(--sl-font-size-x-small);\n  --sl-button-font-size-medium: var(--sl-font-size-small);\n  --sl-button-font-size-large: var(--sl-font-size-medium);\n\n  --sl-input-height-small: 1.875rem;\n  --sl-input-height-medium: 2.5rem;\n  --sl-input-height-large: 3.125rem;\n\n  --sl-input-background-color: var(--sl-color-neutral-0);\n  --sl-input-background-color-hover: var(--sl-input-background-color);\n  --sl-input-background-color-focus: var(--sl-input-background-color);\n  --sl-input-background-color-disabled: var(--sl-color-neutral-100);\n  --sl-input-border-color: var(--sl-color-neutral-300);\n  --sl-input-border-color-hover: var(--sl-color-neutral-400);\n  --sl-input-border-color-focus: var(--sl-color-primary-500);\n  --sl-input-border-color-disabled: var(--sl-color-neutral-300);\n  --sl-input-border-width: 1px;\n  --sl-input-required-content: \"*\";\n  --sl-input-required-content-offset: -2px;\n  --sl-input-required-content-color: var(--sl-input-label-color);\n\n  --sl-input-border-radius-small: var(--sl-border-radius-medium);\n  --sl-input-border-radius-medium: var(--sl-border-radius-medium);\n  --sl-input-border-radius-large: var(--sl-border-radius-medium);\n\n  --sl-input-font-family: var(--sl-font-sans);\n  --sl-input-font-weight: var(--sl-font-weight-normal);\n  --sl-input-font-size-small: var(--sl-font-size-small);\n  --sl-input-font-size-medium: var(--sl-font-size-medium);\n  --sl-input-font-size-large: var(--sl-font-size-large);\n  --sl-input-letter-spacing: var(--sl-letter-spacing-normal);\n\n  --sl-input-color: var(--sl-color-neutral-700);\n  --sl-input-color-hover: var(--sl-color-neutral-700);\n  --sl-input-color-focus: var(--sl-color-neutral-700);\n  --sl-input-color-disabled: var(--sl-color-neutral-900);\n  --sl-input-icon-color: var(--sl-color-neutral-500);\n  --sl-input-icon-color-hover: var(--sl-color-neutral-600);\n  --sl-input-icon-color-focus: var(--sl-color-neutral-600);\n  --sl-input-placeholder-color: var(--sl-color-neutral-500);\n  --sl-input-placeholder-color-disabled: var(--sl-color-neutral-600);\n  --sl-input-spacing-small: var(--sl-spacing-small);\n  --sl-input-spacing-medium: var(--sl-spacing-medium);\n  --sl-input-spacing-large: var(--sl-spacing-large);\n\n  --sl-input-focus-ring-color: hsl(198.6 88.7% 48.4% / 40%);\n  --sl-input-focus-ring-offset: 0;\n\n  --sl-input-filled-background-color: var(--sl-color-neutral-100);\n  --sl-input-filled-background-color-hover: var(--sl-color-neutral-100);\n  --sl-input-filled-background-color-focus: var(--sl-color-neutral-100);\n  --sl-input-filled-background-color-disabled: var(--sl-color-neutral-100);\n  --sl-input-filled-color: var(--sl-color-neutral-800);\n  --sl-input-filled-color-hover: var(--sl-color-neutral-800);\n  --sl-input-filled-color-focus: var(--sl-color-neutral-700);\n  --sl-input-filled-color-disabled: var(--sl-color-neutral-800);\n\n  --sl-input-label-font-size-small: var(--sl-font-size-small);\n  --sl-input-label-font-size-medium: var(--sl-font-size-medium);\n  --sl-input-label-font-size-large: var(--sl-font-size-large);\n  --sl-input-label-color: inherit;\n\n  --sl-input-help-text-font-size-small: var(--sl-font-size-x-small);\n  --sl-input-help-text-font-size-medium: var(--sl-font-size-small);\n  --sl-input-help-text-font-size-large: var(--sl-font-size-medium);\n  --sl-input-help-text-color: var(--sl-color-neutral-500);\n\n  --sl-toggle-size-small: 0.875rem;\n  --sl-toggle-size-medium: 1.125rem;\n  --sl-toggle-size-large: 1.375rem;\n\n  --sl-overlay-background-color: hsl(240 3.8% 46.1% / 33%);\n\n  --sl-panel-background-color: var(--sl-color-neutral-0);\n  --sl-panel-border-color: var(--sl-color-neutral-200);\n  --sl-panel-border-width: 1px;\n\n  --sl-tooltip-border-radius: var(--sl-border-radius-medium);\n  --sl-tooltip-background-color: var(--sl-color-neutral-800);\n  --sl-tooltip-color: var(--sl-color-neutral-0);\n  --sl-tooltip-font-family: var(--sl-font-sans);\n  --sl-tooltip-font-weight: var(--sl-font-weight-normal);\n  --sl-tooltip-font-size: var(--sl-font-size-small);\n  --sl-tooltip-line-height: var(--sl-line-height-dense);\n  --sl-tooltip-padding: var(--sl-spacing-2x-small) var(--sl-spacing-x-small);\n  --sl-tooltip-arrow-size: 6px;\n\n  --sl-z-index-drawer: 999700;\n  --sl-z-index-dialog: 999800;\n  --sl-z-index-dropdown: 999900;\n  --sl-z-index-toast: 999950;\n  --sl-z-index-tooltip: 9991000;\n}\n\n.sl-scroll-lock {\n  padding-right: var(--sl-scroll-lock-size) !important;\n  overflow: hidden !important;\n}\n\n.sl-toast-stack {\n  position: fixed;\n  top: 0;\n  inset-inline-end: 0;\n  z-index: var(--sl-z-index-toast);\n  width: 28rem;\n  max-width: 100%;\n  max-height: 100%;\n  overflow: auto;\n}\n\n.sl-toast-stack sl-alert {\n  margin: var(--sl-spacing-medium);\n}\n\n.sl-toast-stack sl-alert::part(base) {\n  box-shadow: var(--sl-shadow-large);\n}\n\nsl-drawer::part(base) {\n  color: var(--sl-color-neutral-800) !important;\n}\n\n.h5player-popup-wrap {\n  position: relative;\n  z-index: 99999999;\n  opacity: 0;\n}\n\n.h5player-popup-wrap sl-popup {\n  position: relative;\n}\n\n.h5player-popup-wrap .h5player-popup-content {\n  background-color: rgba(0, 0, 0, 0.9);\n  color: #fff;\n  font-size: 16px;\n  min-width: 220px;\n  height: 48px;\n  line-height: 48px;\n  display: flex;\n  padding: 0 16px;\n  border-radius: 6px 6px 0 0;\n  border-bottom: 2px solid rgba(255, 255, 255, 0.2);\n\n  /* 灰色向下的过度阴影 */\n  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.7);\n\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n}\n\n@keyframes text-lumos {\n  0%,100%{ color:#fff; }\n\t50%{ color:#ccc; }\n}\n\n.h5player-popup-content .h5p-logo-mod {\n  white-space: nowrap;\n  font-weight: 500;\n  text-shadow: 0px 0px 2px #666, 0 0 30px #666;\n  animation: text-lumos 5s infinite;\n}\n\n.h5player-popup-content .h5p-menu-wrap {}\n\n.h5player-popup-content .h5p-action-mod {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n}\n\n.h5player-popup-content .h5p-action-btn {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 14px;\n  padding: 0 8px;\n  cursor: pointer;\n  white-space: nowrap;\n}\n\n.h5player-popup-content .h5p-action-btn:hover {\n  background-color: rgba(255, 255, 255, 0.2);\n}\n\n.h5player-popup-content .h5p-action-btn sl-icon {\n  padding: 0 4px;\n}\n\n/* 激活态 */\n.h5player-popup-active {\n  opacity: 0.8;\n  transition: opacity 0.2s;\n}\n\n.h5player-popup-content a, .h5player-popup-content a:visited{\n  color: #fff;\n  cursor: pointer;\n  text-decoration: none;\n}\n\n.h5player-popup-wrap:hover, .h5player-popup-full-active {\n  opacity: 1 !important;\n  transition: opacity 0.2s;\n}\n\n.h5player-popup-wrap:hover .h5player-popup-content, .h5player-popup-full-active .h5player-popup-content {\n  border-bottom: 2px solid rgba(255, 255, 255, 0.6);\n}\n\n.h5player-popup-content .h5p-action-mod sl-menu {\n  background-color: rgba(0, 0, 0, 0.9);\n  color: #fff;\n  border-radius: 4px;\n  padding: 5px 0;\n}\n\n.h5player-popup-content .h5p-action-mod sl-menu-item::part(base) {\n  /* background-color: rgba(0, 0, 0, 0.9); */\n  color: #fff;\n  font-size: 14px;\n  padding: 2px 0;\n}\n\n.h5player-popup-content .h5p-action-mod sl-menu-item::part(base):hover {\n  background-color: var(--sl-color-primary-500);\n  color: #fff;\n}\n\n.h5player-popup-content .h5p-recommend-wrap {\n  flex-grow: 1;\n  box-sizing: border-box;\n  padding: 0 20px;\n  text-align: center;\n  font-size: 14px;\n  overflow: hidden;\n  white-space: nowrap;\n}\n\n@keyframes text-marquee {\n  0% { transform: translateX(0); }\n  100% { transform: translateX(-100%); }\n}\n\n.h5player-popup-content .h5p-recommend-mod {\n  display: inline-block;\n  padding-left: 100%;\n  animation: text-marquee 15s linear infinite;\n}\n\n.h5player-popup-content .h5p-recommend-wrap>div {\n  opacity: 0.5;\n}\n.h5player-popup-content .h5p-recommend-wrap>div:hover{\n  opacity: 1;\n}\n.h5player-popup-content .h5p-recommend-wrap>div:hover .h5p-recommend-mod {\n  animation-play-state: paused;\n}");
+  const sheet = new CSSStyleSheet();sheet.replaceSync(":root,\r\n:host,\r\n.sl-theme-light {\r\n  color-scheme: light;\r\n\r\n  --sl-color-gray-50: hsl(0 0% 97.5%);\r\n  --sl-color-gray-100: hsl(240 4.8% 95.9%);\r\n  --sl-color-gray-200: hsl(240 5.9% 90%);\r\n  --sl-color-gray-300: hsl(240 4.9% 83.9%);\r\n  --sl-color-gray-400: hsl(240 5% 64.9%);\r\n  --sl-color-gray-500: hsl(240 3.8% 46.1%);\r\n  --sl-color-gray-600: hsl(240 5.2% 33.9%);\r\n  --sl-color-gray-700: hsl(240 5.3% 26.1%);\r\n  --sl-color-gray-800: hsl(240 3.7% 15.9%);\r\n  --sl-color-gray-900: hsl(240 5.9% 10%);\r\n  --sl-color-gray-950: hsl(240 7.3% 8%);\r\n\r\n  --sl-color-red-50: hsl(0 85.7% 97.3%);\r\n  --sl-color-red-100: hsl(0 93.3% 94.1%);\r\n  --sl-color-red-200: hsl(0 96.3% 89.4%);\r\n  --sl-color-red-300: hsl(0 93.5% 81.8%);\r\n  --sl-color-red-400: hsl(0 90.6% 70.8%);\r\n  --sl-color-red-500: hsl(0 84.2% 60.2%);\r\n  --sl-color-red-600: hsl(0 72.2% 50.6%);\r\n  --sl-color-red-700: hsl(0 73.7% 41.8%);\r\n  --sl-color-red-800: hsl(0 70% 35.3%);\r\n  --sl-color-red-900: hsl(0 62.8% 30.6%);\r\n  --sl-color-red-950: hsl(0 60% 19.6%);\r\n\r\n  --sl-color-orange-50: hsl(33.3 100% 96.5%);\r\n  --sl-color-orange-100: hsl(34.3 100% 91.8%);\r\n  --sl-color-orange-200: hsl(32.1 97.7% 83.1%);\r\n  --sl-color-orange-300: hsl(30.7 97.2% 72.4%);\r\n  --sl-color-orange-400: hsl(27 96% 61%);\r\n  --sl-color-orange-500: hsl(24.6 95% 53.1%);\r\n  --sl-color-orange-600: hsl(20.5 90.2% 48.2%);\r\n  --sl-color-orange-700: hsl(17.5 88.3% 40.4%);\r\n  --sl-color-orange-800: hsl(15 79.1% 33.7%);\r\n  --sl-color-orange-900: hsl(15.3 74.6% 27.8%);\r\n  --sl-color-orange-950: hsl(15.2 69.1% 19%);\r\n\r\n  --sl-color-amber-50: hsl(48 100% 96.1%);\r\n  --sl-color-amber-100: hsl(48 96.5% 88.8%);\r\n  --sl-color-amber-200: hsl(48 96.6% 76.7%);\r\n  --sl-color-amber-300: hsl(45.9 96.7% 64.5%);\r\n  --sl-color-amber-400: hsl(43.3 96.4% 56.3%);\r\n  --sl-color-amber-500: hsl(37.7 92.1% 50.2%);\r\n  --sl-color-amber-600: hsl(32.1 94.6% 43.7%);\r\n  --sl-color-amber-700: hsl(26 90.5% 37.1%);\r\n  --sl-color-amber-800: hsl(22.7 82.5% 31.4%);\r\n  --sl-color-amber-900: hsl(21.7 77.8% 26.5%);\r\n  --sl-color-amber-950: hsl(22.9 74.1% 16.7%);\r\n\r\n  --sl-color-yellow-50: hsl(54.5 91.7% 95.3%);\r\n  --sl-color-yellow-100: hsl(54.9 96.7% 88%);\r\n  --sl-color-yellow-200: hsl(52.8 98.3% 76.9%);\r\n  --sl-color-yellow-300: hsl(50.4 97.8% 63.5%);\r\n  --sl-color-yellow-400: hsl(47.9 95.8% 53.1%);\r\n  --sl-color-yellow-500: hsl(45.4 93.4% 47.5%);\r\n  --sl-color-yellow-600: hsl(40.6 96.1% 40.4%);\r\n  --sl-color-yellow-700: hsl(35.5 91.7% 32.9%);\r\n  --sl-color-yellow-800: hsl(31.8 81% 28.8%);\r\n  --sl-color-yellow-900: hsl(28.4 72.5% 25.7%);\r\n  --sl-color-yellow-950: hsl(33.1 69% 13.9%);\r\n\r\n  --sl-color-lime-50: hsl(78.3 92% 95.1%);\r\n  --sl-color-lime-100: hsl(79.6 89.1% 89.2%);\r\n  --sl-color-lime-200: hsl(80.9 88.5% 79.6%);\r\n  --sl-color-lime-300: hsl(82 84.5% 67.1%);\r\n  --sl-color-lime-400: hsl(82.7 78% 55.5%);\r\n  --sl-color-lime-500: hsl(83.7 80.5% 44.3%);\r\n  --sl-color-lime-600: hsl(84.8 85.2% 34.5%);\r\n  --sl-color-lime-700: hsl(85.9 78.4% 27.3%);\r\n  --sl-color-lime-800: hsl(86.3 69% 22.7%);\r\n  --sl-color-lime-900: hsl(87.6 61.2% 20.2%);\r\n  --sl-color-lime-950: hsl(86.5 60.6% 13.9%);\r\n\r\n  --sl-color-green-50: hsl(138.5 76.5% 96.7%);\r\n  --sl-color-green-100: hsl(140.6 84.2% 92.5%);\r\n  --sl-color-green-200: hsl(141 78.9% 85.1%);\r\n  --sl-color-green-300: hsl(141.7 76.6% 73.1%);\r\n  --sl-color-green-400: hsl(141.9 69.2% 58%);\r\n  --sl-color-green-500: hsl(142.1 70.6% 45.3%);\r\n  --sl-color-green-600: hsl(142.1 76.2% 36.3%);\r\n  --sl-color-green-700: hsl(142.4 71.8% 29.2%);\r\n  --sl-color-green-800: hsl(142.8 64.2% 24.1%);\r\n  --sl-color-green-900: hsl(143.8 61.2% 20.2%);\r\n  --sl-color-green-950: hsl(144.3 60.7% 12%);\r\n\r\n  --sl-color-emerald-50: hsl(151.8 81% 95.9%);\r\n  --sl-color-emerald-100: hsl(149.3 80.4% 90%);\r\n  --sl-color-emerald-200: hsl(152.4 76% 80.4%);\r\n  --sl-color-emerald-300: hsl(156.2 71.6% 66.9%);\r\n  --sl-color-emerald-400: hsl(158.1 64.4% 51.6%);\r\n  --sl-color-emerald-500: hsl(160.1 84.1% 39.4%);\r\n  --sl-color-emerald-600: hsl(161.4 93.5% 30.4%);\r\n  --sl-color-emerald-700: hsl(162.9 93.5% 24.3%);\r\n  --sl-color-emerald-800: hsl(163.1 88.1% 19.8%);\r\n  --sl-color-emerald-900: hsl(164.2 85.7% 16.5%);\r\n  --sl-color-emerald-950: hsl(164.3 87.5% 9.4%);\r\n\r\n  --sl-color-teal-50: hsl(166.2 76.5% 96.7%);\r\n  --sl-color-teal-100: hsl(167.2 85.5% 89.2%);\r\n  --sl-color-teal-200: hsl(168.4 83.8% 78.2%);\r\n  --sl-color-teal-300: hsl(170.6 76.9% 64.3%);\r\n  --sl-color-teal-400: hsl(172.5 66% 50.4%);\r\n  --sl-color-teal-500: hsl(173.4 80.4% 40%);\r\n  --sl-color-teal-600: hsl(174.7 83.9% 31.6%);\r\n  --sl-color-teal-700: hsl(175.3 77.4% 26.1%);\r\n  --sl-color-teal-800: hsl(176.1 69.4% 21.8%);\r\n  --sl-color-teal-900: hsl(175.9 60.8% 19%);\r\n  --sl-color-teal-950: hsl(176.5 58.6% 11.4%);\r\n\r\n  --sl-color-cyan-50: hsl(183.2 100% 96.3%);\r\n  --sl-color-cyan-100: hsl(185.1 95.9% 90.4%);\r\n  --sl-color-cyan-200: hsl(186.2 93.5% 81.8%);\r\n  --sl-color-cyan-300: hsl(187 92.4% 69%);\r\n  --sl-color-cyan-400: hsl(187.9 85.7% 53.3%);\r\n  --sl-color-cyan-500: hsl(188.7 94.5% 42.7%);\r\n  --sl-color-cyan-600: hsl(191.6 91.4% 36.5%);\r\n  --sl-color-cyan-700: hsl(192.9 82.3% 31%);\r\n  --sl-color-cyan-800: hsl(194.4 69.6% 27.1%);\r\n  --sl-color-cyan-900: hsl(196.4 63.6% 23.7%);\r\n  --sl-color-cyan-950: hsl(196.8 61% 16.1%);\r\n\r\n  --sl-color-sky-50: hsl(204 100% 97.1%);\r\n  --sl-color-sky-100: hsl(204 93.8% 93.7%);\r\n  --sl-color-sky-200: hsl(200.6 94.4% 86.1%);\r\n  --sl-color-sky-300: hsl(199.4 95.5% 73.9%);\r\n  --sl-color-sky-400: hsl(198.4 93.2% 59.6%);\r\n  --sl-color-sky-500: hsl(198.6 88.7% 48.4%);\r\n  --sl-color-sky-600: hsl(200.4 98% 39.4%);\r\n  --sl-color-sky-700: hsl(201.3 96.3% 32.2%);\r\n  --sl-color-sky-800: hsl(201 90% 27.5%);\r\n  --sl-color-sky-900: hsl(202 80.3% 23.9%);\r\n  --sl-color-sky-950: hsl(202.3 73.8% 16.5%);\r\n\r\n  --sl-color-blue-50: hsl(213.8 100% 96.9%);\r\n  --sl-color-blue-100: hsl(214.3 94.6% 92.7%);\r\n  --sl-color-blue-200: hsl(213.3 96.9% 87.3%);\r\n  --sl-color-blue-300: hsl(211.7 96.4% 78.4%);\r\n  --sl-color-blue-400: hsl(213.1 93.9% 67.8%);\r\n  --sl-color-blue-500: hsl(217.2 91.2% 59.8%);\r\n  --sl-color-blue-600: hsl(221.2 83.2% 53.3%);\r\n  --sl-color-blue-700: hsl(224.3 76.3% 48%);\r\n  --sl-color-blue-800: hsl(225.9 70.7% 40.2%);\r\n  --sl-color-blue-900: hsl(224.4 64.3% 32.9%);\r\n  --sl-color-blue-950: hsl(226.2 55.3% 18.4%);\r\n\r\n  --sl-color-indigo-50: hsl(225.9 100% 96.7%);\r\n  --sl-color-indigo-100: hsl(226.5 100% 93.9%);\r\n  --sl-color-indigo-200: hsl(228 96.5% 88.8%);\r\n  --sl-color-indigo-300: hsl(229.7 93.5% 81.8%);\r\n  --sl-color-indigo-400: hsl(234.5 89.5% 73.9%);\r\n  --sl-color-indigo-500: hsl(238.7 83.5% 66.7%);\r\n  --sl-color-indigo-600: hsl(243.4 75.4% 58.6%);\r\n  --sl-color-indigo-700: hsl(244.5 57.9% 50.6%);\r\n  --sl-color-indigo-800: hsl(243.7 54.5% 41.4%);\r\n  --sl-color-indigo-900: hsl(242.2 47.4% 34.3%);\r\n  --sl-color-indigo-950: hsl(243.5 43.6% 22.9%);\r\n\r\n  --sl-color-violet-50: hsl(250 100% 97.6%);\r\n  --sl-color-violet-100: hsl(251.4 91.3% 95.5%);\r\n  --sl-color-violet-200: hsl(250.5 95.2% 91.8%);\r\n  --sl-color-violet-300: hsl(252.5 94.7% 85.1%);\r\n  --sl-color-violet-400: hsl(255.1 91.7% 76.3%);\r\n  --sl-color-violet-500: hsl(258.3 89.5% 66.3%);\r\n  --sl-color-violet-600: hsl(262.1 83.3% 57.8%);\r\n  --sl-color-violet-700: hsl(263.4 70% 50.4%);\r\n  --sl-color-violet-800: hsl(263.4 69.3% 42.2%);\r\n  --sl-color-violet-900: hsl(263.5 67.4% 34.9%);\r\n  --sl-color-violet-950: hsl(265.1 61.5% 21.4%);\r\n\r\n  --sl-color-purple-50: hsl(270 100% 98%);\r\n  --sl-color-purple-100: hsl(268.7 100% 95.5%);\r\n  --sl-color-purple-200: hsl(268.6 100% 91.8%);\r\n  --sl-color-purple-300: hsl(269.2 97.4% 85.1%);\r\n  --sl-color-purple-400: hsl(270 95.2% 75.3%);\r\n  --sl-color-purple-500: hsl(270.7 91% 65.1%);\r\n  --sl-color-purple-600: hsl(271.5 81.3% 55.9%);\r\n  --sl-color-purple-700: hsl(272.1 71.7% 47.1%);\r\n  --sl-color-purple-800: hsl(272.9 67.2% 39.4%);\r\n  --sl-color-purple-900: hsl(273.6 65.6% 32%);\r\n  --sl-color-purple-950: hsl(276 59.5% 16.5%);\r\n\r\n  --sl-color-fuchsia-50: hsl(289.1 100% 97.8%);\r\n  --sl-color-fuchsia-100: hsl(287 100% 95.5%);\r\n  --sl-color-fuchsia-200: hsl(288.3 95.8% 90.6%);\r\n  --sl-color-fuchsia-300: hsl(291.1 93.1% 82.9%);\r\n  --sl-color-fuchsia-400: hsl(292 91.4% 72.5%);\r\n  --sl-color-fuchsia-500: hsl(292.2 84.1% 60.6%);\r\n  --sl-color-fuchsia-600: hsl(293.4 69.5% 48.8%);\r\n  --sl-color-fuchsia-700: hsl(294.7 72.4% 39.8%);\r\n  --sl-color-fuchsia-800: hsl(295.4 70.2% 32.9%);\r\n  --sl-color-fuchsia-900: hsl(296.7 63.6% 28%);\r\n  --sl-color-fuchsia-950: hsl(297.1 56.8% 14.5%);\r\n\r\n  --sl-color-pink-50: hsl(327.3 73.3% 97.1%);\r\n  --sl-color-pink-100: hsl(325.7 77.8% 94.7%);\r\n  --sl-color-pink-200: hsl(325.9 84.6% 89.8%);\r\n  --sl-color-pink-300: hsl(327.4 87.1% 81.8%);\r\n  --sl-color-pink-400: hsl(328.6 85.5% 70.2%);\r\n  --sl-color-pink-500: hsl(330.4 81.2% 60.4%);\r\n  --sl-color-pink-600: hsl(333.3 71.4% 50.6%);\r\n  --sl-color-pink-700: hsl(335.1 77.6% 42%);\r\n  --sl-color-pink-800: hsl(335.8 74.4% 35.3%);\r\n  --sl-color-pink-900: hsl(335.9 69% 30.4%);\r\n  --sl-color-pink-950: hsl(336.2 65.4% 15.9%);\r\n\r\n  --sl-color-rose-50: hsl(355.7 100% 97.3%);\r\n  --sl-color-rose-100: hsl(355.6 100% 94.7%);\r\n  --sl-color-rose-200: hsl(352.7 96.1% 90%);\r\n  --sl-color-rose-300: hsl(352.6 95.7% 81.8%);\r\n  --sl-color-rose-400: hsl(351.3 94.5% 71.4%);\r\n  --sl-color-rose-500: hsl(349.7 89.2% 60.2%);\r\n  --sl-color-rose-600: hsl(346.8 77.2% 49.8%);\r\n  --sl-color-rose-700: hsl(345.3 82.7% 40.8%);\r\n  --sl-color-rose-800: hsl(343.4 79.7% 34.7%);\r\n  --sl-color-rose-900: hsl(341.5 75.5% 30.4%);\r\n  --sl-color-rose-950: hsl(341.3 70.1% 17.1%);\r\n\r\n  --sl-color-primary-50: var(--sl-color-sky-50);\r\n  --sl-color-primary-100: var(--sl-color-sky-100);\r\n  --sl-color-primary-200: var(--sl-color-sky-200);\r\n  --sl-color-primary-300: var(--sl-color-sky-300);\r\n  --sl-color-primary-400: var(--sl-color-sky-400);\r\n  --sl-color-primary-500: var(--sl-color-sky-500);\r\n  --sl-color-primary-600: var(--sl-color-sky-600);\r\n  --sl-color-primary-700: var(--sl-color-sky-700);\r\n  --sl-color-primary-800: var(--sl-color-sky-800);\r\n  --sl-color-primary-900: var(--sl-color-sky-900);\r\n  --sl-color-primary-950: var(--sl-color-sky-950);\r\n\r\n  --sl-color-success-50: var(--sl-color-green-50);\r\n  --sl-color-success-100: var(--sl-color-green-100);\r\n  --sl-color-success-200: var(--sl-color-green-200);\r\n  --sl-color-success-300: var(--sl-color-green-300);\r\n  --sl-color-success-400: var(--sl-color-green-400);\r\n  --sl-color-success-500: var(--sl-color-green-500);\r\n  --sl-color-success-600: var(--sl-color-green-600);\r\n  --sl-color-success-700: var(--sl-color-green-700);\r\n  --sl-color-success-800: var(--sl-color-green-800);\r\n  --sl-color-success-900: var(--sl-color-green-900);\r\n  --sl-color-success-950: var(--sl-color-green-950);\r\n\r\n  --sl-color-warning-50: var(--sl-color-amber-50);\r\n  --sl-color-warning-100: var(--sl-color-amber-100);\r\n  --sl-color-warning-200: var(--sl-color-amber-200);\r\n  --sl-color-warning-300: var(--sl-color-amber-300);\r\n  --sl-color-warning-400: var(--sl-color-amber-400);\r\n  --sl-color-warning-500: var(--sl-color-amber-500);\r\n  --sl-color-warning-600: var(--sl-color-amber-600);\r\n  --sl-color-warning-700: var(--sl-color-amber-700);\r\n  --sl-color-warning-800: var(--sl-color-amber-800);\r\n  --sl-color-warning-900: var(--sl-color-amber-900);\r\n  --sl-color-warning-950: var(--sl-color-amber-950);\r\n\r\n  --sl-color-danger-50: var(--sl-color-red-50);\r\n  --sl-color-danger-100: var(--sl-color-red-100);\r\n  --sl-color-danger-200: var(--sl-color-red-200);\r\n  --sl-color-danger-300: var(--sl-color-red-300);\r\n  --sl-color-danger-400: var(--sl-color-red-400);\r\n  --sl-color-danger-500: var(--sl-color-red-500);\r\n  --sl-color-danger-600: var(--sl-color-red-600);\r\n  --sl-color-danger-700: var(--sl-color-red-700);\r\n  --sl-color-danger-800: var(--sl-color-red-800);\r\n  --sl-color-danger-900: var(--sl-color-red-900);\r\n  --sl-color-danger-950: var(--sl-color-red-950);\r\n\r\n  --sl-color-neutral-50: var(--sl-color-gray-50);\r\n  --sl-color-neutral-100: var(--sl-color-gray-100);\r\n  --sl-color-neutral-200: var(--sl-color-gray-200);\r\n  --sl-color-neutral-300: var(--sl-color-gray-300);\r\n  --sl-color-neutral-400: var(--sl-color-gray-400);\r\n  --sl-color-neutral-500: var(--sl-color-gray-500);\r\n  --sl-color-neutral-600: var(--sl-color-gray-600);\r\n  --sl-color-neutral-700: var(--sl-color-gray-700);\r\n  --sl-color-neutral-800: var(--sl-color-gray-800);\r\n  --sl-color-neutral-900: var(--sl-color-gray-900);\r\n  --sl-color-neutral-950: var(--sl-color-gray-950);\r\n\r\n  --sl-color-neutral-0: hsl(0, 0%, 100%);\r\n  --sl-color-neutral-1000: hsl(0, 0%, 0%);\r\n\r\n  --sl-border-radius-small: 0.1875rem;\r\n  --sl-border-radius-medium: 0.25rem;\r\n  --sl-border-radius-large: 0.5rem;\r\n  --sl-border-radius-x-large: 1rem;\r\n\r\n  --sl-border-radius-circle: 50%;\r\n  --sl-border-radius-pill: 9999px;\r\n\r\n  --sl-shadow-x-small: 0 1px 2px hsl(240 3.8% 46.1% / 6%);\r\n  --sl-shadow-small: 0 1px 2px hsl(240 3.8% 46.1% / 12%);\r\n  --sl-shadow-medium: 0 2px 4px hsl(240 3.8% 46.1% / 12%);\r\n  --sl-shadow-large: 0 2px 8px hsl(240 3.8% 46.1% / 12%);\r\n  --sl-shadow-x-large: 0 4px 16px hsl(240 3.8% 46.1% / 12%);\r\n\r\n  --sl-spacing-3x-small: 0.125rem;\r\n  --sl-spacing-2x-small: 0.25rem;\r\n  --sl-spacing-x-small: 0.5rem;\r\n  --sl-spacing-small: 0.75rem;\r\n  --sl-spacing-medium: 1rem;\r\n  --sl-spacing-large: 1.25rem;\r\n  --sl-spacing-x-large: 1.75rem;\r\n  --sl-spacing-2x-large: 2.25rem;\r\n  --sl-spacing-3x-large: 3rem;\r\n  --sl-spacing-4x-large: 4.5rem;\r\n\r\n  --sl-transition-x-slow: 1000ms;\r\n  --sl-transition-slow: 500ms;\r\n  --sl-transition-medium: 250ms;\r\n  --sl-transition-fast: 150ms;\r\n  --sl-transition-x-fast: 50ms;\r\n\r\n  --sl-font-mono: SFMono-Regular, Consolas, \"Liberation Mono\", Menlo, monospace;\r\n  --sl-font-sans: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\r\n    Helvetica, Arial, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\",\r\n    \"Segoe UI Symbol\";\r\n  --sl-font-serif: Georgia, \"Times New Roman\", serif;\r\n\r\n  --sl-font-size-2x-small: 0.625rem;\r\n  --sl-font-size-x-small: 0.75rem;\r\n  --sl-font-size-small: 0.875rem;\r\n  --sl-font-size-medium: 1rem;\r\n  --sl-font-size-large: 1.25rem;\r\n  --sl-font-size-x-large: 1.5rem;\r\n  --sl-font-size-2x-large: 2.25rem;\r\n  --sl-font-size-3x-large: 3rem;\r\n  --sl-font-size-4x-large: 4.5rem;\r\n\r\n  --sl-font-weight-light: 300;\r\n  --sl-font-weight-normal: 400;\r\n  --sl-font-weight-semibold: 500;\r\n  --sl-font-weight-bold: 700;\r\n\r\n  --sl-letter-spacing-denser: -0.03em;\r\n  --sl-letter-spacing-dense: -0.015em;\r\n  --sl-letter-spacing-normal: normal;\r\n  --sl-letter-spacing-loose: 0.075em;\r\n  --sl-letter-spacing-looser: 0.15em;\r\n\r\n  --sl-line-height-denser: 1;\r\n  --sl-line-height-dense: 1.4;\r\n  --sl-line-height-normal: 1.8;\r\n  --sl-line-height-loose: 2.2;\r\n  --sl-line-height-looser: 2.6;\r\n\r\n  --sl-focus-ring-color: var(--sl-color-primary-600);\r\n  --sl-focus-ring-style: solid;\r\n  --sl-focus-ring-width: 3px;\r\n  --sl-focus-ring: var(--sl-focus-ring-style) var(--sl-focus-ring-width)\r\n    var(--sl-focus-ring-color);\r\n  --sl-focus-ring-offset: 1px;\r\n\r\n  --sl-button-font-size-small: var(--sl-font-size-x-small);\r\n  --sl-button-font-size-medium: var(--sl-font-size-small);\r\n  --sl-button-font-size-large: var(--sl-font-size-medium);\r\n\r\n  --sl-input-height-small: 1.875rem;\r\n  --sl-input-height-medium: 2.5rem;\r\n  --sl-input-height-large: 3.125rem;\r\n\r\n  --sl-input-background-color: var(--sl-color-neutral-0);\r\n  --sl-input-background-color-hover: var(--sl-input-background-color);\r\n  --sl-input-background-color-focus: var(--sl-input-background-color);\r\n  --sl-input-background-color-disabled: var(--sl-color-neutral-100);\r\n  --sl-input-border-color: var(--sl-color-neutral-300);\r\n  --sl-input-border-color-hover: var(--sl-color-neutral-400);\r\n  --sl-input-border-color-focus: var(--sl-color-primary-500);\r\n  --sl-input-border-color-disabled: var(--sl-color-neutral-300);\r\n  --sl-input-border-width: 1px;\r\n  --sl-input-required-content: \"*\";\r\n  --sl-input-required-content-offset: -2px;\r\n  --sl-input-required-content-color: var(--sl-input-label-color);\r\n\r\n  --sl-input-border-radius-small: var(--sl-border-radius-medium);\r\n  --sl-input-border-radius-medium: var(--sl-border-radius-medium);\r\n  --sl-input-border-radius-large: var(--sl-border-radius-medium);\r\n\r\n  --sl-input-font-family: var(--sl-font-sans);\r\n  --sl-input-font-weight: var(--sl-font-weight-normal);\r\n  --sl-input-font-size-small: var(--sl-font-size-small);\r\n  --sl-input-font-size-medium: var(--sl-font-size-medium);\r\n  --sl-input-font-size-large: var(--sl-font-size-large);\r\n  --sl-input-letter-spacing: var(--sl-letter-spacing-normal);\r\n\r\n  --sl-input-color: var(--sl-color-neutral-700);\r\n  --sl-input-color-hover: var(--sl-color-neutral-700);\r\n  --sl-input-color-focus: var(--sl-color-neutral-700);\r\n  --sl-input-color-disabled: var(--sl-color-neutral-900);\r\n  --sl-input-icon-color: var(--sl-color-neutral-500);\r\n  --sl-input-icon-color-hover: var(--sl-color-neutral-600);\r\n  --sl-input-icon-color-focus: var(--sl-color-neutral-600);\r\n  --sl-input-placeholder-color: var(--sl-color-neutral-500);\r\n  --sl-input-placeholder-color-disabled: var(--sl-color-neutral-600);\r\n  --sl-input-spacing-small: var(--sl-spacing-small);\r\n  --sl-input-spacing-medium: var(--sl-spacing-medium);\r\n  --sl-input-spacing-large: var(--sl-spacing-large);\r\n\r\n  --sl-input-focus-ring-color: hsl(198.6 88.7% 48.4% / 40%);\r\n  --sl-input-focus-ring-offset: 0;\r\n\r\n  --sl-input-filled-background-color: var(--sl-color-neutral-100);\r\n  --sl-input-filled-background-color-hover: var(--sl-color-neutral-100);\r\n  --sl-input-filled-background-color-focus: var(--sl-color-neutral-100);\r\n  --sl-input-filled-background-color-disabled: var(--sl-color-neutral-100);\r\n  --sl-input-filled-color: var(--sl-color-neutral-800);\r\n  --sl-input-filled-color-hover: var(--sl-color-neutral-800);\r\n  --sl-input-filled-color-focus: var(--sl-color-neutral-700);\r\n  --sl-input-filled-color-disabled: var(--sl-color-neutral-800);\r\n\r\n  --sl-input-label-font-size-small: var(--sl-font-size-small);\r\n  --sl-input-label-font-size-medium: var(--sl-font-size-medium);\r\n  --sl-input-label-font-size-large: var(--sl-font-size-large);\r\n  --sl-input-label-color: inherit;\r\n\r\n  --sl-input-help-text-font-size-small: var(--sl-font-size-x-small);\r\n  --sl-input-help-text-font-size-medium: var(--sl-font-size-small);\r\n  --sl-input-help-text-font-size-large: var(--sl-font-size-medium);\r\n  --sl-input-help-text-color: var(--sl-color-neutral-500);\r\n\r\n  --sl-toggle-size-small: 0.875rem;\r\n  --sl-toggle-size-medium: 1.125rem;\r\n  --sl-toggle-size-large: 1.375rem;\r\n\r\n  --sl-overlay-background-color: hsl(240 3.8% 46.1% / 33%);\r\n\r\n  --sl-panel-background-color: var(--sl-color-neutral-0);\r\n  --sl-panel-border-color: var(--sl-color-neutral-200);\r\n  --sl-panel-border-width: 1px;\r\n\r\n  --sl-tooltip-border-radius: var(--sl-border-radius-medium);\r\n  --sl-tooltip-background-color: var(--sl-color-neutral-800);\r\n  --sl-tooltip-color: var(--sl-color-neutral-0);\r\n  --sl-tooltip-font-family: var(--sl-font-sans);\r\n  --sl-tooltip-font-weight: var(--sl-font-weight-normal);\r\n  --sl-tooltip-font-size: var(--sl-font-size-small);\r\n  --sl-tooltip-line-height: var(--sl-line-height-dense);\r\n  --sl-tooltip-padding: var(--sl-spacing-2x-small) var(--sl-spacing-x-small);\r\n  --sl-tooltip-arrow-size: 6px;\r\n\r\n  --sl-z-index-drawer: 999700;\r\n  --sl-z-index-dialog: 999800;\r\n  --sl-z-index-dropdown: 999900;\r\n  --sl-z-index-toast: 999950;\r\n  --sl-z-index-tooltip: 9991000;\r\n}\r\n\r\n.sl-scroll-lock {\r\n  padding-right: var(--sl-scroll-lock-size) !important;\r\n  overflow: hidden !important;\r\n}\r\n\r\n.sl-toast-stack {\r\n  position: fixed;\r\n  top: 0;\r\n  inset-inline-end: 0;\r\n  z-index: var(--sl-z-index-toast);\r\n  width: 28rem;\r\n  max-width: 100%;\r\n  max-height: 100%;\r\n  overflow: auto;\r\n}\r\n\r\n.sl-toast-stack sl-alert {\r\n  margin: var(--sl-spacing-medium);\r\n}\r\n\r\n.sl-toast-stack sl-alert::part(base) {\r\n  box-shadow: var(--sl-shadow-large);\r\n}\r\n\r\nsl-drawer::part(base) {\r\n  color: var(--sl-color-neutral-800) !important;\r\n}\r\n\r\n.h5player-popup-wrap {\r\n  position: relative;\r\n  z-index: 99999999;\r\n  opacity: 0;\r\n}\r\n\r\n.h5player-popup-wrap sl-popup {\r\n  position: relative;\r\n}\r\n\r\n.h5player-popup-wrap .h5player-popup-content {\r\n  background-color: rgba(0, 0, 0, 0.9);\r\n  color: #fff;\r\n  font-size: 16px;\r\n  min-width: 220px;\r\n  height: 48px;\r\n  line-height: 48px;\r\n  display: flex;\r\n  padding: 0 16px;\r\n  border-radius: 6px 6px 0 0;\r\n  border-bottom: 2px solid rgba(255, 255, 255, 0.2);\r\n\r\n  /* 灰色向下的过度阴影 */\r\n  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.7);\r\n\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: space-between;\r\n}\r\n\r\n@keyframes text-lumos {\r\n  0%,100%{ color:#fff; }\r\n\t50%{ color:#ccc; }\r\n}\r\n\r\n.h5player-popup-content .h5p-logo-mod {\r\n  white-space: nowrap;\r\n  font-weight: 500;\r\n  text-shadow: 0px 0px 2px #666, 0 0 30px #666;\r\n  animation: text-lumos 5s infinite;\r\n}\r\n\r\n.h5player-popup-content .h5p-menu-wrap {}\r\n\r\n.h5player-popup-content .h5p-action-mod {\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: space-between;\r\n}\r\n\r\n.h5player-popup-content .h5p-action-btn {\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: center;\r\n  font-size: 14px;\r\n  padding: 0 8px;\r\n  cursor: pointer;\r\n  white-space: nowrap;\r\n}\r\n\r\n.h5player-popup-content .h5p-action-btn:hover {\r\n  background-color: rgba(255, 255, 255, 0.2);\r\n}\r\n\r\n.h5player-popup-content .h5p-action-btn sl-icon {\r\n  padding: 0 4px;\r\n}\r\n\r\n/* 激活态 */\r\n.h5player-popup-active {\r\n  opacity: 0.8;\r\n  transition: opacity 0.2s;\r\n}\r\n\r\n.h5player-popup-content a, .h5player-popup-content a:visited{\r\n  color: #fff;\r\n  cursor: pointer;\r\n  text-decoration: none;\r\n}\r\n\r\n.h5player-popup-wrap:hover, .h5player-popup-full-active {\r\n  opacity: 1 !important;\r\n  transition: opacity 0.2s;\r\n}\r\n\r\n.h5player-popup-wrap:hover .h5player-popup-content, .h5player-popup-full-active .h5player-popup-content {\r\n  border-bottom: 2px solid rgba(255, 255, 255, 0.6);\r\n}\r\n\r\n.h5player-popup-content .h5p-action-mod sl-menu {\r\n  background-color: rgba(0, 0, 0, 0.9);\r\n  color: #fff;\r\n  border-radius: 4px;\r\n  padding: 5px 0;\r\n}\r\n\r\n.h5player-popup-content .h5p-action-mod sl-menu-item::part(base) {\r\n  /* background-color: rgba(0, 0, 0, 0.9); */\r\n  color: #fff;\r\n  font-size: 14px;\r\n  padding: 2px 0;\r\n}\r\n\r\n.h5player-popup-content .h5p-action-mod sl-menu-item::part(base):hover {\r\n  background-color: var(--sl-color-primary-500);\r\n  color: #fff;\r\n}\r\n\r\n.h5player-popup-content .h5p-recommend-wrap {\r\n  flex-grow: 1;\r\n  box-sizing: border-box;\r\n  padding: 0 20px;\r\n  text-align: center;\r\n  font-size: 14px;\r\n  overflow: hidden;\r\n  white-space: nowrap;\r\n}\r\n\r\n@keyframes text-marquee {\r\n  0% { transform: translateX(0); }\r\n  100% { transform: translateX(-100%); }\r\n}\r\n\r\n.h5player-popup-content .h5p-recommend-mod {\r\n  display: inline-block;\r\n  padding-left: 100%;\r\n  animation: text-marquee 15s linear infinite;\r\n}\r\n\r\n.h5player-popup-content .h5p-recommend-wrap>div {\r\n  opacity: 0.5;\r\n}\r\n.h5player-popup-content .h5p-recommend-wrap>div:hover{\r\n  opacity: 1;\r\n}\r\n.h5player-popup-content .h5p-recommend-wrap>div:hover .h5p-recommend-mod {\r\n  animation-play-state: paused;\r\n}");
 
   /**
    * @license
@@ -10315,6 +10479,40 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
       icon: img$1,
       dropdownMenu: [
         {
+          title: i18n.t('graphicalInterface'),
+          desc: i18n.t('graphicalInterface'),
+          subMenu: [
+            {
+              title: i18n.t('disableCurrentInstanceGUI'),
+              desc: i18n.t('disableCurrentInstanceGUI'),
+              action: 'disableCurrentInstanceGUI',
+              args: null
+            },
+            {
+              title: i18n.t('disableGUITemporarily'),
+              desc: i18n.t('disableGUITemporarily'),
+              action: 'disableGUITemporarily',
+              args: null
+            },
+            {
+              ...globalFunctional.toggleGUIStatusUnderCurrentSite,
+              action: 'toggleGUIStatusUnderCurrentSite',
+              args: null
+            },
+            {
+              ...globalFunctional.toggleGUIStatus,
+              action: 'toggleGUIStatus',
+              args: null
+            },
+            {
+              ...globalFunctional.alwaysShowGraphicalInterface,
+              action: 'alwaysShowGraphicalInterface',
+              args: null,
+              disabled: !debug$1.isDebugMode()
+            }
+          ]
+        },
+        {
           title: i18n.t('videoFilter'),
           desc: i18n.t('videoFilter'),
           subMenu: [
@@ -10443,37 +10641,20 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
           ]
         },
         {
-          title: i18n.t('graphicalInterface'),
-          desc: i18n.t('graphicalInterface'),
-          subMenu: [
-            {
-              title: i18n.t('disableGUITemporarily'),
-              desc: i18n.t('disableGUITemporarily'),
-              action: 'disableGUITemporarily',
-              args: null
-            },
-            {
-              ...globalFunctional.toggleGUIStatusUnderCurrentSite,
-              action: 'toggleGUIStatusUnderCurrentSite',
-              args: null
-            },
-            {
-              ...globalFunctional.toggleGUIStatus,
-              action: 'toggleGUIStatus',
-              args: null
-            },
-            {
-              ...globalFunctional.alwaysShowGraphicalInterface,
-              action: 'alwaysShowGraphicalInterface',
-              args: null,
-              disabled: !debug$1.isDebugMode()
-            }
-          ]
-        },
-        {
           title: i18n.t('moreActions'),
           desc: i18n.t('moreActions'),
           subMenu: [
+            {
+              title: `${i18n.t('toggleStates')} ${i18n.t('autoGotoBufferedTime')}`,
+              desc: `${i18n.t('toggleStates')} ${i18n.t('autoGotoBufferedTime')}`,
+              action: 'toggleAutoGotoBufferedTime'
+            },
+            {
+              title: 'Print Player info',
+              desc: 'Print Player info',
+              action: 'printPlayerInfo',
+              disabled: !debug$1.isDebugMode()
+            },
             {
               ...globalFunctional.openCustomConfigurationEditor,
               action: 'openCustomConfigurationEditor',
@@ -10666,7 +10847,7 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
             {
               title: i18n.t('ffmpegScript'),
               desc: i18n.t('ffmpegScript'),
-              url: 'https://github.com/xxxily/ffmpeg-script'
+              url: 'https://u.anzz.top/ffmpegscript'
             }
           ]
         }
@@ -10768,7 +10949,7 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
 
   function createRecommendModTemplate (refDom) {
     const refWidth = refDom.offsetWidth;
-    return refWidth < 500 ? '' : `<a class="h5p-recommend-mod" href="https://chatgpt.com" target="_blank">${i18n.t('recommend')}</a>`
+    return refWidth < 500 ? '' : `<a class="h5p-recommend-mod" href="https://u.anzz.top/h5precommend" target="_blank">${i18n.t('recommend')}</a>`
   }
 
   /**
@@ -10847,6 +11028,12 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
     delete popupWrapObjs[popupWrapId];
   }
 
+  function removePopupWrapByElement (element) {
+    if (!element) { return false }
+    const popupWrapId = element.getAttribute('data-popup-wrap-id');
+    if (popupWrapId) { removePopupWrapById(popupWrapId); }
+  }
+
   /* 遍历popupWrapObjs，如果popupWrapObjs中的element元素的offsetParent为null，则移除掉 */
   function cleanPopupWrap () {
     const popupWrapIds = Object.keys(popupWrapObjs);
@@ -10856,6 +11043,23 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
         removePopupWrapById(popupWrapId);
       }
     });
+  }
+
+  function getAllPopupWrapElement () {
+    return document.querySelectorAll('.h5player-popup-wrap')
+  }
+
+  function findPopupWrapWithElement (videoElement) {
+    const result = [];
+    const popupWrapIds = Object.keys(popupWrapObjs);
+    popupWrapIds.forEach(popupWrapId => {
+      const element = popupWrapObjs[popupWrapId];
+      if (element === videoElement) {
+        result.push(popupWrapId);
+      }
+    });
+
+    return result.map(id => document.querySelector(`#${id}`))
   }
 
   const h5playerUI = {
@@ -10874,8 +11078,17 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
       });
     },
 
+    getAllPopupWrapElement,
+    findPopupWrapWithElement,
+    cleanPopupWrap,
+    removePopupWrapById,
+    removePopupWrapByElement,
+
     popup (element, h5Player) {
-      if (this.__disableGUITemporarily__) { return false }
+      if (this.__disableGUITemporarily__ || element.__disableGUITemporarily__) { return false }
+
+      /* 如果element元素的宽高比大于2.5，说明可能为视频背景，则也不显示popup */
+      if (element.videoWidth / element.videoHeight > 2.5) { return false }
 
       /* 防止popup渲染过于频繁 */
       if (this.lastRenderedPopupTime && Date.now() - this.lastRenderedPopupTime < 100) {
@@ -10934,7 +11147,7 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
        */
       function checkPopupUpdateComplete () {
         if (!popup || !popup.updateComplete || !popup.updateComplete.then) {
-          debug.error('[h5playerUI][popup][updateComplete], 组件初始化异常', popup, element);
+          // debug.error('[h5playerUI][popup][updateComplete], 组件初始化异常', popup, element)
           element.removeAttribute('data-popup-wrap-id');
           popupWrap.remove();
           delete popupWrapObjs[popupWrapId];
@@ -10982,12 +11195,12 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
             }, { once: true });
           });
 
-          debug.log('[h5playerUI][popup][reRenderMenuMod]');
+          // debug.log('[h5playerUI][popup][reRenderMenuMod]')
         }
       }
 
       /* 油管首次渲染会莫名其妙的出错，所以此处延迟一段时间重新渲染一次菜单 */
-      setTimeout(() => { reRenderMenuMod(); }, 200);
+      setTimeout(() => { reRenderMenuMod(); }, 400);
 
       /* 重新渲染h5p-recommend-mod对应的推荐模块，如果位置不够则对隐藏改模块 */
       function reRenderRecommendMod () {
@@ -10999,7 +11212,7 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
           const newRecommendModTemplate = `<div style="overflow:hidden">${createRecommendModTemplate(element)}</div>`;
           parseHTML(newRecommendModTemplate, recommendWrap);
 
-          debug.log('[h5playerUI][popup][reRenderRecommendMod]');
+          // debug.log('[h5playerUI][popup][reRenderRecommendMod]')
         }
       }
 
@@ -11013,6 +11226,13 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
        */
       let mouseleaveTimer = null;
       popupWrap.addEventListener('mouseenter', () => {
+        /* 元素比例异常，不显示popup */
+        if (element.videoWidth / element.videoHeight > 2.5) {
+          element.__disableGUITemporarily__ = true;
+          removePopupWrapByElement(element);
+          return false
+        }
+
         clearTimeout(mouseleaveTimer);
         if (isOutOfDocument(element)) {
           popupWrap.classList.remove(fullActiveClass);
@@ -11233,7 +11453,7 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
       /* 尝试清除popupWrapObjs中的无效元素 */
       cleanPopupWrap();
 
-      debug.log('[h5playerUI][popup]', popup, popupWrap, element);
+      // debug.log('[h5playerUI][popup]', popup, popupWrap, element)
     }
   };
 
@@ -11310,6 +11530,16 @@ const h5Player = {
       const script = document.createElement('script');
       script.innerText = 'debugger';
       document.body.appendChild(script);
+    }
+  },
+
+  /* 关闭当前视频实例的UI界面，以便消除UI界面对其他元素遮挡等相关影响 */
+  disableCurrentInstanceGUI () {
+    const t = this;
+    const player = t.player();
+    if (player && t.UI && t.UI.removePopupWrapByElement) {
+      player.__disableGUITemporarily__ = true;
+      t.UI.removePopupWrapByElement(player);
     }
   },
 
@@ -11487,19 +11717,21 @@ const h5Player = {
       TCC.doTask('init', player);
     }
 
+    const needInitEvent = !player.__registeredInitEvent__;
+
     /* 注册鼠标响应事件 */
-    t.mouseObserver.on(player, 'click', function (event, offset, target) {
+    needInitEvent && t.mouseObserver.on(player, 'click', function (event, offset, target) {
       // debug.log('捕捉到鼠标点击事件：', event, offset, target)
     });
 
     /* 画中画事件监听 */
-    player.addEventListener('enterpictureinpicture', () => {
+    needInitEvent && player.addEventListener('enterpictureinpicture', () => {
       monkeyMsg.send('globalPictureInPictureInfo', {
         usePictureInPicture: true
       });
       debug.log('enterpictureinpicture', player);
     });
-    player.addEventListener('leavepictureinpicture', () => {
+    needInitEvent && player.addEventListener('leavepictureinpicture', () => {
       t.leavepictureinpictureTime = Date.now();
 
       monkeyMsg.send('globalPictureInPictureInfo', {
@@ -11508,39 +11740,88 @@ const h5Player = {
       debug.log('leavepictureinpicture', player);
     });
 
-    // if (debug.isDebugMode()) {
-    //   player.addEventListener('loadeddata', function () {
-    //     debug.log(`video url: ${player.src} video duration: ${player.duration} video dom:`, player)
-    //   })
-    //   player.addEventListener('durationchange', function () {
-    //     debug.log(`video durationchange: ${player.duration}`)
-    //   })
-    // }
+    // if (debug.isDebugMode()) {}
+
+    /* 记录player使用过的src */
+    function srcRecord (player) {
+      const src = player.currentSrc || player.src;
+      if (!src) { return }
+
+      player.srcList = player.srcList || [src];
+      if (!player.srcList.includes(src)) {
+        player.srcList.push(src);
+      }
+    }
+
+    function updataBufferedTime (player) {
+      /* 随时记录缓存数据到了哪个时间节点 */
+      if (player.buffered.length > 0) {
+        const bufferedTime = player.buffered.end(player.buffered.length - 1);
+        player.bufferedTime = bufferedTime;
+      }
+
+      if (t.autoGotoBufferedTime && player.bufferedTime && t.player() === player && player.bufferedTime < player.duration - 1 && player.currentTime < player.bufferedTime - 1) {
+        t.setCurrentTime(player.bufferedTime);
+      }
+    }
+
+    needInitEvent && player.addEventListener('loadeddata', function () {
+      debug.log(`[player][loadeddata] ${player.src} video duration: ${player.duration} video dom:`, player);
+      srcRecord(player);
+    });
+    needInitEvent && player.addEventListener('durationchange', function () {
+      debug.log(`[player][durationchange] ${player.duration}`);
+      srcRecord(player);
+    });
+
+    needInitEvent && player.addEventListener('loadstart', function () {
+      debug.log('[player][loadstart]', player.currentSrc, player.src);
+      srcRecord(player);
+    });
 
     /* 注册UI界面 */
     t.UI && t.UI.popup && t.UI.popup(player, t);
 
     /* 在播放或暂停时，也尝试注册UI界面，这样即使popup被意外删除，也还是能正常再次创建回来 */
-    player.addEventListener('play', function () {
+    needInitEvent && player.addEventListener('play', function () {
       t.UI && t.UI.popup && t.UI.popup(player, t);
     });
-    player.addEventListener('pause', function () {
+    needInitEvent && player.addEventListener('pause', function () {
       t.UI && t.UI.popup && t.UI.popup(player, t);
     });
     let lastRegisterUIPopupTime = Date.now();
     let tryRegisterUIPopupCount = 0;
-    player.addEventListener('timeupdate', function () {
+    needInitEvent && player.addEventListener('timeupdate', function () {
+      // updataBufferedTime(player)
+
       if (Date.now() - lastRegisterUIPopupTime > 800 && tryRegisterUIPopupCount < 60) {
         lastRegisterUIPopupTime = Date.now();
         tryRegisterUIPopupCount += 1;
         t.UI && t.UI.popup && t.UI.popup(player, t);
       }
+
+      srcRecord(player);
+      mediaSource.connectMediaSourceWithMediaElement(player);
     });
-    player.addEventListener('durationchange', function () {
+
+    let lastCleanMediaSourceDataTime = Date.now();
+    needInitEvent && player.addEventListener('progress', () => {
+      updataBufferedTime(player);
+      mediaSource.connectMediaSourceWithMediaElement(player);
+
+      if (Date.now() - lastCleanMediaSourceDataTime > 1000 * 10) {
+        lastCleanMediaSourceDataTime = Date.now();
+        mediaSource.cleanMediaSourceData();
+      }
+    });
+
+    needInitEvent && player.addEventListener('durationchange', function () {
       lastRegisterUIPopupTime = Date.now();
       tryRegisterUIPopupCount = 0;
       t.UI && t.UI.popup && t.UI.popup(player, t);
     });
+
+    player.__registeredInitEvent__ = true;
   },
 
   registerHotkeysRunner () {
@@ -11690,6 +11971,26 @@ const h5Player = {
         }, 200);
       }
     }
+  },
+
+  printPlayerInfo (p) {
+    const t = this;
+    const player = p || t.player();
+
+    const info = {
+      curPlayer: player,
+      srcList: player.srcList,
+      h5player: t,
+      h5playerUI: t.UI,
+      mediaSource
+    };
+
+    if (t.UI && t.UI.findPopupWrapWithElement) {
+      info.curlPopupWrap = t.UI.findPopupWrapWithElement(player);
+      info.allPopupWrap = t.UI.getAllPopupWrapElement();
+    }
+
+    debug.info('[playerInfo]', info);
   },
 
   /* 设置视频全屏 */
@@ -12534,6 +12835,13 @@ const h5Player = {
     } else {
       t.tips(i18n.t('tipsMsg.stopframe') + perFps);
     }
+  },
+
+  autoGotoBufferedTime: false,
+  toggleAutoGotoBufferedTime () {
+    const t = this;
+    t.autoGotoBufferedTime = !t.autoGotoBufferedTime;
+    t.tips(t.autoGotoBufferedTime ? i18n.t('autoGotoBufferedTime') : i18n.t('disableAutoGotoBufferedTime'));
   },
 
   /**
@@ -13852,9 +14160,9 @@ async function h5PlayerInit () {
     crossTabCtl.init();
 
     if (isInIframe()) {
-      debug.log('h5Player init suc, in iframe:', window, window.location.href);
+      debug.log('h5Player init suc, in iframe:');
     } else {
-      debug.log('h5Player init suc', window, h5Player);
+      debug.log('h5Player init suc');
     }
 
     if (isInCrossOriginFrame()) {

@@ -23,8 +23,6 @@ const resolve = p => {
 // https://rollupjs.org/configuration-options
 const confTree = {
   h5player: {
-    version: '3.8.1',
-    description: 'h5player',
     input: resolve('src/h5player/index.js'),
     output: {
       file: resolve('dist/h5player.js'),
@@ -35,8 +33,6 @@ const confTree = {
     }
   },
   h5playerUI: {
-    version: '0.0.1',
-    description: 'h5player ui script',
     input: resolve('src/h5player/ui/h5playerUI.js'),
     output: {
       file: resolve('src/h5player/ui/h5playerUI.es.js'),

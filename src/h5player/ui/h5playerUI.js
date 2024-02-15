@@ -28,6 +28,12 @@ function removePopupWrapById (popupWrapId) {
   delete popupWrapObjs[popupWrapId]
 }
 
+function removePopupWrapByElement (element) {
+  if (!element) { return false }
+  const popupWrapId = element.getAttribute('data-popup-wrap-id')
+  if (popupWrapId) { removePopupWrapById(popupWrapId) }
+}
+
 /* 遍历popupWrapObjs，如果popupWrapObjs中的element元素的offsetParent为null，则移除掉 */
 function cleanPopupWrap () {
   const popupWrapIds = Object.keys(popupWrapObjs)
@@ -37,6 +43,23 @@ function cleanPopupWrap () {
       removePopupWrapById(popupWrapId)
     }
   })
+}
+
+function getAllPopupWrapElement () {
+  return document.querySelectorAll('.h5player-popup-wrap')
+}
+
+function findPopupWrapWithElement (videoElement) {
+  const result = []
+  const popupWrapIds = Object.keys(popupWrapObjs)
+  popupWrapIds.forEach(popupWrapId => {
+    const element = popupWrapObjs[popupWrapId]
+    if (element === videoElement) {
+      result.push(popupWrapId)
+    }
+  })
+
+  return result.map(id => document.querySelector(`#${id}`))
 }
 
 const h5playerUI = {
@@ -55,8 +78,17 @@ const h5playerUI = {
     })
   },
 
+  getAllPopupWrapElement,
+  findPopupWrapWithElement,
+  cleanPopupWrap,
+  removePopupWrapById,
+  removePopupWrapByElement,
+
   popup (element, h5Player) {
-    if (this.__disableGUITemporarily__) { return false }
+    if (this.__disableGUITemporarily__ || element.__disableGUITemporarily__) { return false }
+
+    /* 如果element元素的宽高比大于2.5，说明可能为视频背景，则也不显示popup */
+    if (element.videoWidth / element.videoHeight > 2.5) { return false }
 
     /* 防止popup渲染过于频繁 */
     if (this.lastRenderedPopupTime && Date.now() - this.lastRenderedPopupTime < 100) {
@@ -115,7 +147,7 @@ const h5playerUI = {
      */
     function checkPopupUpdateComplete () {
       if (!popup || !popup.updateComplete || !popup.updateComplete.then) {
-        debug.error('[h5playerUI][popup][updateComplete], 组件初始化异常', popup, element)
+        // debug.error('[h5playerUI][popup][updateComplete], 组件初始化异常', popup, element)
         element.removeAttribute('data-popup-wrap-id')
         popupWrap.remove()
         delete popupWrapObjs[popupWrapId]
@@ -163,12 +195,12 @@ const h5playerUI = {
           }, { once: true })
         })
 
-        debug.log('[h5playerUI][popup][reRenderMenuMod]')
+        // debug.log('[h5playerUI][popup][reRenderMenuMod]')
       }
     }
 
     /* 油管首次渲染会莫名其妙的出错，所以此处延迟一段时间重新渲染一次菜单 */
-    setTimeout(() => { reRenderMenuMod() }, 200)
+    setTimeout(() => { reRenderMenuMod() }, 400)
 
     /* 重新渲染h5p-recommend-mod对应的推荐模块，如果位置不够则对隐藏改模块 */
     function reRenderRecommendMod () {
@@ -180,7 +212,7 @@ const h5playerUI = {
         const newRecommendModTemplate = `<div style="overflow:hidden">${createRecommendModTemplate(element)}</div>`
         parseHTML(newRecommendModTemplate, recommendWrap)
 
-        debug.log('[h5playerUI][popup][reRenderRecommendMod]')
+        // debug.log('[h5playerUI][popup][reRenderRecommendMod]')
       }
     }
 
@@ -194,6 +226,13 @@ const h5playerUI = {
      */
     let mouseleaveTimer = null
     popupWrap.addEventListener('mouseenter', () => {
+      /* 元素比例异常，不显示popup */
+      if (element.videoWidth / element.videoHeight > 2.5) {
+        element.__disableGUITemporarily__ = true
+        removePopupWrapByElement(element)
+        return false
+      }
+
       clearTimeout(mouseleaveTimer)
       if (isOutOfDocument(element)) {
         popupWrap.classList.remove(fullActiveClass)
@@ -414,7 +453,7 @@ const h5playerUI = {
     /* 尝试清除popupWrapObjs中的无效元素 */
     cleanPopupWrap()
 
-    debug.log('[h5playerUI][popup]', popup, popupWrap, element)
+    // debug.log('[h5playerUI][popup]', popup, popupWrap, element)
   }
 }
 

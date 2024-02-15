@@ -24,7 +24,8 @@ const globalFunctional = {
       const homePageLinks = [
         'https://h5player.anzz.top',
         'https://github.com/xxxily/h5player',
-        'https://greasyfork.org/scripts/381682'
+        'https://greasyfork.org/scripts/381682',
+        'https://u.anzz.top/h5player'
       ]
 
       /* 从homePageLinks中随机选取一个链接返回 */
@@ -37,14 +38,15 @@ const globalFunctional = {
     title: i18n.t('website'),
     desc: i18n.t('website'),
     fn: () => {
-      openInTab('https://h5player.anzz.top/')
+      openInTab('https://u.anzz.top/h5player')
     }
   },
   openAuthorHomePage: {
     title: i18n.t('aboutAuthor'),
     desc: i18n.t('aboutAuthor'),
     fn: () => {
-      openInTab('https://github.com/xxxily')
+      // openInTab('https://github.com/xxxily')
+      openInTab('https://u.anzz.top/xxxily')
     }
   },
   openHotkeysPage: {
@@ -72,14 +74,14 @@ const globalFunctional = {
     title: i18n.t('donate'),
     desc: i18n.t('donate'),
     fn: () => {
-      openInTab('https://h5player.anzz.top/#%E8%B5%9E')
+      openInTab('https://u.anzz.top/h5playerdonate')
     }
   },
   openAddGroupChatPage: {
     title: i18n.t('addGroupChat'),
     desc: i18n.t('addGroupChat'),
     fn: () => {
-      openInTab('https://h5player.anzz.top/home/#%E4%BA%A4%E6%B5%81%E7%BE%A4')
+      openInTab('https://u.anzz.top/h5playerddhatroup')
     }
   },
   openChangeLogPage: {
@@ -118,7 +120,8 @@ const globalFunctional = {
     title: i18n.t('openCustomConfigurationEditor'),
     desc: i18n.t('openCustomConfigurationEditor'),
     fn: () => {
-      openInTab('https://h5player.anzz.top/tools/json-editor/index.html?mode=tree&saveHandlerName=saveH5PlayerConfig&expandAll=true&json={}')
+      // openInTab('https://h5player.anzz.top/tools/json-editor/index.html?mode=tree&saveHandlerName=saveH5PlayerConfig&expandAll=true&json={}')
+      openInTab('https://u.anzz.top/h5pjsoneditor')
     }
   },
   /* 切换tampermonkey菜单的展开或折叠状态 */

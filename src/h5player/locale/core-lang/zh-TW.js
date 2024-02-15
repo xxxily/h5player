@@ -16,6 +16,7 @@ export default {
   aboutAuthor: '關於作者',
   enableScript: '啟用腳本',
   disableScript: '禁用腳本',
+  disableCurrentInstanceGUI: '關閉當前圖形用戶界面',
   disableGUITemporarily: '臨時禁用圖形用戶界面',
   enableGUI: '啟用圖形用戶界面',
   disableGUI: '禁用圖形用戶界面',
@@ -85,6 +86,8 @@ export default {
   autoChoose: '自動選擇',
   comingSoon: '更多功能正在完善中，敬請期待',
   ffmpegScript: '音視頻合併/轉換腳本',
+  autoGotoBufferedTime: '自動跟隨跳轉到緩衝區時間',
+  disableAutoGotoBufferedTime: '禁用自動跟隨跳轉到緩衝區時間',
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '向前：',

@@ -17,6 +17,7 @@ export default {
   recommend: '❤️ 免费ChatGPT-4 ❤️',
   enableScript: '启用脚本',
   disableScript: '禁用脚本',
+  disableCurrentInstanceGUI: '关闭当前图形用户界面',
   disableGUITemporarily: '临时禁用图形用户界面',
   enableGUI: '启用图形用户界面',
   disableGUI: '禁用图形用户界面',
@@ -86,6 +87,8 @@ export default {
   autoChoose: '自动选择',
   comingSoon: '更多功能正在完善中，敬请期待',
   ffmpegScript: '音视频合并/转换脚本',
+  autoGotoBufferedTime: '自动跟随跳转到缓冲区时间',
+  disableAutoGotoBufferedTime: '禁用自动跟随跳转到缓冲区时间',
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '前进：',

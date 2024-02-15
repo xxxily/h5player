@@ -16,6 +16,7 @@ export default {
   aboutAuthor: 'About the author',
   enableScript: 'Enable script',
   disableScript: 'Disable script',
+  disableCurrentInstanceGUI: 'Close the current graphical user interface',
   disableGUITemporarily: 'Temporarily disable the graphical interface',
   enableGUI: 'Enable Graphical User Interface',
   disableGUI: 'Disable Graphical User Interface',
@@ -85,6 +86,8 @@ export default {
   autoChoose: 'Auto choose',
   comingSoon: 'More features are being improved, stay tuned',
   ffmpegScript: 'Audio and video merge/convert script',
+  autoGotoBufferedTime: 'Automatically jump to the buffered time',
+  disableAutoGotoBufferedTime: 'Disable automatic jump to the buffered time',
   tipsMsg: {
     playspeed: 'Speed: ',
     forward: 'Forward: ',

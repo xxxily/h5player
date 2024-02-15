@@ -95,6 +95,40 @@ export const menuConfig = [
     icon: iconList,
     dropdownMenu: [
       {
+        title: i18n.t('graphicalInterface'),
+        desc: i18n.t('graphicalInterface'),
+        subMenu: [
+          {
+            title: i18n.t('disableCurrentInstanceGUI'),
+            desc: i18n.t('disableCurrentInstanceGUI'),
+            action: 'disableCurrentInstanceGUI',
+            args: null
+          },
+          {
+            title: i18n.t('disableGUITemporarily'),
+            desc: i18n.t('disableGUITemporarily'),
+            action: 'disableGUITemporarily',
+            args: null
+          },
+          {
+            ...globalFunctional.toggleGUIStatusUnderCurrentSite,
+            action: 'toggleGUIStatusUnderCurrentSite',
+            args: null
+          },
+          {
+            ...globalFunctional.toggleGUIStatus,
+            action: 'toggleGUIStatus',
+            args: null
+          },
+          {
+            ...globalFunctional.alwaysShowGraphicalInterface,
+            action: 'alwaysShowGraphicalInterface',
+            args: null,
+            disabled: !debug.isDebugMode()
+          }
+        ]
+      },
+      {
         title: i18n.t('videoFilter'),
         desc: i18n.t('videoFilter'),
         subMenu: [
@@ -223,37 +257,20 @@ export const menuConfig = [
         ]
       },
       {
-        title: i18n.t('graphicalInterface'),
-        desc: i18n.t('graphicalInterface'),
-        subMenu: [
-          {
-            title: i18n.t('disableGUITemporarily'),
-            desc: i18n.t('disableGUITemporarily'),
-            action: 'disableGUITemporarily',
-            args: null
-          },
-          {
-            ...globalFunctional.toggleGUIStatusUnderCurrentSite,
-            action: 'toggleGUIStatusUnderCurrentSite',
-            args: null
-          },
-          {
-            ...globalFunctional.toggleGUIStatus,
-            action: 'toggleGUIStatus',
-            args: null
-          },
-          {
-            ...globalFunctional.alwaysShowGraphicalInterface,
-            action: 'alwaysShowGraphicalInterface',
-            args: null,
-            disabled: !debug.isDebugMode()
-          }
-        ]
-      },
-      {
         title: i18n.t('moreActions'),
         desc: i18n.t('moreActions'),
         subMenu: [
+          {
+            title: `${i18n.t('toggleStates')} ${i18n.t('autoGotoBufferedTime')}`,
+            desc: `${i18n.t('toggleStates')} ${i18n.t('autoGotoBufferedTime')}`,
+            action: 'toggleAutoGotoBufferedTime'
+          },
+          {
+            title: 'Print Player info',
+            desc: 'Print Player info',
+            action: 'printPlayerInfo',
+            disabled: !debug.isDebugMode()
+          },
           {
             ...globalFunctional.openCustomConfigurationEditor,
             action: 'openCustomConfigurationEditor',
@@ -446,7 +463,7 @@ export const menuConfig = [
           {
             title: i18n.t('ffmpegScript'),
             desc: i18n.t('ffmpegScript'),
-            url: 'https://github.com/xxxily/ffmpeg-script'
+            url: 'https://u.anzz.top/ffmpegscript'
           }
         ]
       }
@@ -548,7 +565,7 @@ export function createLogoModTemplate () {
 
 export function createRecommendModTemplate (refDom) {
   const refWidth = refDom.offsetWidth
-  return refWidth < 500 ? '' : `<a class="h5p-recommend-mod" href="https://chatgpt.com" target="_blank">${i18n.t('recommend')}</a>`
+  return refWidth < 500 ? '' : `<a class="h5p-recommend-mod" href="https://u.anzz.top/h5precommend" target="_blank">${i18n.t('recommend')}</a>`
 }
 
 /**

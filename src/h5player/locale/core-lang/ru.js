@@ -16,6 +16,7 @@ export default {
   aboutAuthor: 'о авторе',
   enableScript: 'включить скрипт',
   disableScript: 'отключить скрипт',
+  disableCurrentInstanceGUI: 'отключить текущий графический интерфейс пользователя',
   disableGUITemporarily: 'Временно отключить графический интерфейс пользователя',
   enableGUI: 'Включить графический интерфейс пользователя',
   disableGUI: 'Отключить графический интерфейс пользователя',
@@ -85,6 +86,8 @@ export default {
   autoChoose: 'Автоматический выбор',
   comingSoon: 'Больше функций находится в процессе улучшения, следите за обновлениями',
   ffmpegScript: 'Скрипт слияния/преобразования аудио и видео',
+  autoGotoBufferedTime: 'Автоматически перейти к времени буфера',
+  disableAutoGotoBufferedTime: 'Отключить автоматический переход к времени буфера',
   tipsMsg: {
     playspeed: 'Скорость: ',
     forward: 'Вперёд: ',
