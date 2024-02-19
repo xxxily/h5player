@@ -10,6 +10,7 @@ module.exports = {
         '/home/feature',
         '/home/customConfiguration',
         '/home/q&a',
+        '/home/aboutDonate',
         '/home/changeLog'
       ]
     }

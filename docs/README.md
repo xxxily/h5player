@@ -18,8 +18,10 @@ footer: GPL Licensed | Copyright © 2022-present Blaze
 
 # 赞
 
-如果我的努力给你带来了便利，请不要吝啬你的赞赏
+如果我的努力给你带来了便利，请不要吝啬你的赞赏。  
 
-![如果我的努力给你带来了便利，请不要吝啬你的赞赏](/assets/img/donate.png)
+[让我看看，作者收了多少打赏？](https://u.anzz.top/aboutonate)  
+
+![如果我的努力给你带来了便利，请不要吝啬你的赞赏](/assets/img/donate.png)  
 
 <Vssue :title="$title" />
