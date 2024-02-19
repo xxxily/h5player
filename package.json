@@ -13,8 +13,8 @@
     "server": "node bin/staticService/index.js",
     "ui-dev": "webpack-dev-server --inline --config bin/webpack/webpack.dev.conf.js",
     "ui-build": "webpack-cli --inline --config bin/webpack/webpack.prod.conf.js",
-    "docs:dev": "vuepress dev docs",
-    "docs:build": "vuepress build docs"
+    "docs:dev": "cross-env NODE_OPTIONS=--openssl-legacy-provider vuepress dev docs",
+    "docs:build": "cross-env NODE_OPTIONS=--openssl-legacy-provider vuepress build docs"
   },
   "dependencies": {
     "@shoelace-style/shoelace": "^2.12.0",
