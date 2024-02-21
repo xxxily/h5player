@@ -5,9 +5,11 @@
     <title>H5player remote helper</title>
   </head>
   <body>
-    <!-- 发起最简单的使用统计请求，不包含任何隐私信息 -->
-    <iframe src="https://u.anzz.top/h5phelper" style="width: 0px; height: 0px; border: none; visibility: hidden;" ></iframe>
     <script>
+      /* 发起最简单的使用统计请求，不包含任何隐私信息 */
+      const timeStr = new Date().toISOString().split('T')[0].replace(/-/g, '') + new Date().getHours()
+      fetch(`https://u.anzz.top/h5phelper?t=${timeStr}`);
+      
       var recommendList = [
         {
           "title": "❤️ 免费ChatGPT-4 ❤️",
