@@ -4507,8 +4507,6 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
     const args = JSON.parse(actionDOM.getAttribute('data-args') || null);
     const url = actionDOM.getAttribute('data-url');
 
-    console.log('[menuActionHandler]', action, args, url);
-
     if (url) {
       globalFunctional.openInTab(url);
       return
@@ -4631,6 +4629,14 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
         return false
       } else {
         this.lastRenderedPopupTime = Date.now();
+      }
+
+      /* 防止popup死循环渲染 */
+      if (element.__popupRenderedCount__ && element.__popupRenderedCount__ > 15) {
+        debug.error('[h5playerUI][popup][renderedCount]', element.__popupRenderedCount__);
+        return false
+      } else {
+        element.__popupRenderedCount__ = element.__popupRenderedCount__ ? element.__popupRenderedCount__ + 1 : 1;
       }
 
       if (!element || !element.tagName || element.tagName.toLowerCase() !== 'video' || isOutOfDocument(element)) {
@@ -4784,8 +4790,8 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
           popupWrap.classList.remove(fullActiveClass);
         } else {
           mouseleaveTimer = setTimeout(() => {
-            !alwaysShowUIBar && popupWrap.classList.remove(activeClass);
-            !alwaysShowUIBar && popupWrap.classList.remove(fullActiveClass);
+            !alwaysShowUIBar && !element.paused && popupWrap.classList.remove(activeClass);
+            !alwaysShowUIBar && !element.paused && popupWrap.classList.remove(fullActiveClass);
 
             /* 关闭popupWrap中的所有sl-dropdown */
             const dropdowns = popupWrap.querySelectorAll('sl-dropdown');
@@ -4895,7 +4901,9 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
           }
 
           if (element && element.paused && !isOutOfDocument(element)) {
-            popupWrap.classList.add(activeClass);
+            if (element.currentTime && element.currentTime > 1.5) {
+              popupWrap.classList.add(activeClass);
+            }
           } else {
             if (alwaysShowUIBar) {
               popupWrap.classList.add(activeClass);
@@ -4963,7 +4971,9 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
           popupWrap.classList.add(activeClass);
           popupWrap.classList.add(fullActiveClass);
         } else {
-          popupWrap.classList.add(activeClass);
+          if (element.currentTime && element.currentTime > 1.5) {
+            popupWrap.classList.add(activeClass);
+          }
         }
 
         if (isOutOfDocument(element)) {

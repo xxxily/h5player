@@ -587,8 +587,6 @@ export function menuActionHandler (obj) {
   const args = JSON.parse(actionDOM.getAttribute('data-args') || null)
   const url = actionDOM.getAttribute('data-url')
 
-  console.log('[menuActionHandler]', action, args, url)
-
   if (url) {
     globalFunctional.openInTab(url)
     return
