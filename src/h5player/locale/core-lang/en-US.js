@@ -13,6 +13,7 @@ export default {
   enableHotkeys: 'Enable hotkeys',
   disableHotkeys: 'Disable hotkeys',
   donate: '👍Donate',
+  aboutDonate: 'How much the author has received?',
   aboutAuthor: 'About the author',
   enableScript: 'Enable script',
   disableScript: 'Disable script',

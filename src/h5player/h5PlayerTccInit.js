@@ -117,6 +117,9 @@ const taskConf = {
     fullScreen: 'button.ytp-fullscreen-button',
     next: '.ytp-next-button',
     afterPlay: function (h5Player, taskConf) {
+      /* 解决字幕显示停滞问题 */
+      setTimeout(() => { h5Player.setCurrentTimeUp(0.01, true) }, 0)
+
       /* 解决快捷键暂停、播放后一直有loading图标滞留的问题 */
       const player = h5Player.player()
       const playerwWrap = player.closest('.html5-video-player')
@@ -393,7 +396,7 @@ const taskConf = {
               }
 
               window.sessionStorage.playbackRate = targetSpeed
-              h5Player.setCurrentTime(0.01, true)
+              h5Player.setCurrentTimeUp(0.01, true)
               h5Player.setPlaybackRate(targetSpeed, true)
               return true
             }

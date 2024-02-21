@@ -1638,7 +1638,7 @@ function isLocalStorageUsable () {
  * https://www.tampermonkey.net/documentation.php?ext=dhdg#GM_setValue
  */
 function isGlobalStorageUsable () {
-  return window.GM_setValue && window.GM_getValue && window.GM_deleteValue && window.GM_listValues
+  return window.GM_setValue && window.GM_getValue && window.GM_deleteValue && window.GM_listValues instanceof Function
 }
 
 /**
@@ -1670,6 +1670,9 @@ class ConfigManager {
   constructor (opts) {
     this.opts = opts;
   }
+
+  isLocalStorageUsable = isLocalStorageUsable
+  isGlobalStorageUsable = isGlobalStorageUsable
 
   /**
    * 将confPath转换称最终存储到localStorage或globalStorage里的键名
@@ -1732,13 +1735,7 @@ class ConfigManager {
     }
 
     /* 如果localStorage和GlobalStorage配置都没找到，则尝试在默认配置表里拿相关配置信息 */
-    const config = this.getConfObj();
-    const defConfVal = getValByPath$1(config, confPath);
-    if (typeof defConfVal !== 'undefined' && defConfVal !== null) {
-      return defConfVal
-    }
-
-    return null
+    return this.getMemoryStorage(confPath)
   }
 
   /**
@@ -1783,6 +1780,18 @@ class ConfigManager {
     this.clearGlobalStorage();
   }
 
+  getMemoryStorage (confPath) {
+    if (typeof confPath !== 'string') { return null }
+
+    const config = this.getConfObj();
+    const val = getValByPath$1(config, confPath);
+    if (typeof val !== 'undefined' && val !== null) {
+      return val
+    } else {
+      return null
+    }
+  }
+
   /**
    * 根据给定的配置路径，获取LocalStorage下定义的配置信息
    * @param {String} confPath -必选，配置路径信息
@@ -1805,6 +1814,8 @@ class ConfigManager {
         }
 
         return localConf
+      } else {
+        return this.getMemoryStorage(confPath)
       }
     }
 
@@ -1827,10 +1838,21 @@ class ConfigManager {
       const globalConf = window.GM_getValue(key);
       if (globalConf !== null && globalConf !== undefined) {
         return globalConf
+      } else {
+        return this.getMemoryStorage(confPath)
       }
     }
 
     return null
+  }
+
+  setMemoryStorage (confPath, val) {
+    if (typeof confPath !== 'string' || typeof val === 'undefined' || val === null) {
+      return false
+    } else {
+      setValByPath(this.opts.config, confPath, val);
+      return true
+    }
   }
 
   /**
@@ -2826,6 +2848,9 @@ const taskConf = {
     fullScreen: 'button.ytp-fullscreen-button',
     next: '.ytp-next-button',
     afterPlay: function (h5Player, taskConf) {
+      /* 解决字幕显示停滞问题 */
+      setTimeout(() => { h5Player.setCurrentTimeUp(0.01, true); }, 0);
+
       /* 解决快捷键暂停、播放后一直有loading图标滞留的问题 */
       const player = h5Player.player();
       const playerwWrap = player.closest('.html5-video-player');
@@ -3102,7 +3127,7 @@ const taskConf = {
               }
 
               window.sessionStorage.playbackRate = targetSpeed;
-              h5Player.setCurrentTime(0.01, true);
+              h5Player.setCurrentTimeUp(0.01, true);
               h5Player.setPlaybackRate(targetSpeed, true);
               return true
             }
@@ -3919,6 +3944,7 @@ var zhCN = {
   enableHotkeys: '启用快捷键',
   disableHotkeys: '禁用快捷键',
   donate: '👍请作者喝杯咖啡',
+  aboutDonate: '作者收了多少打赏？',
   aboutAuthor: '关于作者',
   recommend: '❤️ 免费ChatGPT-4 ❤️',
   enableScript: '启用脚本',
@@ -4043,6 +4069,7 @@ var enUS = {
   enableHotkeys: 'Enable hotkeys',
   disableHotkeys: 'Disable hotkeys',
   donate: '👍Donate',
+  aboutDonate: 'How much the author has received?',
   aboutAuthor: 'About the author',
   enableScript: 'Enable script',
   disableScript: 'Disable script',
@@ -4167,6 +4194,7 @@ var ru = {
   enableHotkeys: 'включить горячие клавиши',
   disableHotkeys: 'отключить горячие клавиши',
   donate: '👍пожертвовать',
+  aboutDonate: 'Сколько автор получил?',
   aboutAuthor: 'о авторе',
   enableScript: 'включить скрипт',
   disableScript: 'отключить скрипт',
@@ -4290,6 +4318,7 @@ var zhTW = {
   enableHotkeys: '啟用快捷鍵',
   disableHotkeys: '禁用快捷鍵',
   donate: '👍讚賞',
+  aboutDonate: '作者收了多少打賞？',
   aboutAuthor: '關於作者',
   enableScript: '啟用腳本',
   disableScript: '禁用腳本',
@@ -5451,6 +5480,13 @@ const globalFunctional = {
       openInTab('https://u.anzz.top/h5playerdonate');
     }
   },
+  openAboutDonatePage: {
+    title: i18n.t('aboutDonate'),
+    desc: i18n.t('aboutDonate'),
+    fn: () => {
+      openInTab('https://u.anzz.top/aboutonate');
+    }
+  },
   openAddGroupChatPage: {
     title: i18n.t('addGroupChat'),
     desc: i18n.t('addGroupChat'),
@@ -5737,7 +5773,7 @@ let monkeyMenuList = [
   },
   {
     ...globalFunctional.toggleGUIStatus,
-    disable: configManager.get('ui.enable') !== false
+    disable: configManager.getGlobalStorage('ui.enable') !== false
   },
   {
     ...globalFunctional.toggleHotkeysStatusUnderCurrentSite,
@@ -10393,7 +10429,8 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
   // import iconGear from '../../../node_modules/@shoelace-style/shoelace/dist/assets/icons/gear.svg'
   // import iconXLg from '../../../node_modules/@shoelace-style/shoelace/dist/assets/icons/x-lg.svg'
 
-  const { i18n, debug: debug$1, globalFunctional } = window.h5playerUIProvider;
+  const { i18n, debug: debug$1, globalFunctional, configManager: configManager$1 } = window.h5playerUIProvider;
+  const isGlobalStorageUsable = configManager$1.isGlobalStorageUsable();
 
   const menuConfig = [
     {
@@ -10504,15 +10541,10 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
               args: null
             },
             {
-              ...globalFunctional.toggleGUIStatus,
-              action: 'toggleGUIStatus',
-              args: null
-            },
-            {
               ...globalFunctional.alwaysShowGraphicalInterface,
               action: 'alwaysShowGraphicalInterface',
               args: null,
-              disabled: !debug$1.isDebugMode()
+              disabled: !debug$1.isDebugMode() || !isGlobalStorageUsable
             }
           ]
         },
@@ -10697,7 +10729,8 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
             {
               ...globalFunctional.toggleHotkeysStatus,
               action: 'toggleHotkeysStatus',
-              args: null
+              args: null,
+              disabled: !isGlobalStorageUsable
             }
           ]
         },
@@ -10713,7 +10746,8 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
             {
               ...globalFunctional.restoreGlobalConfiguration,
               action: 'restoreGlobalConfiguration',
-              args: ''
+              args: '',
+              disabled: !isGlobalStorageUsable
             },
             {
               ...globalFunctional.toggleScriptEnableState,
@@ -10731,38 +10765,51 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
               args: ''
             },
             {
+              ...globalFunctional.toggleGUIStatus,
+              action: 'toggleGUIStatus',
+              args: null,
+              disabled: !isGlobalStorageUsable
+            },
+            {
               ...globalFunctional.toggleSetPlaybackRateFunctional,
               action: 'toggleSetPlaybackRateFunctional',
-              args: ''
+              args: '',
+              disabled: !isGlobalStorageUsable
             },
             {
               ...globalFunctional.toggleAcousticGainFunctional,
               action: 'toggleAcousticGainFunctional',
-              args: ''
+              args: '',
+              disabled: !isGlobalStorageUsable
             },
             {
               ...globalFunctional.toggleCrossOriginControlFunctional,
               action: 'toggleCrossOriginControlFunctional',
-              args: ''
+              args: '',
+              disabled: !isGlobalStorageUsable
             },
             {
               ...globalFunctional.toggleExperimentFeatures,
               action: 'toggleExperimentFeatures',
-              args: ''
+              args: '',
+              disabled: !isGlobalStorageUsable
             },
             {
               ...globalFunctional.toggleExternalCustomConfiguration,
               action: 'toggleExternalCustomConfiguration',
-              args: ''
+              args: '',
+              disabled: !isGlobalStorageUsable
             },
             {
               ...globalFunctional.toggleDebugMode,
               action: 'toggleDebugMode',
-              args: ''
+              args: '',
+              disabled: !isGlobalStorageUsable
             },
             {
               title: `${i18n.t('languageSettings')}「${i18n.t('globalSetting')}」`,
               desc: `${i18n.t('languageSettings')}「${i18n.t('globalSetting')}」`,
+              disabled: !isGlobalStorageUsable,
               subMenu: [
                 {
                   title: i18n.t('autoChoose'),
@@ -10835,6 +10882,11 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
             {
               ...globalFunctional.openDonatePage,
               action: 'openDonatePage',
+              args: ''
+            },
+            {
+              ...globalFunctional.openAboutDonatePage,
+              action: 'openAboutDonatePage',
               args: ''
             },
             {
@@ -10989,7 +11041,7 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
     }
 
     if (action && (h5Player[action] instanceof Function || globalFunctional[action])) {
-      debug$1.log('[menuActionHandler]', actionDOM, action, args);
+      // debug.log('[menuActionHandler]', actionDOM, action, args)
 
       try {
         if (action === 'setPlaybackRate') {
@@ -11996,7 +12048,8 @@ const h5Player = {
       srcList: player.srcList,
       h5player: t,
       h5playerUI: t.UI,
-      mediaSource
+      mediaSource,
+      window
     };
 
     if (t.UI && t.UI.findPopupWrapWithElement) {

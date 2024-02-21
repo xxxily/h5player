@@ -569,7 +569,8 @@ const h5Player = {
       srcList: player.srcList,
       h5player: t,
       h5playerUI: t.UI,
-      mediaSource
+      mediaSource,
+      window
     }
 
     if (t.UI && t.UI.findPopupWrapWithElement) {

@@ -35,7 +35,7 @@ function isLocalStorageUsable () {
  * https://www.tampermonkey.net/documentation.php?ext=dhdg#GM_setValue
  */
 function isGlobalStorageUsable () {
-  return window.GM_setValue && window.GM_getValue && window.GM_deleteValue && window.GM_listValues
+  return window.GM_setValue && window.GM_getValue && window.GM_deleteValue && window.GM_listValues instanceof Function
 }
 
 /**
@@ -67,6 +67,9 @@ export default class ConfigManager {
   constructor (opts) {
     this.opts = opts
   }
+
+  isLocalStorageUsable = isLocalStorageUsable
+  isGlobalStorageUsable = isGlobalStorageUsable
 
   /**
    * 将confPath转换称最终存储到localStorage或globalStorage里的键名
@@ -129,13 +132,7 @@ export default class ConfigManager {
     }
 
     /* 如果localStorage和GlobalStorage配置都没找到，则尝试在默认配置表里拿相关配置信息 */
-    const config = this.getConfObj()
-    const defConfVal = getValByPath(config, confPath)
-    if (typeof defConfVal !== 'undefined' && defConfVal !== null) {
-      return defConfVal
-    }
-
-    return null
+    return this.getMemoryStorage(confPath)
   }
 
   /**
@@ -180,6 +177,18 @@ export default class ConfigManager {
     this.clearGlobalStorage()
   }
 
+  getMemoryStorage (confPath) {
+    if (typeof confPath !== 'string') { return null }
+
+    const config = this.getConfObj()
+    const val = getValByPath(config, confPath)
+    if (typeof val !== 'undefined' && val !== null) {
+      return val
+    } else {
+      return null
+    }
+  }
+
   /**
    * 根据给定的配置路径，获取LocalStorage下定义的配置信息
    * @param {String} confPath -必选，配置路径信息
@@ -202,6 +211,8 @@ export default class ConfigManager {
         }
 
         return localConf
+      } else {
+        return this.getMemoryStorage(confPath)
       }
     }
 
@@ -224,10 +235,21 @@ export default class ConfigManager {
       const globalConf = window.GM_getValue(key)
       if (globalConf !== null && globalConf !== undefined) {
         return globalConf
+      } else {
+        return this.getMemoryStorage(confPath)
       }
     }
 
     return null
+  }
+
+  setMemoryStorage (confPath, val) {
+    if (typeof confPath !== 'string' || typeof val === 'undefined' || val === null) {
+      return false
+    } else {
+      setValByPath(this.opts.config, confPath, val)
+      return true
+    }
   }
 
   /**

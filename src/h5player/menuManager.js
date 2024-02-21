@@ -32,7 +32,7 @@ let monkeyMenuList = [
   },
   {
     ...globalFunctional.toggleGUIStatus,
-    disable: configManager.get('ui.enable') !== false
+    disable: configManager.getGlobalStorage('ui.enable') !== false
   },
   {
     ...globalFunctional.toggleHotkeysStatusUnderCurrentSite,

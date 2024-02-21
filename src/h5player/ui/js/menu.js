@@ -5,7 +5,8 @@ import iconDownload from '../../../../node_modules/@shoelace-style/shoelace/dist
 // import iconGear from '../../../node_modules/@shoelace-style/shoelace/dist/assets/icons/gear.svg'
 // import iconXLg from '../../../node_modules/@shoelace-style/shoelace/dist/assets/icons/x-lg.svg'
 
-const { i18n, debug, globalFunctional } = window.h5playerUIProvider
+const { i18n, debug, globalFunctional, configManager } = window.h5playerUIProvider
+const isGlobalStorageUsable = configManager.isGlobalStorageUsable()
 
 export const menuConfig = [
   {
@@ -116,15 +117,10 @@ export const menuConfig = [
             args: null
           },
           {
-            ...globalFunctional.toggleGUIStatus,
-            action: 'toggleGUIStatus',
-            args: null
-          },
-          {
             ...globalFunctional.alwaysShowGraphicalInterface,
             action: 'alwaysShowGraphicalInterface',
             args: null,
-            disabled: !debug.isDebugMode()
+            disabled: !debug.isDebugMode() || !isGlobalStorageUsable
           }
         ]
       },
@@ -309,7 +305,8 @@ export const menuConfig = [
           {
             ...globalFunctional.toggleHotkeysStatus,
             action: 'toggleHotkeysStatus',
-            args: null
+            args: null,
+            disabled: !isGlobalStorageUsable
           }
         ]
       },
@@ -325,7 +322,8 @@ export const menuConfig = [
           {
             ...globalFunctional.restoreGlobalConfiguration,
             action: 'restoreGlobalConfiguration',
-            args: ''
+            args: '',
+            disabled: !isGlobalStorageUsable
           },
           {
             ...globalFunctional.toggleScriptEnableState,
@@ -343,38 +341,51 @@ export const menuConfig = [
             args: ''
           },
           {
+            ...globalFunctional.toggleGUIStatus,
+            action: 'toggleGUIStatus',
+            args: null,
+            disabled: !isGlobalStorageUsable
+          },
+          {
             ...globalFunctional.toggleSetPlaybackRateFunctional,
             action: 'toggleSetPlaybackRateFunctional',
-            args: ''
+            args: '',
+            disabled: !isGlobalStorageUsable
           },
           {
             ...globalFunctional.toggleAcousticGainFunctional,
             action: 'toggleAcousticGainFunctional',
-            args: ''
+            args: '',
+            disabled: !isGlobalStorageUsable
           },
           {
             ...globalFunctional.toggleCrossOriginControlFunctional,
             action: 'toggleCrossOriginControlFunctional',
-            args: ''
+            args: '',
+            disabled: !isGlobalStorageUsable
           },
           {
             ...globalFunctional.toggleExperimentFeatures,
             action: 'toggleExperimentFeatures',
-            args: ''
+            args: '',
+            disabled: !isGlobalStorageUsable
           },
           {
             ...globalFunctional.toggleExternalCustomConfiguration,
             action: 'toggleExternalCustomConfiguration',
-            args: ''
+            args: '',
+            disabled: !isGlobalStorageUsable
           },
           {
             ...globalFunctional.toggleDebugMode,
             action: 'toggleDebugMode',
-            args: ''
+            args: '',
+            disabled: !isGlobalStorageUsable
           },
           {
             title: `${i18n.t('languageSettings')}「${i18n.t('globalSetting')}」`,
             desc: `${i18n.t('languageSettings')}「${i18n.t('globalSetting')}」`,
+            disabled: !isGlobalStorageUsable,
             subMenu: [
               {
                 title: i18n.t('autoChoose'),
@@ -447,6 +458,11 @@ export const menuConfig = [
           {
             ...globalFunctional.openDonatePage,
             action: 'openDonatePage',
+            args: ''
+          },
+          {
+            ...globalFunctional.openAboutDonatePage,
+            action: 'openAboutDonatePage',
             args: ''
           },
           {
@@ -601,7 +617,7 @@ export function menuActionHandler (obj) {
   }
 
   if (action && (h5Player[action] instanceof Function || globalFunctional[action])) {
-    debug.log('[menuActionHandler]', actionDOM, action, args)
+    // debug.log('[menuActionHandler]', actionDOM, action, args)
 
     try {
       if (action === 'setPlaybackRate') {

@@ -13,6 +13,7 @@ export default {
   enableHotkeys: '启用快捷键',
   disableHotkeys: '禁用快捷键',
   donate: '👍请作者喝杯咖啡',
+  aboutDonate: '作者收了多少打赏？',
   aboutAuthor: '关于作者',
   recommend: '❤️ 免费ChatGPT-4 ❤️',
   enableScript: '启用脚本',

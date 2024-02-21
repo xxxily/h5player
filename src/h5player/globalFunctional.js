@@ -77,6 +77,13 @@ const globalFunctional = {
       openInTab('https://u.anzz.top/h5playerdonate')
     }
   },
+  openAboutDonatePage: {
+    title: i18n.t('aboutDonate'),
+    desc: i18n.t('aboutDonate'),
+    fn: () => {
+      openInTab('https://u.anzz.top/aboutonate')
+    }
+  },
   openAddGroupChatPage: {
     title: i18n.t('addGroupChat'),
     desc: i18n.t('addGroupChat'),
