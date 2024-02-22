@@ -262,6 +262,12 @@ export const menuConfig = [
             action: 'toggleAutoGotoBufferedTime'
           },
           {
+            title: 'Clean remote helper info',
+            desc: 'Clean remote helper info',
+            action: 'cleanRemoteHelperInfo',
+            disabled: !debug.isDebugMode()
+          },
+          {
             title: 'Print Player info',
             desc: 'Print Player info',
             action: 'printPlayerInfo',
@@ -581,7 +587,21 @@ export function createLogoModTemplate () {
 
 export function createRecommendModTemplate (refDom) {
   const refWidth = refDom.offsetWidth
-  return refWidth < 500 ? '' : `<a class="h5p-recommend-mod" href="https://u.anzz.top/h5precommend" target="_blank">${i18n.t('recommend')}</a>`
+  if (refWidth < 500) { return '' }
+
+  let recommendList = configManager.getGlobalStorage('recommendList') || [{
+    title: i18n.t('recommend'),
+    url: 'https://u.anzz.top/h5precommend'
+  }]
+  recommendList = recommendList.filter(item => !item.disabled)
+
+  if (!recommendList.length) { return '' }
+
+  const recommendHtml = recommendList.map(item => {
+    return `<a class="h5p-recommend-item" href="${item.url}" title="${item.desc || ''}" target="_blank">${item.title}</a>`
+  }).join('')
+
+  return `<div class="h5p-recommend-mod" >${recommendHtml}</div>`
 }
 
 /**

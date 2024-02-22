@@ -340,6 +340,17 @@ const globalFunctional = {
         }
       }
     }
+  },
+
+  cleanRemoteHelperInfo: {
+    title: i18n.t('cleanRemoteHelperInfo'),
+    desc: i18n.t('cleanRemoteHelperInfo'),
+    fn: () => {
+      configManager.setGlobalStorage('recommendList', false)
+      configManager.setGlobalStorage('contactRemoteHelperSuccessTime', false)
+      configManager.setGlobalStorage('lastContactRemoteHelperTime', false)
+      window.location.reload()
+    }
   }
 }
 

@@ -99,7 +99,6 @@ const h5playerUI = {
 
     /* 防止popup死循环渲染 */
     if (element.__popupRenderedCount__ && element.__popupRenderedCount__ > 15) {
-      debug.error('[h5playerUI][popup][renderedCount]', element.__popupRenderedCount__)
       return false
     } else {
       element.__popupRenderedCount__ = element.__popupRenderedCount__ ? element.__popupRenderedCount__ + 1 : 1
