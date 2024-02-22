@@ -2791,9 +2791,10 @@ async function h5PlayerInit () {
   /**
    * 跟官网远程助手进行互动，有严重安全或信息洁癖的人手动注释下面代码即可
    * 下面代码不会影响主要功能的正常使用
+   * 不注释代码，禁用UI界面也有同等效果
    */
   try {
-    remoteHelper.init()
+    configManager.get('ui.enable') !== false && remoteHelper.init()
   } catch (e) {
     debug.error('[remoteHelper.init]', e)
   }

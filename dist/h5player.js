@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      4.0.1
+// @version      4.1.0
 // @description  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
 // @description:en  Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
 // @description:zh  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
@@ -40,9 +40,6 @@
 // @grant        GM_setClipboard
 // @run-at       document-start
 // @antifeature  ads
-// @antifeature  membership
-// @antifeature  payment
-// @antifeature tracking
 // @license      GPL
 // ==/UserScript==
 (function (w) { if (w) { w.name = 'h5player'; } })();
@@ -5404,7 +5401,7 @@ const monkeyMenu = {
   }
 };
 
-const version = '4.0.1';
+const version = '4.1.0';
 
 function refreshPage (msg) {
   msg = msg || '配置已更改，马上刷新页面让配置生效？';
@@ -14381,9 +14378,10 @@ async function h5PlayerInit () {
   /**
    * 跟官网远程助手进行互动，有严重安全或信息洁癖的人手动注释下面代码即可
    * 下面代码不会影响主要功能的正常使用
+   * 不注释代码，禁用UI界面也有同等效果
    */
   try {
-    remoteHelper.init();
+    configManager.get('ui.enable') !== false && remoteHelper.init();
   } catch (e) {
     debug.error('[remoteHelper.init]', e);
   }
