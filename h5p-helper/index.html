@@ -14,26 +14,24 @@
       if(!isSamePage){
         /* 发起使用统计请求，不包含任何隐私信息 */
         const timeStr = new Date().toISOString().split('T')[0].replace(/-/g, '') + new Date().getHours()
-        const url = `https://u.anzz.top/h5phelper?t=${Date.now()}`
+        const url = `https://u.anzz.top/h5phelper?t=${timeStr}`
         const iframe = document.createElement('iframe')
         iframe.src = url
         iframe.style.display = 'none'
         document.body.appendChild(iframe)
       }
       
-      var recommendList = [
+      const recommendList = [
         {
-          "title": "❤️ 免费ChatGPT-4 ❤️",
-          "url": "https://u.anzz.top/h5precommend"
+          title: "❤️ 免费ChatGPT-4 ❤️",
+          url: "https://u.anzz.top/h5precommend"
         },
         {
-          "title": "❤️ 免费ChatGPT-4 ❤️",
-          "url": "https://u.anzz.top/h5precommend"
-        },
-        {
-          "title": "❤️ 免费ChatGPT-4 ❤️",
-          "url": "https://u.anzz.top/h5precommend"
-        },
+          title: "音视频合并工具",
+          url: "https://github.com/xxxily/ffmpeg-script",
+          desc: "将h5player下载到的音视频文件自动合并成一个文件，不经过二次编码，可快速合并",
+          disabled: true
+        }
       ];
       window.recommendList = recommendList;
       window.remoteVersion = undefined;
