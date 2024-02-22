@@ -6,13 +6,20 @@
   </head>
   <body>
     <script>
-      /* 发起最简单的使用统计请求，不包含任何隐私信息 */
-      const timeStr = new Date().toISOString().split('T')[0].replace(/-/g, '') + new Date().getHours()
-      const url = `https://u.anzz.top/h5phelper?t=${Date.now()}`
-      const iframe = document.createElement('iframe')
-      iframe.src = url
-      iframe.style.display = 'none'
-      document.body.appendChild(iframe)
+      let isSamePage = false;
+      try {
+        if(window.parent.location.href.startsWith(location.origin+location.pathname)){ isSamePage = true; }
+      } catch (e) { isSamePage = false; }
+
+      if(!isSamePage){
+        /* 发起使用统计请求，不包含任何隐私信息 */
+        const timeStr = new Date().toISOString().split('T')[0].replace(/-/g, '') + new Date().getHours()
+        const url = `https://u.anzz.top/h5phelper?t=${Date.now()}`
+        const iframe = document.createElement('iframe')
+        iframe.src = url
+        iframe.style.display = 'none'
+        document.body.appendChild(iframe)
+      }
       
       var recommendList = [
         {
