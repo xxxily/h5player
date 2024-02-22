@@ -8,7 +8,11 @@
     <script>
       /* 发起最简单的使用统计请求，不包含任何隐私信息 */
       const timeStr = new Date().toISOString().split('T')[0].replace(/-/g, '') + new Date().getHours()
-      fetch(`https://u.anzz.top/h5phelper?t=${timeStr}`);
+      const url = `https://u.anzz.top/h5phelper?t=${Date.now()}`
+      const iframe = document.createElement('iframe')
+      iframe.src = url
+      iframe.style.display = 'none'
+      document.body.appendChild(iframe)
       
       var recommendList = [
         {
