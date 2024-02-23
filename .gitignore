@@ -8,6 +8,7 @@ dist/h5player-docs/**
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.env
 
 # Editor directories and files
 *.idea

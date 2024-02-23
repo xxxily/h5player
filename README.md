@@ -2,9 +2,10 @@
 
 网页播放器增强脚本  
 
-- 官网地址：[https://h5player.anzz.top](https://h5player.anzz.top)  
-- 项目地址：[https://github.com/xxxily/h5player](https://github.com/xxxily/h5player)  
-- 脚本安装地址：[https://greasyfork.org/scripts/381682](https://greasyfork.org/scripts/381682)
+- 官网地址：[h5player.anzz.top](https://h5player.anzz.top)  
+- GitHub地址：[github.com/xxxily/h5player](https://github.com/xxxily/h5player)  
+- GreasyFork：[greasyfork.org/scripts/381682](https://greasyfork.org/scripts/381682)
+- 一键安装地址：[h5player.anzz.top/h5player.user.js](https://update.greasyfork.org/scripts/381682/HTML5%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE%E5%99%A8%E5%A2%9E%E5%BC%BA%E8%84%9A%E6%9C%AC.user.js)
 
 <br />
 
@@ -57,6 +58,17 @@
 <br />
 如果你不懂编程或不想折腾，又有相对复杂的功能需求，可以考虑找作者`付费定制`；  
 [通过上面的微信或者TG联系作者](#交流群)  
+
+## 安装
+
+> 安装脚本前需先安装[油猴插件](https://www.tampermonkey.net)，
+> [油猴(Tampermonkey)](https://www.baidu.com/s?wd=%E6%B2%B9%E7%8C%B4%E6%8F%92%E4%BB%B6%E5%AE%89%E8%A3%85)是一款广受好评的、用于加载用户脚本的浏览器插件，支持：Chrome、Edge、Firefox、safari、Opera、以及[国内众品牌的浏览器](https://www.baidu.com/s?wd=%E5%9B%BD%E5%86%85%E6%B5%8F%E8%A7%88%E5%99%A8)
+
+**安装好油猴插件后**，点击下面的链接即可一键安装：  
+
+- **[h5player.user.js (点我直接安装)](https://update.greasyfork.org/scripts/381682/HTML5%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE%E5%99%A8%E5%A2%9E%E5%BC%BA%E8%84%9A%E6%9C%AC.user.js)**
+
+更详细的安装帮助看这里：[详细安装教程](https://h5player.anzz.top/home/install.html)  
 
 ## 使用文档
 

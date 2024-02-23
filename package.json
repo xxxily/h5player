@@ -14,7 +14,8 @@
     "ui-dev": "webpack-dev-server --inline --config bin/webpack/webpack.dev.conf.js",
     "ui-build": "webpack-cli --inline --config bin/webpack/webpack.prod.conf.js",
     "docs:dev": "cross-env NODE_OPTIONS=--openssl-legacy-provider vuepress dev docs",
-    "docs:build": "cross-env NODE_OPTIONS=--openssl-legacy-provider vuepress build docs"
+    "docs:build": "cross-env NODE_OPTIONS=--openssl-legacy-provider vuepress build docs",
+    "docs:release": "node bin/docs/release.js"
   },
   "dependencies": {
     "@shoelace-style/shoelace": "^2.12.0",
@@ -41,6 +42,7 @@
     "chokidar": "^3.5.3",
     "cross-env": "^7.0.3",
     "dayjs": "^1.11.10",
+    "dotenv": "^16.4.5",
     "eslint": "^8.0.1",
     "eslint-config-standard": "latest",
     "eslint-plugin-import": "^2.25.2",

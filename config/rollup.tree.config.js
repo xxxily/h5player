@@ -25,7 +25,7 @@ const confTree = {
   h5player: {
     input: resolve('src/h5player/index.js'),
     output: {
-      file: resolve('dist/h5player.js'),
+      file: resolve('dist/h5player.user.js'),
       format: 'es', // 可选值： amd, cjs, es, iife, umd
       name: 'h5player',
       /* 使用内联动态导入，让打包文件始终保持只有一个文件 */

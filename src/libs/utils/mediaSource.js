@@ -201,6 +201,7 @@ const mediaSource = (function () {
         }
       }
 
+      let mediaSourceTitle = null
       mediaSourceInfo.sourceBuffer.forEach(sourceBufferItem => {
         if (!sourceBufferItem.mimeCodecs || sourceBufferItem.mimeCodecs.toString().indexOf(';') === -1) {
           const msg = '[downloadMediaSource][mimeCodecs][error] mimeCodecs不存在或信息异常，无法下载'
@@ -210,9 +211,9 @@ const mediaSource = (function () {
         }
 
         try {
-          let mediaTitle = `${sourceBufferItem.mediaInfo.title || title || mediaEl.getAttribute('data-title') || document.title || Date.now()}_${sourceBufferItem.mediaInfo.type}.${sourceBufferItem.mediaInfo.format}`
+          let mediaTitle = `${mediaSourceTitle || sourceBufferItem.mediaInfo.title || title || mediaEl.getAttribute('data-title') || document.title || Date.now()}`
 
-          if (!sourceBufferItem.mediaInfo.title) {
+          if (!mediaSourceTitle && !sourceBufferItem.mediaInfo.title) {
             mediaTitle = original.prompt('请确认文件标题：', mediaTitle)
 
             if (!mediaTitle) { return false }
@@ -220,9 +221,10 @@ const mediaSource = (function () {
             sourceBufferItem.mediaInfo.title = mediaTitle
           }
 
-          if (!mediaTitle.endsWith(sourceBufferItem.mediaInfo.format)) {
-            mediaTitle = mediaTitle + '.' + sourceBufferItem.mediaInfo.format
-          }
+          mediaSourceTitle = mediaTitle
+
+          /* 自动补充媒体类型和文件后缀 */
+          mediaTitle = `${mediaTitle}_${sourceBufferItem.mediaInfo.type}.${sourceBufferItem.mediaInfo.format}`
 
           const a = document.createElement('a')
           a.href = URL.createObjectURL(new Blob(sourceBufferItem.bufferData))
