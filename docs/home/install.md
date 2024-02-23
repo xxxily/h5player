@@ -1,7 +1,7 @@
 # 安装详解
 
 > 安装脚本前需先安装[油猴插件](https://www.tampermonkey.net)，
-> [油猴(Tampermonkey)](https://www.baidu.com/s?wd=%E6%B2%B9%E7%8C%B4%E6%8F%92%E4%BB%B6%E5%AE%89%E8%A3%85)是一款广受好评的、用于加载用户脚本的浏览器插件，支持：Chrome、Edge、Firefox、safari、Opera、以及[国内众品牌的浏览器](https://www.baidu.com/s?wd=%E5%9B%BD%E5%86%85%E6%B5%8F%E8%A7%88%E5%99%A8)
+> [油猴(Tampermonkey)](https://www.baidu.com/s?wd=%E6%B2%B9%E7%8C%B4%E6%8F%92%E4%BB%B6%E5%AE%89%E8%A3%85)是一款广受好评的、用于加载用户脚本的浏览器插件，支持：Chrome、Edge、Firefox、safari、Opera、以及[国内品牌众多的浏览器](https://www.baidu.com/s?wd=%E5%9B%BD%E5%86%85%E6%B5%8F%E8%A7%88%E5%99%A8)
 
 **安装好油猴插件后**，点击下面的链接即可一键安装：  
 
@@ -78,6 +78,16 @@ tar -xvf tampermonkey_stable.crx
 
 - [https://h5player.anzz.top/h5player.user.js](https://h5player.anzz.top/h5player.user.js)
 
+安装好后的运行效果如下所示：  
+
+<a href="https://h5player.anzz.top/assets/img/h5player_ui.jpg" target="_blank">
+  <img src="https://h5player.anzz.top/assets/img/h5player_ui.jpg" alt="h5player-ui" />
+</a>
+<br />
+<a href="https://h5player.anzz.top/assets/img/h5player_ui02.jpg" target="_blank">
+  <img src="https://h5player.anzz.top/assets/img/h5player_ui02.jpg" alt="h5player-ui" />
+</a>
+
 ## 移动端安装
 
 对于有移动端需求的用户，脚本也是可以支持运行的。  
@@ -101,6 +111,11 @@ tar -xvf tampermonkey_stable.crx
 - [Kiwi Browser - 百度云](https://pan.baidu.com/s/1ZPc7mIbiCoSXcymnRxWx5Q?pwd=m1yb) 提取密码：m1yb
 
 安装好Kiwi Browser后，安装Tampermonkey插件，需要在线或离线安装都参考前面的安装方法进行安装即可。
+
+安装好后的运行效果如下所示：
+
+<img src="./img/kiwi_browser_effect01.jpg" alt="h5player_for_kiwi_browser" width=480>
+<img src="./img/kiwi_browser_effect02.jpg" alt="h5player_for_kiwi_browser" width=480>
 
 ## AdGuard客户端下安装
 
