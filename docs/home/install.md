@@ -40,7 +40,7 @@
 
 ### 第一步：下载离线包
 
-Tampermonkey离线包的官方地址，可能没法访问，如果不行用下面的网盘地址，如果可以优先使用下面地址：
+Tampermonkey离线包的官方地址，可能没法访问，如果不行则用下面的网盘地址，如果可以请优先使用官方地址：
 
 - [Tampermonkey离线包](https://data.tampermonkey.net/tampermonkey_stable.crx)
 
@@ -84,9 +84,6 @@ tar -xvf tampermonkey_stable.crx
   <img src="https://h5player.anzz.top/assets/img/h5player_ui.jpg" alt="h5player-ui" />
 </a>
 <br />
-<a href="https://h5player.anzz.top/assets/img/h5player_ui02.jpg" target="_blank">
-  <img src="https://h5player.anzz.top/assets/img/h5player_ui02.jpg" alt="h5player-ui" />
-</a>
 
 ## 移动端安装
 
@@ -114,8 +111,12 @@ tar -xvf tampermonkey_stable.crx
 
 安装好后的运行效果如下所示：
 
-<img src="./img/kiwi_browser_effect01.jpg" alt="h5player_for_kiwi_browser" width=480>
-<img src="./img/kiwi_browser_effect02.jpg" alt="h5player_for_kiwi_browser" width=480>
+<a href="https://h5player.anzz.top/assets/img/kiwi_browser_effect01.83b4a12a.jpg" target="_blank">
+  <img src="./img/kiwi_browser_effect01.jpg" alt="h5player_for_kiwi_browser" width=480>
+</a>
+<a href="https://h5player.anzz.top/assets/img/kiwi_browser_effect02.c5541da0.jpg" target="_blank">
+  <img src="./img/kiwi_browser_effect02.jpg" alt="h5player_for_kiwi_browser" width=480>
+</a>
 
 ## AdGuard客户端下安装
 
