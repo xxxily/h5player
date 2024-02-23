@@ -7,6 +7,7 @@ module.exports = {
       sidebarDepth: 1,    // 可选的, 默认值是 1
       children: [
         '/home/Introduction',
+        '/home/install',
         '/home/feature',
         '/home/customConfiguration',
         '/home/q&a',
