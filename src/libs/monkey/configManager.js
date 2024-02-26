@@ -238,9 +238,10 @@ export default class ConfigManager {
       } else {
         return this.getMemoryStorage(confPath)
       }
+    } else {
+      /* 非油猴环境，回退到localStorage存储 */
+      return this.getLocalStorage(confPath)
     }
-
-    return null
   }
 
   setMemoryStorage (confPath, val) {
@@ -309,7 +310,8 @@ export default class ConfigManager {
         return false
       }
     } else {
-      return false
+      /* 非油猴环境，回退到localStorage存储 */
+      return this.setLocalStorage(confPath, val)
     }
   }
 
@@ -389,7 +391,7 @@ export default class ConfigManager {
         return
       }
 
-      console.log('setGlobalStorageByObj', confPath, val)
+      // console.log('setGlobalStorageByObj', confPath, val)
 
       this.setGlobalStorage(confPath, val)
     })

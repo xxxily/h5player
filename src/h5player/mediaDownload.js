@@ -1,7 +1,6 @@
 import original from '../libs/utils/original'
-import {
-  mediaSource
-} from '../libs/utils/index'
+import mediaSource from './mediaSource'
+import i18n from './i18n'
 
 const downloadState = new Map()
 
@@ -35,7 +34,7 @@ function mediaDownload (mediaEl, title, downloadType) {
         if (Date.now() - mediaState.downloading < 1000 * 1) {
           return false
         } else {
-          const confirm = original.confirm('文件正在下载中，确定重复执行此操作？')
+          const confirm = original.confirm(i18n.t('mediaDownload.downloading'))
           if (!confirm) {
             return false
           }
@@ -43,13 +42,13 @@ function mediaDownload (mediaEl, title, downloadType) {
       }
 
       if (mediaState.hasDownload) {
-        const confirm = original.confirm('该媒体文件已经下载过了，确定需要再次下载？')
+        const confirm = original.confirm(i18n.t('mediaDownload.hasDownload'))
         if (!confirm) {
           return false
         }
       }
 
-      mediaTitle = original.prompt('请确认文件标题：', mediaTitle)
+      mediaTitle = original.prompt(i18n.t('mediaDownload.confirmTitle'), mediaTitle)
       if (!mediaTitle) { return false }
 
       if (!mediaTitle.endsWith(mediaInfo.format)) {
@@ -91,7 +90,7 @@ function mediaDownload (mediaEl, title, downloadType) {
     /* 下载通过MediaSource管理的媒体文件 */
     mediaSource.downloadMediaSource(mediaEl, title)
   } else {
-    original.alert('当前媒体文件无法下载，下载功能待优化完善')
+    original.alert(i18n.t('mediaDownload.notSupport'))
   }
 }
 

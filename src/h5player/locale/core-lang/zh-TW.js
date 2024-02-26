@@ -58,6 +58,16 @@ export default {
   speed: '倍速',
   capture: '截圖',
   download: '下載',
+  mediaDownload: {
+    downloading: '文件正在下載中，確定重複執行此操作？',
+    hasDownload: '文件已經下載，確定重複執行此操作？',
+    confirmTitle: '請輸入文件名',
+    notSupport: '目前媒體檔案無法下載，下載功能要優化完善',
+    notEndOfStream: '媒體資料還沒完全就緒，確定要執行下載操作？',
+    cancelAutoDownload: '是否取消自動下載？',
+    autoDownload: '媒體資料完全就緒後，是否自動下載？',
+    notFoundMediaSource: '未找到對應的媒體流數據，數據可能被清理或媒體元素已經被移除，建議刷新頁面後重試'
+  },
   menu: '菜單',
   more: '更多',
   moreActions: '更多操作',

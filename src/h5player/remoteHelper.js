@@ -6,6 +6,7 @@
  */
 
 import { isInIframe } from '../libs/utils/index'
+import version from './version'
 import configManager from './configManager'
 import { getPageWindow } from './helper'
 
@@ -32,16 +33,18 @@ const remoteHelper = {
      * 12小时内有成功握手过的话，就不再重复握手
      * 最少间隔1分钟才进行下一次握手
      */
-    if (contactRemoteHelperSuccessTime && Date.now() - contactRemoteHelperSuccessTime < 1000 * 60 * 60 * 12) { return false }
+    const syncInterval = configManager.getGlobalStorage('remoteHelperSyncInterval') || 1000 * 60 * 60 * 12
+    if (contactRemoteHelperSuccessTime && Date.now() - contactRemoteHelperSuccessTime < syncInterval) { return false }
     if (Date.now() - lastContactRemoteHelperTime < 1000 * 60) { return false }
 
     this.establishRemoteConnection()
   },
 
   establishRemoteConnection () {
+    const lastSucTime = configManager.getGlobalStorage('contactRemoteHelperSuccessTime') || '0'
     const timeStr = new Date().toISOString().split('T')[0].replace(/-/g, '') + new Date().getHours()
     const iframe = document.createElement('iframe')
-    iframe.src = remoteHelperUrl + '?' + timeStr
+    iframe.src = `${remoteHelperUrl}?t=${timeStr}&v=${version}&lst=${lastSucTime}`
     iframe.style.cssText = 'width:0; height:0; border:none; visibility:hidden; opacity:0;'
     const insertIframe = () => {
       document.body.appendChild(iframe)
@@ -69,6 +72,10 @@ const remoteHelper = {
       /* 待增加版本对比判断逻辑 */
       if (pageWindow.remoteVersion) {
         configManager.setGlobalStorage('remoteVersion', pageWindow.remoteVersion)
+      }
+
+      if (pageWindow.remoteHelperSyncInterval) {
+        configManager.setGlobalStorage('remoteHelperSyncInterval', pageWindow.remoteHelperSyncInterval)
       }
 
       configManager.setGlobalStorage('contactRemoteHelperSuccessTime', Date.now())

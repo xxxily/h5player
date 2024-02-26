@@ -335,6 +335,7 @@ async function initUiConfigManager () {
 
   function init (pageWindow) {
     const config = JSON.parse(JSON.stringify(configManager.getConfObj()))
+    delete config.recommendList
     if (Array.isArray(config.hotkeys)) {
       /* 给hotkeys的各自项添加disabled选项，以便在界面侧可以快速禁用或启用某个项 */
       config.hotkeys.forEach(item => {
@@ -351,7 +352,9 @@ async function initUiConfigManager () {
 
     pageWindow.saveH5PlayerConfig = function (editor) {
       try {
+        const defConfig = configManager.getConfObj()
         const newConfig = editor.get()
+        newConfig.recommendList = defConfig.recommendList || []
         configManager.setGlobalStorageByObj(newConfig)
         alert('配置已更新')
       } catch (e) {

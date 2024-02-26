@@ -1,5 +1,6 @@
-import original from './original'
-import { isOutOfDocument } from './dom'
+import original from '../libs/utils/original'
+import { isOutOfDocument } from '../libs/utils/dom'
+import i18n from './i18n'
 
 const mediaSource = (function () {
   let hasMediaSourceInit = false
@@ -148,7 +149,7 @@ const mediaSource = (function () {
     const curSrc = mediaEl.currentSrc || mediaEl.src
 
     if (!curSrc) {
-      original.alert('当前媒体元素没有src属性，无法下载')
+      original.alert(i18n.t('mediaDownload.notSupport'))
       return false
     }
 
@@ -174,7 +175,7 @@ const mediaSource = (function () {
       // original.console.log('[downloadMediaSource][mediaSourceInfo]', mediaSourceInfo)
 
       if (mediaSourceInfo.hasDownload) {
-        const confirm = original.confirm('该媒体文件已经下载过了，确定需要再次下载？')
+        const confirm = original.confirm(i18n.t('mediaDownload.hasDownload'))
         if (!confirm) {
           return false
         }
@@ -183,15 +184,15 @@ const mediaSource = (function () {
       if (!mediaSourceInfo.hasDownload && !mediaSourceInfo.endOfStream) {
         // original.console.log('[downloadMediaSource] 媒体数据还没完全就绪', mediaSourceInfo)
 
-        const confirm = original.confirm('媒体数据还没完全就绪，确定要执行下载操作？')
+        const confirm = original.confirm(i18n.t('mediaDownload.notEndOfStream'))
         if (!confirm) {
           if (mediaSourceInfo.autoDownload) {
-            const cancelAutoDownload = original.confirm('是否取消自动下载？')
+            const cancelAutoDownload = original.confirm(i18n.t('mediaDownload.cancelAutoDownload'))
             if (cancelAutoDownload) {
               mediaSourceInfo.autoDownload = false
             }
           } else {
-            const autoDownload = original.confirm('媒体数据完全就绪后，是否自动下载？')
+            const autoDownload = original.confirm(i18n.t('mediaDownload.autoDownload'))
             if (autoDownload) {
               mediaSourceInfo.autoDownload = true
             }
@@ -214,7 +215,7 @@ const mediaSource = (function () {
           let mediaTitle = `${mediaSourceTitle || sourceBufferItem.mediaInfo.title || title || mediaEl.getAttribute('data-title') || document.title || Date.now()}`
 
           if (!mediaSourceTitle && !sourceBufferItem.mediaInfo.title) {
-            mediaTitle = original.prompt('请确认文件标题：', mediaTitle)
+            mediaTitle = original.prompt(i18n.t('mediaDownload.confirmTitle'), mediaTitle)
 
             if (!mediaTitle) { return false }
 
@@ -243,7 +244,7 @@ const mediaSource = (function () {
     })
 
     if (!hasFindMediaSource) {
-      original.alert('未找到对应的媒体流数据，数据可能被清理或者媒体元素已经被移除，建议刷新页面后重试')
+      original.alert(i18n.t('mediaDownload.notFoundMediaSource'))
     }
   }
 

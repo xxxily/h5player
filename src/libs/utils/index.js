@@ -3,7 +3,6 @@ import attrObserver from './attrObserver'
 import hackAttachShadow from './hackAttachShadow'
 import hackEventListener from './hackEventListener'
 import mediaCore from './mediaCore'
-import mediaSource from './mediaSource'
 import { getType, isType, isObj, isErr, isArr, isRegExp, isFunction, isUndefined, isNull } from './typeof'
 import { clone, forIn, getObjKeys, mergeObj, merge, getValByPath, setValByPath } from './object'
 import { quickSort } from './number'
@@ -22,7 +21,6 @@ export {
   hackAttachShadow,
   hackEventListener,
   mediaCore,
-  mediaSource,
   getType,
   isType,
   isObj,

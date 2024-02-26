@@ -9,7 +9,7 @@ import '@shoelace-style/shoelace/dist/components/menu-item/menu-item.js'
 import '@shoelace-style/shoelace/dist/components/menu-label/menu-label.js'
 import '@shoelace-style/shoelace/dist/components/icon/icon.js'
 import '@shoelace-style/shoelace/dist/components/divider/divider.js'
-import { createMenuTemplate, createLogoModTemplate, createRecommendModTemplate, menuConfig, menuConfigPreprocess, menuActionHandler } from './js/menu.js'
+import { createMenuTemplate, createLogoModTemplate, createRecommendModTemplate, registerRecommendModToggle, menuConfig, menuConfigPreprocess, menuActionHandler } from './js/menu.js'
 
 if (!window.h5playerUIProvider) {
   throw new Error('h5playerUIProvider is not defined, please check if you have imported h5playerUIProvider.js')
@@ -145,6 +145,8 @@ const h5playerUI = {
       </div>
     `, document.body)[0]
 
+    setTimeout(() => { registerRecommendModToggle(popupWrap.querySelector('.h5p-recommend-wrap')) }, 100)
+
     const popup = popupWrap.querySelector('sl-popup')
 
     /**
@@ -209,7 +211,7 @@ const h5playerUI = {
     /* 油管首次渲染会莫名其妙的出错，所以此处延迟一段时间重新渲染一次菜单 */
     setTimeout(() => { reRenderMenuMod() }, 400)
 
-    /* 重新渲染h5p-recommend-mod对应的推荐模块，如果位置不够则对隐藏改模块 */
+    /* 重新渲染h5p-recommend-mod对应的推荐模块，如果位置不够则对隐藏该模块 */
     function reRenderRecommendMod () {
       const recommendWrap = popupWrap.querySelector('.h5player-popup-content .h5p-recommend-wrap')
       const recommendMod = popupWrap.querySelector('.h5player-popup-content .h5p-recommend-wrap>div')
@@ -219,6 +221,7 @@ const h5playerUI = {
         const newRecommendModTemplate = `<div style="overflow:hidden">${createRecommendModTemplate(element)}</div>`
         parseHTML(newRecommendModTemplate, recommendWrap)
 
+        registerRecommendModToggle(recommendWrap, true)
         // debug.log('[h5playerUI][popup][reRenderRecommendMod]')
       }
     }

@@ -595,13 +595,85 @@ export function createRecommendModTemplate (refDom) {
   }]
   recommendList = recommendList.filter(item => !item.disabled)
 
+  const curLang = i18n.language() || ''
+  /* 兼容各种可能的语言配置写法 */
+  const curLang2 = curLang.replace('-', '')
+  const curLang3 = curLang.replace('-', '_')
+  const curLang4 = curLang.split('-')[0]
+
+  /* 根据当前的language和recommendList的languages配置过滤出符合当前语言的recommendList */
+  recommendList = recommendList.filter(item => {
+    let lang = item.lang || item.language || item.languages
+    if (lang && !Array.isArray(lang)) { lang = [lang] }
+    if (curLang && lang) {
+      return lang.includes(curLang) || lang.includes(curLang2) || lang.includes(curLang3) || lang.includes(curLang4)
+    } else {
+      return true
+    }
+  })
+
   if (!recommendList.length) { return '' }
 
+  /* 从recommendList里随机取5条数据，多余的不予以展示 */
+  if (recommendList.length > 5) { recommendList = recommendList.sort(() => Math.random() - 0.5).slice(0, 5) }
+
+  /* 根据recommendList里的priority字段进行排序，priority值越大越靠前 */
+  recommendList = recommendList.sort((a, b) => (b.priority || 0) - (a.priority || 0))
+
   const recommendHtml = recommendList.map(item => {
-    return `<a class="h5p-recommend-item" href="${item.url}" title="${item.desc || ''}" target="_blank">${item.title}</a>`
+    let title = item.title || ''
+    let desc = item.desc || ''
+    let url = item.url || ''
+
+    if (item.i18n) {
+      const i18nInfo = item.i18n[`${curLang}`] || item.i18n[`${curLang2}`] || item.i18n[`${curLang3}`] || item.i18n[`${curLang4}`]
+      if (i18nInfo) {
+        title = i18nInfo.title || title
+        desc = i18nInfo.desc || desc
+        url = i18nInfo.url || url
+      }
+    }
+
+    return `<a class="h5p-recommend-item" href="${url}" title="${desc}" target="_blank">${title}</a>`
   }).join('')
 
   return `<div class="h5p-recommend-mod" >${recommendHtml}</div>`
+}
+
+/**
+ * 注册Recommend切换逻辑，每4s检测一次当前哪个h5p-recommend-item上有h5p-recommend-item__active，然后将h5p-recommend-item__active切换到下一个元素，如此往复
+ * 当鼠标移动到recommendWrap的时候停止切换，移开后继续切换
+ */
+export function registerRecommendModToggle (recommendWrap, reRender) {
+  if (!reRender && (!recommendWrap || recommendWrap.__h5pRecommendModRegistered__)) { return }
+
+  let recommendIndex = 0
+  let stopToggle = false
+
+  const toggleRecommend = () => {
+    if (stopToggle) { return }
+    const recommendItems = recommendWrap.querySelectorAll('.h5p-recommend-item')
+    recommendItems.forEach((item, index) => {
+      if (index === recommendIndex) {
+        item.classList.add('h5p-recommend-item__active')
+      } else {
+        item.classList.remove('h5p-recommend-item__active')
+      }
+    })
+
+    recommendIndex = (recommendIndex + 1) % recommendItems.length
+  }
+
+  toggleRecommend()
+
+  clearInterval(recommendWrap.__h5pRecommendModInterval__)
+  recommendWrap.__h5pRecommendModInterval__ = setInterval(toggleRecommend, 3000)
+  if (!reRender) {
+    recommendWrap.addEventListener('mouseenter', () => { stopToggle = true })
+    recommendWrap.addEventListener('mouseleave', () => { stopToggle = false })
+  }
+
+  recommendWrap.__h5pRecommendModRegistered__ = true
 }
 
 /**

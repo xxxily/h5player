@@ -59,6 +59,16 @@ export default {
   speed: '倍速',
   capture: '截图',
   download: '下载',
+  mediaDownload: {
+    downloading: '文件正在下载中，确定重复执行此操作？',
+    hasDownload: '文件已经下载，确定重复执行此操作？',
+    confirmTitle: '请输入文件名',
+    notSupport: '当前媒体文件无法下载，下载功能待优化完善',
+    notEndOfStream: '媒体数据还没完全就绪，确定要执行下载操作？',
+    cancelAutoDownload: '是否取消自动下载？',
+    autoDownload: '媒体数据完全就绪后，是否自动下载？',
+    notFoundMediaSource: '未找到对应的媒体流数据，数据可能被清理或者媒体元素已经被移除，建议刷新页面后重试'
+  },
   menu: '菜单',
   more: '更多',
   moreActions: '更多操作',

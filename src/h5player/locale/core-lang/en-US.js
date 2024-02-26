@@ -58,6 +58,16 @@ export default {
   speed: 'Speed',
   capture: 'Capture',
   download: 'Download',
+  mediaDownload: {
+    downloading: 'The file is being downloaded. Are you sure you want to execute this operation again?',
+    hasDownload: 'The file has been downloaded. Are you sure you want to execute this operation again?',
+    confirmTitle: 'Please enter the file name',
+    notSupport: 'The current media file cannot be downloaded. The download function needs to be optimized and improved',
+    notEndOfStream: 'The media data is not fully ready, are you sure you want to download it?',
+    cancelAutoDownload: 'Cancel automatic download?',
+    autoDownload: 'The media data is not fully ready, do you want to automatically download it when it is ready?',
+    notFoundMediaSource: 'The corresponding media stream data was not found, the data may have been cleared or the media element has been removed, it is recommended to refresh the page and try again'
+  },
   menu: 'Menu',
   more: 'More',
   moreActions: 'More actions',

@@ -13,11 +13,11 @@ import debug from './debug'
 import hackDefineProperty from './hackDefineProperty'
 import { menuRegister, addMenu, registerH5playerMenus } from './menuManager'
 import { proxyHTMLMediaElementEvent } from './hackEventListener'
+import mediaSource from './mediaSource'
 import {
   ready,
   hackAttachShadow,
   mediaCore,
-  mediaSource,
   isObj,
   quickSort,
   eachParentNode,

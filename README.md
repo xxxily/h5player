@@ -202,7 +202,7 @@
 
 ## 更新日志
 
-- [https://github.com/xxxily/h5player/blob/master/changeLog.md](https://github.com/xxxily/h5player/blob/master/changeLog.md)
+- [H5player ChangeLog](https://github.com/xxxily/h5player/blob/master/changeLog.md)
 
 ## 支持作者
 
