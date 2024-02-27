@@ -11,7 +11,7 @@
     const urlParams = new URLSearchParams(window.location.search)
     let isSamePage = false
     try {
-      if (window.parent.location.href.startsWith(location.origin + location.pathname)) { isSamePage = true; }
+      if (window.parent !== window && window.parent.location.href.startsWith(location.origin + location.pathname)) { isSamePage = true; }
     } catch (e) { isSamePage = false; }
 
     /* 发起使用统计请求，不包含任何隐私信息 */
