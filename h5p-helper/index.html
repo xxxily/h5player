@@ -72,13 +72,15 @@
       }
     ];
 
-    if (urlParams.get('v')) {
-      window.recommendList = recommendList
-    } else {
-      window.recommendList = [recommendList[1]]
-    }
+    if(!isSamePage){
+      if (urlParams.get('v')) {
+        window.recommendList = recommendList
+      } else {
+        window.recommendList = [recommendList[1]]
+      }
 
-    window.remoteVersion = undefined
+      window.remoteVersion = undefined
+    }
   </script>
 </body>
 
