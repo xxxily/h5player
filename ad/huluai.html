@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>【限时优惠】GPT-4+MJ永久会员298元，国内可用</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      background-color: #000;
+      text-align: center;
+    }
+
+    img {
+      margin: 0 auto;
+      width: 100%;
+      max-width: 480px;
+      margin-top: 15px;
+    }
+
+    a{
+      color: #fff; 
+      text-decoration: none; 
+      font-size: 16px;
+    }
+    a:hover{
+      color: #FFD700; 
+      text-decoration: underline; 
+    }
+
+    .qiye_info {
+      padding: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <img src="./img/huluai_haibao.png" alt="【限时优惠】">
+  <div class="qiye_info">
+    <a href="https://dingtalk.com/qidian/company/1230322000038183315" target="_blank">点我查看：Hulu AI 企业信息</a>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search)
+    let isSamePage = false
+    try {
+      if (window.parent.location.href.startsWith(location.origin + location.pathname)) { isSamePage = true; }
+    } catch (e) { isSamePage = false; }
+
+    function usageStatistics() {
+      if (isSamePage || urlParams.get('tag')) return;
+
+      const iframe = document.createElement('iframe')
+      iframe.src = `https://u.anzz.top/huluaistat?t=${Date.now()}`
+      iframe.style.display = 'none'
+      document.body.appendChild(iframe)
+    }
+    usageStatistics()
+  </script>
+</body>
+
+</html>
