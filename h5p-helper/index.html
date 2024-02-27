@@ -8,20 +8,40 @@
 
 <body>
   <script>
-    let isSamePage = false;
+    const urlParams = new URLSearchParams(window.location.search)
+    let isSamePage = false
     try {
       if (window.parent.location.href.startsWith(location.origin + location.pathname)) { isSamePage = true; }
     } catch (e) { isSamePage = false; }
 
-    if (!isSamePage) {
-      /* 发起使用统计请求，不包含任何隐私信息 */
-      const timeStr = new Date().toISOString().split('T')[0].replace(/-/g, '') + new Date().getHours()
-      const url = `https://u.anzz.top/h5phelper?t=${timeStr}`
+    /* 发起使用统计请求，不包含任何隐私信息 */
+    function usageStatistics() {
+      if (isSamePage || urlParams.get('tag')) return;
+
+      const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '')
+      const timeStr = dateStr + new Date().getHours()
+
+      const urlMap = {
+        first: `https://u.anzz.top/h5phelperfirst?t=${dateStr}`,
+        oldVersion: `https://u.anzz.top/h5phelper?t=${timeStr}`,
+        newVersion: `https://u.anzz.top/h5phelperdays?t=${dateStr}`
+      }
+
+      let url = urlMap.oldVersion
+      if (!urlParams.get('lst')) {
+        url = urlMap.oldVersion
+      } else if (urlParams.get('lst') == '0') {
+        url = urlMap.first
+      } else {
+        url = urlMap.newVersion
+      }
+
       const iframe = document.createElement('iframe')
       iframe.src = url
       iframe.style.display = 'none'
       document.body.appendChild(iframe)
     }
+    usageStatistics()
 
     const recommendList = [
       {
@@ -47,7 +67,6 @@
       }
     ];
 
-    const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('v')) {
       window.recommendList = recommendList
     } else {
