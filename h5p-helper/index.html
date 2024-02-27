@@ -1,45 +1,61 @@
 <!-- 注：本页内容不允许压缩，且功能必须足够简单，以方便其他人进行安全性审查 -->
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>H5player remote helper</title>
-  </head>
-  <body>
-    <script>
-      let isSamePage = false;
-      try {
-        if(window.parent.location.href.startsWith(location.origin+location.pathname)){ isSamePage = true; }
-      } catch (e) { isSamePage = false; }
 
-      if(!isSamePage){
-        /* 发起使用统计请求，不包含任何隐私信息 */
-        const timeStr = new Date().toISOString().split('T')[0].replace(/-/g, '') + new Date().getHours()
-        const url = `https://u.anzz.top/h5phelper?t=${timeStr}`
-        const iframe = document.createElement('iframe')
-        iframe.src = url
-        iframe.style.display = 'none'
-        document.body.appendChild(iframe)
-      }
-      
-      const recommendList = [
-        {
-          title: "【免费GPT-4】由字节跳动海外团队提供",
-          url: "https://u.anzz.top/ai"
-        },
-        {
-          title: "让我看看，作者收了多少打赏？",
-          url: "https://u.anzz.top/aboutonate",
-          disabled: true
-        },
-        {
-          title: "音视频合并工具",
-          url: "https://github.com/xxxily/ffmpeg-script",
-          desc: "将h5player下载到的音视频文件自动合并成一个文件，不经过二次编码，可快速合并",
-          disabled: true
+<head>
+  <title>H5player remote helper</title>
+</head>
+
+<body>
+  <script>
+    let isSamePage = false;
+    try {
+      if (window.parent.location.href.startsWith(location.origin + location.pathname)) { isSamePage = true; }
+    } catch (e) { isSamePage = false; }
+
+    if (!isSamePage) {
+      /* 发起使用统计请求，不包含任何隐私信息 */
+      const timeStr = new Date().toISOString().split('T')[0].replace(/-/g, '') + new Date().getHours()
+      const url = `https://u.anzz.top/h5phelper?t=${timeStr}`
+      const iframe = document.createElement('iframe')
+      iframe.src = url
+      iframe.style.display = 'none'
+      document.body.appendChild(iframe)
+    }
+
+    const recommendList = [
+      {
+        title: "【Free GPT-4】Provided by the overseas team of ByteDance",
+        url: "https://u.anzz.top/ai",
+        i18n: {
+          "zh": {
+            title: "【免费GPT-4】由字节跳动海外团队提供",
+            url: "https://u.anzz.top/h5precommend"
+          }
         }
-      ];
-      window.recommendList = recommendList;
-      window.remoteVersion = undefined;
-    </script>
-  </body>
+      },
+      {
+        title: "让我看看，作者收了多少打赏？",
+        url: "https://u.anzz.top/aboutonate",
+        disabled: true
+      },
+      {
+        title: "音视频合并工具",
+        url: "https://github.com/xxxily/ffmpeg-script",
+        desc: "将h5player下载到的音视频文件自动合并成一个文件，不经过二次编码，可快速合并",
+        disabled: true
+      }
+    ];
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('v')) {
+      window.recommendList = recommendList
+    } else {
+      window.recommendList = []
+    }
+
+    window.remoteVersion = undefined
+  </script>
+</body>
+
 </html>
