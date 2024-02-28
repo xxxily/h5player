@@ -42,7 +42,7 @@ const remoteHelper = {
 
   establishRemoteConnection () {
     const lastSucTime = configManager.getGlobalStorage('contactRemoteHelperSuccessTime') || '0'
-    const timeStr = new Date().toISOString().split('T')[0].replace(/-/g, '') + new Date().getHours()
+    const timeStr = new Date().toISOString().split('T')[0].replace(/-/g, '') + new Date().getHours() + '' + new Date().getMinutes()
     const iframe = document.createElement('iframe')
     iframe.src = `${remoteHelperUrl}?t=${timeStr}&v=${version}&lst=${lastSucTime}`
     iframe.style.cssText = 'width:0; height:0; border:none; visibility:hidden; opacity:0;'

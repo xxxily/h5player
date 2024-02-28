@@ -648,10 +648,10 @@ export function registerRecommendModToggle (recommendWrap, reRender) {
   if (!reRender && (!recommendWrap || recommendWrap.__h5pRecommendModRegistered__)) { return }
 
   let recommendIndex = 0
-  let stopToggle = false
+  recommendWrap.__stopToggle__ = false
 
   const toggleRecommend = () => {
-    if (stopToggle) { return }
+    if (recommendWrap.__stopToggle__) { return }
     const recommendItems = recommendWrap.querySelectorAll('.h5p-recommend-item')
     recommendItems.forEach((item, index) => {
       if (index === recommendIndex) {
@@ -669,8 +669,8 @@ export function registerRecommendModToggle (recommendWrap, reRender) {
   clearInterval(recommendWrap.__h5pRecommendModInterval__)
   recommendWrap.__h5pRecommendModInterval__ = setInterval(toggleRecommend, 3000)
   if (!reRender) {
-    recommendWrap.addEventListener('mouseenter', () => { stopToggle = true })
-    recommendWrap.addEventListener('mouseleave', () => { stopToggle = false })
+    recommendWrap.addEventListener('mouseenter', () => { recommendWrap.__stopToggle__ = true })
+    recommendWrap.addEventListener('mouseleave', () => { recommendWrap.__stopToggle__ = false })
   }
 
   recommendWrap.__h5pRecommendModRegistered__ = true

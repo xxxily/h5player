@@ -446,6 +446,8 @@ const h5playerUI = {
 
       if (isOutOfDocument(element)) {
         popup.active = false
+        popupWrap.classList.remove(activeClass)
+        popupWrap.classList.remove(fullActiveClass)
       } else {
         popup.active = true
       }

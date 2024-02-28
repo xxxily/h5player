@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      4.2.0
+// @version      4.2.1
 // @description  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
 // @description:en  Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
 // @description:zh  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
@@ -5163,7 +5163,7 @@ const monkeyMenu = {
   }
 };
 
-const version = '4.2.0';
+const version = '4.2.1';
 
 function refreshPage (msg) {
   msg = msg || '配置已更改，马上刷新页面让配置生效？';
@@ -6598,7 +6598,7 @@ const remoteHelper = {
 
   establishRemoteConnection () {
     const lastSucTime = configManager.getGlobalStorage('contactRemoteHelperSuccessTime') || '0';
-    const timeStr = new Date().toISOString().split('T')[0].replace(/-/g, '') + new Date().getHours();
+    const timeStr = new Date().toISOString().split('T')[0].replace(/-/g, '') + new Date().getHours() + '' + new Date().getMinutes();
     const iframe = document.createElement('iframe');
     iframe.src = `${remoteHelperUrl}?t=${timeStr}&v=${version}&lst=${lastSucTime}`;
     iframe.style.cssText = 'width:0; height:0; border:none; visibility:hidden; opacity:0;';
@@ -11227,10 +11227,10 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
     if (!reRender && (!recommendWrap || recommendWrap.__h5pRecommendModRegistered__)) { return }
 
     let recommendIndex = 0;
-    let stopToggle = false;
+    recommendWrap.__stopToggle__ = false;
 
     const toggleRecommend = () => {
-      if (stopToggle) { return }
+      if (recommendWrap.__stopToggle__) { return }
       const recommendItems = recommendWrap.querySelectorAll('.h5p-recommend-item');
       recommendItems.forEach((item, index) => {
         if (index === recommendIndex) {
@@ -11248,8 +11248,8 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
     clearInterval(recommendWrap.__h5pRecommendModInterval__);
     recommendWrap.__h5pRecommendModInterval__ = setInterval(toggleRecommend, 3000);
     if (!reRender) {
-      recommendWrap.addEventListener('mouseenter', () => { stopToggle = true; });
-      recommendWrap.addEventListener('mouseleave', () => { stopToggle = false; });
+      recommendWrap.addEventListener('mouseenter', () => { recommendWrap.__stopToggle__ = true; });
+      recommendWrap.addEventListener('mouseleave', () => { recommendWrap.__stopToggle__ = false; });
     }
 
     recommendWrap.__h5pRecommendModRegistered__ = true;
@@ -11747,6 +11747,8 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
 
         if (isOutOfDocument(element)) {
           popup.active = false;
+          popupWrap.classList.remove(activeClass);
+          popupWrap.classList.remove(fullActiveClass);
         } else {
           popup.active = true;
         }
@@ -14375,11 +14377,6 @@ const h5Player = {
       return true
     }
 
-    if (!configManager.get('enable')) {
-      debug.info(`[config][disable][${location.host}] 当前网站已禁用脚本，如要启用脚本，请在菜单里开启`);
-      return true
-    }
-
     if (!global) {
       /* 检测是否存在H5播放器 */
       t.detecH5Player();
@@ -14425,31 +14422,41 @@ const h5Player = {
 };
 
 async function h5PlayerInit () {
+  const isEnabled = configManager.get('enable');
+
   try {
-    mediaCore.init(function (mediaElement) {
-      h5Player.init();
-    });
+    if (isEnabled) {
+      mediaCore.init(function (mediaElement) {
+        h5Player.init();
+      });
 
-    if (configManager.get('enhance.allowExperimentFeatures')) {
-      mediaSource.init();
-      debug.warn(`[experimentFeatures][warning] ${i18n.t('experimentFeaturesWarning')}`);
-      debug.warn('[experimentFeatures][mediaSource][activated]');
+      if (configManager.get('enhance.allowExperimentFeatures')) {
+        mediaSource.init();
+        debug.warn(`[experimentFeatures][warning] ${i18n.t('experimentFeaturesWarning')}`);
+        debug.warn('[experimentFeatures][mediaSource][activated]');
+      }
+
+      /* 禁止对playbackRate等属性进行锁定 */
+      hackDefineProperty();
+
+      /* 禁止对shadowdom使用close模式 */
+      hackAttachShadow();
+
+      /* 对所有事件进行接管 */
+      proxyHTMLMediaElementEvent();
+      // hackEventListener()
     }
-
-    /* 禁止对playbackRate等属性进行锁定 */
-    hackDefineProperty();
-
-    /* 禁止对shadowdom使用close模式 */
-    hackAttachShadow();
-
-    /* 对所有事件进行接管 */
-    proxyHTMLMediaElementEvent();
-    // hackEventListener()
   } catch (e) {
     console.error('h5player hack error', e);
   }
 
+  /* 注意：油猴的菜单注册不能根据isEnabled禁用掉，否则没法通过油猴的菜单进行启用 */
   menuRegister();
+
+  if (!isEnabled) {
+    debug.warn(`[config][disable][${location.host}] 当前网站已禁用脚本，如要启用脚本，请在菜单里开启`);
+    return false
+  }
 
   try {
     /* 初始化全局所需的相关方法 */
@@ -14513,6 +14520,8 @@ async function h5PlayerInit () {
   } catch (e) {
     debug.error('[remoteHelper.init]', e);
   }
+
+  // console.clear = () => {}
 }
 
 function init (retryCount = 0) {

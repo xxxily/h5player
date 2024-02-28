@@ -2660,11 +2660,6 @@ const h5Player = {
       return true
     }
 
-    if (!configManager.get('enable')) {
-      debug.info(`[config][disable][${location.host}] 当前网站已禁用脚本，如要启用脚本，请在菜单里开启`)
-      return true
-    }
-
     if (!global) {
       /* 检测是否存在H5播放器 */
       t.detecH5Player()
@@ -2710,31 +2705,41 @@ const h5Player = {
 }
 
 async function h5PlayerInit () {
+  const isEnabled = configManager.get('enable')
+
   try {
-    mediaCore.init(function (mediaElement) {
-      h5Player.init()
-    })
+    if (isEnabled) {
+      mediaCore.init(function (mediaElement) {
+        h5Player.init()
+      })
 
-    if (configManager.get('enhance.allowExperimentFeatures')) {
-      mediaSource.init()
-      debug.warn(`[experimentFeatures][warning] ${i18n.t('experimentFeaturesWarning')}`)
-      debug.warn('[experimentFeatures][mediaSource][activated]')
+      if (configManager.get('enhance.allowExperimentFeatures')) {
+        mediaSource.init()
+        debug.warn(`[experimentFeatures][warning] ${i18n.t('experimentFeaturesWarning')}`)
+        debug.warn('[experimentFeatures][mediaSource][activated]')
+      }
+
+      /* 禁止对playbackRate等属性进行锁定 */
+      hackDefineProperty()
+
+      /* 禁止对shadowdom使用close模式 */
+      hackAttachShadow()
+
+      /* 对所有事件进行接管 */
+      proxyHTMLMediaElementEvent()
+      // hackEventListener()
     }
-
-    /* 禁止对playbackRate等属性进行锁定 */
-    hackDefineProperty()
-
-    /* 禁止对shadowdom使用close模式 */
-    hackAttachShadow()
-
-    /* 对所有事件进行接管 */
-    proxyHTMLMediaElementEvent()
-    // hackEventListener()
   } catch (e) {
     console.error('h5player hack error', e)
   }
 
+  /* 注意：油猴的菜单注册不能根据isEnabled禁用掉，否则没法通过油猴的菜单进行启用 */
   menuRegister()
+
+  if (!isEnabled) {
+    debug.warn(`[config][disable][${location.host}] 当前网站已禁用脚本，如要启用脚本，请在菜单里开启`)
+    return false
+  }
 
   try {
     /* 初始化全局所需的相关方法 */
@@ -2798,6 +2803,8 @@ async function h5PlayerInit () {
   } catch (e) {
     debug.error('[remoteHelper.init]', e)
   }
+
+  // console.clear = () => {}
 }
 
 export default h5PlayerInit
