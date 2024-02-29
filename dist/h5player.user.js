@@ -2086,7 +2086,15 @@ const configManager = new ConfigManager({
       unfoldMenu: false
     },
     language: 'auto',
-    debug: false
+    debug: false,
+    /**
+     * url黑名单，在这些url下面禁止运行h5player脚本
+     * 以适应一些难以排查、或难以通一兼容的页面，但又不希望对整个网站进行禁用的情况
+     * 例如：B站首页
+     */
+    blackUrlList: [
+      'https://www.bilibili.com/'
+    ]
   }
 });
 
@@ -14423,9 +14431,15 @@ const h5Player = {
 
 async function h5PlayerInit () {
   const isEnabled = configManager.get('enable');
+  const blackUrlList = configManager.get('blackUrlList');
+  const isInBlackList = blackUrlList && blackUrlList.includes(location.href);
+
+  if (isInBlackList) {
+    console.warn(`[h5player][config][blackUrlList][${location.href}] \n当前页面已被加入黑名单，不执行h5player增强脚本的相关逻辑，如有需要开启，请在配置里的blackUrlList移除对应的地址`);
+  }
 
   try {
-    if (isEnabled) {
+    if (isEnabled && !isInBlackList) {
       mediaCore.init(function (mediaElement) {
         h5Player.init();
       });
@@ -14453,7 +14467,7 @@ async function h5PlayerInit () {
   /* 注意：油猴的菜单注册不能根据isEnabled禁用掉，否则没法通过油猴的菜单进行启用 */
   menuRegister();
 
-  if (!isEnabled) {
+  if (!isEnabled || isInBlackList) {
     debug.warn(`[config][disable][${location.host}] 当前网站已禁用脚本，如要启用脚本，请在菜单里开启`);
     return false
   }
