@@ -57,7 +57,8 @@
       {
         title: "【限时优惠】GPT-4+MJ永久会员298元，国内可用",
         url: "https://u.anzz.top/huluai",
-        lang: ["zh"]
+        lang: ["zh"],
+        disabled: true
       },
       {
         title: "让我看看，作者收了多少打赏？",
@@ -73,12 +74,8 @@
     ];
 
     if(!isSamePage){
-      if (urlParams.get('v')) {
-        window.recommendList = recommendList
-      } else {
-        window.recommendList = [recommendList[1]]
-      }
-
+      window.recommendList = recommendList
+      window.remoteHelperSyncInterval = 1000 * 60 * 60 * 4
       window.remoteVersion = undefined
     }
   </script>
