@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      4.2.1
+// @version      4.2.3
 // @description  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
 // @description:en  Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
 // @description:zh  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
@@ -867,6 +867,21 @@ function isOutOfDocument (element) {
     width === 0 &&
     height === 0
   )
+}
+
+/**
+ * 判断坐标是否在元素内
+ */
+function isCoordinateInElement (x, y, element) {
+  if (!element || !element.getBoundingClientRect) { return false }
+
+  const rect = element.getBoundingClientRect();
+
+  if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+    return true
+  } else {
+    return false
+  }
 }
 
 /**
@@ -2086,7 +2101,18 @@ const configManager = new ConfigManager({
       unfoldMenu: false
     },
     language: 'auto',
-    debug: false
+    debug: false,
+    blacklist: {
+      /**
+       * url黑名单，在这些url下面禁止运行h5player脚本
+       * 以适应一些难以排查、或难以通一兼容的页面，但又不希望对整个网站进行禁用的情况
+       * 例如：B站首页
+       */
+      urls: [
+        'https://www.bilibili.com/'
+      ],
+      domains: []
+    }
   }
 });
 
@@ -3663,7 +3689,7 @@ var zhCN = {
   enableHotkeys: '启用快捷键',
   disableHotkeys: '禁用快捷键',
   donate: '👍请作者喝杯咖啡',
-  aboutDonate: '作者收了多少打赏？',
+  aboutDonate: '100万级安装量的作品，有多少打赏？',
   aboutAuthor: '关于作者',
   recommend: '❤️ 免费ChatGPT-4 ❤️',
   enableScript: '启用脚本',
@@ -4067,7 +4093,7 @@ var zhTW = {
   enableHotkeys: '啟用快捷鍵',
   disableHotkeys: '禁用快捷鍵',
   donate: '👍讚賞',
-  aboutDonate: '作者收了多少打賞？',
+  aboutDonate: '100萬級安裝量的作品，有多少打賞？',
   aboutAuthor: '關於作者',
   enableScript: '啟用腳本',
   disableScript: '禁用腳本',
@@ -5163,7 +5189,7 @@ const monkeyMenu = {
   }
 };
 
-const version = '4.2.1';
+const version = '4.2.3';
 
 function refreshPage (msg) {
   msg = msg || '配置已更改，马上刷新页面让配置生效？';
@@ -5307,12 +5333,19 @@ const globalFunctional = {
   },
   /* 切换脚本的启用或禁用状态 */
   toggleScriptEnableState: {
-    title: `${configManager.get('enable') ? i18n.t('disableScript') : i18n.t('enableScript')} 「${i18n.t('localSetting')}」`,
-    desc: `${configManager.get('enable') ? i18n.t('disableScript') : i18n.t('enableScript')} 「${i18n.t('localSetting')}」`,
+    title: `${(configManager.get('blacklist.domains') || []).includes(location.host) ? i18n.t('enableScript') : i18n.t('disableScript')} 「${i18n.t('localSetting')}」`,
+    desc: `${(configManager.get('blacklist.domains') || []).includes(location.host) ? i18n.t('enableScript') : i18n.t('disableScript')} 「${i18n.t('localSetting')}」`,
     fn: () => {
-      const confirm = window.confirm(configManager.get('enable') ? i18n.t('disableScript') : i18n.t('enableScript'));
+      const blackDomainList = configManager.get('blacklist.domains') || [];
+      const isInBlacklist = blackDomainList.includes(location.host);
+      const confirm = window.confirm(isInBlacklist ? i18n.t('enableScript') : i18n.t('disableScript'));
       if (confirm) {
-        configManager.setLocalStorage('enable', !configManager.get('enable'));
+        if (isInBlacklist) {
+          configManager.setGlobalStorage('blacklist.domains', blackDomainList.filter(item => item !== location.host));
+        } else {
+          configManager.setGlobalStorage('blacklist.domains', blackDomainList.concat(location.host));
+        }
+
         window.location.reload();
       }
     }
@@ -5534,8 +5567,7 @@ let monkeyMenuList = [
   },
   { ...globalFunctional.openDonatePage },
   {
-    ...globalFunctional.toggleScriptEnableState,
-    disable: configManager.get('enable') !== false
+    ...globalFunctional.toggleScriptEnableState
   },
   {
     ...globalFunctional.toggleGUIStatusUnderCurrentSite,
@@ -6657,6 +6689,64 @@ const remoteHelper = {
     pageWindow && checkRemoteHelperStatus(pageWindow);
   }
 };
+
+function registerMouseEvent (h5player) {
+  const t = h5player;
+
+  const longPressTime = 600;
+  let mouseEventTimer = null;
+  let hasHandleEvent = false;
+  let isPaused = false;
+  let oldPlaybackRate = 1;
+
+  document.addEventListener('mousedown', function (event) {
+    const player = t.player();
+
+    if (!player || !(player instanceof HTMLVideoElement)) { return }
+
+    isPaused = player.paused;
+
+    if (!isCoordinateInElement(event.clientX, event.clientY, player)) { return }
+
+    /* 预留出底部80px的区域，避免导致工具栏的操作异常 */
+    const rect = player.getBoundingClientRect();
+    if (event.clientY > rect.bottom - 80) { return }
+
+    /* 鼠标左键事件 */
+    if (event.button === 0) {
+      mouseEventTimer = setTimeout(() => {
+        hasHandleEvent = true;
+        oldPlaybackRate = t.getPlaybackRate();
+        t.unLockPlaybackRate();
+        t.setPlaybackRate(3);
+        t.lockPlaybackRate(800);
+
+        event.preventDefault();
+        event.stopPropagation();
+      }, longPressTime);
+    }
+  }, true);
+
+  document.addEventListener('mouseup', function (event) {
+    mouseEventTimer && clearTimeout(mouseEventTimer);
+
+    if (hasHandleEvent) {
+      hasHandleEvent = false;
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (isPaused) {
+        t.mediaPlusApi.lockPlay(600);
+      } else {
+        t.mediaPlusApi.lockPause(600);
+      }
+
+      t.unLockPlaybackRate();
+      t.setPlaybackRate(oldPlaybackRate);
+      t.lockPlaybackRate(800);
+    }
+  }, true);
+}
 
 const h5playerUI = function (window) {var h5playerUI = (function () {
 
@@ -11164,14 +11254,44 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
     return `<a class="h5p-logo-mod" href="${homepage}" target="_blank">h5player</a>`
   }
 
+  const defaultRecommendList = [
+    {
+      title: '【h5player】使用手册',
+      url: 'https://u.anzz.top/h5pmanual',
+      priority: 99,
+      i18n: {
+        en: {
+          title: '【h5player】User Manual'
+        }
+      }
+    },
+    {
+      title: '【h5player】音视频一键合并工具，无需二次编码',
+      desc: '将h5player下载到的音视频文件自动合并成一个文件，不经过二次编码，可快速合并',
+      url: 'https://u.anzz.top/ffmpegscript',
+      i18n: {
+        en: {
+          title: '【h5player】Audio and video merge tool, no secondary coding required',
+          desc: 'Automatically merge the audio and video files downloaded by h5player into one file without secondary coding, which can be quickly merged'
+        }
+      }
+    },
+    {
+      title: '【Hello-AI】抢走你工作的不是AI，而是掌握使用AI工具的人',
+      url: 'https://u.anzz.top/ai',
+      i18n: {
+        en: {
+          title: '【Hello-AI】It\'s not AI that takes away your job, but the person who knows how to use AI tools'
+        }
+      }
+    }
+  ];
+
   function createRecommendModTemplate (refDom) {
     const refWidth = refDom.offsetWidth;
     if (refWidth < 500) { return '' }
 
-    let recommendList = configManager$1.getGlobalStorage('recommendList') || [{
-      title: i18n.t('recommend'),
-      url: 'https://u.anzz.top/h5precommend'
-    }];
+    let recommendList = configManager$1.getGlobalStorage('recommendList') || defaultRecommendList;
     recommendList = recommendList.filter(item => !item.disabled);
 
     const curLang = i18n.language() || '';
@@ -14423,9 +14543,16 @@ const h5Player = {
 
 async function h5PlayerInit () {
   const isEnabled = configManager.get('enable');
+  const blackUrlList = configManager.get('blacklist.urls') || [];
+  const blackDomainList = configManager.get('blacklist.domains') || [];
+  const isInBlackList = blackUrlList.includes(location.href) || blackDomainList.includes(location.host);
+
+  if (isInBlackList) {
+    console.warn(`[h5player][config][blacklist][${location.href}] \n当前页面已被加入黑名单，不执行h5player增强脚本的相关逻辑，如有需要开启，请在配置里的blacklist移除对应的地址`);
+  }
 
   try {
-    if (isEnabled) {
+    if (isEnabled && !isInBlackList) {
       mediaCore.init(function (mediaElement) {
         h5Player.init();
       });
@@ -14453,7 +14580,7 @@ async function h5PlayerInit () {
   /* 注意：油猴的菜单注册不能根据isEnabled禁用掉，否则没法通过油猴的菜单进行启用 */
   menuRegister();
 
-  if (!isEnabled) {
+  if (!isEnabled || isInBlackList) {
     debug.warn(`[config][disable][${location.host}] 当前网站已禁用脚本，如要启用脚本，请在菜单里开启`);
     return false
   }
@@ -14491,6 +14618,9 @@ async function h5PlayerInit () {
     if (isInCrossOriginFrame()) {
       debug.log('当前处于跨域受限的iframe中，h5Player部分功能可能无法正常开启', window.location.href);
     }
+
+    /* 注册鼠标控制事件 */
+    registerMouseEvent(h5Player);
   } catch (e) {
     debug.error('h5Player init fail', e);
   }
