@@ -325,14 +325,17 @@ const configManager = new ConfigManager({
     },
     language: 'auto',
     debug: false,
-    /**
-     * url黑名单，在这些url下面禁止运行h5player脚本
-     * 以适应一些难以排查、或难以通一兼容的页面，但又不希望对整个网站进行禁用的情况
-     * 例如：B站首页
-     */
-    blackUrlList: [
-      'https://www.bilibili.com/'
-    ]
+    blacklist: {
+      /**
+       * url黑名单，在这些url下面禁止运行h5player脚本
+       * 以适应一些难以排查、或难以通一兼容的页面，但又不希望对整个网站进行禁用的情况
+       * 例如：B站首页
+       */
+      urls: [
+        'https://www.bilibili.com/'
+      ],
+      domains: []
+    }
   }
 })
 

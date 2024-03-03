@@ -23,8 +23,7 @@ let monkeyMenuList = [
   },
   { ...globalFunctional.openDonatePage },
   {
-    ...globalFunctional.toggleScriptEnableState,
-    disable: configManager.get('enable') !== false
+    ...globalFunctional.toggleScriptEnableState
   },
   {
     ...globalFunctional.toggleGUIStatusUnderCurrentSite,

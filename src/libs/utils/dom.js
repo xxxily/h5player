@@ -204,4 +204,69 @@ function isOutOfDocument (element) {
   )
 }
 
-export { hideDom, eachParentNode, loadCSSText, getContainer, isEditableTarget, isInShadow, isInViewPort, observeVisibility, isOutOfDocument }
+/**
+ * 判断坐标是否在元素内
+ */
+function isCoordinateInElement (x, y, element) {
+  if (!element || !element.getBoundingClientRect) { return false }
+
+  const rect = element.getBoundingClientRect()
+
+  if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+    return true
+  } else {
+    return false
+  }
+}
+
+/**
+ * 给定坐标点，判断其在元素的哪个位置，可以为left、right、top、bottom、center
+ * 注意这里并没有限定给出的坐标必须是元素内部的坐标，可以是任意坐标
+ * @param { Number } x -必选 鼠标的x坐标
+ * @param { Number } y -必选 鼠标的y坐标
+ * @param { Element } element -必选 要判断的元素
+ * @param { Number } deadZone -可选 死区范围，默认为0
+ * @returns
+ */
+function coordinateToPosition (x, y, element, deadZone = 0) {
+  const rect = element.getBoundingClientRect()
+
+  const verticalMidpoint = rect.top + rect.height / 2
+  const horizontalMidpoint = rect.left + rect.width / 2
+
+  const position = {
+    horizontal: '',
+    vertical: ''
+  }
+
+  if (x <= horizontalMidpoint - deadZone) {
+    position.horizontal = 'left'
+  } else if (x >= horizontalMidpoint + deadZone) {
+    position.horizontal = 'right'
+  } else {
+    position.horizontal = 'center'
+  }
+
+  if (y < verticalMidpoint - deadZone) {
+    position.vertical = 'top'
+  } else if (y > verticalMidpoint + deadZone) {
+    position.vertical = 'bottom'
+  } else {
+    position.vertical = 'center'
+  }
+
+  return position
+}
+
+/**
+ * 计算两点之间形成的夹角度数
+ */
+function calculateDegree (x1, y1, x2, y2) {
+  const dy = y2 - y1
+  const dx = x2 - x1
+  let theta = Math.atan2(dy, dx) // 返回的是弧度
+  theta *= 180 / Math.PI // 弧度转换为度
+  return Math.round(theta)
+}
+
+export { hideDom, eachParentNode, loadCSSText, getContainer, isEditableTarget, isInShadow, isInViewPort, observeVisibility, isOutOfDocument, isCoordinateInElement, coordinateToPosition, calculateDegree }

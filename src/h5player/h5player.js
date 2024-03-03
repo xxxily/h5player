@@ -47,6 +47,8 @@ import {
   isAudioElement
 } from './helper'
 
+import { registerMouseEvent } from './mouseEvent'
+
 import h5playerUiWraper from './ui/h5playerUI.es'
 
 /* 定义支持哪些媒体标签 */
@@ -2706,11 +2708,12 @@ const h5Player = {
 
 async function h5PlayerInit () {
   const isEnabled = configManager.get('enable')
-  const blackUrlList = configManager.get('blackUrlList')
-  const isInBlackList = blackUrlList && blackUrlList.includes(location.href)
+  const blackUrlList = configManager.get('blacklist.urls') || []
+  const blackDomainList = configManager.get('blacklist.domains') || []
+  const isInBlackList = blackUrlList.includes(location.href) || blackDomainList.includes(location.host)
 
   if (isInBlackList) {
-    console.warn(`[h5player][config][blackUrlList][${location.href}] \n当前页面已被加入黑名单，不执行h5player增强脚本的相关逻辑，如有需要开启，请在配置里的blackUrlList移除对应的地址`)
+    console.warn(`[h5player][config][blacklist][${location.href}] \n当前页面已被加入黑名单，不执行h5player增强脚本的相关逻辑，如有需要开启，请在配置里的blacklist移除对应的地址`)
   }
 
   try {
@@ -2780,6 +2783,9 @@ async function h5PlayerInit () {
     if (isInCrossOriginFrame()) {
       debug.log('当前处于跨域受限的iframe中，h5Player部分功能可能无法正常开启', window.location.href)
     }
+
+    /* 注册鼠标控制事件 */
+    registerMouseEvent(h5Player)
   } catch (e) {
     debug.error('h5Player init fail', e)
   }

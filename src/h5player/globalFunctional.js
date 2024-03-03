@@ -145,12 +145,19 @@ const globalFunctional = {
   },
   /* 切换脚本的启用或禁用状态 */
   toggleScriptEnableState: {
-    title: `${configManager.get('enable') ? i18n.t('disableScript') : i18n.t('enableScript')} 「${i18n.t('localSetting')}」`,
-    desc: `${configManager.get('enable') ? i18n.t('disableScript') : i18n.t('enableScript')} 「${i18n.t('localSetting')}」`,
+    title: `${(configManager.get('blacklist.domains') || []).includes(location.host) ? i18n.t('enableScript') : i18n.t('disableScript')} 「${i18n.t('localSetting')}」`,
+    desc: `${(configManager.get('blacklist.domains') || []).includes(location.host) ? i18n.t('enableScript') : i18n.t('disableScript')} 「${i18n.t('localSetting')}」`,
     fn: () => {
-      const confirm = window.confirm(configManager.get('enable') ? i18n.t('disableScript') : i18n.t('enableScript'))
+      const blackDomainList = configManager.get('blacklist.domains') || []
+      const isInBlacklist = blackDomainList.includes(location.host)
+      const confirm = window.confirm(isInBlacklist ? i18n.t('enableScript') : i18n.t('disableScript'))
       if (confirm) {
-        configManager.setLocalStorage('enable', !configManager.get('enable'))
+        if (isInBlacklist) {
+          configManager.setGlobalStorage('blacklist.domains', blackDomainList.filter(item => item !== location.host))
+        } else {
+          configManager.setGlobalStorage('blacklist.domains', blackDomainList.concat(location.host))
+        }
+
         window.location.reload()
       }
     }
