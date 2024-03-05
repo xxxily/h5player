@@ -208,7 +208,7 @@
 
 如果我的努力给你带来了便利，请不要吝啬你的赞赏  
 
-[100万级安装量的开源作品，一年有多少打赏收入？](https://u.anzz.top/aboutonate)  
+[100万级安装量的开源作品，一年有多少打赏收入？](https://u.anzz.top/aboutdonate)  
 
 <p>
   <a href="https://h5player.anzz.top" target="_blank">

@@ -20,7 +20,7 @@ footer: GPL Licensed | Copyright © 2022-present Blaze
 
 如果我的努力给你带来了便利，请不要吝啬你的赞赏。  
 
-[让我看看，作者收了多少打赏？](https://u.anzz.top/aboutonate)  
+[100万级安装量的开源作品，一年有多少打赏收入？](https://u.anzz.top/aboutdonate)  
 
 ![如果我的努力给你带来了便利，请不要吝啬你的赞赏](/assets/img/donate.png)  
 
