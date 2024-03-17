@@ -282,12 +282,12 @@ class HotkeysRunner {
       let commandFunc = () => {};
       if (target && typeof hotkeyConf.command === 'string') {
         /* Reference via internal function name - Pass configured arguments */
-        commandFunc = getValByPath$1(target, hotkeyConf.command);
-        args = toArrArgs(hotkeyConf.args);
+        commandFunc = getValByPath(target, hotkeyConf.command)
+        args = toArrArgs(hotkeyConf.args)
       } else {
         /* Function object - Pass general info */
-        commandFunc = hotkeyConf.command;
-        args = toArrArgs([h5Player, taskConf, event]);
+        commandFunc = hotkeyConf.command
+        args = toArrArgs([h5Player, taskConf, event])
       }
 
       if (!(commandFunc instanceof Function) && target) {
