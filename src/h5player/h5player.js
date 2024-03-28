@@ -2722,7 +2722,7 @@ async function h5PlayerInit () {
         h5Player.init()
       })
 
-      if (configManager.get('enhance.allowExperimentFeatures')) {
+      if (configManager.get('enhance.allowExperimentFeatures') && configManager.get('download.enable')) {
         mediaSource.init()
         debug.warn(`[experimentFeatures][warning] ${i18n.t('experimentFeaturesWarning')}`)
         debug.warn('[experimentFeatures][mediaSource][activated]')
@@ -2785,7 +2785,9 @@ async function h5PlayerInit () {
     }
 
     /* 注册鼠标控制事件 */
-    registerMouseEvent(h5Player)
+    if (configManager.get('mouse.enable')) {
+      registerMouseEvent(h5Player)
+    }
   } catch (e) {
     debug.error('h5Player init fail', e)
   }

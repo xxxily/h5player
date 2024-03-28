@@ -4,6 +4,8 @@ export default {
   issues: '问题反馈',
   setting: '设置',
   hotkeys: '快捷键',
+  keyboardControl: '键盘控制',
+  mouseControl: '鼠标控制',
   hotkeysDocs: '快捷键文档',
   enable: '启用',
   disable: '禁用',
@@ -12,6 +14,8 @@ export default {
   toggleHotkeysTemporarily: '临时启用/禁用快捷键',
   enableHotkeys: '启用快捷键',
   disableHotkeys: '禁用快捷键',
+  enableMouseControl: '启用鼠标控制',
+  disableMouseControl: '禁用鼠标控制',
   donate: '👍请作者喝杯咖啡',
   aboutDonate: '100万级安装量的作品，有多少打赏？',
   aboutAuthor: '关于作者',
@@ -60,6 +64,9 @@ export default {
   capture: '截图',
   download: '下载',
   mediaDownload: {
+    enable: '开启媒体下载',
+    disable: '关闭媒体下载',
+    downloadOptions: '下载选项',
     downloading: '文件正在下载中，确定重复执行此操作？',
     hasDownload: '文件已经下载，确定重复执行此操作？',
     confirmTitle: '请输入文件名',
@@ -100,6 +107,11 @@ export default {
   ffmpegScript: '音视频合并/转换脚本',
   autoGotoBufferedTime: '自动跟随跳转到缓冲区时间',
   disableAutoGotoBufferedTime: '禁用自动跟随跳转到缓冲区时间',
+  mouse: {
+    enable: '启用鼠标控制',
+    disable: '禁用鼠标控制',
+    longPressTime: '长按多久响应鼠标长按事件'
+  },
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '前进：',

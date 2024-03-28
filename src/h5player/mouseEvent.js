@@ -1,11 +1,12 @@
 import {
   isCoordinateInElement
 } from '../libs/utils/index'
+import configManager from './configManager'
 
 export function registerMouseEvent (h5player) {
   const t = h5player
 
-  const longPressTime = 600
+  const longPressTime = configManager.get('mouse.longPressTime') || 600
   let mouseEventTimer = null
   let hasHandleEvent = false
   let isPaused = false

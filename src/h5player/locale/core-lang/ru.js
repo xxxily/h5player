@@ -4,6 +4,8 @@ export default {
   issues: 'обратная связь',
   setting: 'установка',
   hotkeys: 'горячие клавиши',
+  keyboardControl: 'управление клавиатурой',
+  mouseControl: 'управление мышью',
   hotkeysDocs: 'документы горячих клавиш',
   enable: 'включить',
   disable: 'отключить',
@@ -59,6 +61,9 @@ export default {
   capture: 'Захват',
   download: 'Скачать',
   mediaDownload: {
+    enable: 'Включить загрузку медиафайлов',
+    disable: 'Отключить загрузку медиафайлов',
+    downloadOptions: 'Опции загрузки',
     downloading: 'Идет скачивание файла. Вы уверены, что хотите повторить эту операцию?',
     hasDownload: 'Файл скачан. Вы уверены, что хотите повторить эту операцию?',
     confirmTitle: 'Пожалуйста, введите имя файла',
@@ -99,6 +104,11 @@ export default {
   ffmpegScript: 'Скрипт слияния/преобразования аудио и видео',
   autoGotoBufferedTime: 'Автоматически перейти к времени буфера',
   disableAutoGotoBufferedTime: 'Отключить автоматический переход к времени буфера',
+  mouse: {
+    enable: 'Включить управление мышью',
+    disable: 'Отключить управление мышью',
+    longPressTime: 'Как долго реагировать на долгие нажатия мыши'
+  },
   tipsMsg: {
     playspeed: 'Скорость: ',
     forward: 'Вперёд: ',

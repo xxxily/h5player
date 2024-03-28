@@ -4,6 +4,8 @@ export default {
   issues: '反饋',
   setting: '設置',
   hotkeys: '快捷鍵',
+  keyboardControl: '鍵盤控制',
+  mouseControl: '鼠標控制',
   hotkeysDocs: '快捷鍵文檔',
   enable: '啟用',
   disable: '禁用',
@@ -59,6 +61,9 @@ export default {
   capture: '截圖',
   download: '下載',
   mediaDownload: {
+    enable: '開啟媒體下載',
+    disable: '關閉媒體下載',
+    downloadOptions: '下載選項',
     downloading: '文件正在下載中，確定重複執行此操作？',
     hasDownload: '文件已經下載，確定重複執行此操作？',
     confirmTitle: '請輸入文件名',
@@ -99,6 +104,11 @@ export default {
   ffmpegScript: '音視頻合併/轉換腳本',
   autoGotoBufferedTime: '自動跟隨跳轉到緩衝區時間',
   disableAutoGotoBufferedTime: '禁用自動跟隨跳轉到緩衝區時間',
+  mouse: {
+    enable: '啟用鼠標控制',
+    disable: '禁用鼠標控制',
+    longPressTime: '長按多久響應鼠標長按事件'
+  },
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '向前：',

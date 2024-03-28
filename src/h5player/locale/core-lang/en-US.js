@@ -4,6 +4,8 @@ export default {
   issues: 'Issues',
   setting: 'Setting',
   hotkeys: 'Hotkeys',
+  keyboardControl: 'Keyboard Control',
+  mouseControl: 'Mouse Control',
   hotkeysDocs: 'Hotkeys Docs',
   enable: 'Enable',
   disable: 'Disable',
@@ -59,6 +61,9 @@ export default {
   capture: 'Capture',
   download: 'Download',
   mediaDownload: {
+    enable: 'Enable media download',
+    disable: 'Disable media download',
+    downloadOptions: 'Download options',
     downloading: 'The file is being downloaded. Are you sure you want to execute this operation again?',
     hasDownload: 'The file has been downloaded. Are you sure you want to execute this operation again?',
     confirmTitle: 'Please enter the file name',
@@ -99,6 +104,11 @@ export default {
   ffmpegScript: 'Audio and video merge/convert script',
   autoGotoBufferedTime: 'Automatically jump to the buffered time',
   disableAutoGotoBufferedTime: 'Disable automatic jump to the buffered time',
+  mouse: {
+    enable: 'Enable mouse control',
+    disable: 'Disable mouse control',
+    longPressTime: 'How long to respond to mouse long press events'
+  },
   tipsMsg: {
     playspeed: 'Speed: ',
     forward: 'Forward: ',

@@ -333,6 +333,66 @@ const globalFunctional = {
     }
   },
 
+  toggleMouseControl: {
+    title: () => `${configManager.getGlobalStorage('mouse.enable') === false ? i18n.t('mouse.enable') : i18n.t('mouse.disable')} 「${i18n.t('globalSetting')}」`,
+    desc: () => `${configManager.getGlobalStorage('mouse.enable') === false ? i18n.t('mouse.enable') : i18n.t('mouse.disable')} 「${i18n.t('globalSetting')}」`,
+    fn: () => {
+      const confirm = window.confirm(`${configManager.getGlobalStorage('mouse.enable') === false ? i18n.t('mouse.enable') : i18n.t('mouse.disable')} 「${i18n.t('globalSetting')}」`)
+      if (confirm) {
+        configManager.setGlobalStorage('mouse.enable', !configManager.getGlobalStorage('mouse.enable'))
+        window.location.reload()
+      }
+    }
+  },
+
+  toggleMouseControlUnderCurrentSite: {
+    title: () => `${configManager.getLocalStorage('mouse.enable') === false ? i18n.t('mouse.enable') : i18n.t('mouse.disable')} 「${i18n.t('localSetting')}」`,
+    desc: () => `${configManager.getLocalStorage('mouse.enable') === false ? i18n.t('mouse.enable') : i18n.t('mouse.disable')} 「${i18n.t('localSetting')}」`,
+    fn: () => {
+      const confirm = window.confirm(`${configManager.getLocalStorage('mouse.enable') === false ? i18n.t('mouse.enable') : i18n.t('mouse.disable')} 「${i18n.t('localSetting')}」`)
+      if (confirm) {
+        configManager.setLocalStorage('mouse.enable', !configManager.getLocalStorage('mouse.enable'))
+        window.location.reload()
+      }
+    }
+  },
+
+  setMouseLongPressTime: {
+    title: `${i18n.t('mouse.longPressTime')}「${i18n.t('globalSetting')}」`,
+    desc: `${i18n.t('mouse.longPressTime')}「${i18n.t('globalSetting')}」`,
+    fn: () => {
+      const longPressTime = prompt(`${i18n.t('mouse.longPressTime')}「${i18n.t('globalSetting')}」`, configManager.getGlobalStorage('mouse.longPressTime') || 600)
+      if (longPressTime) {
+        configManager.setGlobalStorage('mouse.longPressTime', Number(longPressTime))
+        window.location.reload()
+      }
+    }
+  },
+
+  toggleDownloadControl: {
+    title: () => `${configManager.getGlobalStorage('download.enable') === false ? i18n.t('mediaDownload.enable') : i18n.t('mediaDownload.disable')} 「${i18n.t('globalSetting')}」`,
+    desc: () => `${configManager.getGlobalStorage('download.enable') === false ? i18n.t('mediaDownload.enable') : i18n.t('mediaDownload.disable')} 「${i18n.t('globalSetting')}」`,
+    fn: () => {
+      const confirm = window.confirm(`${configManager.getGlobalStorage('download.enable') === false ? i18n.t('mediaDownload.enable') : i18n.t('mediaDownload.disable')} 「${i18n.t('globalSetting')}」`)
+      if (confirm) {
+        configManager.setGlobalStorage('download.enable', !configManager.getGlobalStorage('download.enable'))
+        window.location.reload()
+      }
+    }
+  },
+
+  toggleDownloadControlUnderCurrentSite: {
+    title: () => `${configManager.getLocalStorage('download.enable') === false ? i18n.t('mediaDownload.enable') : i18n.t('mediaDownload.disable')} 「${i18n.t('localSetting')}」`,
+    desc: () => `${configManager.getLocalStorage('download.enable') === false ? i18n.t('mediaDownload.enable') : i18n.t('mediaDownload.disable')} 「${i18n.t('localSetting')}」`,
+    fn: () => {
+      const confirm = window.confirm(`${configManager.getLocalStorage('download.enable') === false ? i18n.t('mediaDownload.enable') : i18n.t('mediaDownload.disable')} 「${i18n.t('localSetting')}」`)
+      if (confirm) {
+        configManager.setLocalStorage('download.enable', !configManager.getLocalStorage('download.enable'))
+        window.location.reload()
+      }
+    }
+  },
+
   setLanguage: {
     title: `${i18n.t('languageSettings')}「${i18n.t('globalSetting')}」`,
     desc: `${i18n.t('languageSettings')}「${i18n.t('globalSetting')}」`,

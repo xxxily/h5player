@@ -4177,11 +4177,6 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
           desc: i18n.t('moreActions'),
           subMenu: [
             {
-              title: `${i18n.t('toggleStates')} ${i18n.t('autoGotoBufferedTime')}`,
-              desc: `${i18n.t('toggleStates')} ${i18n.t('autoGotoBufferedTime')}`,
-              action: 'toggleAutoGotoBufferedTime'
-            },
-            {
               title: 'Clean remote helper info',
               desc: 'Clean remote helper info',
               action: 'cleanRemoteHelperInfo',
@@ -4209,8 +4204,8 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
           divider: true
         },
         {
-          title: i18n.t('hotkeys'),
-          desc: i18n.t('hotkeys'),
+          title: i18n.t('keyboardControl'),
+          desc: i18n.t('keyboardControl'),
           subMenu: [
             {
               ...globalFunctional.openHotkeysPage,
@@ -4220,19 +4215,64 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
             {
               title: i18n.t('toggleHotkeysTemporarily'),
               desc: i18n.t('toggleHotkeysTemporarily'),
-              action: 'toggleHotkeys',
-              args: null
+              action: 'toggleHotkeys'
             },
             {
               ...globalFunctional.toggleHotkeysStatusUnderCurrentSite,
-              action: 'toggleHotkeysStatusUnderCurrentSite',
-              args: null
+              action: 'toggleHotkeysStatusUnderCurrentSite'
             },
             {
               ...globalFunctional.toggleHotkeysStatus,
               action: 'toggleHotkeysStatus',
-              args: null,
               disabled: !isGlobalStorageUsable
+            }
+          ]
+        },
+        {
+          title: i18n.t('mouseControl'),
+          desc: i18n.t('mouseControl'),
+          subMenu: [
+            {
+              ...globalFunctional.setMouseLongPressTime,
+              action: 'setMouseLongPressTime'
+            },
+            {
+              ...globalFunctional.toggleMouseControlUnderCurrentSite,
+              action: 'toggleMouseControlUnderCurrentSite'
+            },
+            {
+              ...globalFunctional.toggleMouseControl,
+              action: 'toggleMouseControl',
+              disabled: !isGlobalStorageUsable
+            },
+            {
+              title: i18n.t('comingSoon'),
+              desc: i18n.t('comingSoon')
+            }
+          ]
+        },
+        {
+          title: i18n.t('mediaDownload.downloadOptions'),
+          desc: i18n.t('mediaDownload.downloadOptions'),
+          subMenu: [
+            {
+              ...globalFunctional.toggleDownloadControlUnderCurrentSite,
+              action: 'toggleDownloadControlUnderCurrentSite'
+            },
+            {
+              ...globalFunctional.toggleDownloadControl,
+              action: 'toggleDownloadControl',
+              disabled: !isGlobalStorageUsable
+            },
+            {
+              title: `${i18n.t('toggleStates')} ${i18n.t('autoGotoBufferedTime')}`,
+              desc: `${i18n.t('toggleStates')} ${i18n.t('autoGotoBufferedTime')}`,
+              action: 'toggleAutoGotoBufferedTime'
+            },
+            {
+              title: i18n.t('ffmpegScript'),
+              desc: i18n.t('ffmpegScript'),
+              url: 'https://u.anzz.top/ffmpegscript'
             }
           ]
         },
@@ -4401,6 +4441,7 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
         {
           title: i18n.t('more'),
           desc: i18n.t('more'),
+          disabled: true,
           subMenu: [
             {
               title: i18n.t('ffmpegScript'),

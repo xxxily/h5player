@@ -68,12 +68,14 @@ const configManager = new ConfigManager({
       {
         desc: '缩小视频画面 -0.05',
         key: 'shift+x',
-        command: 'setScaleDown'
+        command: 'setScaleDown',
+        args: -0.05
       },
       {
         desc: '放大视频画面 +0.05',
         key: 'shift+c',
-        command: 'setScaleUp'
+        command: 'setScaleUp',
+        args: 0.05
       },
       {
         desc: '恢复视频画面',
@@ -83,32 +85,38 @@ const configManager = new ConfigManager({
       {
         desc: '画面向右移动10px',
         key: 'shift+arrowright',
-        command: 'setTranslateRight'
+        command: 'setTranslateRight',
+        args: 10
       },
       {
         desc: '画面向左移动10px',
         key: 'shift+arrowleft',
-        command: 'setTranslateLeft'
+        command: 'setTranslateLeft',
+        args: -10
       },
       {
         desc: '画面向上移动10px',
         key: 'shift+arrowup',
-        command: 'setTranslateUp'
+        command: 'setTranslateUp',
+        args: 10
       },
       {
         desc: '画面向下移动10px',
         key: 'shift+arrowdown',
-        command: 'setTranslateDown'
+        command: 'setTranslateDown',
+        args: -10
       },
       {
         desc: '前进5秒',
         key: 'arrowright',
-        command: 'setCurrentTimeUp'
+        command: 'setCurrentTimeUp',
+        args: 5
       },
       {
         desc: '后退5秒',
         key: 'arrowleft',
-        command: 'setCurrentTimeDown'
+        command: 'setCurrentTimeDown',
+        args: -5
       },
       {
         desc: '前进30秒',
@@ -152,14 +160,16 @@ const configManager = new ConfigManager({
         command: 'switchPlayStatus'
       },
       {
-        desc: '减速播放 -0.1',
+        desc: '减速播放',
         key: 'x',
-        command: 'setPlaybackRateDown'
+        command: 'setPlaybackRateDown',
+        args: -0.1
       },
       {
-        desc: '加速播放 +0.1',
+        desc: '加速播放',
         key: 'c',
-        command: 'setPlaybackRateUp'
+        command: 'setPlaybackRateUp',
+        args: 0.1
       },
       {
         desc: '正常速度播放',
@@ -305,9 +315,17 @@ const configManager = new ConfigManager({
         when: ''
       }
     ],
+    mouse: {
+      enable: false,
+      /* 长按多久响应鼠标长按事件 */
+      longPressTime: 600
+    },
     ui: {
       enable: true,
       alwaysShow: false
+    },
+    download: {
+      enable: true
     },
     enhance: {
     /* 不禁用默认的调速逻辑，则在多个视频切换时，速度很容易被重置，所以该选项默认开启 */
