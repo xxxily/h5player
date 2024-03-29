@@ -128,7 +128,11 @@ const globalFunctional = {
     desc: i18n.t('openCustomConfigurationEditor'),
     fn: () => {
       // openInTab('https://h5player.anzz.top/tools/json-editor/index.html?mode=tree&saveHandlerName=saveH5PlayerConfig&expandAll=true&json={}')
-      openInTab('https://u.anzz.top/h5pjsoneditor')
+      if (navigator.language.indexOf('zh-CN') > -1) {
+        openInTab('https://u.anzz.top/h5pjsoneditorzh')
+      } else {
+        openInTab('https://u.anzz.top/h5pjsoneditor')
+      }
     }
   },
   /* 切换tampermonkey菜单的展开或折叠状态 */
