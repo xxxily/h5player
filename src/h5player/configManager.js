@@ -377,7 +377,7 @@ async function initUiConfigManager () {
     pageWindow.jsonEditor.set(config)
 
     // pageWindow.jsonEditor.collapseAll()
-    pageWindow.jsonEditor.expandAll()
+    pageWindow.jsonEditor.expandAll && pageWindow.jsonEditor.expandAll()
 
     pageWindow.saveH5PlayerConfig = function (editor) {
       try {
