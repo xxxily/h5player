@@ -2,6 +2,7 @@
 **/node_modules/
 **/log/
 **/.cache/
+**/.vitepress/cache/
 **/src/demo/
 dist/h5player-docs/**
 

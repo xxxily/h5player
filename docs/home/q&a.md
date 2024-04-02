@@ -1,186 +1,178 @@
 # Q&A
 
-## 倍速刷课为啥学习进度没变化
+## Why doesn't fast-tracking courses affect learning progress?
 
-`脚本支持视频倍速，但不是针对刷课时而设计的，所以不要指望使用脚本来刷学习进度`  
+"The script supports video speed-up, but it's not designed for course brushing, so don't expect to use scripts to brush up on learning progress."
 
-目前大部分学习网站都会有较严谨的学习进度监控逻辑，包括但不限于：
+Most learning websites have rigorous progress monitoring logic, including, but not limited to:
 
 ::: warning
 
-- 倍速检测（发现使用倍速就不记录学习进度）
-- 后端校验（学习时长跟视频时长有出入就不记录学习进度）
-- 服务器计时（学习端报告学习状态，服务器计算并记录学习进度）
-- 日志审核（人工审查核对学习日志，学时严重不符直接通报开除）
+- Speed detection (if speed use is detected, learning progress is not recorded)
+- Backend verification (if there's a discrepancy between learning duration and video length, progress is not recorded)
+- Server timing (the learning end reports the learning status, the server calculates and records the progress)
+- Log review (manual inspection of learning logs, severe discrepancies are reported and may lead to dismissal)
 
 :::
 
-罗列这些检测手段只是想告诉你：`倍速学习有风险，出了问题不要怪脚本`  
+These monitoring methods are listed to tell you: "there are risks with speed learning, and if there are any issues, don't blame the script."
 
-除去刷课，该脚本还可以用来干很多有用的事情，例如：
+Aside from brushing courses, this script can do many useful things, such as:
 
 ::: tip
 
-- 享受一致的视频网站播放控制体验
-- 电视剧、电影、娱乐节目的倍速快看
-- 视频课程复习阶段的倍速快学
-- 网盘音视频文件的倍速播放
-- 视频旋转平移等画面调整
-- 网页视频精彩画面截图
-- 网页视频画中画播放等
+- Enjoy a consistent video site playback control experience
+- Speed watching TV dramas, movies, and entertainment programs
+- Quick learning during the revision phase of video courses
+- Speed playback of network disk audio and video files
+- Video rotation and other picture adjustments
+- Screenshotting exciting moments in web videos
+- Picture-in-picture playback of web videos, and more
 
 :::
 
-## 百度网盘视频无法倍速播放
+## Baidu Netdisk videos can't be played at an increased speed
 
-这是因为非百度会员使用的非h5标准的播放器进行播放导致的  
+This occurs because non-Baidu members use a non-h5 standard player for playback.
 
-建议结合[https://greasyfork.org/zh-CN/scripts/?q=pan.baidu.com](https://greasyfork.org/zh-CN/scripts/?q=pan.baidu.com) 其它百度盘脚本使用，即可实现倍速播放  
+It’s suggested to use it in combination with other Baidu disk scripts available at [https://greasyfork.org/zh-CN/scripts/?q=pan.baidu.com](https://greasyfork.org/zh-CN/scripts/?q=pan.baidu.com), which will allow speed playback.
 
-如果你是百度会员用户，并且结合上面的脚本依然无法进行倍速播放，建议查看下控制台是否报错，并将报错信息反馈给作者  
+If you are a Baidu member and still can’t speed up playback when using the script mentioned above, it's recommended to check the console for errors and report them to the author.
 
-## B站视频无法倍速或者倍速播放卡顿
+## Bilibili videos can't speed up, or they stutter when sped up
 
-这是因为B站对H5播放器进行了较多的特殊定制，且使用软解的方式对视频进行解码等原因造成的，如果出现无法倍速或者倍速播放卡顿的情况，请将编码方式切换为AVC：  
+This is due to Bilibili's extensive customizations to the H5 player and their use of software decoding for video, which can cause issues with speed-up or stuttering during playback. If you encounter these problems, switch the encoding mode to AVC:
 
-![blockSetCurrentTime](./img/bilibili.avc.jpg)  
+![blockSetCurrentTime](./img/bilibili.avc.jpg)
 
-## 倍速播放卡顿、无进度、音画不同步
+## Playback is stuttering, has no progress, or is out of sync
 
-一、开启倍速出现播放卡顿的可能原因如下：
+1. Potential reasons for stuttering playback upon speeding up include:
 
-- 1、电脑性能较差，倍速播放占用了大量CPU、GPU资源导致的卡顿
-- 2、接入的网络较差，开启倍速后，视频加载速度跟不上播放速度导致的卡顿
-- 3、视频网站网络带宽有限，传输数据缓慢导致的视频加载卡顿
-- 4、看的是直播视频，没法加载还没录制进去的数据流，请使用1x速度观看
+   - Poor computer performance, causing stutter due to high CPU/GPU resource usage
+   - Poor network connection, causing stutter as video loading can't keep up with the speed of play
+   - Limited network bandwidth from the video site causing slow data transfer and stuttering
+   - Watching live videos where data can't be loaded in advance; please watch at 1x speed
 
-二、开启倍速后导致无进度，或者播放进度直接归零、又或者画面一直在某个时间点循环，通常来说这是网站自身不希望你倍速播放导致的  
+2. Progress issues following speed-up, including progress resetting to zero or looping at a particular point in the video, typically indicate the site does not want you to play videos at increased speeds.
 
-可尝试开启：`禁止默认播放进度控制逻辑` 来解决该问题  
+   Try enabling: "Block default playback progress control logic" to resolve this issue.
 
-![blockSetCurrentTime](./img/blockSetCurrentTime.png)  
+    ![blockSetCurrentTime](./img/blockSetCurrentTime.png)
 
-三、开启倍速后视频看起来音画不同步，这通常是由于网站自身将音视频分开加载导致的  
+3. Audio and video may be out of sync after speeding up, usually due to the site loading audio and video separately.
 
-可通过下面的方法减少此类情况的出现：
+   Mitigate this through the following methods:
 
-- 1、使用性能较好的电脑和确保网络质量处于较佳的状态
-- 2、请勿频繁在高倍播放倍速和正常播放倍速里反复切换
-- 3、尝试调整一下播放进度，可能会触发重新校正音画进度的逻辑
-- 4、这也可能是视频本身就是音画不同步的，这种情况暂时无解
+   - Use a higher-performance computer and ensure good network quality
+   - Avoid frequently switching between high and normal play speeds
+   - Try adjusting the playback point to potentially trigger a re-sync of audio and video
+   - It's also possible the video itself is out of sync, which currently has no solution
 
-## 如何支持本地视频文件的倍速播放
+## How can I support speed playback for local video files?
 
-在浏览器的扩展程序里，找到你的脚本运行插件（如：Tampermonkey），点击`详情`，然后开启`允许访问文件网址` 即可，具体图示如下：  
+In your browser's extensions, find your script management plugin (such as Tampermonkey), click 'Details', and then enable 'Allow access to file URLs' as shown below:
 
-![扩展程序](./img/kuozhanchengxu.png)  
+![Extension](./img/kuozhanchengxu.png)
 
-![插件详情](./img/tampermonkey.xiangqing.png)  
+![Plugin Details](./img/tampermonkey.xiangqing.png)
 
-最后将你的本地视频拖放到浏览器里，即可使用插件的快捷键控制视频的播放了
+Finally, drag and drop your local video into the browser, and you can use the plugin's shortcut keys to control the video's playback.
 
-## 开启插件后网站自身的调速失效了
+## The site's own speed control fails after enabling the plugin
 
-这是因为插件接管了默认的调速逻辑，并且禁止了其他逻辑进行调速操作，如果不进行禁用，则会存在多套调速逻辑，这将会导致以下问题：  
+This occurs because the plugin takes over the default speed control logic and prevents other logic from performing speed operations. If not disabled, multiple speed control logics would conflict, causing continuous jumps and changes in playback speed for the same video. To avoid this and other related issues, the plugin defaults to taking full control over speed logic.
 
-- 默认调速逻辑和插件调速逻辑相互覆盖，插件调了2x的速度，而默认逻辑认为此时应该为1x，最终导致同一个视频下倍速调节不断跳跃变换  
-- 在多个视频的网站下，播放首个视频时调了速，播放下一个视频时又要重新调速
-- 在不希望你进行调速的网站下，会通过锁定倍速而导致插件无法调速
-- 安装了其他调速插件，调速逻辑相互被抢占，导致调速结果混乱
-
-基于以上几点原因，所以插件只能默认全盘接管调速逻辑，从而致使其他调速逻辑失效  
-如果你希望不要全盘接管，插件也提供了选项：`允许默认速度调节逻辑`  
-
-允许后就可以调速逻辑共存了，当然也免不了会出现上述相关问题，所以`不建议允许默认速度调节逻辑`
+If you prefer not to have complete takeover, the plugin provides an option: "Allow default speed adjustment logic."
 
 ![unblockSetPlaybackRate](./img/unblockSetPlaybackRate.png)
 
-## 如何开启实验性功能
+With it enabled, speed control logic can coexist, but related issues are likely to arise, so it is "not recommended to allow default speed adjustment logic."
 
-在有视频媒体的网站下，将会出现如下菜单：
+## How to enable experimental features
 
-![扩展程序](./img/allowExperimentFeatures.png)  
+On sites with video media, the following menu will appear:
 
-点击菜单即可全局开启实验性功能
+![Extension](./img/allowExperimentFeatures.png)
 
-::: warning
-实验性功能可能造成一些不确定的问题，请谨慎开启。
-:::
-
-## 如何才能使用媒体下载功能
-
-使用媒体下载功能需要具备以下两个条件：
-
-- 脚本版本要在 [3.6.1](./changeLog.md) 以上
-- 需开启实验性功能
-
-## 为什么视频跟音频是分开下载的
-
-因为与其它下载脚本不同的是：该脚本下载的是媒体的原始数据流，如果原始数据流是音视频分开的，则下载回来的也是分开的。  
-这也是为什么该脚本可以下载直播流媒体数据的原因  
-
-由于是下载原始数据流，这意味着你选了什么画质的视频，则下载到的也是对应画质的媒体数据，
-所以希望下载高清画质媒体文件的，请选高画质进行播放，播放结束后再下载即可
+Click the menu to globally enable experimental features.
 
 ::: warning
-注意：不完全是画质越高越好，这得跟你电脑配置和带宽相匹配才行，否则会出现严重的卡顿和大量的内存占用等情况
+Experimental features may cause some unpredictable issues, please enable them with caution.
 :::
 
-## 如何合并下载到的音视频文件
+## How to use the media download function
 
-你可以使用第三方工具进行音视频文件的合并，例如：
+To use the media download function, you must meet two conditions:
 
-- [格式工厂](http://www.pcgeshi.com/)
-- [剪影](https://lv.ulikecam.com/)
+- The script version must be [3.6.1](./changeLog.md) or above.
+- Experimental features must be enabled.
+
+## Why are video and audio downloaded separately?
+
+Unlike other download scripts, this script downloads the raw media data streams. If the original streams are separate for audio and video, the downloads will be separate too. This is also why this script can download live stream media.
+
+Since it's the raw media stream, the quality of the downloaded video matches the quality you selected for playback. If you want high-definition media files, select the high-quality setting, play to the end, and then download.
+
+::: warning
+Note that higher quality isn't always better; it must be matched to your computer's capabilities and bandwidth, or you may experience severe stuttering and significant memory usage.
+:::
+
+## How to merge downloaded audio and video files
+
+You can use third-party tools to merge audio and video files, such as:
+
+- [Format Factory](http://www.pcgeshi.com/)
+- [JianYing (剪影)](https://lv.ulikecam.com/)
 - [Adobe Premiere Pro](https://www.adobe.com/products/premiere.html)
 
-这些工具都能进行音视频文件的合并，但也存在其缺点和弊端：
+These tools can merge audio and video files but have their drawbacks:
 
-- 1、需要进行可视化界面操作，效率偏低
-- 2、需了解转换操作过程和配置相关转换参数
-- 3、转换过程需要占用较高的CPU和GPU资源
-- 4、转换后文件体积和画质发生一定的改变
-- 5、部分工具需付费授权才可使用
-- 6、部分工具存在广告弹窗等烦人行为
+- They require a graphical interface for operation, which is less efficient.
+- Understanding the conversion process and related parameters is necessary.
+- The conversion process consumes significant CPU and GPU resources.
+- Converted files may change in size and quality.
+- Some tools require paid licenses to use.
+- Some have ads or other annoying behaviors.
 
-总的来说，这些第三方工具有其更擅长的领域，如果只是单纯的音视频合并，往往不是那么合适和方便  
+In general, these tools have their specialties, and for merging audio and video alone, they may not be the best or easiest options.
 
-为了简化下载好的音视频文件合并过程，作者发布了[ffmpeg-script](https://github.com/xxxily/ffmpeg-script), 该脚本可实现：
+To simplify the process, the author has released [ffmpeg-script](https://github.com/xxxily/ffmpeg-script), which can achieve:
 
-- 支持批量处理
-- 不重新编码，快速处理
-- 自动检测是否存在相关文件
-- 自动跳过已处理完成的文件
-- 可随时终止，无需担心出错
-- 只需一条命令，简单快捷
+- Batch processing support
+- Fast processing without re-encoding
+- Automatic detection of related files
+- Auto-skip over already processed files
+- Can be stopped at any time without worry
+- Simple and quick to use with a single command
 
-具体的使用说明，参见：[https://github.com/xxxily/ffmpeg-script](https://github.com/xxxily/ffmpeg-script)  
+For detailed instructions, see: [https://github.com/xxxily/ffmpeg-script](https://github.com/xxxily/ffmpeg-script)
 
 ::: tip
-脚本是免费、开源、跨平台的，不存在任何限制，可放心食用
+The script is free, open-source, and cross-platform, with no restrictions, so you can use it with confidence.
 :::
 
-## 为什么视频截图不同网站表现不一致
+## Why is video screenshot functionality inconsistent across websites?
 
-这是因为受 [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) 策略的影响，部分视频画面截取后，数据没法被直接下载回来  
+This is due to the [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) policy, which in some cases prevents screenshot data from being directly downloaded after capture.
 
-当出现CORS受限后，只能通过新开弹窗的方式将画面截取下来，这个时候只能手动对截图结果进行保存或复制了  
+When CORS restrictions apply, the screenshot is displayed in a new window, requiring manual save or copy.
 
 ::: tip
-如果截图后能自动下载保存到本地文件夹，这个时候脚本也会尝试自动将截图写入到你的剪贴板里，从而允许你直接将截图粘贴到聊天窗口或word文档中
+If a screenshot can automatically download and save to a local folder, the script will also try to copy the screenshot to your clipboard, allowing you to paste it directly into a chat window or Word document.
 :::
 
 ::: warning
-如果你按了截图快捷键，既没有自动下载，也没新开窗口，这个时候很有可能是你阻止了新开弹窗，导致截图功能异常，只需要设置允许当前网站的弹窗操作即可
+If you press the screenshot hotkey and it neither downloads automatically nor opens a new window, then it's likely that you've blocked new window pop-ups, causing the screenshot function to malfunction. Setting permission for pop-ups on the current site will resolve this issue.
 :::
 
-## 快捷键太多如何禁用不需要的快捷键
+## How to disable unwanted shortcut keys when there are too many
 
-非常抱歉，到目前为止插件还未提供禁用快捷键的控制选项，等后续想好了可视化配置方案后会加上，但可能遥遥无期，请不要寄予过高的期望，因为作者空闲时间有限、精力有限……  
+We apologize that, as of now, the plugin does not provide an option to disable shortcut keys. Once a user-friendly configuration scheme is devised, we will add it, but there is no precise timeline for this. We ask for your patience as the author has limited free time and energy.
 
-如果你非常需要这个功能，而又有一定编程基础，恭喜你，插件是完全开源的，你可以fork一份，加上自己的逻辑即可  
+If you have some programming background and urgently need this feature, the good news is that the plugin is fully open-source. You can fork it and add your own logic.
 
-同时补充一句：`鄙视那种一言不合，因为没有他们想要的功能就给插件差评的人，鄙视那种不尊重他人辛劳付出，随便恶言相向的人`  
+Additionally, a note: "Disdain goes out to those who, due to a lack of a feature they want, give a plugin a bad review without hesitation, and to those who disrespect others' hard work with unkind words."
 
 <br />
 <br />

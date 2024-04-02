@@ -8,7 +8,7 @@
  */
 import alias from '@rollup/plugin-alias'
 import json from '@rollup/plugin-json'
-import css from "rollup-plugin-import-css"
+import css from 'rollup-plugin-import-css'
 import image from '@rollup/plugin-image'
 import commonjs from '@rollup/plugin-commonjs'
 import nodeResolve from '@rollup/plugin-node-resolve'
@@ -30,8 +30,8 @@ const msgLog = log.create({
 })
 
 /* 运行模式，只有开发(dev)或发布(prod)两种模式 */
-let runMode = process.env.MODE || 'prod'
-let projectName = process.env.PROJECT_NAME || 'h5player'
+const runMode = process.env.MODE || 'prod'
+const projectName = process.env.PROJECT_NAME || 'h5player'
 
 const projectConf = confTree[projectName]
 

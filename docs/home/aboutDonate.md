@@ -1,121 +1,121 @@
-# 100万级安装量的开源作品，一年有多少打赏收入？
+# Annual donations received for open-source work with over a million installations?
 
-> 我的答案是：**330元**
+> My answer is: **330 yuan**
 
-## 答案
+## Answer
 
-不卖关子、不吹不黑，按我个人作品2023年的打赏收入来算，打造一款100万级安装量的开源作品，一年能带来 **330元** 的收入。  
+Straight to the point and without any hype or discredit, based on my personal open-source work's donation income in 2023, creating an open-source project with a million installations can bring in **330 yuan** a year.  
 
-这相当于：
+This is roughly equivalent to:  
 
-- 约等于或少于去建筑工地搬两天砖的收入
-- 又或者加多几十块，够交个人居民医保
-- 又或者略多于两个农村老人一个月能拿到的养老补贴
-- 又或者…… 请自行脑补
+- Equal to or less than the income of moving bricks on a construction site for two days  
+- Or with an extra few tens of yuan, enough to pay for an individual's resident medical insurance  
+- Or slightly more than the monthly pension subsidy that two elderly people in rural areas can receive  
+- Or... feel free to imagine more  
 
-**是不是跟你们想象的差距很大？如果不是，那我猜你大概率也是个开源作者，别问我是怎么知道的...**  
+**Is this a bigger gap than what you all expected? If not, then I guess you are most likely also an open-source author. Don't ask me how I know...**  
 
-即便如此，每次收到打赏还是会很开心，这是一种被肯定的成就感，这种感觉无法用金钱来衡量。  
+Even so, it's still very gratifying to receive a donation, as it is a sense of achievement that cannot be measured in money.  
 
-## 数据
+## Data
 
-先说明一下作品情况，避免大家懵逼：100万级安装量的是个啥玩意？  
+First, let's clarify the work to avoid confusion: What is a million-installation work?  
 
-简单来说，作者的作品是一款托管于Greasy Fork上的网页播放器增强脚本，几乎支持所有H5视频网站的：无极倍速调节、视频画面截图等功能。  
+In simple terms, the author's work is a webpage player enhancement script hosted on Greasy Fork, supporting almost all H5 video websites with features like limitless speed adjustment, video screenshot, etc.  
 
-更详细的作品介绍请自行查阅下面的相关网址：
+For a more detailed introduction to the work, please refer to the following URLs:  
 
-- 官网地址：[h5player.anzz.top](https://h5player.anzz.top)  
-- GitHub地址：[github.com/xxxily/h5player](https://github.com/xxxily/h5player)  
-- GreasyFork：[greasyfork.org/scripts/381682](https://greasyfork.org/scripts/381682)  
+- Official website: [h5player.anzz.top](https://h5player.anzz.top)
+- GitHub: [github.com/xxxily/h5player](https://github.com/xxxily/h5player)
+- Greasy Fork: [greasyfork.org/scripts/381682](https://greasyfork.org/scripts/381682)
 
-这里重点关注一下作品的相关数据：  
+Let's focus on some relevant data for the work:  
 
-截至到2024年2月份作品的相关数据如下：
+As of February 2024, data for the work is as follows:  
 
-- GreasyFork上的总安装量已经超过了100万
-- GreasyFork上的日均安装量1000+
-- GitHub上的Star数2.2K+
-- GreasyFork和GitHub上收到的反馈和issues也有1000+条
+- Installation volume on Greasy Fork has exceeded 1 million
+- Daily average installations on Greasy Fork exceed 1,000+
+- Star count on GitHub is 2.2K+
+- Feedback and issues received on Greasy Fork and GitHub also total over 1,000
 
-<img src="./img/install_count.png" width=560 alt="donate_count" />
+<img src="./img/install_count.png" width="560" alt="donate_count" />
 
 ![install_data](./img/install_data.jpg)
 
-下面是最近三个月的打赏记录：
+Below are the donation records from the last three months:  
 
-<img src="./img/donate_history.jpg" width=400 alt="donate_history" />
+<img src="./img/donate_history.jpg" width="400" alt="donate_history" />
 
 <br />
 <br />
 
-23年11月打赏收入：18元  
-23年12月打赏收入：37元  
-24年1月打赏收入：10元  
+Donation income in November '23: 18 yuan  
+Donation income in December '23: 37 yuan  
+Donation income in January '24: 10 yuan  
 
-可以看出：平均每个月不足30元。  
-实际统计一下2023年全年的打赏收入，具体数据如下：  
+As you can see, the average monthly income is less than 30 yuan.
+A specific tally of the donation income for the entire year of 2023 is as follows:  
 
-| 月份 | 打赏收入 |
+| Month | Donation Income |
 | --- | --- |
-| 23.01 | 42.45 |
-| 23.02 | 39.67 |
-| 23.03 | 48.56 |
-| 23.04 | 14.42 |
-| 23.05 | 0.00  |
-| 23.06 | 3.00  |
-| 23.07 | 4.00  |
-| 23.08 | 66.11 |
-| 23.09 | 30.90 |
-| 23.10 | 25.88 |
-| 23.11 | 18.00 |
-| 23.12 | 37.00 |
-| 总计  | 329.99 |
+| Jan '23 | 42.45 |
+| Feb '23 | 39.67 |
+| Mar '23 | 48.56 |
+| Apr '23 | 14.42 |
+| May '23 | 0.00  |
+| Jun '23 | 3.00  |
+| Jul '23 | 4.00  |
+| Aug '23 | 66.11 |
+| Sep '23 | 30.90 |
+| Oct '23 | 25.88 |
+| Nov '23 | 18.00 |
+| Dec '23 | 37.00 |
+| Total | 329.99 |
 
-数据真实可靠，这就是一个100万级安装量的开源作品一年的打赏收入的真实例子。  
+The data is reliable and true; this is a real-world example of the annual donation income for an open-source work with a million installations.  
 
-**以上，并不是想吐槽什么，更不是为了炫耀什么，只是想让更多人了解开源作者的真实一面，所以仅以我的作品的相关数据来给大家一个参考，并不能说明所有的开源作品都是如此，更不希望都是如此。**  
+**With this, I am not trying to complain or show off, but rather to give more people a glimpse into the real side of open-source authors. So I merely provide my work's related data as a reference. This doesn't mean that all open-source works are like this, and I certainly hope not all are.**  
 
-## 改变
+## Change
 
-优秀的开源作者并不能飞仙成神，也要吃人间烟火、养家糊口、也会面临生活的困顿局促，作者也不可能例外。  
+Exceptional open-source authors cannot ascend to higher planes; they need to deal with the mundane world, make a living, and face life's challenges. The author is no exception.  
 
-因此作者也开始尝试探索开源作品的其它变现方式，比如：
+Therefore, the author has also begun to explore other monetization methods for open-source works, such as:  
 
-在不影响用户体验的前提下，以文本的形式加入少量的、不影响用户体验的产品或项目推广链接。  
+Adding a small number of text-based promotional links for products or projects that do not impact user experience.  
 
-<img src="./img/h5player_tuiguang01.jpg" width=720 alt="h5player_tuiguang" />
-
-<br />
-<br />
-
-又例如：基于当前脚本的用户基数，推广其它优秀开源作者的作品，在帮助别人的同时，也可以此来获取一些收益。  
-
-其它形式：说实在的，对于开源作品来说，变现极其困难，至少作者目前了解到的是这样。  
-
-## 阻力
-
-开源作品变现的困难之处在于：一旦开源作者尝试开始变现，就会遭到一些习惯白嫖的人的各种指责，莫名奇妙的差评或恶意举报也会逐渐多起来，这是很多不善言辞、缺乏交际的开源作者所难以面对的局面。
-
-显然这不只是开源作品才会遇到的问题，任何一个尝试变现的项目或作品，例如公众号、视频号、直播等，都会遭遇类似的问题。一旦加上了广告或增加付费内容，用户就会开始指责你：初心被狗叼了、终于露出狼子野心、镰刀举起来了、韭菜要开割了。**更有甚者，搞得好像他们比开源作者更懂开源精神、更懂用户体验、更能深入实践社会道德一样，而曾经乐于分享、喜欢帮助他人的你，却成了丧失开源精神、败坏社会风气的罪魁祸首。**
-
-<img src="./img/antifeature_info.png" width=720 />
+<img src="./img/h5player_tuiguang01.jpg" width="720" alt="h5player_tuiguang" />
 
 <br />
 <br />
 
-这样做**也不全是坏事**，至少经过一段时间的沉淀，**它会过滤掉一些离谱的用户，留下一些能理解你，和确实有使用需求的用户，这样的用户会更乐于为你的作品提出有效的问题反馈，或是更有建设性的意见和建议。**  
+Another example is promoting other exceptional open-source authors' works based on the current script's user base, which helps others and can also generate some income.  
 
-<img src="./img/user_message01.png" width=720 />
+Other forms: Honestly, monetizing open-source works is extremely difficult—at least based on what the author currently understands.  
 
-## 劝告
+## Resistance
 
-2023年是AI大模型元年，也是AI智能突飞涌现的一年。2024年AI界更是开年便平地惊雷，**[Sora](https://mp.weixin.qq.com/s/rYCzpZAZDWuf4fLRXi6bdQ)**、**[Gemini 1.5](https://36kr.com/p/2650854374260993)**、**[Stable Diffusion 3](https://mp.weixin.qq.com/s/PU_VCbFU29rkfgoIm2as0g)**、**[EMO](https://mp.weixin.qq.com/s/4KGYu-B4Te5FvPfDI804mg)** 等一系列的重磅AI闪耀登场。  
+The difficulty in monetizing open-source works comes when the author attempts to begin monetizing, which can lead to various accusations from people accustomed to freeloading. Unwarranted negative reviews or malicious reports can also become more frequent, a situation that many non-eloquent and socially inexperienced open-source authors find difficult to face.  
 
-与此同时，国内的就业环境却在不断劣化，越来越多的企业开启了战略性的 **开猿节流、降本增笑** “计划”。 **降薪、裁员** 的事情越发频繁，企业关门、工厂倒闭、老板跑路、旺铺转租、楼盘降价甩卖等事情已经开始屡见不鲜。在这样的大环境下，越来越多的人开始寻求转行谋生，或者想尽办法开辟副业渠道，以备不时之需。
+Obviously, this is not unique to open-source works; any project attempting monetization, such as official accounts, video accounts, and live broadcasts, will encounter similar problems. Once advertisements are added or paid content is increased, users begin accusing you of losing your original intention or revealing greed. **And some will act as if they understand the spirit of open source and user experience more than the open-source authors, and that the author, once a loving sharer and helper, has become a prime offender against the open-source spirit and corrupts social morals.**  
 
-互联网从业人员，**在AI能力的加持下，** 个人能力得到了极大的提升，结合得好、运用得当，**甚至可以做到一人单挑整个团队** 的效果。因此越来越多的程序员开始跃跃欲试，尝试做**独立开发**，开发一些小工具、小插件、小脚本，或者是运营自己的小程序、公众号，视频号等，以此来挣点外快，发展个人事业。  
+<img src="./img/antifeature_info.png" width="720" />
 
-一定程度上来说：**热衷于造轮子、搞开源的程序员才是好程序员。** 也是优秀程序员开辟副业渠道、成为独立开发、发展个人事业的常见选项之一。在AI的辅助加持下，走这条路的程序员也愈发地多了起来。这其中有希望通过开源项目磨练技术的，也不乏寄望通过开源项目变现，实现逆袭的，或者是奔着增加应聘优势、获得涨薪筹码而来的。但是，不管你是出于什么目的，在目前这个试错成本偏高的恶化环境下，我劝你：**千万不要寄望通过打赏/捐赠来激发你的开发热情，或打算以此来维持生计！尽早打消这个念头，以我过来人的经历告诉你：开源作者靠打赏/捐赠挣钱的话，基本等于自寻死路，它会浇灭你所有的热情。**
+<br />
+<br />
 
-很多不明就里的人，看到优秀的开源作品，第一反应肯定是：作者 **NB.gif**，**你他娘的还真是个天才.jpg**！但接下来的反应可能就是：作者肯定通过这个作品赚了不少钱吧，肯定不缺我这一点打赏/捐赠。又或者是：别人都不一定出钱，就我出，我是不是傻？ 这是普遍的心理预期。即使没有这个心理预期，人们也更愿意为有明确收费要求的产品或服务付费，而不是为本身就是免费的开源作品打赏/捐赠，这或许也是 “**心理账户（Mental accounting）理论**” 的一种体现吧。  
+This **is not entirely bad**; after some time, **it filters out some unreasonable users, leaving behind those who understand you and genuinely need your work. These users are more likely to provide valuable feedback or constructive opinions and suggestions.**  
+
+<img src="./img/user_message01.png" width="720" />
+
+## Advice
+
+2023 was the first year for AI big models, and AI intelligence emerged rapidly. The year 2024 saw continued breakthroughs with the appearances of **[Sora](https://mp.weixin.qq.com/s/rYCzpZAZDWuf4fLRXi6bdQ)**, **[Gemini 1.5](https://36kr.com/p/2650854374260993)**, **[Stable Diffusion 3](https://mp.weixin.qq.com/s/PU_VCbFU29rkfgoIm2as0g)**, **[EMO](https://mp.weixin.qq.com/s/4KGYu-B4Te5FvPfDI804mg)**, and other significant AI releases.  
+
+At the same time, the domestic employment situation has been deteriorating, with more and more companies starting strategic "tightening of the belt and cutting down on expenditures". **Wage reductions and layoffs** are becoming increasingly frequent, businesses closing down, factories shutting their doors, owners absconding, thriving stores changing hands, and property prices being slashed have become commonplace. Against this backdrop, more and more people are seeking to change careers or trying to open up side hustles for contingency.  
+
+Internet professionals, **with the enhancement of AI capabilities,** have seen their skills greatly improved. Well integrated and appropriately used, **they can even achieve the effect of one person taking on a whole team.** As a result, an increasing number of programmers are eager to try **independent development,** developing small tools, plugins, scripts, or operating their small programs, official accounts, and video accounts, to earn extra income and advance their personal careers.  
+
+To some extent, **programmers who like to build and maintain open-source projects are good programmers.** It is also a common option for excellent programmers to venture into side hustles, become independent developers, and grow their personal businesses. Many hope to hone their skills through open-source projects, while others wish to monetize and achieve a turnaround or increase their job prospects and bargaining chips for a pay raise. However, given the current environment where trial and error costs are high, I advise you: **Never depend on donations to fuel your development passion or to make a living! Dispel this idea early on; as someone who has been there, I can tell you from experience that relying on donations for open-source work is essentially a death wish, and it can extinguish all your passion.**  
+
+Many uninformed people seeing an excellent open-source project might think: "The author is **awesome.gif**," "You're really a genius.jpg"! But the next reaction might be: the author must have made a lot of money from this project, surely they won't miss my donation. Or perhaps: why should I donate if nobody else is? Isn't that foolish? This is a common psychological expectation. Even without this expectation, people are more willing to pay for products or services with clear charging requirements than to donate to a free open-source project, which may also be a manifestation of the "mental accounting theory."  

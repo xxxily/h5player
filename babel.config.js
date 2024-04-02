@@ -3,7 +3,6 @@ export default {
     [
       '@babel/preset-env',
       {
-        // modules: false,
         targets: {
           /* 49是个分界线，const输出不再转换成var */
           // chrome: '49',

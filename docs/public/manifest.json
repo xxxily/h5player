@@ -1,6 +1,6 @@
 {
-  "name": "vue2-builder",
-  "short_name": "vue2-builder",
+  "name": "vite-builder",
+  "short_name": "vite-builder",
   "icons": [
     {
       "src": "/assets/img/logo.png",

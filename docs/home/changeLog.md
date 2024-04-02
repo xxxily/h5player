@@ -1,517 +1,517 @@
-# 更新日志
+# Update Log
 
 ## 4.2.4 [2024/03/29]
 
-* 增加鼠标控制模块的开关配置选项
-* 增加长按鼠标的生效时间配置选项
-* 优化默认自定义配置的默认参数选项
-* 优化调整菜单选项的归类和显示逻辑
+* Added a switch configuration option for the mouse control module.
+* Added a configuration option for the effective time of long-pressing the mouse.
+* Optimized the default parameter options for the default custom configuration.
+* Enhanced the categorization and display logic of the menu options.
 
 ## 4.2.3 [2024/03/02]
 
-* 增加鼠标控制模块，预计接下来将完善鼠标控制的能力
-* 重新定义黑名单的数据结构，增加urls和domains两种全局黑名单
-* 重构针对某个域名禁用脚本的逻辑，以实现禁用列表配置的自定义编辑
-* 修改默认推荐配置列表，去掉旧有的不合理的推荐配置
-* 修正禁用脚本菜单的显隐逻辑，确保任意网站下都能正常开启/禁用脚本
+* Added mouse control module, planning to enhance the mouse control capability in the future
+* Redefined the data structure of the blacklist, adding urls and domains as two global blacklists
+* Refactored the script disabling logic for a specific domain to enable custom editing of the disable list configuration
+* Modified the default recommendation configuration list, discarding irrational old recommendations
+* Corrected the show/hide logic of the script disabling menu, ensuring normal enable/disable of the script under any website
 
 ## 4.2.2 [2024/02/29]
 
-* 增加排除URL的配置选项，实现更精细化的配置能力
-* 将B站首页添加到排除URL中，解决部分人反馈的首页内存严重泄漏问题
+* Added URL exclusion configuration options, allowing for more refined configuration
+* Added the B site homepage to the URL exclusion to fix severe memory leaks on the homepage reported by some users
 
 ## 4.2.1 [2024/02/28]
 
-* 优化禁用逻辑，以实现在单个网站上的脚本彻底禁用
-* 去掉快捷键禁用脚本逻辑，解决遗留太多干扰逻辑的问题
-* 优化UI界面部分交互逻辑异常问题
+* Optimized disable logic to thoroughly disable scripts on individual websites
+* Removed the shortcut key disabling script logic, solving issues with too many interfering logics
+* Optimized some abnormal interactive logic in the UI
 
 ## 4.2.0 [2024/02/26]
 
-* 增加对非油猴插件的支持改进，提升兼容性
-* 移除推荐模块的循环滚动逻辑，提升用户体验
-* 修改调整推荐模块的渲染逻辑，弱化显示效果
-* 增加油猴菜单下禁用UI界面选项的控制逻辑
-* 优化下载保存逻辑，减少文件名的输入次数
-* 对下载模块的提示进行国际化改造
+* Improved support for non-Greasemonkey plugins to enhance compatibility
+* Removed the looping scrolling logic of the recommendation module to improve user experience
+* Adjusted the rendering logic of the recommendation module to downplay the display effect
+* Added control logic for disabling UI options in the Greasemonkey menu
+* Optimized download save logic to reduce filename input
+* Internationalized the download module prompts
 
 ## 4.1.0 [2024/02/22]
 
-* 增加主动读取官网配置信息的模块
-* 增加预防UI渲染死循环的逻辑
-* 优化UI界面的显示逻辑，降低工具条的干扰性
-* 调整UI关闭按钮的显示顺序
-* 修复全局配置写入异常的问题
-* 修复油管字幕没法正常跟随的问题
-* 按需声明@antifeature标识
+* Added a module for actively reading configuration information from the official website
+* Added logic to prevent UI rendering deadlocks
+* Optimized the display logic of the UI to reduce toolbar interference
+* Adjusted the display order of the UI close button
+* Fixed the issue with global configuration write exceptions
+* Fixed the issue with YouTube subtitles not following properly
+* Added the @antifeature tag as needed
 
 ## 4.0.1 [2024/02/19]
 
-* 根据社区规则增加@antifeature，主动叠甲
-* 解决因出现轮播推荐免费GPT-4而被举报的问题（确实是免费的！）
-* 暂无计划增加@antifeature标识的一系列“功能”
-* 但不排除会增加少量的、不影响用户体验的推广链接
+* Added the @antifeature according to the community rules, being proactive
+* Resolved the issue of being reported because the free GPT-4 was promoted in carousel ads (it's honestly free!)
+* Currently, no plans to add a series of "features" with the @antifeature tag
+* But, some promotional links that won't affect the user experience might be added
 
 ## 4.0.0 [2024/02/15]
 
-* 增加可视化UI操作界面，降低使用门槛、提升操作便捷性
-* 实现了对移动端浏览器下开启调速的支持（使用文档后续更新）
-* 完善视频下载功能，极大提升更多网站的视频流提取能力
-* 完善设置选项功能，实现更精细化的配置能力
-* 优化实验性功能的内存占用和进行了整体的性能调优
-* 修复了一系列已知问题（但增加了UI界面，也引入了更多潜在的问题）
+* Added a visual UI operation interface, lowering the usage threshold and improving operational convenience
+* Implemented support for adjusting speed in mobile browsers (update of user document will follow)
+* Improved the video download feature, significantly enhancing streaming extraction capability for more websites
+* Perfected the settings option feature, allowing for more refined configuration
+* Optimized the memory usage of experimental features and performed overall performance tuning
+* Fixed a series of known issues (But the addition of the UI interface may also introduce more potential issues)
 
 ## 3.7.12 [2024/01/19]
 
-* 修复截图保存的jpg文件过大问题
-* 修复将截图传递给剪贴板失效的问题
+* Fixed the issue of oversized jpg files when saving screenshots
+* Fixed the problem of passing screenshots to the clipboard being ineffective
 
 ## 3.7.11 [2024/01/04]
 
-* 增加自动跳过油管广告的脚本逻辑
-* 修复底层快捷键库不支持多窗口对象绑定的问题
-* 解决iframe嵌套网站下快捷键没法透传的问题
+* Added script logic to automatically skip Youtube ads
+* Fixed the problem of the underlying shortcut key library not supporting multiple window object bindings
+* Solved the problem of unable to pass shortcuts on iframe nested websites
 
 ## 3.7.10 [2024/01/03]
 
-* 增加记住历史播放倍速功能
-* 优化油管播放暂停时进度条的显隐逻辑
-* 优化debug输出相关逻辑
+* Added the function of remembering the historical playback speed
+* Optimized the visibility logic of the progress bar when YouTube is paused
+* Optimized debug output-related logic
 
 ## 3.7.9 [2023/11/03]
 
-* 解决油管播放、暂停时Loading图标滞留问题
+* Solved the problem of the Loading icon lingering during YouTube play and pause
 
 ## 3.7.8 [2023/06/28]
 
-* 尝试优化B站的内存占用
+* Attempted to optimize the memory occupancy of the B site
 
 ## 3.7.7 [2023/06/26]
 
-* 解决高低倍速频繁切换后，音画不同步的问题
+* Fixed the problem of audio and visual asynchrony after frequent switching of high and low speed
 
 ## 3.7.6 [2023/05/16]
 
-* 增加全局配置的UI配置界面
-* 增加对ShadowDOM事件的支持
-* 修复B站视频比例调整后受到干扰的问题
+* Added a UI configuration interface for global configuration
+* Added support for ShadowDOM events
+* Fixed the problem of B-site video ratio being interfered after adjustment
 
 ## 3.7.5 [2023/04/21]
 
-* 解决NewBing下无法正常聊天的问题
-* 解决无法正常进入文心一言的问题
-* 解决脚本图标在部分网络下现实异常的问题
-* 修复快捷键对win和mac兼容的逻辑问题
+* Solved the problem of not being able to chat normally in NewBing
+* Resolved the issue of not being able to enter Wenxin Yiyuan normally
+* Resolved the issue of script icons displaying abnormally under certain networks
+* Fixed logical issues with shortcut keys compatible with win and mac
 
 ## 3.7.4 [2023/03/31]
 
-* 增加公益ChatGPT推广
+* Promoted the public interest ChatGPT
 
 ## 3.7.3 [2023/03/15]
 
-* 增加开启/禁用脚本的菜单选项
-* 更改UA解决百度盘非会员倍速异常问题
+* Added menu options to enable/disable scripts
+* Changed UA to solve the playback speed problem for non-members of Baidu Drive
 
 ## 3.7.2 [2023/02/23]
 
-* 解决百度盘非会员倍速异常问题
-* 增强倍速调节的抗干扰能力
+* Resolved the playback speed issue for non-members of Baidu Drive
+* Enhanced the anti-interference ability of the speed adjustment
 
 ## 3.7.1 [2022/11/29]
 
-* 增加音量增益的开关菜单选项
-* 增加跨域控制的开关菜单选项
-* 完善国际化信息
+* Added the switch menu option for volume gain
+* Added the switch menu option for cross-domain control
+* Enhanced the internationalization information
 
 ## 3.7.0 [2022/11/25]
 
-* 实现自定义快捷键能力
-* 实现自定义配置的能力
-* 实现自定义任务配置中心的能力
-* 增加音量增益能力提升音量响度
-* 增加菜单控制项并优化菜单交互
-* 移除调试模式减少无用信息输出
-* 优化快捷键占用和冲突问题
-* 解决恢复播放倍速异常问题
-* 移除部分用不到的API和脚本
+* Implemented the ability to customize shortcut keys
+* Implemented the ability to customize configurations
+* Implemented the ability to customize the task configuration center
+* Increased the ability of volume gain to enhance volume loudness
+* Added more menu control items and optimized menu interaction
+* Removed debug mode to reduce unnecessary information output
+* Optimized the issue of shortcut key occupancy and conflict
+* Solved the issue of abnormal recovery of playback speed
+* Removed some unused APIs and scripts
 
 ## 3.6.3 [2022/11/18]
 
-* 提升倍速调节的抗干扰能力
-* 修复禁止默认进度不生效问题
-* 修复B站部分地址下一集失效问题
+* Increased the anti-interference ability of the speed adjustment
+* Fixed the issue of default progress prohibition not being effective
+* Fixed the issue of B-site's "Next Episode" feature failing under certain addresses
 
 ## 3.6.2 [2022/11/11]
 
-* 优化菜单描述
-* 修复B站HEVC视频控制失效问题
+* Optimized menu description
+* Fixed the issue of B-site’s HEVC video control failing
 
 ## 3.6.1 [2022/11/3]
 
-* 增加开启/关闭实验性功能选项
-* 增加对视频流内容的下载能力（实验性功能）
-* 优化播放进度记录与恢复逻辑
-* 修复Tampermonkey菜单叠加出现的问题
+* Added an option to switch on/off experimental features
+* Added the ability to download video stream content (experimental feature)
+* Optimized playback progress record and recovery logic
+* Fixed the issue with overlapped Tampermonkey menus
 
 ## 3.6.0 [2022/10/23]
 
-* 重构底层控制逻辑，提升兼容能力
-* 增加对音频播放的倍速控制支持
-* 增加对AdGuard扩展的支持
-* 支持作为单独脚本引入到网页中使用
-* 逐渐降低对Tampermonkey专有API的依赖
-* 记录播放进度的逻辑调整
-* 优化和提升播放实例切换准确率
-* 修复腾讯视频倍速控制失效问题
-* 修复内容提示停滞再页面上的问题
-* 解决播放进度控制没法回到0:00的问题
-* 解决Tampermonkey出现数字菜单的问题
+* Refactored the underlying control logic to enhance compatibility
+* Added support for speed control of audio playback
+* Added support for the AdGuard extension
+* Can be used as a separate script introduced into web pages
+* Gradually reduced dependence on Tampermonkey's proprietary API
+* Adjusted the logic for recording playback progress
+* Optimized and improved the accuracy of playback instance switching
+* Fixed the issue of speed control failure in Tencent videos
+* Fixed the problem of content prompts lingering on the page
+* Solved the issue of control over the play progress not being able to return to 0:00
+* Solved the issue of numeric menus appearing in Tampermonkey
 
 ## 3.5.4 [2022/10/9]
 
-* 增加低版本webkit内核的兼容
+* Added compatibility for lower version webkit core
 
 ## 3.5.3 [2022/9/28]
 
-* 优化数字键调速的双击反应时间
-* 修复tips频繁出现的问题
-* 修复对多邻国网站的兼容
+* Optimized the double-click reaction time of the numeric key speed adjustment
+* Fixed the issue of frequently appearing tips
+* Fixed the compatibility issue with the Duolingo website
 
 ## 3.5.2 [2022/9/26]
 
-* 增加倍速跳跃式调节的能力
-* 解决油管快速调速不生效的问题
-* 更新脚本文档信息和相关地址
-* 修复部分网站静音/取消静音失效问题
+* Added the ability to adjust the speed jump-wise
+* Solved the issue of Youtube's speed adjustment not being effective
+* Updated script documentation information and related addresses
+* Fixed the issue of mute/unmute failure on some websites
 
 ## 3.5.1 [2022/9/24]
 
-* 增加视频画面平移、缩放、旋转的恢复能力
-* 优化学堂在线的兼容
-* 优化debug信息输出
+* Added the ability to recover video pan, zoom, and rotate
+* Optimized compatibility with Xuetang Online
+* Optimized debug information output
 
 ## 3.5.0 [2022/9/21]
 
-* 重构配置选项存储管理逻辑
-* 增强播放暂停状态切换的容错能力
-* 提升脚本初始化的成功率
-* 提升视频实例的检出率
-* 优化垮TAB控制的快捷键占用情况
-* 调音幅度从10%改到5%
-* 画面缩放从10%改到5%
-* 移除初始化实例时的音量同步逻辑
-* 移除无用代码精简脚本体积
-* 修复多个站点的播放控制支持
+* Refactored configuration option storage management logic
+* Enhanced the fault tolerance ability of play/pause state switching
+* Improved success rate of script initialization
+* Increased detection rate of video instances
+* Optimized shortcut key occupancy situation for cross-TAB control
+* Adjusted volume amplitude from 10% to 5%
+* Adjusted screen zoom from 10% to 5%
+* Removed volume sync logic during initialization of instances
+* Removed useless code to streamline script volume
+* Fixed playback control support for several sites
 
 ## 3.4.8 [2022/9/13]
 
-* 暂时回退到3.4.6的代码
+* Temporarily retreated to the 3.4.6 code
 
 ## 3.4.7 [2022/9/06]
 
-* 增加记录播放音量的管理逻辑
-* 实现调速和网站自身的调速相兼容
-* 增加任务配置中心的可配置选项
-* 增加开启/关闭增强配置的菜单选项
-* 增加阻断调整播放进度的检测并进行反阻断
-* 修复配置项状态管理器的配置项同步异常问题
+* Added management logic to record playback volume
+* Implemented compatibility between speed adjustment and website's own speed adjustment
+* Added configurable options to the task configuration center
+* Added a menu option to turn on/off enhanced configurations
+* Added blocking of adjustment playback progress detection and anti-blocking
+* Fixed the abnormal synchronization of configuration items in the configuration item state manager
 
 ## 3.4.6 [2022/9/04]
 
-* 增加阻断调速的检测和进行反阻断
-* 提升多实例视频网站的视频实例切换的准确率
-* 优化西瓜视频、知乎视频、微博视频的操作体验
+* Added detection of blocking speed adjustment and anti-blocking
+* Enhanced the accuracy of video instance switching in multi-instance video websites
+* Optimized the user experience of West Melon Video, Zhihu Video, Weibo Video
 
 ## 3.4.5 [2022/9/02]
 
-* 实现将视频截图结果自动写入到剪贴板
-* 增加任务配置中心可配置项
-* 增强任务配置中心的容错性
-* 快捷键调用函数化改造
-* 优化对netflix的支持
+* Implemented automatic writing of video screenshot results to the clipboard
+* Added configurable items to the task configuration center
+* Enhanced fault tolerance of the task configuration center
+* Functionized shortcut key call
+* Optimized support for Netflix
 
 ## 3.4.4 [2022/8/30]
 
-* 增加全局播放速率的配置选项
-* 优化跨域受限页面的倍速记录
-* 修复自动播放菜单选项无效的问题
-* 修复知乎视频无法调节音量的问题
+* Added configuration option for global playback speed
+* Optimized speed recording of cross-domain limited pages
+* Fixed the problem of the auto-play menu option being invalid
+* Fixed the problem of failed volume adjustment for Zhihu videos
 
 ## 3.4.3 [2022/8/29]
 
-* 增加对本地视频播放控制支持
-* 增加对B站的HEVC视频（bwp播放器）的支持
-* 修复提示DOM可能造成的样式错乱问题
-* 优化截图时自动暂停的条件判断
+* Added support for local video playback control
+* Added support for B station's HEVC videos (bwp player)
+* Fixed the style disorder problem that may be caused by the prompt DOM
+* Optimized the condition judgment when automatically paused when screenshotting
 
 ## 3.4.2 [2022/8/26]
 
-* 调整截图的交互，实现视频截图的全兼容
-* 增加视频镜像翻转功能
-* 优化跨TAB控制逻辑
-* 优化画中画检测逻辑
-* 修复画中画因性能策略导致的跨TAB控制失效问题
+* Adjusted screenshot interaction to achieve full compatibility of video screenshots
+* Added video mirror flip function
+* Optimized cross-TAB control logic
+* Optimized picture-in-picture detection logic
+* Fixed the cross-TAB control failure problem caused by the picture-in-picture performance strategy
 
 ## 3.4.1 [2022/8/22]
 
-* 提升跨域iframe视频的操控体验
-* 修复开启/禁用自动播放的菜单功能
+* Improved the control experience of cross-domain iframe videos
+* Fixed the menu function of enabling/disabling auto-play
 
 ## 3.4.0 [2022/8/21]
 
-* 提升脚本初始化的成功率
-* 增加配置管理脚本逻辑
-* 调整完善菜单注册逻辑
-* 增加对douyin.com的兼容
-* 修复B站稍后观看视频快捷键失效问题
+* Improved the success rate of script initialization
+* Added configuration management script logic
+* Adjusted and perfected menu registration logic
+* Added compatibility for douyin.com
+* Fixed the shortcut key failure problem for B station's "Watch Later" videos
 
 ## 3.3.12 [2022/8/14]
 
-* 修复B站空格暂停播放失效问题
-* 修复B站下一集快捷键失效问题
+* Fixed the problem of B station space pause play invalid
+* Fixed the problem of B station next episode shortcut key invalid
 
 ## 3.3.11 [2022/8/14]
 
-* 修复B站网页全屏和全屏快捷键失效问题
+* Fixed the problem of invalid webpage fullscreen and fullscreen shortcuts for B station
 
 ## 3.3.10 [2022/5/10]
 
-* 优化部分底层库的功能和兼容
+* Optimized the function and compatibility of some underlying libraries
 
 ## 3.3.9 [2021/6/6]
 
-* 修复自多视频同时自动播放问题
-* 增加禁用初始化播放逻辑的按钮
+* Fixed the problem of automatic playback of multiple videos at the same time
+* Added a button to disable initialization playback logic
 
 ## 3.3.8 [2021/6/6]
 
-* 优化跟其它插件兼容性
-* 解决初始化异常后脚本失效的问题
+* Optimized compatibility with other plugins
+* Solved the problem of script failure after initial abnormality
 
 ## 3.3.7 [2021/5/30]
 
-* 增加B站视频自动播放
-* 优化百度盘、西瓜视频等网站的网页全屏功能
-* 修复部分脚本逻辑错误
+* Added automatic playback of B station videos
+* Optimized the webpage full-screen function of websites such as Baidu Pan and West Melon Video
+* Fixed some script logic errors
 
 ## 3.3.6 [2021/5/27]
 
-* 修复B站切换视频后调速无提示问题
-* 修复国内环境下图标资源加载异常问题
-* 修复百度网盘非VIP会员的视频播放倍速无效问题
-* 解决百度非vip用户播放视频前进行调速死循环问题
+* Fixed the problem of no speed adjustment prompt after switching videos on B station
+* Fixed loading exception problem of icon resources in domestic environments
+* Fixed the problem of ineffective video playback speed for non-VIP members of Baidu Netdisk
+* Solved the problem of speed adjustment loop before playing videos by non-VIP users of Baidu
 
 ## 3.3.5 [2021/5/26]
 
-* 实现主流视频网站的广告倍速播放
-* 重构部分核心脚本库逻辑
-* 优化脚本性能，提升脚本兼容性
+* Implemented high-speed playback of ads on mainstream video websites
+* Refactored some core script library logic
+* Optimized script performance and enhanced script compatibility
 
 ## 3.3.4 [2021/5/25]
 
-* 降低hookJs性能对其他网站的影响（临时方案）
+* Reduced the impact of hookJs performance on other websites (temporary solution)
 
 ## 3.3.3 [2021/5/20]
 
-* 修复百度网盘非VIP会员的视频播放倍速无效问题
+* Fixed the issue of ineffective video playback speed for non-VIP members of Baidu Web Disk
 
 ## 3.3.2 [2021/5/19]
 
-* 修复对百度网盘等网站的支持
+* Fixed support for Baidu NetDisk and other websites
 
 ## 3.3.1 [2020/9/3]
 
-* 解决B站黑屏问题
+* Solved the problem of black screens on B site
 
 ## 3.3.0 [2020/4/24]
 
-* 提示界面支持国际化
-* 优化B站和油管的部分操作体验
-* 优化部分其他反馈的问题
+* The prompt interface supports internationalization
+* Optimized the operation experience of B site and YouTube
+* Optimized some other feedback issues
 
 ## 3.2.8 [2020/4/12]
 
-* 增加调试辅助逻辑实现热更新调试
-* 引入UI相关依赖，准备进行UI界面开发
-* 解决部分网站兼容异常问题
+* Added debugging auxiliary logic to implement hot update debugging
+* Introduced UI-related dependencies, ready for UI interface development
+* Solved compatibility issues of some websites
 
 ## 3.2.7 [2020/4/11]
 
-* 修复脚本报错导致的网站页面异常
+* Fixed website page exceptions caused by script errors
 
 ## 3.2.6 [2020/4/11]
 
-* 修复跨域截图导致的多个网站报错问题
+* Fixed error reporting problems in multiple websites caused by cross-domain screenshots
 
 ## 3.2.5 [2020/4/10]
 
-* 修正部分网站兼容问题
+* Corrected some website compatibility issues
 
 ## 3.2.4 [2020/4/9]
 
-* 支持跨域截图
-* 支持对特定事件进行挂起（增强抗干扰能力）
-* 音量调节步长逻辑优化
+* Supported cross-domain screenshots
+* Supported suspension of specific events (to enhance anti-interference ability)
+* Optimized volume adjustment step length logic
 
 ## 3.2.3 [2020/4/5]
 
-* 支持多语言
+* Supported multiple languages
 
 ## 3.2.2 [2020/4/4]
 
-* 增加facebook全屏快捷键的兼容
-* 增加快进快退，音量快升快降（ctrl+上下左右箭头）
-* 修复旋转功能BUG
+* Added compatibility with Facebook's full-screen shortcut key
+* Added fast forward, fast rewind, fast volume up, fast volume down (ctrl+up and down arrows)
+* Fixed rotation function BUG
 
 ## 3.2.1 [2019/12/21]
 
-* 自动恢复设置调整为按域名进行控制
-* 增加对A站的兼容，取消B站的自动播放
-* 其它功能的部分细节优化
+* Automatically restore settings adjusted to be controlled by domain name
+* Added compatibility for Station A and cancelled automatic play for Station B
+* Optimized some other function details
 
 ## 3.2.0 [2019/11/22]
 
-* 增加跨Tab操作画中画视频功能
+* Added cross-Tab operation Picture-in-Picture video function
 
 ## 3.1.2 [2019/11/20]
 
-* 修复火狐下滤镜不兼容导致黑屏的BUG
-* 部分网站增加一键播放下一个视频功能
-* 增强部分网站的兼容
+* Fixed the BUG causing black screen due to non-compatibility of filter in Firefox
+* Added one-click play next video function to some websites
+* Enhanced compatibility of some websites
 
 ## 3.1.1 [2019/11/5]
 
-* 增加部分网站兼容
-* 优化提示父节点获取逻辑
+* Added compatibility for certain websites
+* Optimized the logic of obtaining prompt parent node
 
 ## 3.1.0 [2019/10/24]
 
-* 增加自动恢复播放进度的控制选项
-* 修复部分网站tips无法正常显示BUG
+* Added the control option to automatically restore playback progress
+* Fixed bugs where tips could not be displayed correctly on some websites
 
 ## 3.0.5 [2019/10/14]
 
-* 增加mac快捷键兼容
-* 优化部分代码逻辑
+* Added compatibility for Mac shortcut keys
+* Optimized some code logic
 
 ## 3.0.4 [2019/10/11]
 
-* 增强提示样式在不同网站下的兼容
-* 优化获取video包裹节点的方法
+* Enhanced compatibility of prompt style under different websites
+* Optimized the method of obtaining video wrapper node
 
 ## 3.0.3 [2019/10/9]
 
-* 解决tips引起的样式混乱BUG
-* 优化获取video包裹节点的方法
-* 增加MouseObserver模块
+* Solved the style chaos BUG caused by tips
+* Optimized the method of obtaining video wrapper node
+* Added MouseObserver module
 
 ## 3.0.2 [2019/9/27]
 
-* 修复任务配置中心失效问题
-* 优化操作提示样式降低干扰
-* 优化截图保存文件大小
-* 增加部分网站兼容
+* Fixed the problem of Task Configuration Center failure
+* Optimized operation prompt style to reduce interference
+* Optimized screenshot file size
+* Added compatibility for some websites
 
 ## 3.0.1 [2019/9/25]
 
-* 修复截图时文件连结过长截图下载失败BUG
-* 增加ico图标
+* Fixed the BUG of screenshot download failure due to overly long screenshot file link
+* Added an ico icon
 
 ## 3.0.0 [2019/9/22]
 
-* 支持视频画面截图
-* 支持快捷键跨域控制
-* 增加更多实用模块，便于后续开发
+* Supported video screenshot
+* Supported Shortcut key Cross-domain Control
+* Added more useful modules for future development
 
 ## 2.6.1 [2019/9/19]
 
-* 移除统计功能
-* 兼容跨域iframe下播放
+* Removed statistical function
+* Compatible with cross-domain iframe play
 
 ## 2.6.0 [2019/9/18]
 
-* 增加还原播放速度功能
-* 增加Esc退出网页全屏
-* 代码逻辑模块化
+* Added restore play speed function
+* Added Esc to exit webpage full screen
+* Code logic modularized
 
 ## 2.5.1 [2019/9/11]
 
-* 修复快捷键过度占用BUG
+* Fixed excessive occupation of shortcut keys BUG
 
 ## 2.5.0 [2019/9/11]
 
-* 增加画面移动功能
-* 任务配置中心增加自定义初始化方法
-* 屏蔽部分网站水印
-* 屏蔽iqiyi暂停广告
-* 兼容百度云盘全屏快捷键
-* 修复若干BUG
+* Added screen moving function
+* Task Configuration Center adds custom initialization method
+* Shielded part of the website watermark
+* Blocked iQiyi pause ads
+* Compatible with Baidu Cloud Disk full screen shortcut keys
+* Fixed several BUGs
 
 ## 2.4.1 [2019/8/30]
 
-* 兼容腾讯视频倍速播放
-* 增加画中画功能
-* 增加快捷键自定义功能
+* Compatible with Tencent video speed play
+* Added Picture-in-Picture function
+* Added shortcut key customization function
 
 ## 2.3.3 [2019/8/30]
 
-* 兼容腾讯视频快捷键操作
-* 增加画中画功能
-* 增加快捷键自定义功能
+* Compatible with Tencent video shortcut key operation
+* Added Picture-in-Picture function
+* Added shortcut key customization function
 
 ## 2.3.2 [2019/6/15]
 
-* 兼容网易公开课网页
-* 修复亮度、对比度、饱和度非线性调节BUG
-* 优化快进快退等其它细节
+* Compatible with NetEase Open Class webpage
+* Fixed non-linear brightness, contrast, saturation adjustment BUG
+* Optimized other details such as fast forward and fast rewind
 
 ## 2.3.0 [2019/5/5]
 
-* 增加默认的全屏逻辑
-* 增加默认网页全屏逻辑
-* 修复其它相关BUG
+* Added default full-screen logic
+* Added default webpage full-screen logic
+* Fixed other related BUGs
 
 ## 2.2.0 [2019/4/21]
 
-* 重构任务配置中心代码逻辑
-* 修正B站下暂停播放的兼容逻辑
-* 增加对B站直播的兼容
-* 修复其它相关BUG
+* Refactored Task Configuration Center code logic
+* Corrected the compatibility logic of Bilibili under pause
+* Added compatibility with Bilibili Live
+* Fixed other related BUGs
 
 ## 2.1.0 [2019/4/18]
 
-* 实现任务配置中心（TCC）
-* 通过任务配置中心增加某些网站的全屏，网页全屏播放快捷键
-* 修正多实例下不能同步播放速度的问题
-* 优化提示样式
-* 修复其它相关BUG
+* Implemented Task Configuration Center (TCC)
+* Added some websites' full screen, webpage full screen play shortcut keys through the Task Configuration Center
+* Corrected the problem that the playback speed cannot be synchronized under multiple instances
+* Optimized prompt style
+* Fixed other related BUGs
 
 ## 2.0.0 [2019/4/15]
 
-* 解锁shadowdom下的video组件
-* 支持多实例环境
-* 大幅度优化性能，使用更快的侦听方式
-* 代码重构和提炼
-* 修复其它相关BUG
+* Unlocked shadowdom's video component
+* Supports multi-instance environment
+* Greatly optimized performance, using faster listening methods
+* Code restructure and refinement
+* Fixed other related BUGs
 
 ## 1.3.0 [2019/4/13]
 
-* 增加恢复播放进度功能
-* 增加记录播放速度功能
-* 增加禁用插件快捷功能（Ctrl+space）
-* 快捷键变成全局可用，增强兼容
-* 修复其它相关BUG
+* Added resume playback progress function
+* Added record playback speed function
+* Added disable plugin shortcut function (Ctrl+space)
+* Shortcut key becomes globally available, improved compatibility
+* Fixed other related BUGs
 
 ## 1.2.0 [2019/4/12]
 
-* 增加缩放视频画面大小功能
-* 增加对netflix网站的支持
-* 全面调整代码结构
-* 修正部分兼容性问题和相关BUG
-* 脚本代码工程化，代码遵循js standard 规范
-* 完善文档说明
+* Added function to zoom video screen size
+* Added support for netflix website
+* Fully adjusted code structure
+* Corrected some compatibility issues and related BUGs
+* Script code engineering, code complies with js standard specification
+* Completed documentation
 
 ## 1.1.2 [2019/4/11]
 
-* 接坑，梳理代码
-* 优化调整部分代码
+* Inherited code, tidied code
+* Optimized adjustment of some codes

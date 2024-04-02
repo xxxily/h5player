@@ -2,6 +2,7 @@
 **/dist
 **/demo
 **/static
+**/.cache
 *.md
 *.woff
 *.ttf

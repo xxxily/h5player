@@ -45,7 +45,7 @@ class LogSystem {
    */
   setting (obj) {
     const setting = this.baseSetting
-    for (var key in obj) {
+    for (const key in obj) {
       if (typeof setting[key] !== 'undefined') {
         setting[key] = obj[key]
       }
@@ -204,7 +204,7 @@ class LogSystem {
   }
 
   error (msg) {
-    var t = this
+    const t = this
     t.log(msg, -1)
   }
 

@@ -16,3 +16,4 @@ indent_style = tab
 
 [*.bat]
 charset = utf-8
+

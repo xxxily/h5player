@@ -11,19 +11,16 @@
     "start": "yarn run h5playerUI & yarn run h5player",
     "jsonEditor": "cross-env MODE=prod  PROJECT_NAME=jsonEditor rollup -c config/rollup.config.js",
     "server": "node bin/staticService/index.js",
-    "ui-dev": "webpack-dev-server --inline --config bin/webpack/webpack.dev.conf.js",
-    "ui-build": "webpack-cli --inline --config bin/webpack/webpack.prod.conf.js",
-    "docs:dev": "cross-env NODE_OPTIONS=--openssl-legacy-provider vuepress dev docs",
-    "docs:build": "cross-env NODE_OPTIONS=--openssl-legacy-provider vuepress build docs",
-    "docs:release": "node bin/docs/release.js"
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "dependencies": {
     "@shoelace-style/shoelace": "^2.12.0",
-    "@vssue/api-github-v3": "^1.4.7",
-    "@vssue/vuepress-plugin-vssue": "^1.4.8",
+    "@vue/server-renderer": "^3.4.21",
     "local-storage-proxy": "^4.0.3",
     "lodash": "^4.17.21",
-    "vue": "2.7.10"
+    "vue": "^3.4.21"
   },
   "type": "module",
   "license": "GPL",
@@ -54,7 +51,7 @@
     "rollup": "^4.9.6",
     "rollup-plugin-import-css": "^3.4.0",
     "rollup-plugin-uglify": "^6.0.4",
-    "vuepress": "^1.9.7"
+    "vitepress": "^1.0.2"
   },
   "engines": {
     "node": ">= 16.0.0",

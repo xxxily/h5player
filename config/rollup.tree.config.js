@@ -53,8 +53,6 @@ const confTree = {
     ]
   },
   jsonEditor: {
-    version: '0.0.1',
-    description: 'jsonEditor',
     input: resolve('src/tools/json-editor/index.js'),
     output: {
       file: resolve('src/tools/json-editor/assets/js/main.js'),

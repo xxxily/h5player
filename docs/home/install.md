@@ -1,115 +1,114 @@
-# 安装详解
+# Detailed Installation Guide
 
-> 安装脚本前需先安装[油猴插件](https://www.tampermonkey.net)，
-> [油猴(Tampermonkey)](https://www.baidu.com/s?wd=%E6%B2%B9%E7%8C%B4%E6%8F%92%E4%BB%B6%E5%AE%89%E8%A3%85)是一款广受好评的、用于加载用户脚本的浏览器插件，支持：Chrome、Edge、Firefox、safari、Opera、以及[国内品牌众多的浏览器](https://www.baidu.com/s?wd=%E5%9B%BD%E5%86%85%E6%B5%8F%E8%A7%88%E5%99%A8)
+> Before installing the script, you need to install the [Tampermonkey extension](https://www.tampermonkey.net).
+> [Tampermonkey](https://www.baidu.com/s?wd=%E6%B2%B9%E7%8C%B4%E6%8F%92%E4%BB%B6%E5%AE%89%E8%A3%85) is a highly regarded browser extension for loading user scripts, supporting Chrome, Edge, Firefox, Safari, Opera, and [many domestic browsers](https://www.baidu.com/s?wd=%E5%9B%BD%E5%86%85%E6%B5%8F%E8%A7%88%E5%99%A8).
 
-**安装好油猴插件后**，点击下面的链接即可一键安装：  
+**After installing the Tampermonkey extension**, click the link below for one-click installation:
 
-- **[h5player.user.js (点我直接安装)](https://update.greasyfork.org/scripts/381682/HTML5%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE%E5%99%A8%E5%A2%9E%E5%BC%BA%E8%84%9A%E6%9C%AC.user.js)**  
+- **[h5player.user.js (Click here to directly install)](https://update.greasyfork.org/scripts/381682/HTML5%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE%E5%99%A8%E5%A2%9E%E5%BC%BA%E8%84%9A%E6%9C%AC.user.js)**
 
-如果你是第一次接触，各种情况下安装油猴(Tampermonkey)的方法如下：
+If you are first-time installing Tampermonkey, the methods are as follows:
 
-## 正常安装
+## Standard Installation
 
-> 正常安装油猴(Tampermonkey)，只需通过官网或者应用商店安装即可，但国内很多时候下面的链接不一定能打得开，则需要参考下面得国内安装方法。
+> To install Tampermonkey normally, you just need to install it through the official website or the app store. However, often the links below may not be accessible in China, in which case refer to the domestic installation method below.
 
-油猴官网：[https://www.tampermonkey.net](https://www.tampermonkey.net)  
-你可以通过官网的说明进行下载安装，或者通过各大浏览器的应用商店安装。
+Tampermonkey official website: [https://www.tampermonkey.net](https://www.tampermonkey.net)
+You can download and install it following the official website instructions or install it through the browser's app store.
 
-如果你的网络能打开下面应用商店的地址，则直接安装即可：
+If your network can access the app store address below, then install directly:
 
-- [Tampermonkey - Chrome应用商店](https://chrome.google.com/webstore/detail/dhdgffkkebhmkfjojejmpbldmpobfkfo)
-- [Tampermonkey - Edge应用商店](https://microsoftedge.microsoft.com/addons/detail/iikmkjmpaadaobahmlepeloendndfphd)
-- [Tampermonkey - Firefox应用商店](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/)
-- [Tampermonkey - Safari应用商店](https://apps.apple.com/us/app/tampermonkey/id1482490089)
-- [Tampermonkey - Opera应用商店](https://addons.opera.com/en/extensions/details/tampermonkey-beta/)
+- [Tampermonkey - Chrome Web Store](https://chrome.google.com/webstore/detail/dhdgffkkebhmkfjojejmpbldmpobfkfo)
+- [Tampermonkey - Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/iikmkjmpaadaobahmlepeloendndfphd)
+- [Tampermonkey - Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/)
+- [Tampermonkey - Safari App Store](https://apps.apple.com/us/app/tampermonkey/id1482490089)
+- [Tampermonkey - Opera Add-ons](https://addons.opera.com/en/extensions/details/tampermonkey-beta/)
 
-**安装好油猴(Tampermonkey)插件后**，点击下面的链接即可完成脚本的安装：  
+**After installing the Tampermonkey extension**, click the link below to complete the script installation:
 
-**[h5player.user.js (点我完成H5Player增强脚本的安装)](https://update.greasyfork.org/scripts/381682/HTML5%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE%E5%99%A8%E5%A2%9E%E5%BC%BA%E8%84%9A%E6%9C%AC.user.js)**  
+**[h5player.user.js (Click here to install the H5Player enhancement script)](https://update.greasyfork.org/scripts/381682/HTML5%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE%E5%99%A8%E5%A2%9E%E5%BC%BA%E8%84%9A%E6%9C%AC.user.js)**
 
-直接在浏览器地址栏里输入如下的URL也能完成脚本的安装：
+You can also enter the URL below in the browser's address bar to install the script:
 
 - [https://h5player.anzz.top/h5player.user.js](https://h5player.anzz.top/h5player.user.js)
 
-## 国内安装
+## Installation in China
 
-> 国内由于网络环境的原因，很多时候并不能通过浏览器的应用商店直接安装，这个时候只能通过离线安装的方式来安装油猴(Tampermonkey)。  
+> Due to the network environment in China, it is often not possible to install directly through the browser's app store. In this case, the offline installation method must be used to install Tampermonkey.
 
-下面是油猴(Tampermonkey)的离线安装包，将离线包下载回来，然后通过浏览器的扩展程序页面进行安装即可。
+Below is the offline installation package of Tampermonkey. Download the offline package and then install it from the extension page of the browser.
 
-### 第一步：下载离线包
+### Step One: Download the Offline Package
 
-Tampermonkey离线包的官方地址，可能没法访问，如果不行则用下面的网盘地址，如果可以请优先使用官方地址：
+The official address of Tampermonkey's offline package may not be accessible. If not, use the following domestic addresses, but if possible, please prioritize the official address:
 
-- [Tampermonkey离线包](https://data.tampermonkey.net/tampermonkey_stable.crx)
+- [Tampermonkey Offline Package](https://data.tampermonkey.net/tampermonkey_stable.crx)
 
-国内能访问的网盘文件地址：
+Domestically accessible network disk file addresses:
 
-- [Tampermonkey.crx - 蓝奏云](https://wwt.lanzouq.com/izahN1p5e0pg) 提取密码：fn2o
-- [Tampermonkey.crx - 百度云](https://pan.baidu.com/s/1ErjSyfI4W2mop1b452j1CQ?pwd=ayi3) 提取密码：ayi3
+- [Tampermonkey.crx - Lanzou Cloud](https://wwt.lanzouq.com/izahN1p5e0pg) Extraction Code: fn2o
+- [Tampermonkey.crx - Baidu Cloud](https://pan.baidu.com/s/1ErjSyfI4W2mop1b452j1CQ?pwd=ayi3) Extraction Code: ayi3
 
-如果你用的是360极速浏览器等国产浏览器，此时只需将下载好的离线包拖拽到浏览器窗口即可完成安装。  
+If you are using a domestic browser such as 360 Extreme Browser, dragging the downloaded offline package to the browser window will complete the installation.
 
-如果不是，或者直接拖拽进去没法安装，那么请继续下面的步骤。  
-  
-### 第二步：开启开发者模式
+If not, or if direct dragging does not install, then please proceed with the steps below.
 
-你可以通过菜单选项或者地址栏输入`chrome://extensions/`来打开浏览器的扩展程序页面，然后打开开发者模式。
+### Step Two: Enable Developer Mode
 
-![浏览器扩展程序的开发者模式](./img/chrome_develop_mode.jpg)
+You can open the browser's extension page via the menu option or by entering `chrome://extensions/` in the address bar, then activating the developer mode.
 
-### 第三步：解压离线包并加载安装
+![Browser Extension Developer Mode](./img/chrome_develop_mode.jpg)
 
-下载回来的离线包，本质上是一个tar的压缩包，window下将文件名后缀改为`.tar`，然后通过zip或rar等解压工具就能解压出来，再去扩展程序页面点击`加载已解压的扩展程序`，选择解压出来的文件夹即可完成安装。  
+### Step Three: Unzip the Offline Package and Load for Installation
 
-如果是macOS或者linux系统，可以通过命令行解压，然后通过扩展程序页面加载安装。
+The downloaded offline package is essentially a tar archive. On Windows, change the file name extension to `.tar` and unzip it using a tool like zip or rar, then go to the extension page, click on `Load unpacked`, and select the unzipped folder to complete the installation.
+
+For macOS or Linux systems, unzip using the command line, then load and install via the extension page.
 
 ```bash
-# 注意文件名要根据实际情况修改
+# Note to modify the file name according to the actual situation
 tar -xvf tampermonkey_stable.crx
 ```
 
-### 第四步：安装h5player增强脚本
+### Step Four: Install the h5player Enhancement Script
 
-**[h5player.user.js (点我完成H5Player增强脚本的安装)](https://update.greasyfork.org/scripts/381682/HTML5%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE%E5%99%A8%E5%A2%9E%E5%BC%BA%E8%84%9A%E6%9C%AC.user.js)**  
+**[h5player.user.js (Click here to install the H5Player enhancement script)](https://update.greasyfork.org/scripts/381682/HTML5%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE%E5%99%A8%E5%A2%9E%E5%BC%BA%E8%84%9A%E6%9C%AC.user.js)**
 
-直接在浏览器地址栏里输入如下的URL也能完成脚本的安装：
+You can also enter the following URL in the browser's address bar to complete the script installation:
 
 - [https://h5player.anzz.top/h5player.user.js](https://h5player.anzz.top/h5player.user.js)
 
-安装好后的运行效果如下所示：  
+The operational effect after installation is shown below:
 
 <a href="https://h5player.anzz.top/assets/img/h5player_ui.jpg" target="_blank">
   <img src="https://h5player.anzz.top/assets/img/h5player_ui.jpg" alt="h5player-ui" />
 </a>
-<br />
 
-## 移动端安装
+## Mobile Installation
 
-对于有移动端需求的用户，脚本也是可以支持运行的。  
+For users with mobile needs, the script is also supported.
 
-移动端优先推荐使用 [Kiwi Browser](https://kiwibrowser.com/)，它可以像桌面环境一样安装Tampermonkey插件，然后通过Tampermonkey安装脚本。
+On mobile devices, Kiwi Browser is the recommended choice, as it can install the Tampermonkey plugin like a desktop environment and then install the script through Tampermonkey.
 
 <a href="https://kiwibrowser.com/" target="_blank">
   <img src="./img/kiwi_browser_logo.jpg" alt="Kiwi Browser" width=128>
 </a>
 
-如果你可以访问谷歌应用商店，可以直接通过谷歌应用商店安装Kiwi Browser。  
+If you can access the Google Play Store, you can install Kiwi Browser directly through it.
 
-如果不能访问谷歌应用商店，可以通过下面的镜像地址下载安装：  
+If you cannot access the Google Play Store, you can download and install it through the following mirror addresses:
 
 - [Kiwi Browser - apkcombo](https://apkcombo.com/zh/kiwi-browser/com.kiwibrowser.browser/)
 - [Kiwi Browser - apkmirror](https://www.apkmirror.com/apk/geometry-ou/kiwi-browser-fast-quiet/)
 
-如果上面镜像地址也不能访问，可以通过下面的网盘地址下载安装：
+If the above mirror addresses are inaccessible, download and install via the following cloud disk addresses:
 
-- [Kiwi Browser - 蓝奏云](https://wwt.lanzouq.com/i8Pdp1p5z6cf) 提取密码：6hx7
-- [Kiwi Browser - 百度云](https://pan.baidu.com/s/1ZPc7mIbiCoSXcymnRxWx5Q?pwd=m1yb) 提取密码：m1yb
+- [Kiwi Browser - Lanzou Cloud](https://wwt.lanzouq.com/i8Pdp1p5z6cf) Extraction Code: 6hx7
+- [Kiwi Browser - Baidu Cloud](https://pan.baidu.com/s/1ZPc7mIbiCoSXcymnRxWx5Q?pwd=m1yb) Extraction Code: m1yb
 
-安装好Kiwi Browser后，安装Tampermonkey插件，需要在线或离线安装都参考前面的安装方法进行安装即可。
+After installing the Kiwi Browser, install the Tampermonkey plugin by following the previous installation methods.
 
-安装好后的运行效果如下所示：
+The operational effect after installation is shown below:
 
 <a href="https://h5player.anzz.top/assets/img/kiwi_browser_effect01.83b4a12a.jpg" target="_blank">
   <img src="./img/kiwi_browser_effect01.jpg" alt="h5player_for_kiwi_browser" width=480>
@@ -118,12 +117,12 @@ tar -xvf tampermonkey_stable.crx
   <img src="./img/kiwi_browser_effect02.jpg" alt="h5player_for_kiwi_browser" width=480>
 </a>
 
-## AdGuard客户端下安装
+## Installation on AdGuard Client
 
-[AdGuard](https://adguard.com)客户端也支持加载用户脚本，并且h5player脚本也是可以通过AdGuard客户端进行安装运行的，相比使用Tampermonkey插件，AdGuard客户端的用户脚本功能会存在一些限制，但核心功能还是支持的。  
+The [AdGuard](https://adguard.com) client also supports loading user scripts, and the h5player script can be installed and run via AdGuard. Compared to using the Tampermonkey plugin, there are some limitations to user scripts in AdGuard, but core functions are still supported.
 
-使用AdGuard客户端注入脚本的好处是：可以在任意的网页里执行脚本，从而实现对一些不支持Tampermonkey客户端的网页进行功能增强。  
+The benefit of injecting scripts via the AdGuard client is that the script can be executed on any webpage, enabling the enhancement of some webpages that do not support the Tampermonkey client.
 
-当然目前脚本在这方面的支持还不够完善，如果您有通过这种方式加载脚本的需求，可以通过[issues](https://github.com/xxxily/h5player/issues)告诉我，我会根据实际情况决定是否进行适配完善。  
+Currently, the script's support in this regard is not fully optimized. If you need to load the script in this way, please let me know via [issues](https://github.com/xxxily/h5player/issues), and I will decide whether to adapt and perfect it based on actual conditions.
 
 ![h5player_for_adguard](./img/h5player_for_adguard.jpg)
