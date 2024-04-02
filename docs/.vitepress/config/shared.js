@@ -1,12 +1,16 @@
 import { defineConfig } from 'vitepress'
 import { search as zhSearch } from './zh'
 
+console.log('process.env.BASEPATH:', process.env.BASEPATH || '/')
+
 export const shared = defineConfig({
   title: 'h5player',
 
   lastUpdated: true,
   cleanUrls: true,
   metaChunk: true,
+
+  base: process.env.BASEPATH || '/',
 
   outDir: '../dist/h5player-docs',
   themeConfig: {

@@ -14,7 +14,11 @@
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "docs:release": "node bin/docs/release.js"
+    "docs:release": "node bin/docs/release.js",
+    "giteeDocs:dev": "cross-env BASEPATH='/h5player/' vitepress dev docs",
+    "giteeDocs:build": "cross-env BASEPATH='/h5player/' vitepress build docs",
+    "giteeDocs:preview": "cross-env BASEPATH='/h5player/' vitepress preview docs",
+    "giteeDocs:release": "cross-env BASEPATH='/h5player/' DOCSTYPE='gitee' node bin/docs/release.js"
   },
   "dependencies": {
     "@shoelace-style/shoelace": "^2.12.0",
