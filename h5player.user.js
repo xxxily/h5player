@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      4.2.3
+// @version      4.2.4
 // @description  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
 // @description:en  Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
 // @description:zh  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
@@ -1845,12 +1845,14 @@ const configManager = new ConfigManager({
       {
         desc: '缩小视频画面 -0.05',
         key: 'shift+x',
-        command: 'setScaleDown'
+        command: 'setScaleDown',
+        args: -0.05
       },
       {
         desc: '放大视频画面 +0.05',
         key: 'shift+c',
-        command: 'setScaleUp'
+        command: 'setScaleUp',
+        args: 0.05
       },
       {
         desc: '恢复视频画面',
@@ -1860,32 +1862,38 @@ const configManager = new ConfigManager({
       {
         desc: '画面向右移动10px',
         key: 'shift+arrowright',
-        command: 'setTranslateRight'
+        command: 'setTranslateRight',
+        args: 10
       },
       {
         desc: '画面向左移动10px',
         key: 'shift+arrowleft',
-        command: 'setTranslateLeft'
+        command: 'setTranslateLeft',
+        args: -10
       },
       {
         desc: '画面向上移动10px',
         key: 'shift+arrowup',
-        command: 'setTranslateUp'
+        command: 'setTranslateUp',
+        args: 10
       },
       {
         desc: '画面向下移动10px',
         key: 'shift+arrowdown',
-        command: 'setTranslateDown'
+        command: 'setTranslateDown',
+        args: -10
       },
       {
         desc: '前进5秒',
         key: 'arrowright',
-        command: 'setCurrentTimeUp'
+        command: 'setCurrentTimeUp',
+        args: 5
       },
       {
         desc: '后退5秒',
         key: 'arrowleft',
-        command: 'setCurrentTimeDown'
+        command: 'setCurrentTimeDown',
+        args: -5
       },
       {
         desc: '前进30秒',
@@ -1929,14 +1937,16 @@ const configManager = new ConfigManager({
         command: 'switchPlayStatus'
       },
       {
-        desc: '减速播放 -0.1',
+        desc: '减速播放',
         key: 'x',
-        command: 'setPlaybackRateDown'
+        command: 'setPlaybackRateDown',
+        args: -0.1
       },
       {
-        desc: '加速播放 +0.1',
+        desc: '加速播放',
         key: 'c',
-        command: 'setPlaybackRateUp'
+        command: 'setPlaybackRateUp',
+        args: 0.1
       },
       {
         desc: '正常速度播放',
@@ -2082,9 +2092,17 @@ const configManager = new ConfigManager({
         when: ''
       }
     ],
+    mouse: {
+      enable: false,
+      /* 长按多久响应鼠标长按事件 */
+      longPressTime: 600
+    },
     ui: {
       enable: true,
       alwaysShow: false
+    },
+    download: {
+      enable: true
     },
     enhance: {
     /* 不禁用默认的调速逻辑，则在多个视频切换时，速度很容易被重置，所以该选项默认开启 */
@@ -2117,7 +2135,7 @@ const configManager = new ConfigManager({
 });
 
 async function initUiConfigManager () {
-  const isUiConfigPage = location.href.indexOf('h5player.anzz.top/tools/json-editor') > -1;
+  const isUiConfigPage = location.href.indexOf('h5player.anzz.top/tools/json-editor') > -1 || location.href.indexOf('ankvps.gitee.io/h5player/tools/json-editor') > -1;
   const isUiConfigMode = location.href.indexOf('saveHandlerName=saveH5PlayerConfig') > -1;
   if (!isUiConfigPage || !isUiConfigMode) return
 
@@ -2136,7 +2154,7 @@ async function initUiConfigManager () {
     pageWindow.jsonEditor.set(config);
 
     // pageWindow.jsonEditor.collapseAll()
-    pageWindow.jsonEditor.expandAll();
+    pageWindow.jsonEditor.expandAll && pageWindow.jsonEditor.expandAll();
 
     pageWindow.saveH5PlayerConfig = function (editor) {
       try {
@@ -3680,6 +3698,8 @@ var zhCN = {
   issues: '问题反馈',
   setting: '设置',
   hotkeys: '快捷键',
+  keyboardControl: '键盘控制',
+  mouseControl: '鼠标控制',
   hotkeysDocs: '快捷键文档',
   enable: '启用',
   disable: '禁用',
@@ -3688,6 +3708,8 @@ var zhCN = {
   toggleHotkeysTemporarily: '临时启用/禁用快捷键',
   enableHotkeys: '启用快捷键',
   disableHotkeys: '禁用快捷键',
+  enableMouseControl: '启用鼠标控制',
+  disableMouseControl: '禁用鼠标控制',
   donate: '👍请作者喝杯咖啡',
   aboutDonate: '100万级安装量的作品，有多少打赏？',
   aboutAuthor: '关于作者',
@@ -3736,6 +3758,9 @@ var zhCN = {
   capture: '截图',
   download: '下载',
   mediaDownload: {
+    enable: '开启媒体下载',
+    disable: '关闭媒体下载',
+    downloadOptions: '下载选项',
     downloading: '文件正在下载中，确定重复执行此操作？',
     hasDownload: '文件已经下载，确定重复执行此操作？',
     confirmTitle: '请输入文件名',
@@ -3776,6 +3801,11 @@ var zhCN = {
   ffmpegScript: '音视频合并/转换脚本',
   autoGotoBufferedTime: '自动跟随跳转到缓冲区时间',
   disableAutoGotoBufferedTime: '禁用自动跟随跳转到缓冲区时间',
+  mouse: {
+    enable: '启用鼠标控制',
+    disable: '禁用鼠标控制',
+    longPressTime: '长按多久响应鼠标长按事件'
+  },
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '前进：',
@@ -3815,6 +3845,8 @@ var enUS = {
   issues: 'Issues',
   setting: 'Setting',
   hotkeys: 'Hotkeys',
+  keyboardControl: 'Keyboard Control',
+  mouseControl: 'Mouse Control',
   hotkeysDocs: 'Hotkeys Docs',
   enable: 'Enable',
   disable: 'Disable',
@@ -3870,6 +3902,9 @@ var enUS = {
   capture: 'Capture',
   download: 'Download',
   mediaDownload: {
+    enable: 'Enable media download',
+    disable: 'Disable media download',
+    downloadOptions: 'Download options',
     downloading: 'The file is being downloaded. Are you sure you want to execute this operation again?',
     hasDownload: 'The file has been downloaded. Are you sure you want to execute this operation again?',
     confirmTitle: 'Please enter the file name',
@@ -3910,6 +3945,11 @@ var enUS = {
   ffmpegScript: 'Audio and video merge/convert script',
   autoGotoBufferedTime: 'Automatically jump to the buffered time',
   disableAutoGotoBufferedTime: 'Disable automatic jump to the buffered time',
+  mouse: {
+    enable: 'Enable mouse control',
+    disable: 'Disable mouse control',
+    longPressTime: 'How long to respond to mouse long press events'
+  },
   tipsMsg: {
     playspeed: 'Speed: ',
     forward: 'Forward: ',
@@ -3950,6 +3990,8 @@ var ru = {
   issues: 'обратная связь',
   setting: 'установка',
   hotkeys: 'горячие клавиши',
+  keyboardControl: 'управление клавиатурой',
+  mouseControl: 'управление мышью',
   hotkeysDocs: 'документы горячих клавиш',
   enable: 'включить',
   disable: 'отключить',
@@ -4005,6 +4047,9 @@ var ru = {
   capture: 'Захват',
   download: 'Скачать',
   mediaDownload: {
+    enable: 'Включить загрузку медиафайлов',
+    disable: 'Отключить загрузку медиафайлов',
+    downloadOptions: 'Опции загрузки',
     downloading: 'Идет скачивание файла. Вы уверены, что хотите повторить эту операцию?',
     hasDownload: 'Файл скачан. Вы уверены, что хотите повторить эту операцию?',
     confirmTitle: 'Пожалуйста, введите имя файла',
@@ -4045,6 +4090,11 @@ var ru = {
   ffmpegScript: 'Скрипт слияния/преобразования аудио и видео',
   autoGotoBufferedTime: 'Автоматически перейти к времени буфера',
   disableAutoGotoBufferedTime: 'Отключить автоматический переход к времени буфера',
+  mouse: {
+    enable: 'Включить управление мышью',
+    disable: 'Отключить управление мышью',
+    longPressTime: 'Как долго реагировать на долгие нажатия мыши'
+  },
   tipsMsg: {
     playspeed: 'Скорость: ',
     forward: 'Вперёд: ',
@@ -4084,6 +4134,8 @@ var zhTW = {
   issues: '反饋',
   setting: '設置',
   hotkeys: '快捷鍵',
+  keyboardControl: '鍵盤控制',
+  mouseControl: '鼠標控制',
   hotkeysDocs: '快捷鍵文檔',
   enable: '啟用',
   disable: '禁用',
@@ -4139,6 +4191,9 @@ var zhTW = {
   capture: '截圖',
   download: '下載',
   mediaDownload: {
+    enable: '開啟媒體下載',
+    disable: '關閉媒體下載',
+    downloadOptions: '下載選項',
     downloading: '文件正在下載中，確定重複執行此操作？',
     hasDownload: '文件已經下載，確定重複執行此操作？',
     confirmTitle: '請輸入文件名',
@@ -4179,6 +4234,11 @@ var zhTW = {
   ffmpegScript: '音視頻合併/轉換腳本',
   autoGotoBufferedTime: '自動跟隨跳轉到緩衝區時間',
   disableAutoGotoBufferedTime: '禁用自動跟隨跳轉到緩衝區時間',
+  mouse: {
+    enable: '啟用鼠標控制',
+    disable: '禁用鼠標控制',
+    longPressTime: '長按多久響應鼠標長按事件'
+  },
   tipsMsg: {
     playspeed: '播放速度：',
     forward: '向前：',
@@ -5189,7 +5249,7 @@ const monkeyMenu = {
   }
 };
 
-const version = '4.2.3';
+const version = '4.2.4';
 
 function refreshPage (msg) {
   msg = msg || '配置已更改，马上刷新页面让配置生效？';
@@ -5316,7 +5376,11 @@ const globalFunctional = {
     desc: i18n.t('openCustomConfigurationEditor'),
     fn: () => {
       // openInTab('https://h5player.anzz.top/tools/json-editor/index.html?mode=tree&saveHandlerName=saveH5PlayerConfig&expandAll=true&json={}')
-      openInTab('https://u.anzz.top/h5pjsoneditor');
+      if (navigator.language.indexOf('zh-CN') > -1) {
+        openInTab('https://u.anzz.top/h5pjsoneditorzh');
+      } else {
+        openInTab('https://u.anzz.top/h5pjsoneditor');
+      }
     }
   },
   /* 切换tampermonkey菜单的展开或折叠状态 */
@@ -5516,6 +5580,66 @@ const globalFunctional = {
       const confirm = window.confirm(`${configManager.getLocalStorage('enableHotkeys') === false ? i18n.t('enableHotkeys') : i18n.t('disableHotkeys')} 「${i18n.t('localSetting')}」`);
       if (confirm) {
         configManager.setLocalStorage('enableHotkeys', !configManager.getLocalStorage('enableHotkeys'));
+        window.location.reload();
+      }
+    }
+  },
+
+  toggleMouseControl: {
+    title: () => `${configManager.getGlobalStorage('mouse.enable') === false ? i18n.t('mouse.enable') : i18n.t('mouse.disable')} 「${i18n.t('globalSetting')}」`,
+    desc: () => `${configManager.getGlobalStorage('mouse.enable') === false ? i18n.t('mouse.enable') : i18n.t('mouse.disable')} 「${i18n.t('globalSetting')}」`,
+    fn: () => {
+      const confirm = window.confirm(`${configManager.getGlobalStorage('mouse.enable') === false ? i18n.t('mouse.enable') : i18n.t('mouse.disable')} 「${i18n.t('globalSetting')}」`);
+      if (confirm) {
+        configManager.setGlobalStorage('mouse.enable', !configManager.getGlobalStorage('mouse.enable'));
+        window.location.reload();
+      }
+    }
+  },
+
+  toggleMouseControlUnderCurrentSite: {
+    title: () => `${configManager.getLocalStorage('mouse.enable') === false ? i18n.t('mouse.enable') : i18n.t('mouse.disable')} 「${i18n.t('localSetting')}」`,
+    desc: () => `${configManager.getLocalStorage('mouse.enable') === false ? i18n.t('mouse.enable') : i18n.t('mouse.disable')} 「${i18n.t('localSetting')}」`,
+    fn: () => {
+      const confirm = window.confirm(`${configManager.getLocalStorage('mouse.enable') === false ? i18n.t('mouse.enable') : i18n.t('mouse.disable')} 「${i18n.t('localSetting')}」`);
+      if (confirm) {
+        configManager.setLocalStorage('mouse.enable', !configManager.getLocalStorage('mouse.enable'));
+        window.location.reload();
+      }
+    }
+  },
+
+  setMouseLongPressTime: {
+    title: `${i18n.t('mouse.longPressTime')}「${i18n.t('globalSetting')}」`,
+    desc: `${i18n.t('mouse.longPressTime')}「${i18n.t('globalSetting')}」`,
+    fn: () => {
+      const longPressTime = prompt(`${i18n.t('mouse.longPressTime')}「${i18n.t('globalSetting')}」`, configManager.getGlobalStorage('mouse.longPressTime') || 600);
+      if (longPressTime) {
+        configManager.setGlobalStorage('mouse.longPressTime', Number(longPressTime));
+        window.location.reload();
+      }
+    }
+  },
+
+  toggleDownloadControl: {
+    title: () => `${configManager.getGlobalStorage('download.enable') === false ? i18n.t('mediaDownload.enable') : i18n.t('mediaDownload.disable')} 「${i18n.t('globalSetting')}」`,
+    desc: () => `${configManager.getGlobalStorage('download.enable') === false ? i18n.t('mediaDownload.enable') : i18n.t('mediaDownload.disable')} 「${i18n.t('globalSetting')}」`,
+    fn: () => {
+      const confirm = window.confirm(`${configManager.getGlobalStorage('download.enable') === false ? i18n.t('mediaDownload.enable') : i18n.t('mediaDownload.disable')} 「${i18n.t('globalSetting')}」`);
+      if (confirm) {
+        configManager.setGlobalStorage('download.enable', !configManager.getGlobalStorage('download.enable'));
+        window.location.reload();
+      }
+    }
+  },
+
+  toggleDownloadControlUnderCurrentSite: {
+    title: () => `${configManager.getLocalStorage('download.enable') === false ? i18n.t('mediaDownload.enable') : i18n.t('mediaDownload.disable')} 「${i18n.t('localSetting')}」`,
+    desc: () => `${configManager.getLocalStorage('download.enable') === false ? i18n.t('mediaDownload.enable') : i18n.t('mediaDownload.disable')} 「${i18n.t('localSetting')}」`,
+    fn: () => {
+      const confirm = window.confirm(`${configManager.getLocalStorage('download.enable') === false ? i18n.t('mediaDownload.enable') : i18n.t('mediaDownload.disable')} 「${i18n.t('localSetting')}」`);
+      if (confirm) {
+        configManager.setLocalStorage('download.enable', !configManager.getLocalStorage('download.enable'));
         window.location.reload();
       }
     }
@@ -6693,7 +6817,7 @@ const remoteHelper = {
 function registerMouseEvent (h5player) {
   const t = h5player;
 
-  const longPressTime = 600;
+  const longPressTime = configManager.get('mouse.longPressTime') || 600;
   let mouseEventTimer = null;
   let hasHandleEvent = false;
   let isPaused = false;
@@ -10926,11 +11050,6 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
           desc: i18n.t('moreActions'),
           subMenu: [
             {
-              title: `${i18n.t('toggleStates')} ${i18n.t('autoGotoBufferedTime')}`,
-              desc: `${i18n.t('toggleStates')} ${i18n.t('autoGotoBufferedTime')}`,
-              action: 'toggleAutoGotoBufferedTime'
-            },
-            {
               title: 'Clean remote helper info',
               desc: 'Clean remote helper info',
               action: 'cleanRemoteHelperInfo',
@@ -10958,8 +11077,8 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
           divider: true
         },
         {
-          title: i18n.t('hotkeys'),
-          desc: i18n.t('hotkeys'),
+          title: i18n.t('keyboardControl'),
+          desc: i18n.t('keyboardControl'),
           subMenu: [
             {
               ...globalFunctional.openHotkeysPage,
@@ -10969,19 +11088,64 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
             {
               title: i18n.t('toggleHotkeysTemporarily'),
               desc: i18n.t('toggleHotkeysTemporarily'),
-              action: 'toggleHotkeys',
-              args: null
+              action: 'toggleHotkeys'
             },
             {
               ...globalFunctional.toggleHotkeysStatusUnderCurrentSite,
-              action: 'toggleHotkeysStatusUnderCurrentSite',
-              args: null
+              action: 'toggleHotkeysStatusUnderCurrentSite'
             },
             {
               ...globalFunctional.toggleHotkeysStatus,
               action: 'toggleHotkeysStatus',
-              args: null,
               disabled: !isGlobalStorageUsable
+            }
+          ]
+        },
+        {
+          title: i18n.t('mouseControl'),
+          desc: i18n.t('mouseControl'),
+          subMenu: [
+            {
+              ...globalFunctional.setMouseLongPressTime,
+              action: 'setMouseLongPressTime'
+            },
+            {
+              ...globalFunctional.toggleMouseControlUnderCurrentSite,
+              action: 'toggleMouseControlUnderCurrentSite'
+            },
+            {
+              ...globalFunctional.toggleMouseControl,
+              action: 'toggleMouseControl',
+              disabled: !isGlobalStorageUsable
+            },
+            {
+              title: i18n.t('comingSoon'),
+              desc: i18n.t('comingSoon')
+            }
+          ]
+        },
+        {
+          title: i18n.t('mediaDownload.downloadOptions'),
+          desc: i18n.t('mediaDownload.downloadOptions'),
+          subMenu: [
+            {
+              ...globalFunctional.toggleDownloadControlUnderCurrentSite,
+              action: 'toggleDownloadControlUnderCurrentSite'
+            },
+            {
+              ...globalFunctional.toggleDownloadControl,
+              action: 'toggleDownloadControl',
+              disabled: !isGlobalStorageUsable
+            },
+            {
+              title: `${i18n.t('toggleStates')} ${i18n.t('autoGotoBufferedTime')}`,
+              desc: `${i18n.t('toggleStates')} ${i18n.t('autoGotoBufferedTime')}`,
+              action: 'toggleAutoGotoBufferedTime'
+            },
+            {
+              title: i18n.t('ffmpegScript'),
+              desc: i18n.t('ffmpegScript'),
+              url: 'https://u.anzz.top/ffmpegscript'
             }
           ]
         },
@@ -11150,6 +11314,7 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
         {
           title: i18n.t('more'),
           desc: i18n.t('more'),
+          disabled: true,
           subMenu: [
             {
               title: i18n.t('ffmpegScript'),
@@ -14557,7 +14722,7 @@ async function h5PlayerInit () {
         h5Player.init();
       });
 
-      if (configManager.get('enhance.allowExperimentFeatures')) {
+      if (configManager.get('enhance.allowExperimentFeatures') && configManager.get('download.enable')) {
         mediaSource.init();
         debug.warn(`[experimentFeatures][warning] ${i18n.t('experimentFeaturesWarning')}`);
         debug.warn('[experimentFeatures][mediaSource][activated]');
@@ -14620,7 +14785,9 @@ async function h5PlayerInit () {
     }
 
     /* 注册鼠标控制事件 */
-    registerMouseEvent(h5Player);
+    if (configManager.get('mouse.enable')) {
+      registerMouseEvent(h5Player);
+    }
   } catch (e) {
     debug.error('h5Player init fail', e);
   }
