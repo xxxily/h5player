@@ -8,6 +8,7 @@ export const zh = defineConfig({
   themeConfig: {
     nav: [
       { text: '文档中心', link: '/zh/home/quickStart' },
+      { text: '支持作者', link: '/zh/home/rewardTheAuthor' },
       {
         text: '相关连接',
         ariaLabel: '相关连接',
@@ -42,6 +43,21 @@ export const zh = defineConfig({
               { text: '赞赏码', link: 'https://h5player.anzz.top/assets/img/donate.png', target: '_blank' },
             ]
           },
+        ]
+      },
+      {
+        text: 'anzz.top',
+        items: [
+          {
+            text: 'anzz',
+            items: [
+              { text: 'anzz.top', link: 'https://anzz.top', target: '_blank' },
+              { text: 'ai.anzz.top', link: 'https://ai.anzz.top', target: '_blank' },
+              { text: '996.anzz.top', link: 'https://996.anzz.top', target: '_blank' },
+              { text: 'h5player.anzz.top', link: 'https://h5player.anzz.top', target: '_blank' },
+              { text: 'broadcast-message.anzz.top', link: 'https://broadcast-message.anzz.top', target: '_blank' },
+            ]
+          }
         ]
       }
     ],
@@ -78,9 +94,42 @@ export const zh = defineConfig({
           { text: '安装详解', link: '/zh/home/install' },
           { text: '用户手册', link: '/zh/home/feature' },
           { text: '自定义配置', link: '/zh/home/customConfiguration' },
+        ]
+      },
+      {
+        text: '更多',
+        items: [
           { text: '常见问题', link: '/zh/home/q&a' },
           { text: '关于捐赠', link: '/zh/home/aboutDonate' },
+          { text: '支持作者', link: '/zh/home/rewardTheAuthor' },
           { text: '更新日志', link: '/zh/home/changeLog' },
+        ]
+      },
+      {
+        text: '其它作品',
+        items: [
+          { text: 'Hello-AI', link: 'https://github.com/xxxily/hello-ai' },
+          { text: 'ffmpeg-script', link: 'https://github.com/xxxily/ffmpeg-script' },
+          { text: 'local-appstore-for-1Panel', link: 'https://github.com/xxxily/local-appstore-for-1Panel' },
+          { text: 'broadcast-message', link: 'https://github.com/xxxily/broadcast-message' },
+        ]
+      },
+      {
+        text: 'anzz',
+        items: [
+          { text: 'anzz.top', link: 'https://anzz.top', target: '_blank' },
+          { text: 'ai.anzz.top', link: 'https://ai.anzz.top', target: '_blank' },
+          { text: '996.anzz.top', link: 'https://996.anzz.top', target: '_blank' },
+          { text: 'h5player.anzz.top', link: 'https://h5player.anzz.top', target: '_blank' },
+          { text: 'broadcast-message', link: 'https://broadcast-message.anzz.top', target: '_blank' },
+        ]
+      },
+      {
+        text: '其它推荐',
+        items: [
+          { text: 'HuluAI', link: 'https://u.anzz.top/huluai02', target: '_blank' },
+          { text: 'AnakinAI', link: 'https://u.anzz.top/anakinai', target: '_blank' },
+          { text: 'AI编程插件', link: 'https://u.anzz.top/comate', target: '_blank' },
         ]
       }
     ]

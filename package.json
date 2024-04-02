@@ -13,7 +13,8 @@
     "server": "node bin/staticService/index.js",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "docs:release": "node bin/docs/release.js"
   },
   "dependencies": {
     "@shoelace-style/shoelace": "^2.12.0",
