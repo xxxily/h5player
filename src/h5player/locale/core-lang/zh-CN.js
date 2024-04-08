@@ -2,6 +2,7 @@ export default {
   website: '🏠脚本官网',
   about: '关于',
   issues: '问题反馈',
+  faq: '常见问题',
   setting: '设置',
   hotkeys: '快捷键',
   keyboardControl: '键盘控制',
@@ -142,5 +143,8 @@ export default {
     horizontalMirror: '水平镜像',
     verticalMirror: '垂直镜像',
     videozoom: '视频缩放率：'
+  },
+  faqList: {
+    //
   }
 }

@@ -135,6 +135,32 @@ const globalFunctional = {
       }
     }
   },
+
+  openDocsLink: {
+    title: i18n.t('openDocsLink'),
+    desc: i18n.t('openDocsLink'),
+    fn: (link) => {
+      if (typeof link !== 'string' || link.startsWith('http') === true) {
+        return false
+      }
+
+      if (!link.startsWith('/')) {
+        link = '/' + link
+      }
+
+      const isChinese = i18n.language().indexOf('zh') > -1
+      const basePath = isChinese ? 'https://ankvps.gitee.io/h5player' : 'https://h5player.anzz.top'
+      let url = basePath + link
+
+      /* 判断是否为中文环境，且link不是/zh开头，则自动加上/zh前缀 */
+      if (isChinese && !link.startsWith('/zh')) {
+        url = basePath + '/zh' + link
+      }
+
+      openInTab(url)
+    }
+  },
+
   /* 切换tampermonkey菜单的展开或折叠状态 */
   toggleExpandedOrCollapsedStateOfMonkeyMenu: {
     title: `${configManager.get('enhance.unfoldMenu') ? i18n.t('foldMenu') : i18n.t('unfoldMenu')} 「${i18n.t('globalSetting')}」`,

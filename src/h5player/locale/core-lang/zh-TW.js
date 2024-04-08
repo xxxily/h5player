@@ -2,6 +2,7 @@ export default {
   website: '🏠腳本官網',
   about: '關於',
   issues: '反饋',
+  faq: '常見問題',
   setting: '設置',
   hotkeys: '快捷鍵',
   keyboardControl: '鍵盤控制',

@@ -166,13 +166,19 @@ If a screenshot can automatically download and save to a local folder, the scrip
 If you press the screenshot hotkey and it neither downloads automatically nor opens a new window, then it's likely that you've blocked new window pop-ups, causing the screenshot function to malfunction. Setting permission for pop-ups on the current site will resolve this issue.
 :::
 
-## How to disable unwanted shortcut keys when there are too many
+## How to Disable or Customize Shortcut Keys
 
-We apologize that, as of now, the plugin does not provide an option to disable shortcut keys. Once a user-friendly configuration scheme is devised, we will add it, but there is no precise timeline for this. We ask for your patience as the author has limited free time and energy.
+The latest version of the script provides a very rich customization capability. You can disable any shortcut keys you don't need or modify the ones you want by using any of the following methods:
 
-If you have some programming background and urgently need this feature, the good news is that the plugin is fully open-source. You can fork it and add your own logic.
+- Click on GUI's `Menu > Settings > Open Custom Configuration Editor`.
+- Click on the Tampermonkey plugin icon `Open Custom Configuration Editor`.
+- Define your shortcut keys and other related capabilities through [Custom Configuration](./customConfiguration.md).
 
-Additionally, a note: "Disdain goes out to those who, due to a lack of a feature they want, give a plugin a bad review without hesitation, and to those who disrespect others' hard work with unkind words."
+~~We sincerely apologize, as of now, the plugin does not provide an option to disable shortcut keys. We will add a visual configuration solution in the future, but it may be a long time coming. Please do not have too high expectations as the author's free time and energy are limited...~~
+
+~~If you desperately need this feature and have some programming knowledge, congratulations, the plugin is completely open-source. You can fork a copy and add your own logic.~~
+
+Additionally, I'd like to add: `I have disdain for those who hastily leave negative reviews because the plugin lacks the feature they want, and for those who disrespect others' hard work and spout abuse casually.`  
 
 <br />
 <br />

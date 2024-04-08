@@ -4,6 +4,7 @@ import iconList from '../../../../node_modules/@shoelace-style/shoelace/dist/ass
 import iconDownload from '../../../../node_modules/@shoelace-style/shoelace/dist/assets/icons/download.svg'
 // import iconGear from '../../../node_modules/@shoelace-style/shoelace/dist/assets/icons/gear.svg'
 // import iconXLg from '../../../node_modules/@shoelace-style/shoelace/dist/assets/icons/x-lg.svg'
+import { faq } from './faq.js'
 
 const { i18n, debug, globalFunctional, configManager } = window.h5playerUIProvider
 const isGlobalStorageUsable = configManager.isGlobalStorageUsable()
@@ -357,6 +358,11 @@ export const menuConfig = [
         ]
       },
       {
+        title: i18n.t('faq'),
+        desc: i18n.t('faq'),
+        subMenu: faq
+      },
+      {
         title: i18n.t('setting'),
         desc: i18n.t('setting'),
         subMenu: [
@@ -555,6 +561,10 @@ export function menuConfigPreprocess (menuConfig, refDom) {
 export function convertDropdownMenuToTemplate (dropdownMenu, isRootMenu = true) {
   const menuItems = dropdownMenu.map(item => {
     if (item.disabled) return ''
+
+    const lang = item.lang || item.language || item.languages
+    if (lang && !i18n.isMatchCurLang(lang)) return ''
+
     const title = (item.title instanceof Function ? item.title() : item.title) || ''
     const desc = (item.desc instanceof Function ? item.desc() : item.desc) || ''
     const id = item.id || Math.random().toString(36).substr(2)
@@ -587,6 +597,9 @@ export function convertMenuConfigToTemplate (menuConfig) {
   <div class="h5p-action-mod">
       ${menuConfig.map(item => {
         if (item.disabled) return ''
+
+        const lang = item.lang || item.language || item.languages
+        if (lang && !i18n.isMatchCurLang(lang)) return ''
 
         const title = (item.title instanceof Function ? item.title() : item.title) || ''
         const desc = (item.desc instanceof Function ? item.desc() : item.desc) || ''
@@ -674,10 +687,9 @@ export function createRecommendModTemplate (refDom) {
 
   /* 根据当前的language和recommendList的languages配置过滤出符合当前语言的recommendList */
   recommendList = recommendList.filter(item => {
-    let lang = item.lang || item.language || item.languages
-    if (lang && !Array.isArray(lang)) { lang = [lang] }
-    if (curLang && lang) {
-      return lang.includes(curLang) || lang.includes(curLang2) || lang.includes(curLang3) || lang.includes(curLang4)
+    const lang = item.lang || item.language || item.languages
+    if (lang) {
+      return i18n.isMatchCurLang(lang)
     } else {
       return true
     }

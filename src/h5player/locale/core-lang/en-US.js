@@ -2,6 +2,7 @@ export default {
   website: '🏠Script Homepage',
   about: 'About',
   issues: 'Issues',
+  faq: 'FAQ',
   setting: 'Setting',
   hotkeys: 'Hotkeys',
   keyboardControl: 'Keyboard Control',
