@@ -11,6 +11,39 @@ function refreshPage (msg) {
   }
 }
 
+const isChinese = () => i18n.language().indexOf('zh') > -1
+
+function getHomePage () {
+  const homePageLinks = [
+    'https://ankvps.gitee.io/h5player/zh/',
+    'https://u.anzz.top/h5player'
+  ]
+
+  /* 从homePageLinks中随机选取一个链接返回 */
+  return isChinese() ? homePageLinks[0] : homePageLinks[1]
+}
+
+function openDocsByPath (path) {
+  if (typeof path !== 'string' || path.startsWith('http') === true) {
+    return false
+  }
+
+  if (!path.startsWith('/')) {
+    path = '/' + path
+  }
+
+  const chinese = isChinese()
+  const basePath = chinese ? 'https://ankvps.gitee.io/h5player' : 'https://h5player.anzz.top'
+  let url = basePath + path
+
+  /* 判断是否为中文环境，且link不是/zh开头，则自动加上/zh前缀 */
+  if (chinese && !path.startsWith('/zh')) {
+    url = basePath + '/zh' + path
+  }
+
+  openInTab(url)
+}
+
 /**
  * 全局可调用的功能，会提供给monkeyMenu调用和UI界面的相关位置进行调用
  * 为了便于调用编排所以使用对象的方式进行管理
@@ -20,83 +53,63 @@ const globalFunctional = {
   getHomePageLink: {
     title: i18n.t('website'),
     desc: i18n.t('website'),
-    fn: () => {
-      const homePageLinks = [
-        'https://h5player.anzz.top',
-        'https://github.com/xxxily/h5player',
-        'https://greasyfork.org/scripts/381682',
-        'https://u.anzz.top/h5player'
-      ]
-
-      /* 从homePageLinks中随机选取一个链接返回 */
-      return homePageLinks[Math.floor(Math.random() * homePageLinks.length)]
-    }
+    fn: () => getHomePage()
   },
 
   /* 打开官网 */
   openWebsite: {
     title: i18n.t('website'),
     desc: i18n.t('website'),
-    fn: () => {
-      openInTab('https://u.anzz.top/h5player')
-    }
+    fn: () => openInTab(getHomePage())
   },
   openAuthorHomePage: {
     title: i18n.t('aboutAuthor'),
     desc: i18n.t('aboutAuthor'),
-    fn: () => {
-      // openInTab('https://github.com/xxxily')
-      openInTab('https://u.anzz.top/xxxily')
-    }
+    fn: () => { openInTab('https://u.anzz.top/xxxily') }
   },
   openHotkeysPage: {
     title: i18n.t('hotkeysDocs'),
     desc: i18n.t('hotkeysDocs'),
     fn: () => {
-      openInTab('https://h5player.anzz.top/home/Introduction.html#%E5%BF%AB%E6%8D%B7%E9%94%AE%E5%88%97%E8%A1%A8')
+      const hotkeysDocs = [
+        'https://ankvps.gitee.io/h5player/zh/home/quickStart#%E5%BF%AB%E6%8D%B7%E9%94%AE%E5%88%97%E8%A1%A8',
+        'https://h5player.anzz.top/home/quickStart#shortcut-key-list'
+      ]
+      openInTab(isChinese() ? hotkeysDocs[0] : hotkeysDocs[1])
     }
   },
   openProjectGithub: {
     title: 'GitHub',
     desc: 'GitHub',
-    fn: () => {
-      openInTab('https://github.com/xxxily/h5player')
-    }
+    fn: () => openInTab('https://github.com/xxxily/h5player')
   },
   openIssuesPage: {
     title: i18n.t('issues'),
-    desc: i18n.t('hotkeys'),
-    fn: () => {
-      openInTab('https://github.com/xxxily/h5player/issues')
-    }
+    desc: i18n.t('issues'),
+    fn: () => openInTab('https://github.com/xxxily/h5player/issues')
   },
   openDonatePage: {
     title: i18n.t('donate'),
     desc: i18n.t('donate'),
-    fn: () => {
-      openInTab('https://u.anzz.top/h5playerdonate')
-    }
+    fn: () => openDocsByPath('/home/rewardTheAuthor')
   },
   openAboutDonatePage: {
     title: i18n.t('aboutDonate'),
     desc: i18n.t('aboutDonate'),
-    fn: () => {
-      openInTab('https://u.anzz.top/aboutonate')
-    }
+    fn: () => openDocsByPath('/home/aboutDonate')
   },
   openAddGroupChatPage: {
     title: i18n.t('addGroupChat'),
     desc: i18n.t('addGroupChat'),
     fn: () => {
-      openInTab('https://u.anzz.top/h5playerddhatroup')
+      const groupChatUrl = isChinese() ? 'https://ankvps.gitee.io/h5player/zh/home/quickStart#%E4%BA%A4%E6%B5%81%E7%BE%A4' : 'https://h5player.anzz.top/home/quickStart#discussion-groups'
+      openInTab(groupChatUrl)
     }
   },
   openChangeLogPage: {
     title: i18n.t('changeLog'),
     desc: i18n.t('changeLog'),
-    fn: () => {
-      openInTab('https://h5player.anzz.top/home/changeLog.html')
-    }
+    fn: () => openDocsByPath('/home/changeLog')
   },
   openCheckVersionPage: {
     title: i18n.t('checkVersion'),
@@ -127,38 +140,17 @@ const globalFunctional = {
     title: i18n.t('openCustomConfigurationEditor'),
     desc: i18n.t('openCustomConfigurationEditor'),
     fn: () => {
-      // openInTab('https://h5player.anzz.top/tools/json-editor/index.html?mode=tree&saveHandlerName=saveH5PlayerConfig&expandAll=true&json={}')
-      if (navigator.language.indexOf('zh-CN') > -1) {
-        openInTab('https://u.anzz.top/h5pjsoneditorzh')
-      } else {
-        openInTab('https://u.anzz.top/h5pjsoneditor')
-      }
+      const jsoneditorUrl = isChinese()
+        ? 'https://u.anzz.top/h5pjsoneditorzh'
+        : 'https://u.anzz.top/h5pjsoneditor'
+      openInTab(jsoneditorUrl)
     }
   },
 
   openDocsLink: {
     title: i18n.t('openDocsLink'),
     desc: i18n.t('openDocsLink'),
-    fn: (link) => {
-      if (typeof link !== 'string' || link.startsWith('http') === true) {
-        return false
-      }
-
-      if (!link.startsWith('/')) {
-        link = '/' + link
-      }
-
-      const isChinese = i18n.language().indexOf('zh') > -1
-      const basePath = isChinese ? 'https://ankvps.gitee.io/h5player' : 'https://h5player.anzz.top'
-      let url = basePath + link
-
-      /* 判断是否为中文环境，且link不是/zh开头，则自动加上/zh前缀 */
-      if (isChinese && !link.startsWith('/zh')) {
-        url = basePath + '/zh' + link
-      }
-
-      openInTab(url)
-    }
+    fn: (path) => openDocsByPath(path)
   },
 
   /* 切换tampermonkey菜单的展开或折叠状态 */

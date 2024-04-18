@@ -1,5 +1,10 @@
 # Update Log
 
+## 4.2.5 [2024/04/18]
+
+* Added a frequently asked questions menu option.
+* Fixed the URL paths for other document links.
+
 ## 4.2.4 [2024/03/29]
 
 * Added a switch configuration option for the mouse control module.

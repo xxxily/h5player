@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      4.2.4
+// @version      4.2.5
 // @description  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
 // @description:en  Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
 // @description:zh  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
@@ -5272,7 +5272,7 @@ const monkeyMenu = {
   }
 };
 
-const version = '4.2.4';
+const version = '4.2.5';
 
 function refreshPage (msg) {
   msg = msg || '配置已更改，马上刷新页面让配置生效？';
@@ -5280,6 +5280,39 @@ function refreshPage (msg) {
   if (status) {
     window.location.reload();
   }
+}
+
+const isChinese = () => i18n.language().indexOf('zh') > -1;
+
+function getHomePage () {
+  const homePageLinks = [
+    'https://ankvps.gitee.io/h5player/zh/',
+    'https://u.anzz.top/h5player'
+  ];
+
+  /* 从homePageLinks中随机选取一个链接返回 */
+  return isChinese() ? homePageLinks[0] : homePageLinks[1]
+}
+
+function openDocsByPath (path) {
+  if (typeof path !== 'string' || path.startsWith('http') === true) {
+    return false
+  }
+
+  if (!path.startsWith('/')) {
+    path = '/' + path;
+  }
+
+  const chinese = isChinese();
+  const basePath = chinese ? 'https://ankvps.gitee.io/h5player' : 'https://h5player.anzz.top';
+  let url = basePath + path;
+
+  /* 判断是否为中文环境，且link不是/zh开头，则自动加上/zh前缀 */
+  if (chinese && !path.startsWith('/zh')) {
+    url = basePath + '/zh' + path;
+  }
+
+  openInTab(url);
 }
 
 /**
@@ -5291,83 +5324,63 @@ const globalFunctional = {
   getHomePageLink: {
     title: i18n.t('website'),
     desc: i18n.t('website'),
-    fn: () => {
-      const homePageLinks = [
-        'https://h5player.anzz.top',
-        'https://github.com/xxxily/h5player',
-        'https://greasyfork.org/scripts/381682',
-        'https://u.anzz.top/h5player'
-      ];
-
-      /* 从homePageLinks中随机选取一个链接返回 */
-      return homePageLinks[Math.floor(Math.random() * homePageLinks.length)]
-    }
+    fn: () => getHomePage()
   },
 
   /* 打开官网 */
   openWebsite: {
     title: i18n.t('website'),
     desc: i18n.t('website'),
-    fn: () => {
-      openInTab('https://u.anzz.top/h5player');
-    }
+    fn: () => openInTab(getHomePage())
   },
   openAuthorHomePage: {
     title: i18n.t('aboutAuthor'),
     desc: i18n.t('aboutAuthor'),
-    fn: () => {
-      // openInTab('https://github.com/xxxily')
-      openInTab('https://u.anzz.top/xxxily');
-    }
+    fn: () => { openInTab('https://u.anzz.top/xxxily'); }
   },
   openHotkeysPage: {
     title: i18n.t('hotkeysDocs'),
     desc: i18n.t('hotkeysDocs'),
     fn: () => {
-      openInTab('https://h5player.anzz.top/home/Introduction.html#%E5%BF%AB%E6%8D%B7%E9%94%AE%E5%88%97%E8%A1%A8');
+      const hotkeysDocs = [
+        'https://ankvps.gitee.io/h5player/zh/home/quickStart#%E5%BF%AB%E6%8D%B7%E9%94%AE%E5%88%97%E8%A1%A8',
+        'https://h5player.anzz.top/home/quickStart#shortcut-key-list'
+      ];
+      openInTab(isChinese() ? hotkeysDocs[0] : hotkeysDocs[1]);
     }
   },
   openProjectGithub: {
     title: 'GitHub',
     desc: 'GitHub',
-    fn: () => {
-      openInTab('https://github.com/xxxily/h5player');
-    }
+    fn: () => openInTab('https://github.com/xxxily/h5player')
   },
   openIssuesPage: {
     title: i18n.t('issues'),
-    desc: i18n.t('hotkeys'),
-    fn: () => {
-      openInTab('https://github.com/xxxily/h5player/issues');
-    }
+    desc: i18n.t('issues'),
+    fn: () => openInTab('https://github.com/xxxily/h5player/issues')
   },
   openDonatePage: {
     title: i18n.t('donate'),
     desc: i18n.t('donate'),
-    fn: () => {
-      openInTab('https://u.anzz.top/h5playerdonate');
-    }
+    fn: () => openDocsByPath('/home/rewardTheAuthor')
   },
   openAboutDonatePage: {
     title: i18n.t('aboutDonate'),
     desc: i18n.t('aboutDonate'),
-    fn: () => {
-      openInTab('https://u.anzz.top/aboutonate');
-    }
+    fn: () => openDocsByPath('/home/aboutDonate')
   },
   openAddGroupChatPage: {
     title: i18n.t('addGroupChat'),
     desc: i18n.t('addGroupChat'),
     fn: () => {
-      openInTab('https://u.anzz.top/h5playerddhatroup');
+      const groupChatUrl = isChinese() ? 'https://ankvps.gitee.io/h5player/zh/home/quickStart#%E4%BA%A4%E6%B5%81%E7%BE%A4' : 'https://h5player.anzz.top/home/quickStart#discussion-groups';
+      openInTab(groupChatUrl);
     }
   },
   openChangeLogPage: {
     title: i18n.t('changeLog'),
     desc: i18n.t('changeLog'),
-    fn: () => {
-      openInTab('https://h5player.anzz.top/home/changeLog.html');
-    }
+    fn: () => openDocsByPath('/home/changeLog')
   },
   openCheckVersionPage: {
     title: i18n.t('checkVersion'),
@@ -5398,38 +5411,17 @@ const globalFunctional = {
     title: i18n.t('openCustomConfigurationEditor'),
     desc: i18n.t('openCustomConfigurationEditor'),
     fn: () => {
-      // openInTab('https://h5player.anzz.top/tools/json-editor/index.html?mode=tree&saveHandlerName=saveH5PlayerConfig&expandAll=true&json={}')
-      if (navigator.language.indexOf('zh-CN') > -1) {
-        openInTab('https://u.anzz.top/h5pjsoneditorzh');
-      } else {
-        openInTab('https://u.anzz.top/h5pjsoneditor');
-      }
+      const jsoneditorUrl = isChinese()
+        ? 'https://u.anzz.top/h5pjsoneditorzh'
+        : 'https://u.anzz.top/h5pjsoneditor';
+      openInTab(jsoneditorUrl);
     }
   },
 
   openDocsLink: {
     title: i18n.t('openDocsLink'),
     desc: i18n.t('openDocsLink'),
-    fn: (link) => {
-      if (typeof link !== 'string' || link.startsWith('http') === true) {
-        return false
-      }
-
-      if (!link.startsWith('/')) {
-        link = '/' + link;
-      }
-
-      const isChinese = i18n.language().indexOf('zh') > -1;
-      const basePath = isChinese ? 'https://ankvps.gitee.io/h5player' : 'https://h5player.anzz.top';
-      let url = basePath + link;
-
-      /* 判断是否为中文环境，且link不是/zh开头，则自动加上/zh前缀 */
-      if (isChinese && !link.startsWith('/zh')) {
-        url = basePath + '/zh' + link;
-      }
-
-      openInTab(url);
-    }
+    fn: (path) => openDocsByPath(path)
   },
 
   /* 切换tampermonkey菜单的展开或折叠状态 */

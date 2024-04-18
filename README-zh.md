@@ -71,7 +71,7 @@
 ## 功能定制
 
 脚本已经支持了大部分常用的功能，如果你有更多的需求，可以通过自定义配置来实现。  
-具体参考：[自定义配置](https://h5player.anzz.top/home/customConfiguration.html)  
+具体参考：[自定义配置](https://ankvps.gitee.io/h5player/zh/home/customConfiguration)  
 <br />
 如果你不懂编程或不想折腾，又有相对复杂的功能需求，可以考虑找作者`付费定制`；  
 [通过上面的微信或者TG联系作者](#交流群)  
@@ -85,12 +85,12 @@
 
 - **[h5player.user.js (点我直接安装)](https://update.greasyfork.org/scripts/381682/HTML5%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE%E5%99%A8%E5%A2%9E%E5%BC%BA%E8%84%9A%E6%9C%AC.user.js)**
 
-更详细的安装帮助看这里：[详细安装教程](https://h5player.anzz.top/home/install.html)  
+更详细的安装帮助看这里：[详细安装教程](https://ankvps.gitee.io/h5player/zh/home/install)  
 
 ## 使用文档
 
-- [功能手册](https://h5player.anzz.top/home/feature.html)
-- [常见问题Q&A](https://h5player.anzz.top/home/q&a.html)
+- [功能手册](https://ankvps.gitee.io/h5player/zh/home/feature)
+- [常见问题Q&A](https://ankvps.gitee.io/h5player/zh/home/q&a)
   
 ## 快捷键列表
 
@@ -211,7 +211,7 @@
 
 如果我的努力给你带来了便利，请不要吝啬你的赞赏  
 
-[100万级安装量的开源作品，一年有多少打赏收入？](https://u.anzz.top/aboutdonate)  
+[100万级安装量的开源作品，一年有多少打赏收入？](https://ankvps.gitee.io/h5player/zh/home/aboutDonate)  
 
 <p>
   <a href="https://h5player.anzz.top" target="_blank">
