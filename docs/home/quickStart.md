@@ -208,7 +208,9 @@ If the website you frequent is not well supported, feel free to raise [issues](h
 
 If my efforts have brought convenience to you, please do not hesitate to give your appreciation.  
 
-[How much in donations does an open-source work with a million installations receive in a year?](https://u.anzz.top/aboutdonate)  
+[How much in donations does an open-source work with a million installations receive in a year?](./aboutDonate.md)  
+
+PayPal: [paypal.me/BlazeLiu](https://paypal.me/BlazeLiu)  
 
 <p>
   <a href="https://h5player.anzz.top" target="_blank">
