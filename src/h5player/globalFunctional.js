@@ -15,8 +15,8 @@ const isChinese = () => i18n.language().indexOf('zh') > -1
 
 function getHomePage () {
   const homePageLinks = [
-    'https://ankvps.gitee.io/h5player/zh/',
-    'https://u.anzz.top/h5player'
+    'https://h5player.anzz.top/zh/',
+    'https://h5player.anzz.top'
   ]
 
   /* 从homePageLinks中随机选取一个链接返回 */
@@ -33,7 +33,7 @@ function openDocsByPath (path) {
   }
 
   const chinese = isChinese()
-  const basePath = chinese ? 'https://ankvps.gitee.io/h5player' : 'https://h5player.anzz.top'
+  const basePath = chinese ? 'https://h5player.anzz.top' : 'https://h5player.anzz.top'
   let url = basePath + path
 
   /* 判断是否为中文环境，且link不是/zh开头，则自动加上/zh前缀 */
@@ -72,7 +72,7 @@ const globalFunctional = {
     desc: i18n.t('hotkeysDocs'),
     fn: () => {
       const hotkeysDocs = [
-        'https://ankvps.gitee.io/h5player/zh/home/quickStart#%E5%BF%AB%E6%8D%B7%E9%94%AE%E5%88%97%E8%A1%A8',
+        'https://h5player.anzz.top/zh/home/quickStart#%E5%BF%AB%E6%8D%B7%E9%94%AE%E5%88%97%E8%A1%A8',
         'https://h5player.anzz.top/home/quickStart#shortcut-key-list'
       ]
       openInTab(isChinese() ? hotkeysDocs[0] : hotkeysDocs[1])
@@ -102,7 +102,7 @@ const globalFunctional = {
     title: i18n.t('addGroupChat'),
     desc: i18n.t('addGroupChat'),
     fn: () => {
-      const groupChatUrl = isChinese() ? 'https://ankvps.gitee.io/h5player/zh/home/quickStart#%E4%BA%A4%E6%B5%81%E7%BE%A4' : 'https://h5player.anzz.top/home/quickStart#discussion-groups'
+      const groupChatUrl = isChinese() ? 'https://h5player.anzz.top/zh/home/quickStart#%E4%BA%A4%E6%B5%81%E7%BE%A4' : 'https://h5player.anzz.top/home/quickStart#discussion-groups'
       openInTab(groupChatUrl)
     }
   },
@@ -140,9 +140,10 @@ const globalFunctional = {
     title: i18n.t('openCustomConfigurationEditor'),
     desc: i18n.t('openCustomConfigurationEditor'),
     fn: () => {
-      const jsoneditorUrl = isChinese()
-        ? 'https://u.anzz.top/h5pjsoneditorzh'
-        : 'https://u.anzz.top/h5pjsoneditor'
+      // const jsoneditorUrl = isChinese()
+      //   ? 'https://u.anzz.top/h5pjsoneditorzh'
+      //   : 'https://u.anzz.top/h5pjsoneditor'
+      const jsoneditorUrl = 'https://u.anzz.top/h5pjsoneditor'
       openInTab(jsoneditorUrl)
     }
   },

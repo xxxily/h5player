@@ -1,5 +1,9 @@
 # Update Log
 
+## 4.2.6 [2024/05/01]
+
+* Fix the issue of inaccessible Chinese document guidance.
+
 ## 4.2.5 [2024/04/18]
 
 * Added a frequently asked questions menu option.
