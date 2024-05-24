@@ -1,5 +1,9 @@
 # Update Log
 
+## 4.2.7 [2024/05/24]
+
+* Solve the issue of not being able to pass Cloudflare's CAPTCHA verification.
+
 ## 4.2.6 [2024/05/01]
 
 * Fix the issue of inaccessible Chinese document guidance.

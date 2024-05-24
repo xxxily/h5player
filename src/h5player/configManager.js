@@ -352,7 +352,9 @@ const configManager = new ConfigManager({
       urls: [
         'https://www.bilibili.com/'
       ],
-      domains: []
+      domains: [
+        'challenges.cloudflare.com'
+      ]
     }
   }
 })
