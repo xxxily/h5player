@@ -9,7 +9,7 @@
 // @name:de      HTML5 Video Player erweitertes Skript
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      4.2.7
+// @version      4.2.8
 // @description  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
 // @description:en  Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
 // @description:zh  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
@@ -131,6 +131,8 @@ function hackAttachShadow () {
     window.Element.prototype._attachShadow = window.Element.prototype.attachShadow;
     window.Element.prototype.attachShadow = function () {
       const arg = arguments;
+      const isClosed = arg[0] && arg[0].mode === 'closed';
+
       if (arg[0] && arg[0].mode) {
         // 强制使用 open mode
         arg[0].mode = 'open';
@@ -154,6 +156,20 @@ function hackAttachShadow () {
         cancelable: true
       });
       document.dispatchEvent(shadowEvent);
+
+      if (isClosed) {
+        /**
+         * 通过defineProperty来设置shadowRoot，get的时候返回null
+         * 让外部感知到的还是closed的shadowRoot，防止误判或针对性检测
+         */
+        Object.defineProperty(this, 'shadowRoot', {
+          get () {
+            return null
+          }
+        });
+      }
+
+      // console.log('addShadowRoot', shadowRoot.host, this, this.shadowRoot)
 
       return shadowRoot
     };

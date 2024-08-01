@@ -11,6 +11,8 @@ function hackAttachShadow () {
     window.Element.prototype._attachShadow = window.Element.prototype.attachShadow
     window.Element.prototype.attachShadow = function () {
       const arg = arguments
+      const isClosed = arg[0] && arg[0].mode === 'closed'
+
       if (arg[0] && arg[0].mode) {
         // 强制使用 open mode
         arg[0].mode = 'open'
@@ -34,6 +36,20 @@ function hackAttachShadow () {
         cancelable: true
       })
       document.dispatchEvent(shadowEvent)
+
+      if (isClosed) {
+        /**
+         * 通过defineProperty来设置shadowRoot，get的时候返回null
+         * 让外部感知到的还是closed的shadowRoot，防止误判或针对性检测
+         */
+        Object.defineProperty(this, 'shadowRoot', {
+          get () {
+            return null
+          }
+        })
+      }
+
+      // console.log('addShadowRoot', shadowRoot.host, this, this.shadowRoot)
 
       return shadowRoot
     }

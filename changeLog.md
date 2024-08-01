@@ -1,5 +1,10 @@
 # Update Log
 
+## 4.2.8 [2024/08/01]
+
+* Optimize the underlying hook logic to reduce false positives.
+* Solve the issue with Cloudflare CAPTCHA validation anomalies.
+
 ## 4.2.7 [2024/05/24]
 
 * Solve the issue of not being able to pass Cloudflare's CAPTCHA verification.
