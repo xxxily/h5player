@@ -49,14 +49,6 @@ Moreover, it also offers the ability to fast forward short pre/post rolls, speed
 - Live video stream extraction.
 - Customizable feature additions through configurations.  
 
-## About[@antifeature](https://greasyfork.org/help/antifeatures)
-
-This script was developed out of personal need and technical passion. Still, it draws unfounded accusations, negative reviews or reports from a few. Rather than wasting energy on these disputes, it's better to declare an [@antifeature](https://greasyfork.org/help/antifeatures) (as required by GreasyFork community standards) to filter out those who try to take advantage without contribution, or who love to instruct and criticize others from a moral high ground without even reading the documentation! This script does not have premium content, nor does it require payment, likes, or follows for usage, and never actively inserts tracking scripts, such as Baidu or Google Analytics.  
-
-However, to sustain positive, continuous iterations, **the UI interface has a small amount of text-based promotional links that do not impact user experience. For those not accepting this, please disable the user graphic interface in `Menu > Graphic Interface`.** If that's still not acceptable, please refrain from using this script.  
-
-Please note: The script provides abundant shortcut control, perfect for users who love high-efficiency shortcuts. Closing the graphic interface will not affect the core functions of the script, **so users who do not need the graphic interface can confidently disable it.**  
-
 ## Discussion Groups
 
 <br />

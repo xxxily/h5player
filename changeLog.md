@@ -1,5 +1,10 @@
 # Update Log
 
+## 4.3.0 [2024/10/16]
+
+* Disable recommended modules to let the script focus on core functions.
+* Adjust the menu order to facilitate global shutdown of the graphical interface.
+
 ## 4.2.8 [2024/08/01]
 
 * Optimize the underlying hook logic to reduce false positives.

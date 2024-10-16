@@ -1,5 +1,15 @@
 # Update Log
 
+## 4.3.0 [2024/10/16]
+
+* Disable recommended modules to let the script focus on core functions.
+* Adjust the menu order to facilitate global shutdown of the graphical interface.
+
+## 4.2.8 [2024/08/01]
+
+* Optimize the underlying hook logic to reduce false positives.
+* Solve the issue with Cloudflare CAPTCHA validation anomalies.
+
 ## 4.2.7 [2024/05/24]
 
 * Solve the issue of not being able to pass Cloudflare's CAPTCHA verification.

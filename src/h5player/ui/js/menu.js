@@ -118,6 +118,12 @@ export const menuConfig = [
             args: null
           },
           {
+            ...globalFunctional.toggleGUIStatus,
+            action: 'toggleGUIStatus',
+            args: null,
+            disabled: !isGlobalStorageUsable
+          },
+          {
             ...globalFunctional.alwaysShowGraphicalInterface,
             action: 'alwaysShowGraphicalInterface',
             args: null,
@@ -673,6 +679,9 @@ const defaultRecommendList = [
 ]
 
 export function createRecommendModTemplate (refDom) {
+  const showMod = isGlobalStorageUsable && configManager.getGlobalStorage('ui.mod.recommend.enable')
+  if (!showMod) { return '' }
+
   const refWidth = refDom.offsetWidth
   if (refWidth < 500) { return '' }
 

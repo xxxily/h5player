@@ -322,13 +322,21 @@ const configManager = new ConfigManager({
     },
     ui: {
       enable: true,
-      alwaysShow: false
+      alwaysShow: false,
+
+      /* UI模块的相关配置 */
+      mod: {
+        /* 默认禁用推荐模块 */
+        recommend: {
+          enable: false
+        }
+      }
     },
     download: {
       enable: true
     },
     enhance: {
-    /* 不禁用默认的调速逻辑，则在多个视频切换时，速度很容易被重置，所以该选项默认开启 */
+      /* 不禁用默认的调速逻辑，则在多个视频切换时，速度很容易被重置，所以该选项默认开启 */
       blockSetPlaybackRate: true,
 
       blockSetCurrentTime: false,
