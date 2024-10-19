@@ -1,5 +1,9 @@
 # Update Log
 
+## 4.3.1 [2024/10/19]
+
+* Adjust and refine the script introduction copy.
+
 ## 4.3.0 [2024/10/16]
 
 * Disable recommended modules to let the script focus on core functions.
