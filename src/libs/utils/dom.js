@@ -185,6 +185,8 @@ function isOutOfDocument (element) {
     return true
   }
 
+  if (element.style.visibility === 'hidden' || element.style.display === 'none') { return true }
+
   const {
     top,
     right,

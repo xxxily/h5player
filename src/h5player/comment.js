@@ -1,15 +1,15 @@
 // ==UserScript==
-// @name         音视频增强脚本：支持无极调速、倍速快学、快乐刷剧、视频下载、画面截图等「适用大部分网站」
-// @name:en      Audio and Video Enhancement Script: Supports infinite speed adjustment, accelerated learning, joyful binge-watching, video downloading, screen capturing, and more.
+// @name         音视频增强脚本：无极调速|倍速快学|快乐刷剧|视频下载|画面截图等「适用大部分网站」
+// @name:en      Audio and Video Enhancement Script: Supports infinite speed adjustment, video downloading, and more.
 // @name:zh      音视频增强脚本：支持无极调速、倍速快学、快乐刷剧、视频下载、画面截图等「适用大部分网站」
 // @name:zh-TW   音影片增強腳本：支援無極調速、倍速快學、快樂刷劇、影片下載、畫面截圖等「適用大部分網站」
 // @name:ja      オーディオおよびビデオ強化スクリプト: 無限速度調整、倍速学習、快適な TV シリーズ視聴、ビデオ ダウンロード、スクリーンショットなどをサポートします。「ほとんどの Web サイトに適用可能」
 // @name:ko      오디오 및 비디오 향상 스크립트: 무한 속도 조정, 배속 학습, 행복한 TV 시리즈 시청, 비디오 다운로드, 스크린샷 등을 지원합니다. "대부분의 웹사이트에 적용 가능"
-// @name:ru      Сценарий улучшения аудио и видео: поддерживает бесконечную регулировку скорости, обучение с двойной скоростью, приятный просмотр сериалов, загрузку видео, снимки экрана и т. д.
-// @name:de      Skript zur Audio- und Videoverbesserung: Unterstützt stufenlose Geschwindigkeitsanpassung, Lernen mit doppelter Geschwindigkeit, fröhliches Ansehen von Fernsehserien, Herunterladen von Videos, Screenshots usw.
+// @name:ru      Скрипт улучшения звука и видео: поддерживает бесконечную регулировку скорости и многое другое.
+// @name:de      Skript zur Audio- und Videoverbesserung: Unterstützt stufenlose Geschwindigkeitsanpassung und mehr.
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      4.3.1
+// @version      4.3.2
 // @description  视频增强脚本，支持所有H5音视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
 // @description:en  Audio and Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
 // @description:zh  音视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力

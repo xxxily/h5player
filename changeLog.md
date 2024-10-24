@@ -1,5 +1,10 @@
 # Update Log
 
+## 4.3.2 [2024/10/24]
+
+* Fix the persistent UI display issue in Tencent Video.
+* Optimize the underlying logic for UI visibility and invisibility to enhance compatibility.
+
 ## 4.3.1 [2024/10/19]
 
 * Adjust and refine the script introduction copy.
