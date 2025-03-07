@@ -1135,10 +1135,8 @@ const h5Player = {
 
       !notips && t.tips(i18n.t('tipsMsg.volume') + parseInt(num * 100) + '%')
       return true
-    }
-
-    /* 關閉音量增益 */
-    if (num <= 1) {
+    } else if (num <= 1) {
+      /* 關閉音量增益 */
       if (player._amp_ && player._amp_.setLoudness) {
         player._amp_.setLoudness(1);
       }
