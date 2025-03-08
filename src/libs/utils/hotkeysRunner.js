@@ -234,6 +234,7 @@ class HotkeysRunner {
     const target = opts.target || null
     const conditionHandler = opts.conditionHandler || opts.whenHandler
 
+    const selection = window.getSelection();
     const isTextSelected = selection && selection.toString().trim() !== '';
 
     if (isTextSelected) {
