@@ -36,6 +36,7 @@ import mediaDownload from './mediaDownload'
 import windowSandbox from './h5playerUISandbox'
 import version from './version'
 import remoteHelper from './remoteHelper'
+import { isCloudflareChallengePage } from './cfChallenge'
 
 import {
   isRegisterKey,
@@ -2707,6 +2708,15 @@ const h5Player = {
 }
 
 async function h5PlayerInit () {
+  try {
+    if (isCloudflareChallengePage()) {
+      console.warn('当前处于cloudflare的人机验证页面，暂停h5player的运行', location.href)
+      return false
+    }
+  } catch (e) {
+    debug.error(e)
+  }
+
   const isEnabled = configManager.get('enable')
   const blackUrlList = configManager.get('blacklist.urls') || []
   const blackDomainList = configManager.get('blacklist.domains') || []

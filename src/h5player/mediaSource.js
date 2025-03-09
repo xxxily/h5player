@@ -25,6 +25,21 @@ const mediaSource = (function () {
   function cleanMediaSourceData () {
     function removeMediaSourceData (mediaSourceInfo) {
       console.log('[cleanMediaSourceData][removeMediaSourceData]', mediaSourceInfo.mediaUrl || mediaSourceInfo.mediaSource.__objURL__)
+
+      /* 清理sourceBuffer相关数据 */
+      if (mediaSourceInfo.sourceBuffer && mediaSourceInfo.sourceBuffer.length) {
+        mediaSourceInfo.sourceBuffer.forEach(sourceBufferItem => {
+          /* 清空buffer数据 */
+          sourceBufferItem.bufferData = []
+          /* 移除原始appendBuffer的引用 */
+          sourceBufferItem.originAppendBuffer = null
+        })
+        mediaSourceInfo.sourceBuffer = []
+      }
+
+      /* 移除对mediaElement的引用 */
+      mediaSourceInfo.mediaElement = null
+
       original.map.delete.call(mediaSourceMap, mediaSourceInfo.mediaSource)
       original.map.delete.call(objectURLMap, mediaSourceInfo.mediaSource)
     }
@@ -228,12 +243,19 @@ const mediaSource = (function () {
           mediaTitle = `${mediaTitle}_${sourceBufferItem.mediaInfo.type}.${sourceBufferItem.mediaInfo.format}`
 
           const a = document.createElement('a')
-          a.href = URL.createObjectURL(new Blob(sourceBufferItem.bufferData))
+          const blobUrl = URL.createObjectURL(new Blob(sourceBufferItem.bufferData))
+          a.href = blobUrl
           a.download = mediaTitle
-          a.click()
-          URL.revokeObjectURL(a.href)
 
-          mediaSourceInfo.hasDownload = true
+          try {
+            a.click()
+            mediaSourceInfo.hasDownload = true
+          } finally {
+            /* 确保无论下载是否成功都释放blob URL */
+            URL.revokeObjectURL(blobUrl)
+            /* 下载完成后清空buffer数据 */
+            sourceBufferItem.bufferData = []
+          }
         } catch (e) {
           mediaSourceInfo.hasDownload = false
           const msg = '[downloadMediaSource][error]'
@@ -266,7 +288,7 @@ const mediaSource = (function () {
         if (MediaSource.prototype[key] instanceof Function) {
           originMethods[key] = MediaSource.prototype[key]
         }
-      } catch (e) {}
+      } catch (e) { }
     })
 
     proxyMediaSourceMethod()

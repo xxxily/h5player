@@ -9,7 +9,7 @@
 // @name:de      Skript zur Audio- und Videoverbesserung: Unterstützt stufenlose Geschwindigkeitsanpassung und mehr.
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      4.3.2
+// @version      4.3.3
 // @description  视频增强脚本，支持所有H5音视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
 // @description:en  Audio and Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
 // @description:zh  音视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
@@ -1301,6 +1301,38 @@ function getPageWindowSync (rawFunction) {
 }
 
 function openInTab (url, opts, referer) {
+  // fix tampermonkey menu bug start
+  // 由于tampermonkey的菜单功注册和取消注册存在某些难以排查的bug，所以这处对openInTab的打开频率进行了限制，以解决点击tampermonkey 菜单打开链接时候重复打开一堆相同URL的问题
+  // 此方法治标不治本，还是会遗留很多菜单注册和取消注册留下的坑，建议替换chrome插件实现当前脚本功能
+
+  // 使用GM_getValue/GM_setValue或sessionStorage控制同一URL的调用频率
+  const now = Date.now();
+  const sessionKey = `h5player_openTab_${url}`;
+  let lastOpenTime = 0;
+
+  // 优先使用GM_getValue/GM_setValue
+  if (window.GM_getValue && window.GM_setValue) {
+    lastOpenTime = window.GM_getValue(sessionKey, 0);
+
+    if (lastOpenTime && (now - lastOpenTime) < 1000) {
+      // console.info('已阻止重复打开同一URL:', url)
+      return
+    }
+
+    window.GM_setValue(sessionKey, now);
+  } else {
+    // 回退到sessionStorage
+    lastOpenTime = sessionStorage.getItem(sessionKey);
+
+    if (lastOpenTime && (now - parseInt(lastOpenTime)) < 1000) {
+      // console.info('已阻止重复打开同一URL:', url)
+      return
+    }
+
+    sessionStorage.setItem(sessionKey, now.toString());
+  }
+  // fix tampermonkey menu bug end
+
   if (referer) {
     const urlObj = parseURL(url);
     if (!urlObj.params.referer) {
@@ -3205,7 +3237,6 @@ function setFakeUA (ua) {
  * 元素全屏API，同时兼容网页全屏
  */
 
-hackAttachShadow();
 class FullScreen {
   constructor (dom, pageMode) {
     this.dom = dom;
@@ -4721,7 +4752,7 @@ class HookJs {
     const execInfo = {
       result: null,
       error: null,
-      args: args,
+      args,
       type: ''
     };
 
@@ -4729,31 +4760,25 @@ class HookJs {
       let hookResult = null;
       execInfo.type = type || '';
       if (Array.isArray(hooks)) {
-        hooks.forEach(fn => {
+        for (let i = 0; i < hooks.length; i++) {
+          const fn = hooks[i];
           if (util.isFn(fn) && classHook === fn.classHook) {
             hookResult = fn(args, parentObj, methodName, originMethod, execInfo, ctx);
+            if (hookResult === 'STOP-INVOKE') {
+              return hookResult
+            }
           }
-        });
+        }
       }
       return hookResult
     }
 
-    const runTarget = (function () {
-      if (classHook) {
-        return function () {
-          // eslint-disable-next-line new-cap
-          return new target(...args)
-        }
-      } else {
-        return function () {
-          return target.apply(ctx, args)
-        }
-      }
-    })();
+    const runTarget = classHook
+      ? function () { return new target(...args) }
+      : function () { return target.apply(ctx, args) };
 
     const beforeHooksResult = runHooks(beforeHooks, 'before');
-    /* 支持终止后续调用的指令 */
-    if (beforeHooksResult && beforeHooksResult === 'STOP-INVOKE') {
+    if (beforeHooksResult === 'STOP-INVOKE') {
       return beforeHooksResult
     }
 
@@ -4771,8 +4796,7 @@ class HookJs {
         } catch (err) {
           execInfo.error = err;
           const errorHooksResult = runHooks(errorHooks, 'error');
-          /* 支持执行错误后不抛出异常的指令 */
-          if (errorHooksResult && errorHooksResult === 'SKIP-ERROR') ; else {
+          if (errorHooksResult !== 'SKIP-ERROR') {
             throw err
           }
         }
@@ -4867,7 +4891,8 @@ class HookJs {
             },
             set: function (val) {
               originMethod[keyName] = val;
-            }
+            },
+            configurable: true
           });
         } catch (err) {
           // 设置defineProperty的时候出现异常，可能导致hookMethod部分功能缺失，也可能不受影响
@@ -5070,14 +5095,30 @@ class HookJs {
           /* 删除指定类型下的指定hook函数 */
           for (let i = 0; i < hooks.length; i++) {
             if (fn === hooks[i]) {
+              /* 移除hook函数上的classHook标记 */
+              delete fn.classHook;
               hookMethodProperties[hookKeyName].splice(i, 1);
               util.debug.log(`[unHook ${hookKeyName} func] ${util.toStr(parentObj)} ${methodName}`, fn);
               break
             }
           }
+
+          /* 如果所有类型的hooks都为空，则完全还原原始方法 */
+          const hasHooks = ['beforeHooks', 'afterHooks', 'errorHooks', 'hangUpHooks', 'replaceHooks'].some(key => {
+            return Array.isArray(hookMethodProperties[key]) && hookMethodProperties[key].length > 0
+          });
+
+          if (!hasHooks) {
+            parentObj[methodName] = originMethod;
+            delete parentObj[methodName][t.hookPropertiesKeyName];
+          }
         } else {
           /* 删除指定类型下的所有hook函数 */
           if (Array.isArray(hookMethodProperties[hookKeyName])) {
+            /* 移除所有hook函数上的classHook标记 */
+            hookMethodProperties[hookKeyName].forEach(hook => {
+              delete hook.classHook;
+            });
             hookMethodProperties[hookKeyName] = [];
             util.debug.log(`[unHook all ${hookKeyName}] ${util.toStr(parentObj)} ${methodName}`);
           }
@@ -5085,6 +5126,16 @@ class HookJs {
       } else {
         /* 彻底还原被hook的函数 */
         if (util.isFn(originMethod)) {
+          /* 移除所有类型下的所有hook函数的classHook标记 */
+          ['beforeHooks', 'afterHooks', 'errorHooks', 'hangUpHooks', 'replaceHooks'].forEach(key => {
+            if (Array.isArray(hookMethodProperties[key])) {
+              hookMethodProperties[key].forEach(hook => {
+                delete hook.classHook;
+              });
+              hookMethodProperties[key] = [];
+            }
+          });
+
           parentObj[methodName] = originMethod;
           delete parentObj[methodName][t.hookPropertiesKeyName];
 
@@ -5978,6 +6029,21 @@ const mediaSource = (function () {
   function cleanMediaSourceData () {
     function removeMediaSourceData (mediaSourceInfo) {
       console.log('[cleanMediaSourceData][removeMediaSourceData]', mediaSourceInfo.mediaUrl || mediaSourceInfo.mediaSource.__objURL__);
+
+      /* 清理sourceBuffer相关数据 */
+      if (mediaSourceInfo.sourceBuffer && mediaSourceInfo.sourceBuffer.length) {
+        mediaSourceInfo.sourceBuffer.forEach(sourceBufferItem => {
+          /* 清空buffer数据 */
+          sourceBufferItem.bufferData = [];
+          /* 移除原始appendBuffer的引用 */
+          sourceBufferItem.originAppendBuffer = null;
+        });
+        mediaSourceInfo.sourceBuffer = [];
+      }
+
+      /* 移除对mediaElement的引用 */
+      mediaSourceInfo.mediaElement = null;
+
       original.map.delete.call(mediaSourceMap, mediaSourceInfo.mediaSource);
       original.map.delete.call(objectURLMap, mediaSourceInfo.mediaSource);
     }
@@ -6181,12 +6247,19 @@ const mediaSource = (function () {
           mediaTitle = `${mediaTitle}_${sourceBufferItem.mediaInfo.type}.${sourceBufferItem.mediaInfo.format}`;
 
           const a = document.createElement('a');
-          a.href = URL.createObjectURL(new Blob(sourceBufferItem.bufferData));
+          const blobUrl = URL.createObjectURL(new Blob(sourceBufferItem.bufferData));
+          a.href = blobUrl;
           a.download = mediaTitle;
-          a.click();
-          URL.revokeObjectURL(a.href);
 
-          mediaSourceInfo.hasDownload = true;
+          try {
+            a.click();
+            mediaSourceInfo.hasDownload = true;
+          } finally {
+            /* 确保无论下载是否成功都释放blob URL */
+            URL.revokeObjectURL(blobUrl);
+            /* 下载完成后清空buffer数据 */
+            sourceBufferItem.bufferData = [];
+          }
         } catch (e) {
           mediaSourceInfo.hasDownload = false;
           const msg = '[downloadMediaSource][error]';
@@ -6219,7 +6292,7 @@ const mediaSource = (function () {
         if (MediaSource.prototype[key] instanceof Function) {
           originMethods[key] = MediaSource.prototype[key];
         }
-      } catch (e) {}
+      } catch (e) { }
     });
 
     proxyMediaSourceMethod();
@@ -6882,6 +6955,45 @@ const remoteHelper = {
     pageWindow && checkRemoteHelperStatus(pageWindow);
   }
 };
+
+/**
+  * 检测当前页面是否为 Cloudflare 的 challenge 页面
+  * @returns {boolean} 如果是 Cloudflare challenge 页面则返回 true，否则返回 false
+  */
+function isCloudflareChallengePage () {
+  // 特征1: 检查页面标题是否包含特定文本
+  const titleCheck = document.title.includes('Just a moment') ||
+                     document.title.includes('Cloudflare') ||
+                     document.title.includes('challenge');
+
+  // 特征2: 检查是否存在特定的 meta 标签
+  const metaRefreshExists = !!document.querySelector('meta[http-equiv="refresh"]');
+  const robotsNoindexExists = !!document.querySelector('meta[name="robots"][content*="noindex"]');
+
+  // 特征3: 检查页面上是否有特定的 DOM 元素或类名
+  const mainWrapperExists = !!document.querySelector('.main-wrapper[role="main"]');
+  const challengeErrorExists = !!document.querySelector('#challenge-error-text');
+  const bodyNoJsClass = document.body && document.body.classList ? document.body.classList.contains('no-js') : false;
+
+  // 特征4: 检查页面样式中是否包含特定的 Cloudflare 相关样式
+  const hasCloudflareStyling = document.styleSheets.length > 0 &&
+                              (document.documentElement.innerHTML.includes('background-image: url(data:image/svg+xml;base64,') ||
+                               document.documentElement.innerHTML.includes('challenge'));
+
+  // 至少满足以下条件组合之一才判定为 Cloudflare challenge 页面:
+  // 1. 标题特征 + 至少一个 meta 特征
+  // 2. 标题特征 + 至少一个 DOM 特征
+  // 3. 至少两个 DOM 特征 + 至少一个 meta 特征
+  // 4. 样式特征 + 至少一个其他类型的特征
+
+  const metaFeatures = metaRefreshExists || robotsNoindexExists;
+  const domFeatures = mainWrapperExists || challengeErrorExists || bodyNoJsClass;
+
+  return (titleCheck && metaFeatures) ||
+         (titleCheck && domFeatures) ||
+         ((domFeatures && (mainWrapperExists + challengeErrorExists + (bodyNoJsClass ? 1 : 0) >= 2)) && metaFeatures) ||
+         (hasCloudflareStyling && (titleCheck || metaFeatures || domFeatures))
+}
 
 function registerMouseEvent (h5player) {
   const t = h5player;
@@ -14892,6 +15004,15 @@ const h5Player = {
 };
 
 async function h5PlayerInit () {
+  try {
+    if (isCloudflareChallengePage()) {
+      console.warn('当前处于cloudflare的人机验证页面，暂停h5player的运行', location.href);
+      return false
+    }
+  } catch (e) {
+    debug.error(e);
+  }
+
   const isEnabled = configManager.get('enable');
   const blackUrlList = configManager.get('blacklist.urls') || [];
   const blackDomainList = configManager.get('blacklist.domains') || [];
