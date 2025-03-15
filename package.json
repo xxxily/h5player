@@ -11,6 +11,7 @@
     "start": "yarn run h5playerUI & yarn run h5player",
     "jsonEditor": "cross-env MODE=prod PROJECT_NAME=jsonEditor rollup -c config/rollup.config.js",
     "build": "cross-env MODE=prod PROJECT_NAME=h5player rollup -c config/rollup.config.js",
+    "build:inject": "cross-env MODE=prod PROJECT_NAME=h5playerInject rollup -c config/rollup.config.js",
     "server": "node bin/staticService/index.js",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",

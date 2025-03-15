@@ -32,6 +32,16 @@ const confTree = {
       inlineDynamicImports: true
     }
   },
+  h5playerInject: {
+    input: resolve('web-extension/inject.main.js'),
+    output: {
+      file: resolve('web-extension/inject.js'),
+      format: 'es', // 可选值： amd, cjs, es, iife, umd
+      name: 'h5playerInject',
+      /* 使用内联动态导入，让打包文件始终保持只有一个文件 */
+      inlineDynamicImports: true
+    }
+  },
   h5playerUI: {
     input: resolve('src/h5player/ui/h5playerUI.js'),
     output: {
