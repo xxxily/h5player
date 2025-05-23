@@ -1,19 +1,19 @@
 // ==UserScript==
-// @name         HTML5视频播放器增强脚本
-// @name:en      HTML5 video player enhanced script
-// @name:zh      HTML5视频播放器增强脚本
-// @name:zh-TW   HTML5視頻播放器增強腳本
-// @name:ja      HTML5ビデオプレーヤーの拡張スクリプト
-// @name:ko      HTML5 비디오 플레이어 고급 스크립트
-// @name:ru      HTML5 видео плеер улучшенный скрипт
-// @name:de      HTML5 Video Player erweitertes Skript
+// @name         音视频增强脚本：无极调速|倍速快学|快乐刷剧|视频下载|画面截图等「适用大部分网站」
+// @name:en      Audio and Video Enhancement Script: Supports infinite speed adjustment, video downloading, and more.
+// @name:zh      音视频增强脚本：支持无极调速、倍速快学、快乐刷剧、视频下载、画面截图等「适用大部分网站」
+// @name:zh-TW   音影片增強腳本：支援無極調速、倍速快學、快樂刷劇、影片下載、畫面截圖等「適用大部分網站」
+// @name:ja      オーディオおよびビデオ強化スクリプト: 無限速度調整、倍速学習、快適な TV シリーズ視聴、ビデオ ダウンロード、スクリーンショットなどをサポートします。「ほとんどの Web サイトに適用可能」
+// @name:ko      오디오 및 비디오 향상 스크립트: 무한 속도 조정, 배속 학습, 행복한 TV 시리즈 시청, 비디오 다운로드, 스크린샷 등을 지원합니다. "대부분의 웹사이트에 적용 가능"
+// @name:ru      Скрипт улучшения звука и видео: поддерживает бесконечную регулировку скорости и многое другое.
+// @name:de      Skript zur Audio- und Videoverbesserung: Unterstützt stufenlose Geschwindigkeitsanpassung und mehr.
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      4.3.0
-// @description  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
-// @description:en  Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
-// @description:zh  视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
-// @description:zh-TW  視頻增強腳本，支持所有H5視頻網站，例如：B站、抖音、騰訊視頻、優酷、愛奇藝、西瓜視頻、油管（YouTube）、微博視頻、知乎視頻、搜狐視頻、網易公開課、百度網盤、阿里雲盤、ted、instagram、twitter等。全程快捷鍵控制，支持：倍速播放/加速播放、視頻畫面截圖、畫中畫、網頁全屏、調節亮度、飽和度、對比度、自定義配置功能增強等功能，為你提供愉悅的在線視頻播放體驗。還有視頻廣告快進、在線教程/教育視頻倍速快學、視頻文件下載等能力
+// @version      4.3.3
+// @description  视频增强脚本，支持所有H5音视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
+// @description:en  Audio and Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
+// @description:zh  音视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
+// @description:zh-TW  音影片增強腳本，支持所有H5視頻網站，例如：B站、抖音、騰訊視頻、優酷、愛奇藝、西瓜視頻、油管（YouTube）、微博視頻、知乎視頻、搜狐視頻、網易公開課、百度網盤、阿里雲盤、ted、instagram、twitter等。全程快捷鍵控制，支持：倍速播放/加速播放、視頻畫面截圖、畫中畫、網頁全屏、調節亮度、飽和度、對比度、自定義配置功能增強等功能，為你提供愉悅的在線視頻播放體驗。還有視頻廣告快進、在線教程/教育視頻倍速快學、視頻文件下載等能力
 // @description:ja  ビデオ拡張スクリプトは、Bilibili、Douyin、Tencent Video、Youku、iQiyi、Xigua Video、YouTube、Weibo Video、Zhihu Video、Sohu Video、NetEase Open Course、Baidu ネットワーク ディスク、Alibaba クラウド ディスクなど、すべての H5 ビデオ Web サイトをサポートします。テッド、インスタグラム、ツイッターなど 完全なショートカット キー コントロール、サポート: 倍速再生/加速再生、ビデオ スクリーンショット、ピクチャー イン ピクチャー、フルスクリーン Web ページ、明るさ、彩度、コントラストの調整、カスタム構成の強化、その他の機能により、快適なオンラインを提供します。ビデオ再生体験。 ビデオ広告、オンライン チュートリアル/教育ビデオなどを早送りする機能もあります。
 // @description:ko  비디오 향상 스크립트는 Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu 네트워크 디스크, Alibaba 클라우드 디스크와 같은 모든 H5 비디오 웹사이트를 지원합니다. 테드, 인스타그램, 트위터 등 전체 바로 1가기 키 제어, 지원: 배속 재생/가속 재생, 비디오 스크린샷, PIP(Picture-in-Picture), 전체 화면 웹 페이지, 밝기, 채도, 대비, 사용자 정의 구성 향상 및 기타 기능 조정, 쾌적한 온라인 환경 제공 비디오 재생 경험. 비디오 광고, 온라인 자습서/교육 비디오 등을 빨리 감기하는 기능도 있습니다.
 // @description:ru  Сценарий улучшения видео поддерживает все видео-сайты H5, такие как: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, сетевой диск Baidu, облачный диск Alibaba, Тед, инстаграм, твиттер и т.д. Полное управление клавишами быстрого доступа, поддержка: воспроизведение с удвоенной скоростью/ускоренное воспроизведение, скриншоты видео, картинка в картинке, полноэкранные веб-страницы
@@ -865,6 +865,8 @@ function isOutOfDocument (element) {
     return true
   }
 
+  if (element.style.visibility === 'hidden' || element.style.display === 'none') { return true }
+
   const {
     top,
     right,
@@ -1299,6 +1301,38 @@ function getPageWindowSync (rawFunction) {
 }
 
 function openInTab (url, opts, referer) {
+  // fix tampermonkey menu bug start
+  // 由于tampermonkey的菜单功注册和取消注册存在某些难以排查的bug，所以这处对openInTab的打开频率进行了限制，以解决点击tampermonkey 菜单打开链接时候重复打开一堆相同URL的问题
+  // 此方法治标不治本，还是会遗留很多菜单注册和取消注册留下的坑，建议替换chrome插件实现当前脚本功能
+
+  // 使用GM_getValue/GM_setValue或sessionStorage控制同一URL的调用频率
+  const now = Date.now();
+  const sessionKey = `h5player_openTab_${url}`;
+  let lastOpenTime = 0;
+
+  // 优先使用GM_getValue/GM_setValue
+  if (window.GM_getValue && window.GM_setValue) {
+    lastOpenTime = window.GM_getValue(sessionKey, 0);
+
+    if (lastOpenTime && (now - lastOpenTime) < 1000) {
+      // console.info('已阻止重复打开同一URL:', url)
+      return
+    }
+
+    window.GM_setValue(sessionKey, now);
+  } else {
+    // 回退到sessionStorage
+    lastOpenTime = sessionStorage.getItem(sessionKey);
+
+    if (lastOpenTime && (now - parseInt(lastOpenTime)) < 1000) {
+      // console.info('已阻止重复打开同一URL:', url)
+      return
+    }
+
+    sessionStorage.setItem(sessionKey, now.toString());
+  }
+  // fix tampermonkey menu bug end
+
   if (referer) {
     const urlObj = parseURL(url);
     if (!urlObj.params.referer) {
@@ -3203,7 +3237,6 @@ function setFakeUA (ua) {
  * 元素全屏API，同时兼容网页全屏
  */
 
-hackAttachShadow();
 class FullScreen {
   constructor (dom, pageMode) {
     this.dom = dom;
@@ -4719,7 +4752,7 @@ class HookJs {
     const execInfo = {
       result: null,
       error: null,
-      args: args,
+      args,
       type: ''
     };
 
@@ -4727,31 +4760,25 @@ class HookJs {
       let hookResult = null;
       execInfo.type = type || '';
       if (Array.isArray(hooks)) {
-        hooks.forEach(fn => {
+        for (let i = 0; i < hooks.length; i++) {
+          const fn = hooks[i];
           if (util.isFn(fn) && classHook === fn.classHook) {
             hookResult = fn(args, parentObj, methodName, originMethod, execInfo, ctx);
+            if (hookResult === 'STOP-INVOKE') {
+              return hookResult
+            }
           }
-        });
+        }
       }
       return hookResult
     }
 
-    const runTarget = (function () {
-      if (classHook) {
-        return function () {
-          // eslint-disable-next-line new-cap
-          return new target(...args)
-        }
-      } else {
-        return function () {
-          return target.apply(ctx, args)
-        }
-      }
-    })();
+    const runTarget = classHook
+      ? function () { return new target(...args) }
+      : function () { return target.apply(ctx, args) };
 
     const beforeHooksResult = runHooks(beforeHooks, 'before');
-    /* 支持终止后续调用的指令 */
-    if (beforeHooksResult && beforeHooksResult === 'STOP-INVOKE') {
+    if (beforeHooksResult === 'STOP-INVOKE') {
       return beforeHooksResult
     }
 
@@ -4769,8 +4796,7 @@ class HookJs {
         } catch (err) {
           execInfo.error = err;
           const errorHooksResult = runHooks(errorHooks, 'error');
-          /* 支持执行错误后不抛出异常的指令 */
-          if (errorHooksResult && errorHooksResult === 'SKIP-ERROR') ; else {
+          if (errorHooksResult !== 'SKIP-ERROR') {
             throw err
           }
         }
@@ -4865,7 +4891,8 @@ class HookJs {
             },
             set: function (val) {
               originMethod[keyName] = val;
-            }
+            },
+            configurable: true
           });
         } catch (err) {
           // 设置defineProperty的时候出现异常，可能导致hookMethod部分功能缺失，也可能不受影响
@@ -5068,14 +5095,30 @@ class HookJs {
           /* 删除指定类型下的指定hook函数 */
           for (let i = 0; i < hooks.length; i++) {
             if (fn === hooks[i]) {
+              /* 移除hook函数上的classHook标记 */
+              delete fn.classHook;
               hookMethodProperties[hookKeyName].splice(i, 1);
               util.debug.log(`[unHook ${hookKeyName} func] ${util.toStr(parentObj)} ${methodName}`, fn);
               break
             }
           }
+
+          /* 如果所有类型的hooks都为空，则完全还原原始方法 */
+          const hasHooks = ['beforeHooks', 'afterHooks', 'errorHooks', 'hangUpHooks', 'replaceHooks'].some(key => {
+            return Array.isArray(hookMethodProperties[key]) && hookMethodProperties[key].length > 0
+          });
+
+          if (!hasHooks) {
+            parentObj[methodName] = originMethod;
+            delete parentObj[methodName][t.hookPropertiesKeyName];
+          }
         } else {
           /* 删除指定类型下的所有hook函数 */
           if (Array.isArray(hookMethodProperties[hookKeyName])) {
+            /* 移除所有hook函数上的classHook标记 */
+            hookMethodProperties[hookKeyName].forEach(hook => {
+              delete hook.classHook;
+            });
             hookMethodProperties[hookKeyName] = [];
             util.debug.log(`[unHook all ${hookKeyName}] ${util.toStr(parentObj)} ${methodName}`);
           }
@@ -5083,6 +5126,16 @@ class HookJs {
       } else {
         /* 彻底还原被hook的函数 */
         if (util.isFn(originMethod)) {
+          /* 移除所有类型下的所有hook函数的classHook标记 */
+          ['beforeHooks', 'afterHooks', 'errorHooks', 'hangUpHooks', 'replaceHooks'].forEach(key => {
+            if (Array.isArray(hookMethodProperties[key])) {
+              hookMethodProperties[key].forEach(hook => {
+                delete hook.classHook;
+              });
+              hookMethodProperties[key] = [];
+            }
+          });
+
           parentObj[methodName] = originMethod;
           delete parentObj[methodName][t.hookPropertiesKeyName];
 
@@ -5976,6 +6029,21 @@ const mediaSource = (function () {
   function cleanMediaSourceData () {
     function removeMediaSourceData (mediaSourceInfo) {
       console.log('[cleanMediaSourceData][removeMediaSourceData]', mediaSourceInfo.mediaUrl || mediaSourceInfo.mediaSource.__objURL__);
+
+      /* 清理sourceBuffer相关数据 */
+      if (mediaSourceInfo.sourceBuffer && mediaSourceInfo.sourceBuffer.length) {
+        mediaSourceInfo.sourceBuffer.forEach(sourceBufferItem => {
+          /* 清空buffer数据 */
+          sourceBufferItem.bufferData = [];
+          /* 移除原始appendBuffer的引用 */
+          sourceBufferItem.originAppendBuffer = null;
+        });
+        mediaSourceInfo.sourceBuffer = [];
+      }
+
+      /* 移除对mediaElement的引用 */
+      mediaSourceInfo.mediaElement = null;
+
       original.map.delete.call(mediaSourceMap, mediaSourceInfo.mediaSource);
       original.map.delete.call(objectURLMap, mediaSourceInfo.mediaSource);
     }
@@ -6179,12 +6247,19 @@ const mediaSource = (function () {
           mediaTitle = `${mediaTitle}_${sourceBufferItem.mediaInfo.type}.${sourceBufferItem.mediaInfo.format}`;
 
           const a = document.createElement('a');
-          a.href = URL.createObjectURL(new Blob(sourceBufferItem.bufferData));
+          const blobUrl = URL.createObjectURL(new Blob(sourceBufferItem.bufferData));
+          a.href = blobUrl;
           a.download = mediaTitle;
-          a.click();
-          URL.revokeObjectURL(a.href);
 
-          mediaSourceInfo.hasDownload = true;
+          try {
+            a.click();
+            mediaSourceInfo.hasDownload = true;
+          } finally {
+            /* 确保无论下载是否成功都释放blob URL */
+            URL.revokeObjectURL(blobUrl);
+            /* 下载完成后清空buffer数据 */
+            sourceBufferItem.bufferData = [];
+          }
         } catch (e) {
           mediaSourceInfo.hasDownload = false;
           const msg = '[downloadMediaSource][error]';
@@ -6217,7 +6292,7 @@ const mediaSource = (function () {
         if (MediaSource.prototype[key] instanceof Function) {
           originMethods[key] = MediaSource.prototype[key];
         }
-      } catch (e) {}
+      } catch (e) { }
     });
 
     proxyMediaSourceMethod();
@@ -6880,6 +6955,45 @@ const remoteHelper = {
     pageWindow && checkRemoteHelperStatus(pageWindow);
   }
 };
+
+/**
+  * 检测当前页面是否为 Cloudflare 的 challenge 页面
+  * @returns {boolean} 如果是 Cloudflare challenge 页面则返回 true，否则返回 false
+  */
+function isCloudflareChallengePage () {
+  // 特征1: 检查页面标题是否包含特定文本
+  const titleCheck = document.title.includes('Just a moment') ||
+                     document.title.includes('Cloudflare') ||
+                     document.title.includes('challenge');
+
+  // 特征2: 检查是否存在特定的 meta 标签
+  const metaRefreshExists = !!document.querySelector('meta[http-equiv="refresh"]');
+  const robotsNoindexExists = !!document.querySelector('meta[name="robots"][content*="noindex"]');
+
+  // 特征3: 检查页面上是否有特定的 DOM 元素或类名
+  const mainWrapperExists = !!document.querySelector('.main-wrapper[role="main"]');
+  const challengeErrorExists = !!document.querySelector('#challenge-error-text');
+  const bodyNoJsClass = document.body && document.body.classList ? document.body.classList.contains('no-js') : false;
+
+  // 特征4: 检查页面样式中是否包含特定的 Cloudflare 相关样式
+  const hasCloudflareStyling = document.styleSheets.length > 0 &&
+                              (document.documentElement.innerHTML.includes('background-image: url(data:image/svg+xml;base64,') ||
+                               document.documentElement.innerHTML.includes('challenge'));
+
+  // 至少满足以下条件组合之一才判定为 Cloudflare challenge 页面:
+  // 1. 标题特征 + 至少一个 meta 特征
+  // 2. 标题特征 + 至少一个 DOM 特征
+  // 3. 至少两个 DOM 特征 + 至少一个 meta 特征
+  // 4. 样式特征 + 至少一个其他类型的特征
+
+  const metaFeatures = metaRefreshExists || robotsNoindexExists;
+  const domFeatures = mainWrapperExists || challengeErrorExists || bodyNoJsClass;
+
+  return (titleCheck && metaFeatures) ||
+         (titleCheck && domFeatures) ||
+         ((domFeatures && (mainWrapperExists + challengeErrorExists + (bodyNoJsClass ? 1 : 0) >= 2)) && metaFeatures) ||
+         (hasCloudflareStyling && (titleCheck || metaFeatures || domFeatures))
+}
 
 function registerMouseEvent (h5player) {
   const t = h5player;
@@ -14890,6 +15004,15 @@ const h5Player = {
 };
 
 async function h5PlayerInit () {
+  try {
+    if (isCloudflareChallengePage()) {
+      console.warn('当前处于cloudflare的人机验证页面，暂停h5player的运行', location.href);
+      return false
+    }
+  } catch (e) {
+    debug.error(e);
+  }
+
   const isEnabled = configManager.get('enable');
   const blackUrlList = configManager.get('blacklist.urls') || [];
   const blackDomainList = configManager.get('blacklist.domains') || [];
