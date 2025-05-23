@@ -40,22 +40,21 @@ export const zh = defineConfig({
             text: '其他',
             items: [
               { text: 'GitHub.Dev', link: 'https://github.dev/xxxily/h5player', target: '_blank' },
-              { text: '赞赏码', link: 'https://h5player.anzz.top/assets/img/donate.png', target: '_blank' },
+              { text: '赞赏码', link: 'https://h5player.anzz.site/assets/img/donate.png', target: '_blank' },
             ]
           },
         ]
       },
       {
-        text: 'anzz.top',
+        text: 'anzz.site',
         items: [
           {
             text: 'anzz',
             items: [
-              { text: 'anzz.top', link: 'https://anzz.top', target: '_blank' },
-              { text: 'ai.anzz.top', link: 'https://ai.anzz.top', target: '_blank' },
-              { text: '996.anzz.top', link: 'https://996.anzz.top', target: '_blank' },
-              { text: 'h5player.anzz.top', link: 'https://h5player.anzz.top', target: '_blank' },
-              { text: 'broadcast-message.anzz.top', link: 'https://broadcast-message.anzz.top', target: '_blank' },
+              { text: 'anzz.site', link: 'https://anzz.site', target: '_blank' },
+              { text: 'code-flux', link: 'https://code.anzz.site', target: '_blank' },
+              { text: 'h5player.anzz.site', link: 'https://h5player.anzz.site', target: '_blank' },
+              { text: 'broadcast-message', link: 'https://broadcast-message.anzz.site', target: '_blank' },
             ]
           }
         ]
@@ -108,6 +107,7 @@ export const zh = defineConfig({
       {
         text: '其它作品',
         items: [
+          { text: 'code-flux', link: 'https://github.com/xxxily/code-flux' },
           { text: 'Hello-AI', link: 'https://github.com/xxxily/hello-ai' },
           { text: 'ffmpeg-script', link: 'https://github.com/xxxily/ffmpeg-script' },
           { text: 'local-appstore-for-1Panel', link: 'https://github.com/xxxily/local-appstore-for-1Panel' },
@@ -115,19 +115,17 @@ export const zh = defineConfig({
         ]
       },
       {
-        text: 'anzz',
+        text: 'anzz.site',
         items: [
-          { text: 'anzz.top', link: 'https://anzz.top', target: '_blank' },
-          { text: 'ai.anzz.top', link: 'https://ai.anzz.top', target: '_blank' },
-          { text: '996.anzz.top', link: 'https://996.anzz.top', target: '_blank' },
-          { text: 'h5player.anzz.top', link: 'https://h5player.anzz.top', target: '_blank' },
-          { text: 'broadcast-message', link: 'https://broadcast-message.anzz.top', target: '_blank' },
+          { text: 'anzz.site', link: 'https://anzz.site', target: '_blank' },
+          { text: 'code-flux', link: 'https://code.anzz.site', target: '_blank' },
+          { text: 'h5player.anzz.site', link: 'https://h5player.anzz.site', target: '_blank' },
+          { text: 'broadcast-message', link: 'https://broadcast-message.anzz.site', target: '_blank' },
         ]
       },
       {
         text: '其它推荐',
         items: [
-          { text: 'HuluAI', link: 'https://u.anzz.top/huluai02', target: '_blank' },
           { text: 'AnakinAI', link: 'https://u.anzz.top/anakinai', target: '_blank' },
           { text: 'AI编程插件', link: 'https://u.anzz.top/comate', target: '_blank' },
         ]

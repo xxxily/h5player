@@ -82,6 +82,7 @@ export const en = defineConfig({
       {
         text: 'Other Projects',
         items: [
+          { text: 'code-flux', link: 'https://github.com/xxxily/code-flux' },
           { text: 'Hello-AI', link: 'https://github.com/xxxily/hello-ai' },
           { text: 'ffmpeg-script', link: 'https://github.com/xxxily/ffmpeg-script' },
           { text: 'local-appstore-for-1Panel', link: 'https://github.com/xxxily/local-appstore-for-1Panel' },

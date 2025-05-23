@@ -4,11 +4,11 @@
 
 网页播放器增强脚本  
 
-- 官网地址：[h5player.anzz.top](https://h5player.anzz.top)  
+- 官网地址：[h5player.anzz.site](https://h5player.anzz.site)  
 - GitHub地址：[github.com/xxxily/h5player](https://github.com/xxxily/h5player)  
 - Gitee 地址：[gitee.com/ankvps/h5player](https://gitee.com/ankvps/h5player)  
 - GreasyFork：[greasyfork.org/scripts/381682](https://greasyfork.org/scripts/381682)
-- 一键安装地址：[h5player.anzz.top/h5player.user.js](https://update.greasyfork.org/scripts/381682/HTML5%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE%E5%99%A8%E5%A2%9E%E5%BC%BA%E8%84%9A%E6%9C%AC.user.js)
+- 一键安装地址：[h5player.anzz.site/h5player.user.js](https://update.greasyfork.org/scripts/381682/HTML5%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE%E5%99%A8%E5%A2%9E%E5%BC%BA%E8%84%9A%E6%9C%AC.user.js)
 
 <br />
 
@@ -20,8 +20,8 @@
 
 还有片前片后短视频快进、在线教程/教育视频倍速快学、音视频文件离线私藏等能力  
 
-<a href="https://h5player.anzz.top/assets/img/h5player_ui.jpg" target="_blank">
-  <img src="https://h5player.anzz.top/assets/img/h5player_ui.jpg" alt="h5player-ui" />
+<a href="https://h5player.anzz.site/assets/img/h5player_ui.jpg" target="_blank">
+  <img src="https://h5player.anzz.site/assets/img/h5player_ui.jpg" alt="h5player-ui" />
 </a>
 
 ## 应用场景
@@ -56,14 +56,14 @@
 
 | 加我拉你入群<br/>（注明来自：h5player） | Telegram群组<br/>（<a href="https://t.me/h5player" target="_blank">直接入群</a>） |
 | :----: | :----: |
-| <img src="https://h5player.anzz.top/assets/img/WeChat2.png?t=2022.11.21" width=280 /> |  <img src="https://h5player.anzz.top/assets/img/tg.jpg?t=2022.11.21" width=280 /> |
+| <img src="https://h5player.anzz.site/assets/img/WeChat2.png?t=2022.11.21" width=280 /> |  <img src="https://h5player.anzz.site/assets/img/tg.jpg?t=2022.11.21" width=280 /> |
 
 <br />
 
 ## 功能定制
 
 脚本已经支持了大部分常用的功能，如果你有更多的需求，可以通过自定义配置来实现。  
-具体参考：[自定义配置](https://h5player.anzz.top/zh/home/customConfiguration)  
+具体参考：[自定义配置](https://h5player.anzz.site/zh/home/customConfiguration)  
 <br />
 如果你不懂编程或不想折腾，又有相对复杂的功能需求，可以考虑找作者`付费定制`；  
 [通过上面的微信或者TG联系作者](#交流群)  
@@ -77,12 +77,12 @@
 
 - **[h5player.user.js (点我直接安装)](https://update.greasyfork.org/scripts/381682/HTML5%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE%E5%99%A8%E5%A2%9E%E5%BC%BA%E8%84%9A%E6%9C%AC.user.js)**
 
-更详细的安装帮助看这里：[详细安装教程](https://h5player.anzz.top/zh/home/install)  
+更详细的安装帮助看这里：[详细安装教程](https://h5player.anzz.site/zh/home/install)  
 
 ## 使用文档
 
-- [功能手册](https://h5player.anzz.top/zh/home/feature)
-- [常见问题Q&A](https://h5player.anzz.top/zh/home/q&a)
+- [功能手册](https://h5player.anzz.site/zh/home/feature)
+- [常见问题Q&A](https://h5player.anzz.site/zh/home/q&a)
   
 ## 快捷键列表
 
@@ -203,11 +203,11 @@
 
 如果我的努力给你带来了便利，请不要吝啬你的赞赏  
 
-[100万级安装量的开源作品，一年有多少打赏收入？](https://h5player.anzz.top/zh/home/aboutDonate)  
+[100万级安装量的开源作品，一年有多少打赏收入？](https://h5player.anzz.site/zh/home/aboutDonate)  
 
 <p>
-  <a href="https://h5player.anzz.top" target="_blank">
-  <img src="https://h5player.anzz.top/assets/img/donate.png" width=480 alt="如果我的努力给你带来了便利，请不要吝啬你的赞赏" />
+  <a href="https://h5player.anzz.site" target="_blank">
+  <img src="https://h5player.anzz.site/assets/img/donate.png" width=480 alt="如果我的努力给你带来了便利，请不要吝啬你的赞赏" />
   </a>
 </p>
 

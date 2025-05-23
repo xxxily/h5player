@@ -1,6 +1,6 @@
 {
   "name": "h5player",
-  "version": "3.8.0",
+  "version": "4.3.3",
   "description": "h5player tampermonkey",
   "author": "xxxily",
   "private": true,
@@ -15,6 +15,7 @@
     "server": "node bin/staticService/index.js",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
+    "docs:build2": "vitepress build docs && cp dist/h5player.user.js dist/h5player-docs/h5player.user.js",
     "docs:preview": "vitepress preview docs",
     "docs:release": "node bin/docs/release.js",
     "giteeDocs:dev": "cross-env BASEPATH='/h5player/' vitepress dev docs",

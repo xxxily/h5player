@@ -31,7 +31,7 @@ export const shared = defineConfig({
 
     footer: {
       message: 'Released under the GPL License.',
-      copyright: 'Copyright © 2024-present Blaze'
+      copyright: 'Copyright © 2025-present Blaze'
     },
   }
 })

@@ -5,7 +5,7 @@
 
 **After installing the Tampermonkey extension**, click the link below for one-click installation:
 
-- **[h5player.user.js (Click here to directly install)](https://update.greasyfork.org/scripts/381682/HTML5%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE%E5%99%A8%E5%A2%9E%E5%BC%BA%E8%84%9A%E6%9C%AC.user.js)**
+- **[h5player.user.js (Click here to directly install)](https://h5player.anzz.top/h5player.user.js)**
 
 If you are first-time installing Tampermonkey, the methods are as follows:
 
