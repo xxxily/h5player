@@ -2234,7 +2234,7 @@ const h5Player = {
     /* 广播按键消息，进行跨域控制 */
     monkeyMsg.send('globalKeydownEvent', event, 0)
 
-    if (!player) {
+    if (!player || !document.contains(player)) {
       if (t.hasCrossOriginVideoDetected) {
         if (!configManager.get('enhance.allowCrossOriginControl')) {
           return false
