@@ -1,5 +1,6 @@
 ---
 layout: home
+title: HTML5 Video Enhancement Script
 
 hero:
   name: "h5player for tampermonkey"

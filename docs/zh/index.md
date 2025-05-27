@@ -1,6 +1,6 @@
 ---
 layout: home
-
+title: H5音视频增强脚本：无极调速|倍速快学|快乐刷剧|视频下载|画面截图等
 hero:
   name: "h5player for tampermonkey"
   text: "HTML5视频增强脚本"
