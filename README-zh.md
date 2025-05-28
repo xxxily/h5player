@@ -4,7 +4,7 @@
 
 网页播放器增强脚本  
 
-- 官网地址：[h5player.anzz.site](https://h5player.anzz.site)  
+- 官网地址：[h5player.anzz.site](https://h5player.anzz.site/zh)  
 - GitHub地址：[github.com/xxxily/h5player](https://github.com/xxxily/h5player)  
 - Gitee 地址：[gitee.com/ankvps/h5player](https://gitee.com/ankvps/h5player)  
 - GreasyFork：[greasyfork.org/scripts/381682](https://greasyfork.org/scripts/381682)

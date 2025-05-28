@@ -51,7 +51,7 @@ export const en = defineConfig({
             items: [
               { text: 'anzz.top', link: 'https://anzz.top', target: '_blank' },
               { text: 'ai.anzz.top', link: 'https://ai.anzz.top', target: '_blank' },
-              { text: '996.anzz.top', link: 'https://996.anzz.top', target: '_blank' },
+              { text: 'code-flux.anzz.top', link: 'https://code-flux.anzz.top', target: '_blank' },
               { text: 'h5player.anzz.top', link: 'https://h5player.anzz.top', target: '_blank' },
               { text: 'broadcast-message.anzz.top', link: 'https://broadcast-message.anzz.top', target: '_blank' },
             ]
@@ -94,7 +94,7 @@ export const en = defineConfig({
         items: [
           { text: 'anzz.top', link: 'https://anzz.top', target: '_blank' },
           { text: 'ai.anzz.top', link: 'https://ai.anzz.top', target: '_blank' },
-          { text: '996.anzz.top', link: 'https://996.anzz.top', target: '_blank' },
+          { text: 'code-flux.anzz.top', link: 'https://code-flux.anzz.top', target: '_blank' },
           { text: 'h5player.anzz.top', link: 'https://h5player.anzz.top', target: '_blank' },
           { text: 'broadcast-message', link: 'https://broadcast-message.anzz.top', target: '_blank' },
         ]

@@ -9,6 +9,9 @@ hero:
     - theme: brand
       text: Quickstart →
       link: /home/quickStart
+    - theme: brand
+      text: 中文站 →
+      link: https://h5player.anzz.site/zh
     - theme: alt
       text: GitHub
       link: https://github.com/xxxily/h5player

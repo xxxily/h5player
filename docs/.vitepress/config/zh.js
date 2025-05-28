@@ -126,8 +126,7 @@ export const zh = defineConfig({
       {
         text: '其它推荐',
         items: [
-          { text: 'AnakinAI', link: 'https://u.anzz.top/anakinai', target: '_blank' },
-          { text: 'AI编程插件', link: 'https://u.anzz.top/comate', target: '_blank' },
+          { text: 'AnakinAI', link: 'https://u.anzz.top/anakinai', target: '_blank' }
         ]
       }
     ]
