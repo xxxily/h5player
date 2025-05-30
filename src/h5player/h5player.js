@@ -1136,6 +1136,11 @@ const h5Player = {
 
       !notips && t.tips(i18n.t('tipsMsg.volume') + parseInt(num * 100) + '%')
       return true
+    } else if (num <= 1) {
+      /* 關閉音量增益 */
+      if (player._amp_ && player._amp_.setLoudness) {
+        player._amp_.setLoudness(1);
+      }
     }
 
     if (isInIframe() || configManager.get('enhance.blockSetVolume') === true) {
