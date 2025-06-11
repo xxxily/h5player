@@ -1,5 +1,9 @@
 # Update Log
 
+## 4.3.4 [2025/06/11]
+
+* Fix the problem that related addresses cannot be accessed normally
+
 ## 4.3.3 [2025/03/09]  
 
 * Eliminated recurring validation loops during Cloudflare human verification processes

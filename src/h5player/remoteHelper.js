@@ -10,7 +10,7 @@ import version from './version'
 import configManager from './configManager'
 import { getPageWindow } from './helper'
 
-const remoteHelperUrl = 'https://h5player.anzz.top/h5p-helper/index.html'
+const remoteHelperUrl = 'https://h5player.anzz.site/h5p-helper/index.html'
 
 const remoteHelper = {
   init () {
