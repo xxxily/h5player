@@ -9,7 +9,7 @@
 // @name:de      Skript zur Audio- und Videoverbesserung: Unterstützt stufenlose Geschwindigkeitsanpassung und mehr.
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      4.3.3
+// @version      4.3.4
 // @description  视频增强脚本，支持所有H5音视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
 // @description:en  Audio and Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
 // @description:zh  音视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
@@ -2194,7 +2194,7 @@ const configManager = new ConfigManager({
 });
 
 async function initUiConfigManager () {
-  const isUiConfigPage = location.href.indexOf('h5player.anzz.top/tools/json-editor') > -1 || location.href.indexOf('ankvps.gitee.io/h5player/tools/json-editor') > -1;
+  const isUiConfigPage = location.href.indexOf('h5player.anzz.top/tools/json-editor') > -1 || location.href.indexOf('h5player.anzz.site/tools/json-editor') > -1;
   const isUiConfigMode = location.href.indexOf('saveHandlerName=saveH5PlayerConfig') > -1;
   if (!isUiConfigPage || !isUiConfigMode) return
 
@@ -5364,7 +5364,7 @@ const isChinese = () => i18n.language().indexOf('zh') > -1;
 
 function getHomePage () {
   const homePageLinks = [
-    'https://h5player.anzz.top/zh/',
+    'https://h5player.anzz.site/zh/',
     'https://h5player.anzz.top'
   ];
 
@@ -5382,7 +5382,7 @@ function openDocsByPath (path) {
   }
 
   const chinese = isChinese();
-  const basePath = chinese ? 'https://h5player.anzz.top' : 'https://h5player.anzz.top';
+  const basePath = chinese ? 'https://h5player.anzz.site' : 'https://h5player.anzz.top';
   let url = basePath + path;
 
   /* 判断是否为中文环境，且link不是/zh开头，则自动加上/zh前缀 */
@@ -5414,14 +5414,14 @@ const globalFunctional = {
   openAuthorHomePage: {
     title: i18n.t('aboutAuthor'),
     desc: i18n.t('aboutAuthor'),
-    fn: () => { openInTab('https://u.anzz.top/xxxily'); }
+    fn: () => { openInTab('https://github.com/xxxily'); }
   },
   openHotkeysPage: {
     title: i18n.t('hotkeysDocs'),
     desc: i18n.t('hotkeysDocs'),
     fn: () => {
       const hotkeysDocs = [
-        'https://h5player.anzz.top/zh/home/quickStart#%E5%BF%AB%E6%8D%B7%E9%94%AE%E5%88%97%E8%A1%A8',
+        'https://h5player.anzz.site/zh/home/quickStart#%E5%BF%AB%E6%8D%B7%E9%94%AE%E5%88%97%E8%A1%A8',
         'https://h5player.anzz.top/home/quickStart#shortcut-key-list'
       ];
       openInTab(isChinese() ? hotkeysDocs[0] : hotkeysDocs[1]);
@@ -5451,7 +5451,7 @@ const globalFunctional = {
     title: i18n.t('addGroupChat'),
     desc: i18n.t('addGroupChat'),
     fn: () => {
-      const groupChatUrl = isChinese() ? 'https://h5player.anzz.top/zh/home/quickStart#%E4%BA%A4%E6%B5%81%E7%BE%A4' : 'https://h5player.anzz.top/home/quickStart#discussion-groups';
+      const groupChatUrl = isChinese() ? 'https://h5player.anzz.site/zh/home/quickStart#%E4%BA%A4%E6%B5%81%E7%BE%A4' : 'https://h5player.anzz.top/home/quickStart#discussion-groups';
       openInTab(groupChatUrl);
     }
   },
@@ -5489,10 +5489,9 @@ const globalFunctional = {
     title: i18n.t('openCustomConfigurationEditor'),
     desc: i18n.t('openCustomConfigurationEditor'),
     fn: () => {
-      // const jsoneditorUrl = isChinese()
-      //   ? 'https://u.anzz.top/h5pjsoneditorzh'
-      //   : 'https://u.anzz.top/h5pjsoneditor'
-      const jsoneditorUrl = 'https://u.anzz.top/h5pjsoneditor';
+      const jsoneditorUrl = isChinese()
+        ? 'https://h5player.anzz.site/tools/json-editor/index.html?mode=tree&saveHandlerName=saveH5PlayerConfig&expandAll=true&json='
+        : 'https://h5player.anzz.top/tools/json-editor/index.html?mode=tree&saveHandlerName=saveH5PlayerConfig&expandAll=true&json=';
       openInTab(jsoneditorUrl);
     }
   },
@@ -6864,7 +6863,7 @@ const windowSandbox = new Proxy({}, {
  */
 
 
-const remoteHelperUrl = 'https://h5player.anzz.top/h5p-helper/index.html';
+const remoteHelperUrl = 'https://h5player.anzz.site/h5p-helper/index.html';
 
 const remoteHelper = {
   init () {
@@ -11428,7 +11427,7 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
             {
               title: i18n.t('ffmpegScript'),
               desc: i18n.t('ffmpegScript'),
-              url: 'https://u.anzz.top/ffmpegscript'
+              url: 'https://github.com/xxxily/ffmpeg-script'
             }
           ]
         },
@@ -11607,7 +11606,7 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
             {
               title: i18n.t('ffmpegScript'),
               desc: i18n.t('ffmpegScript'),
-              url: 'https://u.anzz.top/ffmpegscript'
+              url: 'https://github.com/xxxily/ffmpeg-script'
             }
           ]
         }
@@ -11714,38 +11713,7 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
     return `<a class="h5p-logo-mod" href="${homepage}" target="_blank">h5player</a>`
   }
 
-  const defaultRecommendList = [
-    {
-      title: '【h5player】使用手册',
-      url: 'https://u.anzz.top/h5pmanual',
-      priority: 99,
-      i18n: {
-        en: {
-          title: '【h5player】User Manual'
-        }
-      }
-    },
-    {
-      title: '【h5player】音视频一键合并工具，无需二次编码',
-      desc: '将h5player下载到的音视频文件自动合并成一个文件，不经过二次编码，可快速合并',
-      url: 'https://u.anzz.top/ffmpegscript',
-      i18n: {
-        en: {
-          title: '【h5player】Audio and video merge tool, no secondary coding required',
-          desc: 'Automatically merge the audio and video files downloaded by h5player into one file without secondary coding, which can be quickly merged'
-        }
-      }
-    },
-    {
-      title: '【Hello-AI】抢走你工作的不是AI，而是掌握使用AI工具的人',
-      url: 'https://u.anzz.top/ai',
-      i18n: {
-        en: {
-          title: '【Hello-AI】It\'s not AI that takes away your job, but the person who knows how to use AI tools'
-        }
-      }
-    }
-  ];
+  const defaultRecommendList = [];
 
   function createRecommendModTemplate (refDom) {
     const showMod = isGlobalStorageUsable && configManager$1.getGlobalStorage('ui.mod.recommend.enable');
