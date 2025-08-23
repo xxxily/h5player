@@ -1,10 +1,8 @@
 /**
  * 元素全屏API，同时兼容网页全屏
  */
-import hackAttachShadow from '../utils/hackAttachShadow'
 import { loadCSSText, isInShadow } from '../utils/dom'
 
-hackAttachShadow()
 class FullScreen {
   constructor (dom, pageMode) {
     this.dom = dom

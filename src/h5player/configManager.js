@@ -368,7 +368,7 @@ const configManager = new ConfigManager({
 })
 
 async function initUiConfigManager () {
-  const isUiConfigPage = location.href.indexOf('h5player.anzz.top/tools/json-editor') > -1 || location.href.indexOf('ankvps.gitee.io/h5player/tools/json-editor') > -1
+  const isUiConfigPage = location.href.indexOf('h5player.anzz.top/tools/json-editor') > -1 || location.href.indexOf('h5player.anzz.site/tools/json-editor') > -1
   const isUiConfigMode = location.href.indexOf('saveHandlerName=saveH5PlayerConfig') > -1
   if (!isUiConfigPage || !isUiConfigMode) return
 

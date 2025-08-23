@@ -1,6 +1,6 @@
 ---
 layout: home
-
+title: H5音视频增强脚本：无极调速|倍速快学|快乐刷剧|视频下载|画面截图等
 hero:
   name: "h5player for tampermonkey"
   text: "HTML5视频增强脚本"
@@ -28,6 +28,6 @@ features:
 
 如果我的努力给你带来了便利，请不要吝啬你的赞赏。  
 
-[100万级安装量的开源作品，一年有多少打赏收入？](https://u.anzz.top/aboutdonate)  
+[100万级安装量的开源作品，一年有多少打赏收入？](./home/aboutDonate.md)  
 
 ![如果我的努力给你带来了便利，请不要吝啬你的赞赏](/assets/img/donate.png)  

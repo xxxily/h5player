@@ -1,5 +1,15 @@
 # Update Log
 
+## 4.3.4 [2025/06/11]
+
+* Fix the problem that related addresses cannot be accessed normally
+
+## 4.3.3 [2025/03/09]  
+
+* Eliminated recurring validation loops during Cloudflare human verification processes
+* Patched unintended concurrent loading of duplicate URLs
+* Refined core algorithms for smoother operation and improved resource efficiency
+
 ## 4.3.2 [2024/10/24]
 
 * Fix the persistent UI display issue in Tencent Video.

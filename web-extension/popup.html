@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>音视频增强工具</title>
+  <style>
+    body {
+      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      width: 280px;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+    }
+    .panel-header {
+      background-color: #4285f4;
+      color: white;
+      padding: 12px 16px;
+      font-size: 16px;
+      font-weight: 500;
+      border-bottom: 1px solid #3367d6;
+    }
+    .panel-content {
+      padding: 8px 0;
+    }
+    .menu-item {
+      padding: 10px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      transition: background-color 0.2s;
+    }
+    .menu-item:hover {
+      background-color: #e8e8e8;
+    }
+    .menu-item-text {
+      flex-grow: 1;
+    }
+    .menu-item-key {
+      color: #666;
+      font-size: 12px;
+      margin-left: 8px;
+    }
+    .empty-message {
+      padding: 16px;
+      color: #666;
+      text-align: center;
+      font-style: italic;
+    }
+    .divider {
+      height: 1px;
+      background-color: #e0e0e0;
+      margin: 4px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="panel-header">音视频增强工具</div>
+  <div class="panel-content" id="menuContainer">
+    <div class="empty-message">加载中...</div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

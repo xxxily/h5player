@@ -1,0 +1,57 @@
+{
+  "manifest_version": 3,
+  "name": "音视频增强工具",
+  "version": "4.3.3",
+  "description": "支持无极调速、倍速快学、快乐刷剧、视频下载、画面截图等功能，适用大部分网站",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "音视频增强工具",
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "storage",
+    "clipboardWrite",
+    "declarativeNetRequest",
+    "webRequest",
+    "webRequestBlocking",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "exclude_matches": [
+        "*://yiyan.baidu.com/*",
+        "*://*.bing.com/search*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["inject.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "h5player@example.com",
+      "strict_min_version": "57.0"
+    }
+  }
+}

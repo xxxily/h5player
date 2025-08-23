@@ -84,7 +84,7 @@ export class HookJs {
     const execInfo = {
       result: null,
       error: null,
-      args: args,
+      args,
       type: ''
     }
 
@@ -92,31 +92,25 @@ export class HookJs {
       let hookResult = null
       execInfo.type = type || ''
       if (Array.isArray(hooks)) {
-        hooks.forEach(fn => {
+        for (let i = 0; i < hooks.length; i++) {
+          const fn = hooks[i]
           if (util.isFn(fn) && classHook === fn.classHook) {
             hookResult = fn(args, parentObj, methodName, originMethod, execInfo, ctx)
+            if (hookResult === 'STOP-INVOKE') {
+              return hookResult
+            }
           }
-        })
+        }
       }
       return hookResult
     }
 
-    const runTarget = (function () {
-      if (classHook) {
-        return function () {
-          // eslint-disable-next-line new-cap
-          return new target(...args)
-        }
-      } else {
-        return function () {
-          return target.apply(ctx, args)
-        }
-      }
-    })()
+    const runTarget = classHook
+      ? function () { return new target(...args) }
+      : function () { return target.apply(ctx, args) }
 
     const beforeHooksResult = runHooks(beforeHooks, 'before')
-    /* 支持终止后续调用的指令 */
-    if (beforeHooksResult && beforeHooksResult === 'STOP-INVOKE') {
+    if (beforeHooksResult === 'STOP-INVOKE') {
       return beforeHooksResult
     }
 
@@ -134,10 +128,7 @@ export class HookJs {
         } catch (err) {
           execInfo.error = err
           const errorHooksResult = runHooks(errorHooks, 'error')
-          /* 支持执行错误后不抛出异常的指令 */
-          if (errorHooksResult && errorHooksResult === 'SKIP-ERROR') {
-            // console.error(`${methodName} error:`, err)
-          } else {
+          if (errorHooksResult !== 'SKIP-ERROR') {
             throw err
           }
         }
@@ -232,7 +223,8 @@ export class HookJs {
             },
             set: function (val) {
               originMethod[keyName] = val
-            }
+            },
+            configurable: true
           })
         } catch (err) {
           // 设置defineProperty的时候出现异常，可能导致hookMethod部分功能缺失，也可能不受影响
@@ -435,14 +427,30 @@ export class HookJs {
           /* 删除指定类型下的指定hook函数 */
           for (let i = 0; i < hooks.length; i++) {
             if (fn === hooks[i]) {
+              /* 移除hook函数上的classHook标记 */
+              delete fn.classHook
               hookMethodProperties[hookKeyName].splice(i, 1)
               util.debug.log(`[unHook ${hookKeyName} func] ${util.toStr(parentObj)} ${methodName}`, fn)
               break
             }
           }
+
+          /* 如果所有类型的hooks都为空，则完全还原原始方法 */
+          const hasHooks = ['beforeHooks', 'afterHooks', 'errorHooks', 'hangUpHooks', 'replaceHooks'].some(key => {
+            return Array.isArray(hookMethodProperties[key]) && hookMethodProperties[key].length > 0
+          })
+
+          if (!hasHooks) {
+            parentObj[methodName] = originMethod
+            delete parentObj[methodName][t.hookPropertiesKeyName]
+          }
         } else {
           /* 删除指定类型下的所有hook函数 */
           if (Array.isArray(hookMethodProperties[hookKeyName])) {
+            /* 移除所有hook函数上的classHook标记 */
+            hookMethodProperties[hookKeyName].forEach(hook => {
+              delete hook.classHook
+            })
             hookMethodProperties[hookKeyName] = []
             util.debug.log(`[unHook all ${hookKeyName}] ${util.toStr(parentObj)} ${methodName}`)
           }
@@ -450,6 +458,16 @@ export class HookJs {
       } else {
         /* 彻底还原被hook的函数 */
         if (util.isFn(originMethod)) {
+          /* 移除所有类型下的所有hook函数的classHook标记 */
+          ['beforeHooks', 'afterHooks', 'errorHooks', 'hangUpHooks', 'replaceHooks'].forEach(key => {
+            if (Array.isArray(hookMethodProperties[key])) {
+              hookMethodProperties[key].forEach(hook => {
+                delete hook.classHook
+              })
+              hookMethodProperties[key] = []
+            }
+          })
+
           parentObj[methodName] = originMethod
           delete parentObj[methodName][t.hookPropertiesKeyName]
 

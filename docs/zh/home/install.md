@@ -5,7 +5,7 @@
 
 **安装好油猴插件后**，点击下面的链接即可一键安装：  
 
-- **[h5player.user.js (点我直接安装)](https://update.greasyfork.org/scripts/381682/HTML5%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE%E5%99%A8%E5%A2%9E%E5%BC%BA%E8%84%9A%E6%9C%AC.user.js)**  
+- **[h5player.user.js (点我直接安装)](https://h5player.anzz.site/h5player.user.js)**  
 
 如果你是第一次接触，各种情况下安装油猴(Tampermonkey)的方法如下：
 
@@ -26,11 +26,11 @@
 
 **安装好油猴(Tampermonkey)插件后**，点击下面的链接即可完成脚本的安装：  
 
-**[h5player.user.js (点我完成H5Player增强脚本的安装)](https://update.greasyfork.org/scripts/381682/HTML5%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE%E5%99%A8%E5%A2%9E%E5%BC%BA%E8%84%9A%E6%9C%AC.user.js)**  
+**[h5player.user.js (点我完成H5Player增强脚本的安装)](https://h5player.anzz.site/h5player.user.js)**  
 
 直接在浏览器地址栏里输入如下的URL也能完成脚本的安装：
 
-- [https://h5player.anzz.top/h5player.user.js](https://h5player.anzz.top/h5player.user.js)
+- [https://h5player.anzz.site/h5player.user.js](https://h5player.anzz.site/h5player.user.js)
 
 ## 国内安装
 
@@ -72,16 +72,16 @@ tar -xvf tampermonkey_stable.crx
 
 ### 第四步：安装h5player增强脚本
 
-**[h5player.user.js (点我完成H5Player增强脚本的安装)](https://update.greasyfork.org/scripts/381682/HTML5%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE%E5%99%A8%E5%A2%9E%E5%BC%BA%E8%84%9A%E6%9C%AC.user.js)**  
+**[h5player.user.js (点我完成H5Player增强脚本的安装)](https://h5player.anzz.site/h5player.user.js)**  
 
 直接在浏览器地址栏里输入如下的URL也能完成脚本的安装：
 
-- [https://h5player.anzz.top/h5player.user.js](https://h5player.anzz.top/h5player.user.js)
+- [https://h5player.anzz.site/h5player.user.js](https://h5player.anzz.site/h5player.user.js)
 
 安装好后的运行效果如下所示：  
 
-<a href="https://h5player.anzz.top/assets/img/h5player_ui.jpg" target="_blank">
-  <img src="https://h5player.anzz.top/assets/img/h5player_ui.jpg" alt="h5player-ui" />
+<a href="https://h5player.anzz.site/assets/img/h5player_ui.jpg" target="_blank">
+  <img src="https://h5player.anzz.site/assets/img/h5player_ui.jpg" alt="h5player-ui" />
 </a>
 <br />
 
@@ -111,10 +111,10 @@ tar -xvf tampermonkey_stable.crx
 
 安装好后的运行效果如下所示：
 
-<a href="https://h5player.anzz.top/assets/img/kiwi_browser_effect01.83b4a12a.jpg" target="_blank">
+<a href="https://h5player.anzz.site/assets/img/kiwi_browser_effect01.83b4a12a.jpg" target="_blank">
   <img src="./img/kiwi_browser_effect01.jpg" alt="h5player_for_kiwi_browser" width=480>
 </a>
-<a href="https://h5player.anzz.top/assets/img/kiwi_browser_effect02.c5541da0.jpg" target="_blank">
+<a href="https://h5player.anzz.site/assets/img/kiwi_browser_effect02.c5541da0.jpg" target="_blank">
   <img src="./img/kiwi_browser_effect02.jpg" alt="h5player_for_kiwi_browser" width=480>
 </a>
 

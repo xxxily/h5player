@@ -4374,7 +4374,7 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
             {
               title: i18n.t('ffmpegScript'),
               desc: i18n.t('ffmpegScript'),
-              url: 'https://u.anzz.top/ffmpegscript'
+              url: 'https://github.com/xxxily/ffmpeg-script'
             }
           ]
         },
@@ -4553,7 +4553,7 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
             {
               title: i18n.t('ffmpegScript'),
               desc: i18n.t('ffmpegScript'),
-              url: 'https://u.anzz.top/ffmpegscript'
+              url: 'https://github.com/xxxily/ffmpeg-script'
             }
           ]
         }
@@ -4660,38 +4660,7 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
     return `<a class="h5p-logo-mod" href="${homepage}" target="_blank">h5player</a>`
   }
 
-  const defaultRecommendList = [
-    {
-      title: '【h5player】使用手册',
-      url: 'https://u.anzz.top/h5pmanual',
-      priority: 99,
-      i18n: {
-        en: {
-          title: '【h5player】User Manual'
-        }
-      }
-    },
-    {
-      title: '【h5player】音视频一键合并工具，无需二次编码',
-      desc: '将h5player下载到的音视频文件自动合并成一个文件，不经过二次编码，可快速合并',
-      url: 'https://u.anzz.top/ffmpegscript',
-      i18n: {
-        en: {
-          title: '【h5player】Audio and video merge tool, no secondary coding required',
-          desc: 'Automatically merge the audio and video files downloaded by h5player into one file without secondary coding, which can be quickly merged'
-        }
-      }
-    },
-    {
-      title: '【Hello-AI】抢走你工作的不是AI，而是掌握使用AI工具的人',
-      url: 'https://u.anzz.top/ai',
-      i18n: {
-        en: {
-          title: '【Hello-AI】It\'s not AI that takes away your job, but the person who knows how to use AI tools'
-        }
-      }
-    }
-  ];
+  const defaultRecommendList = [];
 
   function createRecommendModTemplate (refDom) {
     const showMod = isGlobalStorageUsable && configManager$1.getGlobalStorage('ui.mod.recommend.enable');
