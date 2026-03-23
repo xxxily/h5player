@@ -9,7 +9,7 @@
 // @name:de      Skript zur Audio- und Videoverbesserung: Unterstützt stufenlose Geschwindigkeitsanpassung und mehr.
 // @namespace    https://github.com/xxxily/h5player
 // @homepage     https://github.com/xxxily/h5player
-// @version      4.3.4
+// @version      4.3.5
 // @description  视频增强脚本，支持所有H5音视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
 // @description:en  Audio and Video enhancement script, supports all H5 video websites, such as: Bilibili, Douyin, Tencent Video, Youku, iQiyi, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, NetEase Open Course, Baidu network disk, Alibaba cloud disk, ted, instagram, twitter, etc. Full shortcut key control, support: double-speed playback/accelerated playback, video screenshots, picture-in-picture, full-screen web pages, adjusting brightness, saturation, contrast
 // @description:zh  音视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。全程快捷键控制，支持：倍速播放/加速播放、视频画面截图、画中画、网页全屏、调节亮度、饱和度、对比度、自定义配置功能增强等功能，为你提供愉悦的在线视频播放体验。还有视频广告快进、在线教程/教育视频倍速快学、视频文件下载等能力
@@ -3787,6 +3787,7 @@ var zhCN = {
   disableMouseControl: '禁用鼠标控制',
   donate: '👍请作者喝杯咖啡',
   aboutDonate: '100万级安装量的作品，有多少打赏？',
+  aiProjects: '4000+ AI开源项目',
   aboutAuthor: '关于作者',
   recommend: '❤️ 免费ChatGPT-4 ❤️',
   enableScript: '启用脚本',
@@ -3936,6 +3937,7 @@ var enUS = {
   disableHotkeys: 'Disable hotkeys',
   donate: '👍Donate',
   aboutDonate: 'How much the author has received?',
+  aiProjects: '4000+ AI Open Source Projects',
   aboutAuthor: 'About the author',
   enableScript: 'Enable script',
   disableScript: 'Disable script',
@@ -4082,6 +4084,7 @@ var ru = {
   disableHotkeys: 'отключить горячие клавиши',
   donate: '👍пожертвовать',
   aboutDonate: 'Сколько автор получил?',
+  aiProjects: '4000+ AI-проектов с открытым исходным кодом',
   aboutAuthor: 'о авторе',
   enableScript: 'включить скрипт',
   disableScript: 'отключить скрипт',
@@ -4227,6 +4230,7 @@ var zhTW = {
   disableHotkeys: '禁用快捷鍵',
   donate: '👍讚賞',
   aboutDonate: '100萬級安裝量的作品，有多少打賞？',
+  aiProjects: '4000+ AI開源項目',
   aboutAuthor: '關於作者',
   enableScript: '啟用腳本',
   disableScript: '禁用腳本',
@@ -5352,7 +5356,7 @@ const monkeyMenu = {
 
 const version = '4.2.7';
 
-function refreshPage (msg) {
+function refreshPage(msg) {
   msg = msg || '配置已更改，马上刷新页面让配置生效？';
   const status = confirm(msg);
   if (status) {
@@ -5362,7 +5366,7 @@ function refreshPage (msg) {
 
 const isChinese = () => i18n.language().indexOf('zh') > -1;
 
-function getHomePage () {
+function getHomePage() {
   const homePageLinks = [
     'https://h5player.anzz.site/zh/',
     'https://h5player.anzz.top'
@@ -5372,7 +5376,7 @@ function getHomePage () {
   return isChinese() ? homePageLinks[0] : homePageLinks[1]
 }
 
-function openDocsByPath (path) {
+function openDocsByPath(path) {
   if (typeof path !== 'string' || path.startsWith('http') === true) {
     return false
   }
@@ -5447,6 +5451,11 @@ const globalFunctional = {
     desc: i18n.t('aboutDonate'),
     fn: () => openDocsByPath('/home/aboutDonate')
   },
+  openAiProjectsPage: {
+    title: i18n.t('aiProjects'),
+    desc: i18n.t('aiProjects'),
+    fn: () => openInTab('https://hello-ai.anzz.site/home/categories.html')
+  },
   openAddGroupChatPage: {
     title: i18n.t('addGroupChat'),
     desc: i18n.t('addGroupChat'),
@@ -5474,7 +5483,7 @@ const globalFunctional = {
     title: i18n.t('recommend'),
     desc: i18n.t('recommend'),
     fn: () => {
-      function randomZeroOrOne () {
+      function randomZeroOrOne() {
         return Math.floor(Math.random() * 2)
       }
 
@@ -5809,6 +5818,7 @@ let monkeyMenuList = [
     disable: !configManager.get('enhance.unfoldMenu')
   },
   { ...globalFunctional.openDonatePage },
+  { ...globalFunctional.openAiProjectsPage },
   {
     ...globalFunctional.toggleScriptEnableState
   },
@@ -11586,9 +11596,14 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
               action: 'openDonatePage',
               args: ''
             },
+            // {
+            //   ...globalFunctional.openAboutDonatePage,
+            //   action: 'openAboutDonatePage',
+            //   args: ''
+            // },
             {
-              ...globalFunctional.openAboutDonatePage,
-              action: 'openAboutDonatePage',
+              ...globalFunctional.openAiProjectsPage,
+              action: 'openAiProjectsPage',
               args: ''
             },
             {
