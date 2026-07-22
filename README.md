@@ -11,6 +11,11 @@ Web Player Enhancement Script
 
 <br />
 
+## Project Recommendation
+
+- [4000+ AI Open Source Projects List](https://hello-ai.anzz.site/home/categories.html)
+- [Hello-AI](https://github.com/xxxily/hello-ai)
+
 ## Introduction
 
 This script enhances video playback and is compatible with all H5 video websites, such as: Bilibili, TikTok, Tencent Video, Youku, iQIYI, Xigua Video, YouTube, Weibo Video, Zhihu Video, Sohu Video, Netease Open Class, Baidu Netdisk, AliYun Disk, TED, Instagram, Twitter, and so on.  

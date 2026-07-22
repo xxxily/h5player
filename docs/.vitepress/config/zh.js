@@ -7,8 +7,9 @@ export const zh = defineConfig({
 
   themeConfig: {
     nav: [
+      { text: '4000+ AI开源项目列表', link: 'https://hello-ai.anzz.site/home/categories.html', target: '_blank' },
       { text: '文档中心', link: '/zh/home/quickStart' },
-      { text: '支持作者', link: '/zh/home/rewardTheAuthor' },
+      // { text: '支持作者', link: '/zh/home/rewardTheAuthor' },
       {
         text: '相关连接',
         ariaLabel: '相关连接',
@@ -126,7 +127,8 @@ export const zh = defineConfig({
       {
         text: '其它推荐',
         items: [
-          { text: 'AnakinAI', link: 'https://u.anzz.top/anakinai', target: '_blank' }
+          { text: 'Hello-AI', link: 'https://hello-ai.anzz.site', target: '_blank' },
+          { text: '4000+ AI开源项目列表', link: 'https://hello-ai.anzz.site/home/categories.html', target: '_blank' }
         ]
       }
     ]

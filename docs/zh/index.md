@@ -31,3 +31,8 @@ features:
 [100万级安装量的开源作品，一年有多少打赏收入？](./home/aboutDonate.md)  
 
 ![如果我的努力给你带来了便利，请不要吝啬你的赞赏](/assets/img/donate.png)  
+
+## 项目推荐
+
+- [4000+个AI相关的开源项目](https://hello-ai.anzz.site/home/categories.html)
+- [Hello-AI](https://github.com/xxxily/hello-ai)

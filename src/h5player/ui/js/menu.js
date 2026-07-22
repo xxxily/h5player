@@ -518,9 +518,14 @@ export const menuConfig = [
             action: 'openDonatePage',
             args: ''
           },
+          // {
+          //   ...globalFunctional.openAboutDonatePage,
+          //   action: 'openAboutDonatePage',
+          //   args: ''
+          // },
           {
-            ...globalFunctional.openAboutDonatePage,
-            action: 'openAboutDonatePage',
+            ...globalFunctional.openAiProjectsPage,
+            action: 'openAiProjectsPage',
             args: ''
           },
           {

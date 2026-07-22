@@ -4533,9 +4533,14 @@ const h5playerUI = function (window) {var h5playerUI = (function () {
               action: 'openDonatePage',
               args: ''
             },
+            // {
+            //   ...globalFunctional.openAboutDonatePage,
+            //   action: 'openAboutDonatePage',
+            //   args: ''
+            // },
             {
-              ...globalFunctional.openAboutDonatePage,
-              action: 'openAboutDonatePage',
+              ...globalFunctional.openAiProjectsPage,
+              action: 'openAiProjectsPage',
               args: ''
             },
             {

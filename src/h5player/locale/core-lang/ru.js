@@ -17,6 +17,7 @@ export default {
   disableHotkeys: 'отключить горячие клавиши',
   donate: '👍пожертвовать',
   aboutDonate: 'Сколько автор получил?',
+  aiProjects: '4000+ AI-проектов с открытым исходным кодом',
   aboutAuthor: 'о авторе',
   enableScript: 'включить скрипт',
   disableScript: 'отключить скрипт',

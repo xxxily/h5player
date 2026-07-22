@@ -6,8 +6,9 @@ export const en = defineConfig({
 
   themeConfig: {
     nav: [
+      { text: '4000+ AI open source projects', link: 'https://github.com/xxxily/hello-ai', target: '_blank' },
       { text: 'Docs', link: '/home/quickStart' },
-      { text: 'Reward the Author', link: '/home/rewardTheAuthor' },
+      // { text: 'Reward the Author', link: '/home/rewardTheAuthor' },
       {
         text: 'Related Links',
         ariaLabel: 'Related Links',
@@ -102,7 +103,8 @@ export const en = defineConfig({
       {
         text: 'Recommendation',
         items: [
-          { text: 'AnakinAI', link: 'https://u.anzz.top/anakinai', target: '_blank' },
+          { text: 'Hello-AI', link: 'https://hello-ai.anzz.site', target: '_blank' },
+          { text: '4000+ AI open source projects', link: 'https://hello-ai.anzz.site/home/categories.html', target: '_blank' }
         ]
       }
     ]

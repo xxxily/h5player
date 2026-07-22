@@ -1,5 +1,10 @@
 # Update Log
 
+## 4.3.5 [2026/03/23]
+
+* Remove the "begging" menu under About
+* Add HelloAI project entry
+
 ## 4.3.4 [2025/06/11]
 
 * Fix the problem that related addresses cannot be accessed normally

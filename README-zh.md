@@ -12,6 +12,11 @@
 
 <br />
 
+## 项目推荐
+
+- [4000+个AI相关的开源项目](https://hello-ai.anzz.site/home/categories.html)
+- [Hello-AI](https://github.com/xxxily/hello-ai)
+
 ## 简介
 
 视频增强脚本，支持所有H5视频网站，例如：B站、抖音、腾讯视频、优酷、爱奇艺、西瓜视频、油管（YouTube）、微博视频、知乎视频、搜狐视频、网易公开课、百度网盘、阿里云盘、ted、instagram、twitter等。  

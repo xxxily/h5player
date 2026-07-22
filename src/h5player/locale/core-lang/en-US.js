@@ -17,6 +17,7 @@ export default {
   disableHotkeys: 'Disable hotkeys',
   donate: '👍Donate',
   aboutDonate: 'How much the author has received?',
+  aiProjects: '4000+ AI Open Source Projects',
   aboutAuthor: 'About the author',
   enableScript: 'Enable script',
   disableScript: 'Disable script',

@@ -19,6 +19,7 @@ export default {
   disableMouseControl: '禁用鼠标控制',
   donate: '👍请作者喝杯咖啡',
   aboutDonate: '100万级安装量的作品，有多少打赏？',
+  aiProjects: '4000+ AI开源项目',
   aboutAuthor: '关于作者',
   recommend: '❤️ 免费ChatGPT-4 ❤️',
   enableScript: '启用脚本',

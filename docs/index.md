@@ -37,3 +37,8 @@ If my efforts have brought convenience to you, please do not hesitate to give yo
 PayPal: [paypal.me/BlazeLiu](https://paypal.me/BlazeLiu)  
 
 ![If my efforts have brought convenience to you, please do not hesitate to give your appreciation.](/assets/img/donate.png)  
+
+## Project Recommendation
+
+- [4000+ AI Open Source Projects List](https://hello-ai.anzz.site/home/categories.html)
+- [Hello-AI](https://github.com/xxxily/hello-ai)

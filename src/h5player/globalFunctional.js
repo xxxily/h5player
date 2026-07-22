@@ -3,7 +3,7 @@ import configManager from './configManager'
 import { openInTab } from './helper'
 import version from './version'
 
-function refreshPage (msg) {
+function refreshPage(msg) {
   msg = msg || '配置已更改，马上刷新页面让配置生效？'
   const status = confirm(msg)
   if (status) {
@@ -13,7 +13,7 @@ function refreshPage (msg) {
 
 const isChinese = () => i18n.language().indexOf('zh') > -1
 
-function getHomePage () {
+function getHomePage() {
   const homePageLinks = [
     'https://h5player.anzz.site/zh/',
     'https://h5player.anzz.top'
@@ -23,7 +23,7 @@ function getHomePage () {
   return isChinese() ? homePageLinks[0] : homePageLinks[1]
 }
 
-function openDocsByPath (path) {
+function openDocsByPath(path) {
   if (typeof path !== 'string' || path.startsWith('http') === true) {
     return false
   }
@@ -98,6 +98,11 @@ const globalFunctional = {
     desc: i18n.t('aboutDonate'),
     fn: () => openDocsByPath('/home/aboutDonate')
   },
+  openAiProjectsPage: {
+    title: i18n.t('aiProjects'),
+    desc: i18n.t('aiProjects'),
+    fn: () => openInTab('https://hello-ai.anzz.site/home/categories.html')
+  },
   openAddGroupChatPage: {
     title: i18n.t('addGroupChat'),
     desc: i18n.t('addGroupChat'),
@@ -125,7 +130,7 @@ const globalFunctional = {
     title: i18n.t('recommend'),
     desc: i18n.t('recommend'),
     fn: () => {
-      function randomZeroOrOne () {
+      function randomZeroOrOne() {
         return Math.floor(Math.random() * 2)
       }
 

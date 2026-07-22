@@ -17,6 +17,7 @@ export default {
   disableHotkeys: '禁用快捷鍵',
   donate: '👍讚賞',
   aboutDonate: '100萬級安裝量的作品，有多少打賞？',
+  aiProjects: '4000+ AI開源項目',
   aboutAuthor: '關於作者',
   enableScript: '啟用腳本',
   disableScript: '禁用腳本',

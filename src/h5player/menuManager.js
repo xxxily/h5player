@@ -22,6 +22,7 @@ let monkeyMenuList = [
     disable: !configManager.get('enhance.unfoldMenu')
   },
   { ...globalFunctional.openDonatePage },
+  { ...globalFunctional.openAiProjectsPage },
   {
     ...globalFunctional.toggleScriptEnableState
   },
