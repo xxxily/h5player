@@ -1615,9 +1615,19 @@ const h5Player = {
         parentNode.setAttribute('style-backup', backupSty)
         backupStyle = defStyle
       } else {
-        /* 如果defStyle被外部修改了，则需要更新备份样式 */
+        /* 如果defStyle被外部修改了，则需要更新备份样式（剔除tips逻辑自身写入的样式，避免备份被污染） */
         if (defStyle && !defStyle.includes('style-backup')) {
-          backupStyle = defStyle
+          const defStyleObj = inlineStyleToObj(defStyle)
+          /* 仅当position为tips逻辑写入时才剔除 */
+          if (['static', 'inherit', 'initial', 'unset', ''].includes(parentNode.getAttribute('def-position') || '')) {
+            delete defStyleObj.position
+          }
+          delete defStyleObj['min-width']
+          delete defStyleObj['min-height']
+          backupStyle = objToInlineStyle(defStyleObj)
+        } else if (!defStyle) {
+          /* 容器样式已还原为空时，备份也置空，避免还原时残留占位样式 */
+          backupStyle = ''
         }
       }
 
@@ -1686,9 +1696,8 @@ const h5Player = {
         // 隐藏提示框和还原样式
         style.opacity = 0
         style.display = 'none'
-        if (backupStyle) {
-          parentNode.setAttribute('style', backupStyle)
-        }
+        /* 备份样式为空时也需要还原，否则min-width/min-height等样式会残留在容器上 */
+        parentNode.setAttribute('style', backupStyle)
       }, 2000)
     }
 
