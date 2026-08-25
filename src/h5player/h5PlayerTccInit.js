@@ -596,8 +596,10 @@ const taskConf = {
       wrapEl && wrapEl.addEventListener('mouseover', setVideoTitle)
       setTimeout(setVideoTitle, 600)
     }
-  }
+  },
+  'x.com': {}
 }
+taskConf['x.com'] = Object.assign({}, taskConf['twitter.com']);
 
 function h5PlayerTccInit (h5Player) {
   return new TCC(taskConf, function (taskName, taskConf, data) {
