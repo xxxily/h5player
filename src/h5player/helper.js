@@ -133,9 +133,7 @@ function getPageWindowSync (rawFunction) {
 }
 
 function openInTab (url, opts, referer) {
-  // fix tampermonkey menu bug start
-  // 由于tampermonkey的菜单功注册和取消注册存在某些难以排查的bug，所以这处对openInTab的打开频率进行了限制，以解决点击tampermonkey 菜单打开链接时候重复打开一堆相同URL的问题
-  // 此方法治标不治本，还是会遗留很多菜单注册和取消注册留下的坑，建议替换chrome插件实现当前脚本功能
+  // 防御性限制同一URL的打开频率，避免快速重复点击或第三方脚本重复触发
 
   // 使用GM_getValue/GM_setValue或sessionStorage控制同一URL的调用频率
   const now = Date.now()
@@ -163,8 +161,6 @@ function openInTab (url, opts, referer) {
 
     sessionStorage.setItem(sessionKey, now.toString())
   }
-  // fix tampermonkey menu bug end
-
   if (referer) {
     const urlObj = parseURL(url)
     if (!urlObj.params.referer) {

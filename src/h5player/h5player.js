@@ -511,6 +511,7 @@ const h5Player = {
       }
 
       addMenu({
+        key: 'toggleInitAutoPlay',
         title: () => configManager.getLocalStorage('media.autoPlay') ? i18n.t('disableInitAutoPlay') : i18n.t('enableInitAutoPlay'),
         fn: () => {
           const confirm = window.confirm(configManager.getLocalStorage('media.autoPlay') ? i18n.t('disableInitAutoPlay') : i18n.t('enableInitAutoPlay'))
@@ -520,6 +521,7 @@ const h5Player = {
               alert(i18n.t('configFail'))
             } else {
               configManager.setLocalStorage('media.autoPlay', !autoPlay)
+              setTimeout(() => menuRegister(), 100)
             }
           }
         }
